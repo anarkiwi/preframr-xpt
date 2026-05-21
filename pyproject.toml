@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "preframr-experiments"
+version = "0.1.0"
+description = "Docker-driven experiment runner + spec registry for the preframr SID model research stack."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Josh Bailey" }]
+dependencies = []
+
+[project.scripts]
+preframr-experiments-run = "preframr_experiments.run:main"
+preframr-experiments-hvsc-check = "preframr_experiments.hvsc_version_check:main"
+
+[tool.setuptools.packages.find]
+include = ["preframr_experiments*"]
+
+[tool.setuptools.package-data]
+"preframr_experiments" = [
+    "data/*.list",
+    "data/*.md",
+    "data/*/*.list",
+    "data/*/HVSC_VERSION",
+    "data/refuted/*.md",
+    "preflight/*.py",
+]

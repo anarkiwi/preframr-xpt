@@ -1,0 +1,28 @@
+# Smoke-tier SID corpus. 7 SIDs hand-picked to exercise every macro
+# class the encoder produces, end-to-end wallclock target < 10 min per
+# experiment arm with a warm dump cache.
+#
+# Coverage rubric (one line per class):
+#   BACK_REF / PATTERN_REPLAY     LoopPass + transposed/fuzzy variants
+#   GATE_REPLAY palette           GateMacroPass; bundle replay
+#   PLAY_INSTRUMENT body          InstrumentProgramPass; envelope replay
+#   INTERVAL mirror               IntervalPass; cross-voice freq link
+#   PWM / FilterSweep burst       PwmPass / FilterSweepPass
+#   Long DELAY frames             Variable-IRQ idle handling
+#   PAL + NTSC                    irq mapping divergence
+#
+# Path format: ``<HVSC_VERSION>``-relative, ``MUSICIANS/<L>/<Composer>/<song>.<tune>.dump.parquet``.
+# The list is read by ``integration_tests/experiments/base.py`` which
+# resolves each entry against ``--hvsc-root`` (default
+# ``/scratch/preframr/training-dumps``).
+#
+# Edit policy: this list is pinned. Re-curation is a deliberate event
+# (record the rationale in the commit message); single-arm experiments
+# that care about specific data should reference this file unmodified.
+MUSICIANS/G/Goto80/Truth.1.dump.parquet                # short, dense, voice-rotated
+MUSICIANS/G/Goto80/Acid_10000.1.dump.parquet           # GATE_REPLAY-rich
+MUSICIANS/G/Goto80/Skybox.1.dump.parquet               # InstrumentProgramPass
+MUSICIANS/G/Goto80/CBM_85.1.dump.parquet               # PATTERN_REPLAY-rich
+MUSICIANS/H/Hubbard_Rob/Commando.1.dump.parquet        # long ADSR (long-form PI)
+MUSICIANS/G/Galway_Martin/Yie_Ar_Kung_Fu.1.dump.parquet  # arpeggio (xframe TRANSPOSE)
+MUSICIANS/T/Tel_Jeroen/Afterburner.1.dump.parquet      # NTSC bias
