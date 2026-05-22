@@ -16,7 +16,7 @@ elif [ -f "${PID_FILE}" ] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
 else
     # Wrapper exited without writing the done marker => crashed or was killed.
     if pgrep -af "run_overnight_batch.sh" >/dev/null; then
-        live="$(pgrep -af "bash /scratch/anarkiwi/preframr/preframr_experiments/run_overnight_batch.sh" | awk '{print $1}')"
+        live="$(pgrep -af "bash /scratch/anarkiwi/preframr-xpt/preframr_experiments/run_overnight_batch.sh" | awk '{print $1}')"
         echo "STATE: running (rediscovered pid ${live}; pid file stale)"
     else
         echo "STATE: not running, no done marker. Wrapper crashed -- inspect log."

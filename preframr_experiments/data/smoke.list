@@ -12,7 +12,7 @@
 #   PAL + NTSC                    irq mapping divergence
 #
 # Path format: ``<HVSC_VERSION>``-relative, ``MUSICIANS/<L>/<Composer>/<song>.<tune>.dump.parquet``.
-# The list is read by ``integration_tests/experiments/base.py`` which
+# The list is read by ``preframr_experiments/base.py`` which
 # resolves each entry against ``--hvsc-root`` (default
 # ``/scratch/preframr/training-dumps``).
 #

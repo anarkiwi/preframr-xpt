@@ -65,7 +65,7 @@ def assert_hvsc_version(
         raise HvscVersionMismatch(
             f"HVSC version mismatch at {hvsc_root}: tree reports {actual}, "
             f"caller expected {expected}. Re-pin the tier (commit "
-            f"`integration_tests/data/<tier>/HVSC_VERSION`) or update the "
+            f"`preframr_experiments/data/<tier>/HVSC_VERSION`) or update the "
             f"HVSC checkout to match."
         )
     fallback = read_hvsc_version_via_updates(hvsc_root)

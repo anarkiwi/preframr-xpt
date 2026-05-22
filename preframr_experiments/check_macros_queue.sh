@@ -16,7 +16,7 @@ if [ -f "${DONE_MARKER}" ]; then
 elif [ -f "${PID_FILE}" ] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
     echo "STATE: running (wrapper pid $(cat "${PID_FILE}"), elapsed $(ps -o etime= -p "$(cat "${PID_FILE}")" | tr -d ' '))"
 else
-    live="$(pgrep -af 'bash[^ ]* /scratch/anarkiwi/preframr/preframr_experiments/run_macros_queue.sh' | awk '{print $1}' | head -1)"
+    live="$(pgrep -af 'bash[^ ]* /scratch/anarkiwi/preframr-xpt/preframr_experiments/run_macros_queue.sh' | awk '{print $1}' | head -1)"
     if [ -n "${live}" ]; then
         echo "STATE: running (rediscovered pid ${live}; pid file stale)"
     else

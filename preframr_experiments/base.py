@@ -692,14 +692,6 @@ def preflight_check(
     logger.info("preflight: OK")
 
 
-def _palette_extra_volumes(tier: str) -> list[tuple[Path, str]]:
-    """Bind-mount the tier's canonical-palette JSON (dead code: palette work is REFUTED; kept for compat with any docker call site that still passes the path)."""
-    src = DATA_DIR / tier / "engine_fp_palettes.json"
-    if not src.exists():
-        return []
-    return [(src.resolve(), f"/integration_tests/data/{tier}/engine_fp_palettes.json")]
-
-
 def run_arm(
     spec: ExperimentSpec,
     arm: Arm,
@@ -783,8 +775,6 @@ def run_arm(
         )
         parse_globs = f"{train_glob},{eval_globs}"
 
-    palette_volumes = _palette_extra_volumes(spec.tier)
-
     if not cache_hit:
         parse_args_list = [
             "/preframr/parse.py",
@@ -802,7 +792,6 @@ def run_arm(
             bind_root=work_dir,
             log_path=parse_log,
             memory="32g",
-            extra_volumes=palette_volumes,
         )
         if rc != 0:
             raise RuntimeError(f"parse failed (rc={rc}); see {parse_log}")
@@ -826,7 +815,6 @@ def run_arm(
             bind_root=work_dir,
             log_path=tokenize_log,
             memory="16g",
-            extra_volumes=palette_volumes,
         )
         if rc != 0:
             raise RuntimeError(f"tokenize failed (rc={rc}); see {tokenize_log}")
@@ -861,7 +849,6 @@ def run_arm(
         log_path=train_log,
         memory="32g",
         gpus=_gpu_available(),
-        extra_volumes=palette_volumes,
     )
     train_elapsed_s = time.monotonic() - train_t0
     if rc != 0:

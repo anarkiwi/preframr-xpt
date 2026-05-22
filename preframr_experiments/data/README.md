@@ -1,7 +1,7 @@
 # Pinned data tiers
 
-Stable HVSC-relative path lists consumed by
-``integration_tests/experiments/``. The lists do NOT carry the
+Stable HVSC-relative path lists consumed by ``preframr_experiments``.
+The lists do NOT carry the
 .dump.parquet bodies -- those are materialised by the dump cache at
 ``/scratch/preframr/training-dumps/`` (or rebuilt via vsiddump on
 hosts without the cache).

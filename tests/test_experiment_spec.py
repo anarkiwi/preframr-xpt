@@ -16,7 +16,6 @@ from preframr_experiments.base import (
     ArmArtefacts,
     DATA_DIR,
     ExperimentSpec,
-    _palette_extra_volumes,
     build_eval_reglogs_arg,
     canonical_paths,
     read_list,
@@ -509,30 +508,6 @@ class TestHvscVersionCheck(unittest.TestCase):
             hvsc_root=str(self.tmpdir / "does_not_exist"),
         )
         _hvsc_version_check(spec, logging.getLogger("test"))
-
-
-class TestPaletteExtraVolumes(unittest.TestCase):
-    """The runner must bind-mount the tier's canonical-palette JSON into
-    the training container at the path
-    ``_CANONICAL_PALETTES_CANDIDATES`` expects.
-    """
-
-    def test_existing_tier_yields_mount(self):
-        src = DATA_DIR / "mini" / "engine_fp_palettes.json"
-        if not src.exists():
-            self.skipTest(f"missing fixture {src}")
-        vols = _palette_extra_volumes("mini")
-        self.assertEqual(len(vols), 1)
-        host, container = vols[0]
-        self.assertEqual(host, src.resolve())
-        self.assertEqual(
-            container, "/integration_tests/data/mini/engine_fp_palettes.json"
-        )
-
-    def test_missing_palette_returns_empty(self):
-        if (DATA_DIR / "canonical" / "engine_fp_palettes.json").exists():
-            self.skipTest("canonical palette unexpectedly present")
-        self.assertEqual(_palette_extra_volumes("canonical"), [])
 
 
 if __name__ == "__main__":
