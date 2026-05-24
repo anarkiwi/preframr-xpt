@@ -68,6 +68,51 @@ class TestDatasetCacheKey(unittest.TestCase):
         b = _dataset_cache_key(_toy_spec(seq_len=256), {"train": ["x"]})
         self.assertNotEqual(a, b)
 
+    def test_parse_tokenize_cargs_change_key(self):
+        """Macro flags affect parse/tokenize output, so they must bust the key
+        (else two arms collide -- the bug that forced cache-disable)."""
+        spec = _toy_spec()
+        layout = {"train": ["x"]}
+        base = _dataset_cache_key(spec, layout, "")
+        macro = _dataset_cache_key(spec, layout, "--vibrato-env-pass --freq-run-pass")
+        self.assertNotEqual(base, macro)
+
+    def test_train_only_cargs_do_not_change_key(self):
+        """Train/model-only flags don't touch parse/tokenize, so arms that
+        differ only in them must SHARE one cached dataset (preserve the
+        cross-arm parse+tokenize reuse)."""
+        spec = _toy_spec()
+        layout = {"train": ["x"]}
+        base = _dataset_cache_key(spec, layout, "")
+        store_true = _dataset_cache_key(spec, layout, "--per-tier-heads")
+        with_value = _dataset_cache_key(
+            spec, layout, "--per-tier-heads --per-tier-content-mos-k 4"
+        )
+        eq_value = _dataset_cache_key(spec, layout, "--per-tier-content-mos-k=4")
+        self.assertEqual(base, store_true)
+        self.assertEqual(base, with_value)
+        self.assertEqual(base, eq_value)
+
+    def test_mixed_cargs_key_on_dataset_slice_only(self):
+        """A macro flag + a train-only flag keys the same as the macro flag
+        alone -- the train-only part is stripped, the macro part is kept."""
+        spec = _toy_spec()
+        layout = {"train": ["x"]}
+        macro_only = _dataset_cache_key(spec, layout, "--freq-run-pass")
+        mixed = _dataset_cache_key(
+            spec, layout, "--per-tier-heads --freq-run-pass --per-tier-content-mos-k 4"
+        )
+        self.assertEqual(macro_only, mixed)
+
+    def test_unknown_flag_treated_as_dataset_affecting(self):
+        """Fail-safe: an unrecognised flag busts the key (never silently
+        collides two arms)."""
+        spec = _toy_spec()
+        layout = {"train": ["x"]}
+        base = _dataset_cache_key(spec, layout, "")
+        unknown = _dataset_cache_key(spec, layout, "--some-new-pass")
+        self.assertNotEqual(base, unknown)
+
 
 class TestDatasetCachePopulateAndHit(unittest.TestCase):
     def test_miss_when_no_cache(self):

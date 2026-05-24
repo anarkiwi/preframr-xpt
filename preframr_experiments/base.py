@@ -320,10 +320,49 @@ def stage_dumps(
     return staged
 
 
+_TRAIN_ONLY_CARG_FLAGS = {
+    "--per-tier-heads": False,
+    "--per-tier-content-mos-k": True,
+    "--per-tier-mos-entropy-lambda": True,
+    "--content-cluster-head": False,
+    "--content-cluster-c": True,
+    "--content-cluster-index": True,
+    "--content-diffusion": False,
+    "--content-diffusion-t": True,
+    "--mask-structural-tier-loss": False,
+    "--infonce-content-loss-weight": True,
+    "--infonce-distractors": True,
+}
+
+
+def _dataset_affecting_cargs(extra_cargs: str) -> list[str]:
+    """The parse/tokenize-affecting tokens of ``extra_cargs``, with known
+    train/model-only flags (and their detached values) stripped. Conservative:
+    any flag NOT in ``_TRAIN_ONLY_CARG_FLAGS`` is treated as dataset-affecting,
+    so a new parse/tokenize flag can never collide two arms onto one cache entry
+    -- at worst an unrecognised train-only flag costs a redundant parse+tokenize.
+    The denylist holds only flags verified to be read solely under
+    ``preframr/train/model/`` (+ predict)."""
+    tokens = shlex.split(extra_cargs or "")
+    out: list[str] = []
+    i = 0
+    while i < len(tokens):
+        tok = tokens[i]
+        takes_value = _TRAIN_ONLY_CARG_FLAGS.get(tok.split("=", 1)[0])
+        if takes_value is None:
+            out.append(tok)
+            i += 1
+            continue
+        i += 2 if (takes_value and "=" not in tok) else 1
+    return out
+
+
 def _dataset_cache_key(
-    spec: "ExperimentSpec", data_layout: dict[str, list[str]]
+    spec: "ExperimentSpec",
+    data_layout: dict[str, list[str]],
+    extra_cargs: str = "",
 ) -> str:
-    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the spec's pipeline_spec + tier-pinned data + corpus-shape args don't change."""
+    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the spec's pipeline_spec + tier-pinned data + corpus-shape args + the parse/tokenize-affecting slice of the arm's extra_cargs don't change."""
     payload = {
         "pipeline_spec": spec.pipeline_spec,
         "seq_len": spec.seq_len,
@@ -333,6 +372,7 @@ def _dataset_cache_key(
         "max_perm": spec.max_perm,
         "tier": spec.tier,
         "data_layout": {k: sorted(v) for k, v in data_layout.items()},
+        "dataset_cargs": _dataset_affecting_cargs(extra_cargs),
     }
     blob = json.dumps(payload, sort_keys=True, default=str).encode()
     return hashlib.sha256(blob).hexdigest()[:16]
@@ -717,7 +757,7 @@ def run_arm(
     log_dir.mkdir()
 
     cache_disabled = _dataset_cache_disabled()
-    cache_key = _dataset_cache_key(spec, data_layout)
+    cache_key = _dataset_cache_key(spec, data_layout, arm.extra_cargs)
     cache_dir = _dataset_cache_dir(src_root, cache_key)
     parse_log = log_dir / "parse.log"
     tokenize_log = log_dir / "tokenize.log"
@@ -742,14 +782,8 @@ def run_arm(
                     f"is the dump cache at {src_root} populated?"
                 )
 
-        if spec.pre_run_hook is not None:
-            spec.pre_run_hook(arm, work_dir)
-    elif spec.pre_run_hook is not None:
-        logger.warning(
-            "pre_run_hook is set but skipped because dataset cache HIT; "
-            "set %s=1 if the hook mutates parse inputs",
-            _DATASET_CACHE_DISABLE_ENV,
-        )
+    if spec.pre_run_hook is not None:
+        spec.pre_run_hook(arm, work_dir)
 
     cargs = (
         f"--no-require-pq --seq-len {spec.seq_len} "
