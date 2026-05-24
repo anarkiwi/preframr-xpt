@@ -289,12 +289,24 @@ def _stage_bucket(rel: str) -> str:
 
 
 def stage_dumps(
-    rels: list[str], src_root: Path, dst_dir: Path, logger: logging.Logger
+    rels: list[str],
+    src_root: Path,
+    dst_dir: Path,
+    logger: logging.Logger,
+    link_root: Optional[str] = None,
 ) -> int:
-    """Copy each .dump.parquet from ``src_root/rel`` into a per-composer
+    """Stage each .dump.parquet from ``src_root/rel`` into a per-composer
     subdir under ``dst_dir`` (``dst_dir/<composer>/<basename>``).
-    Skips missing files (logs a warning) so a partial cache doesn't
-    abort the whole stage; returns the count actually staged.
+
+    When ``link_root`` is set, the staged entry is a **symlink** to
+    ``f"{link_root}/{rel}"`` -- a path valid inside the container where
+    ``src_root`` is bind-mounted read-only at ``link_root`` (broken on the host,
+    which is fine: only ever followed in-container). The parser derives its
+    output paths by string from the input name, so the parsed sidecars land in
+    the writable ``dst_dir`` next to the symlink. When ``link_root`` is None the
+    content is copied (needed when a ``pre_run_hook`` mutates the staged dumps).
+    Skips files missing at ``src_root`` (logs a warning); returns the count
+    actually staged.
     """
     dst_dir.mkdir(parents=True, exist_ok=True)
     staged = 0
@@ -306,7 +318,12 @@ def stage_dumps(
             continue
         bucket = dst_dir / _stage_bucket(rel)
         bucket.mkdir(parents=True, exist_ok=True)
-        shutil.copy(src, bucket / src.name)
+        dest = bucket / src.name
+        if link_root is not None:
+            if not dest.is_symlink() and not dest.exists():
+                os.symlink(f"{link_root}/{rel}", dest)
+        else:
+            shutil.copy(src, dest)
         staged += 1
     if missing:
         logger.warning(
@@ -433,7 +450,11 @@ def _populate_dataset_cache(
         for subdir in data_layout.keys():
             src = work_dir / subdir
             if src.exists():
-                shutil.copytree(src, tmp / subdir)
+                shutil.copytree(
+                    src,
+                    tmp / subdir,
+                    ignore=shutil.ignore_patterns("*.dump.parquet"),
+                )
         (tmp / _DATASET_CACHE_MARKER).write_text("")
         try:
             tmp.rename(cache_dir)
@@ -508,7 +529,7 @@ def _chown_bind_root_to_runner(image: str, bind_root: Path, log_path: Path) -> N
         f"{bind_root}:/work",
         image,
         "chown",
-        "-R",
+        "-Rh",
         uid_gid,
         "/work",
     ]
@@ -626,7 +647,7 @@ def _ensure_work_root_writable(
         f"{work_root.resolve()}:/wd",
         image,
         "chown",
-        "-R",
+        "-Rh",
         f"{my_uid}:{os.getgid()}",
         "/wd",
     ]
@@ -772,15 +793,18 @@ def run_arm(
             json.dump(spec.pipeline_spec, f, indent=2)
         pipeline_arg = f"--pipeline-spec @/scratch/preframr/pipeline_spec.json "
 
-    if not cache_hit:
-        for subdir, rels in data_layout.items():
-            dst = work_dir / subdir
-            n = stage_dumps(rels, src_root, dst, logger)
-            if n == 0:
-                raise RuntimeError(
-                    f"arm {arm.label}/seed{seed}: zero dumps staged into {dst}; "
-                    f"is the dump cache at {src_root} populated?"
-                )
+    link_root = "/dumps" if spec.pre_run_hook is None else None
+    dump_volumes = (
+        [(src_root.resolve(), "/dumps:ro")] if link_root is not None else None
+    )
+    for subdir, rels in data_layout.items():
+        dst = work_dir / subdir
+        n = stage_dumps(rels, src_root, dst, logger, link_root=link_root)
+        if n == 0:
+            raise RuntimeError(
+                f"arm {arm.label}/seed{seed}: zero dumps staged into {dst}; "
+                f"is the dump cache at {src_root} populated?"
+            )
 
     if spec.pre_run_hook is not None:
         spec.pre_run_hook(arm, work_dir)
@@ -826,6 +850,7 @@ def run_arm(
             bind_root=work_dir,
             log_path=parse_log,
             memory="32g",
+            extra_volumes=dump_volumes,
         )
         if rc != 0:
             raise RuntimeError(f"parse failed (rc={rc}); see {parse_log}")
@@ -849,6 +874,7 @@ def run_arm(
             bind_root=work_dir,
             log_path=tokenize_log,
             memory="16g",
+            extra_volumes=dump_volumes,
         )
         if rc != 0:
             raise RuntimeError(f"tokenize failed (rc={rc}); see {tokenize_log}")
@@ -883,6 +909,7 @@ def run_arm(
         log_path=train_log,
         memory="32g",
         gpus=_gpu_available(),
+        extra_volumes=dump_volumes,
     )
     train_elapsed_s = time.monotonic() - train_t0
     if rc != 0:
