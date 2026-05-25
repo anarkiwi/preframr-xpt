@@ -1,9 +1,10 @@
 #!/bin/bash
 # Overnight calibration + sweep batch.
 #
-# Current batch: voice_traj_distributed_set_diff_freq_prodlike. Prodlike-tier
-# confirmation of the mini PASS (val_acc +0.0417 on combined arm). 2 arms ×
-# 1 seed; ~12-22 hr total wallclock.
+# Current batch: re-arc STAGE 1 (mini triage) on the post-FREQ_TRAJ tokenizer
+# at the vocab-trimmed config (--tkvocab 8192, UNK=0). 7 model-side specs (see
+# SPECS below); baseline + refuted re-run after full_macros_prodlike PASSED.
+# Prodlike stage (B=4/accum=8, effective batch 32) follows once mini is clean.
 #
 # Outputs land under /scratch/tmp/preframr_experiments/.
 # Status / progress: tail -f /scratch/tmp/preframr_experiments/overnight_batch.log

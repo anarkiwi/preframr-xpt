@@ -2,7 +2,8 @@
 # top of the preframr framework image. Because it FROMs anarkiwi/preframr, the
 # audits/probes that `import preframr` + torch resolve against the base, so they
 # run AND are tested inside this image -- the main repo keeps just the framework.
-ARG BASE=anarkiwi/preframr:latest
+# Pinned to a released framework version (override BASE to track :latest).
+ARG BASE=anarkiwi/preframr:0.1.0
 FROM ${BASE}
 
 ARG PIP_OPTS=""
