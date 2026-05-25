@@ -1,4 +1,4 @@
-"""Prodlike A/B for the full current macro set (post preframr-tokens 0.14.1 multi-frame decode fix) vs the prior registered baseline. The fix is decode-only, so training tokenization is unchanged; this measures whether the newer macros (ctrl_triple / freq_run / freq_vibrato / freq_nudge / release_update / lonely_catch_all) help compression + learnability at scale, now that they also render correctly on generation. The newer macros ride in extra_cargs because they are not yet registered pipeline-spec transform names (only legacy CLI flags); oscillate_env + loop_transposed already default on."""
+"""Prodlike A/B for the remaining collapse/absorber macros (ctrl_triple / freq_nudge / release_update / lonely_catch_all) vs the registered baseline. As of preframr-tokens 0.16.0 the former slope / oscillate_env / freq_vibrato / freq_run passes are unified into freq_trajectory, which rides in the shared base pipeline (both arms), so this A/B no longer varies them; it isolates whether the still-separate newer macros help compression + learnability at scale. They ride in extra_cargs because they are not yet registered pipeline-spec transform names (only CLI flags)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from preframr_experiments.base import (
 )
 
 _BASE_TRANSFORMS = [
-    {"name": "slope"},
+    {"name": "freq_trajectory"},
     {"name": "preset"},
     {"name": "hard_restart"},
     {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
@@ -20,10 +20,8 @@ _BASE_TRANSFORMS = [
 
 _NEW_MACRO_CARGS = (
     "--ctrl-triple-pass "
-    "--freq-run-pass "
     "--freq-nudge-pass "
     "--release-update-pass "
-    "--vibrato-env-pass "
     "--lonely-catch-all"
 )
 
@@ -31,17 +29,16 @@ _NEW_MACRO_CARGS = (
 spec = ExperimentSpec(
     name="full_macros_prodlike",
     doc=(
-        "Prodlike A/B: full current macro set vs prior registered "
-        "baseline. The target arm adds the newer collapse/absorber "
-        "macros (CTRL_TRIPLE, FREQ_RUN, FREQ_VIBRATO, FREQ_NUDGE, "
-        "RELEASE_UPDATE, plus lonely_catch_all to drive the strict-no-"
-        "diff residual toward zero) on top of the shared registered "
-        "pipeline (slope, preset, hard_restart, legato c2/c4, "
-        "voice_block_order, ctrl_bigram, loop+transposed, oscillate_env). "
-        "preframr-tokens 0.14.1 fixed the multi-frame decode off-by-one "
-        "in those macros; the fix is decode-only so the train alphabet "
-        "is unchanged vs a pre-fix tokenize, but generated output now "
-        "renders correctly. Measures (1) compression: "
+        "Prodlike A/B: remaining collapse/absorber macros vs prior "
+        "registered baseline. The target arm adds CTRL_TRIPLE, "
+        "FREQ_NUDGE, RELEASE_UPDATE, plus lonely_catch_all (to drive the "
+        "strict-no-diff residual toward zero) on top of the shared "
+        "registered pipeline (freq_trajectory, preset, hard_restart, "
+        "legato c2/c4, voice_block_order, ctrl_bigram, loop+transposed). "
+        "As of preframr-tokens 0.16.0 the former slope / oscillate_env / "
+        "freq_vibrato / freq_run passes are unified into freq_trajectory "
+        "(in the shared base, both arms), so this A/B no longer varies "
+        "them. Measures (1) compression: "
         "encoded_tokens_per_song should DROP vs baseline; (2) cost: "
         "alphabet_size grows with the added ops; (3) learnability: "
         "eval_a val_acc must not regress > 1 sigma vs baseline, and "
