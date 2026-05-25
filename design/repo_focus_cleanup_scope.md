@@ -90,3 +90,22 @@ framework. (Superseded options: relax-charter-in-place; keep audits in main.)
 1. **xpt purity:** RESOLVED via the layered image (above).
 2. **design/ docs:** split (framework stays / research moves) or move all to xpt?
 3. **data/audit/ (195 generated):** move-and-track, or gitignore + regenerate?
+
+## Executed (2026-05-25, during the live re-arc)
+Moved out (safe — no runtime/build/test dep, untouched by the arc):
+- **design/** (42 docs) → preframr-xpt/design/
+- **integration_tests/data/audit/** (195 generated artefacts) → preframr-xpt/data/audit/
+- **top-level integration_tests scripts** (12: pickers, int-test runners, eval/
+  curation) → preframr-xpt/integration/
+Main `integration_tests/` 293 → **45 files** (profile/ 26 + data/ 16 + fixtures/ 3).
+Verified: no remaining import references a moved file; black clean.
+
+**Deferred to post-arc** (entangled — the live mini stage reads
+`data/content_clusters/` + `profile/augment_voice_permutation.py` host-side; the
+monitor still runs `profile/audit_checkpoint_per_class`; `Dockerfile.predict`
+smokes 4 profile audits; 5 `tests/` import profile audits):
+- `profile/` audits → `preframr_experiments/audit/` (run via the layered image).
+- Move the 5 audit-testing `tests/` to xpt.
+- Drop `integration_tests/` from main `Dockerfile`/`Dockerfile.predict`/`run_tests.sh`.
+- `data/` tier metadata → xpt; `fixtures/` follow their tests.
+- Then rebake + smoke the runner+audit path end-to-end before relying on it.
