@@ -132,5 +132,5 @@ MT); Défossez+ '22 (EnCodec); Copet+ '23 (MusicGen); Agostinelli+ '23
 Internal: `music_llm_landscape_and_fail_fast_plan.md`,
 `compound_token_tokenizer_design.md`,
 `audio_equivalence_normalization_design.md`,
-`melody_transfer_augmentation_design.md`,
+`preframr-aug:design/melody_transfer_augmentation_design.md`,
 `preframr-tokens:TOKEN_IMPROVEMENTS.md`.

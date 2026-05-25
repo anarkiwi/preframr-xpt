@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Voice-permutation augmentation: emit N variants of each input dump.parquet with SID voice indices permuted. See integration_tests/design/melody_transfer_augmentation_design.md 'Voice permutation variant' for the why + the bit-routing details."""
+"""Voice-permutation augmentation: emit N variants of each input dump.parquet with SID voice indices permuted. See preframr-aug:design/melody_transfer_augmentation_design.md 'Voice permutation variant' for the why + the bit-routing details."""
 
 from __future__ import annotations
 

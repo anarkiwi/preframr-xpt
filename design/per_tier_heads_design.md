@@ -190,7 +190,7 @@ These three choices supersede design-doc-time questions:
   router entropy in Phase 2 metrics; if router consistently
   high-entropy on fuzzy positions, validates the soft-router design.
 - **Not a fix for data scale.** Orthogonal to melody-transfer
-  augmentation (`profile/augment_melody_transfer.py`). User has
+  augmentation (`preframr-aug:preframr_aug/augment_melody_transfer.py`). User has
   explicitly deprioritised data-scale interventions for this
   iteration; this design takes that as given.
 - **Not a fix for predict-host envelope.** Body forward dominates

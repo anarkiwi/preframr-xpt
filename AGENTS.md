@@ -179,8 +179,11 @@ Lead with the deployment envelope: **vocab shrink** (tkvocab ~8× to 4096 —
 - Streaming unembed-CE — recovers prodlike 2× wall.
 - Generalization-gate thresholds — `content_over_structural_min=0.05` misfires
   pre-saturation (body=large mini baseline ~0.015); recalibrate per tier.
-- Melody-transfer augmentation (`audit/augment_melody_transfer.py`) — Phase 0
-  smoke pending.
+- Augmentation tooling + design moved to **`preframr-aug`** (`preframr_aug/`:
+  inaudible-perturbation probe, melody/instrument transfer + Phase-0 audit;
+  `design/melody_transfer_augmentation_design.md`). Voice-permutation helper
+  (`audit/augment_voice_permutation.py`) + its spec stay here — wired into the
+  arc runner. Melody-transfer Phase-0 smoke still pending.
 - **Autocast fp32-promotion trap:** any new `Module` in
   `preframr/train/model/heads*.py` must cast log_softmax/logsumexp back to
   input dtype or per-position buffers stay fp32 and OOM at prodlike

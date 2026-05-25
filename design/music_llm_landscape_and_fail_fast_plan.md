@@ -241,5 +241,5 @@ Internal references:
 - Sibling drafts:
   `compound_token_tokenizer_design.md` (commit `731e0fc`),
   `audio_equivalence_normalization_design.md`,
-  `melody_transfer_augmentation_design.md` (+ voice permutation
+  `preframr-aug:design/melody_transfer_augmentation_design.md` (+ voice permutation
   variant).

@@ -68,5 +68,5 @@ fogbank prebake workers don't import the alsa/midi/socket machinery, and the
 - preframr-audio survey (this session): #1 façade, #3 `dfs_render_equivalent`,
   #4 `render_batch`/`verify_equivalent_batch` — landed on
   `feat/audio-augmentation-scaling`.
-- `melody_transfer_augmentation_design.md` (the prebake consumer of the render
+- `preframr-aug:design/melody_transfer_augmentation_design.md` (the prebake consumer of the render
   core).

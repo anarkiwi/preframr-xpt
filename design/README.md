@@ -35,7 +35,7 @@ direction.
 |---|---|---|
 | [`model_loss_queue.md`](model_loss_queue.md) | Back-pocket queue: router-entropy retest, cluster-conditional content head, targeted cross-composer contrastive, frame-level structured prediction, melody-transfer augmentation. Branching-decision tree for picking the next bet from audit evidence. | Reference |
 | [`per_voice_aux_supervision_design.md`](per_voice_aux_supervision_design.md) | Per-voice auxiliary classification heads on the body's hidden state. | Scoping |
-| [`melody_transfer_augmentation_design.md`](melody_transfer_augmentation_design.md) | Three offline corpus-expansion families: verified-inaudible macro perturbation (new), within-song voice permutation, cross-song melody/instrument transfer. | Melody-transfer prototype landed, Phase 0 pending |
+| `preframr-aug:design/melody_transfer_augmentation_design.md` | Three offline corpus-expansion families: verified-inaudible macro perturbation, within-song voice permutation, cross-song melody/instrument transfer. | Moved to preframr-aug (tooling under `preframr_aug/`; voice-permutation helper + spec stay here) |
 
 ## Pipeline coverage holes
 

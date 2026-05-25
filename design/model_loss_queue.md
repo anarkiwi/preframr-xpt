@@ -116,7 +116,7 @@ consistently shows "right notes wrong order".
 
 ### 5. Data-scale: melody-transfer augmentation Phase 0
 
-**Scope.** Land Phase 0 of `melody_transfer_augmentation_design.md`
+**Scope.** Land Phase 0 of `preframr-aug:design/melody_transfer_augmentation_design.md`
 on the existing prototype. Generates A⊗B augmented dumps and
 measures whether expanded corpus moves val_acc on a small A/B at
 mini.
