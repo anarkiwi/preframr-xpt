@@ -1,0 +1,109 @@
+{
+  "description": "Maps eval-B subset names (as used in resolve_data_layout subdir keys and metrics fan) to their composer / cluster metadata. Generated 2026-05-13 alongside the engine_fingerprint_evalb re-pin. See design/engine_fingerprint_evalb_design.md.",
+  "source_audit": "engine_evalb_candidates.json",
+  "source_clustering": "engine_families.json",
+  "primary_k": 7,
+  "top_n_per_rep": 16,
+  "duration_floor_s": 30.0,
+  "hvsc_version": "#2",
+  "skipped_clusters": [
+    {
+      "cluster": 5,
+      "reason": "members<3",
+      "members": [
+        "Electronic_Speech_Systems",
+        "SoundLogic"
+      ]
+    }
+  ],
+  "subsets": {
+    "eval_b_daglish": {
+      "list_file": "eval-B-daglish.list",
+      "composer_key": "Daglish_Ben",
+      "cluster_id": null,
+      "source": "legacy (pre-engine_fingerprint_evalb re-pin)",
+      "n_sids": 16,
+      "duration_floor_s": 30.0
+    },
+    "eval_b_follin": {
+      "list_file": "eval-B-follin.list",
+      "composer_key": "Follin_Tim",
+      "cluster_id": null,
+      "source": "legacy (pre-engine_fingerprint_evalb re-pin)",
+      "n_sids": 16,
+      "duration_floor_s": 30.0
+    },
+    "eval_b_crisps": {
+      "list_file": "eval-B-crisps.list",
+      "composer_key": "Crisps",
+      "composer_rel_dir": "MUSICIANS/C/Crisps",
+      "cluster_id": 1,
+      "dist_to_train_mean": 0.24008670612475294,
+      "n_eligible_audit": 50,
+      "n_above_floor": 81,
+      "source": "engine_fingerprint_evalb k=7, top_n=16",
+      "n_sids": 16,
+      "duration_floor_s": 30.0
+    },
+    "eval_b_mibri": {
+      "list_file": "eval-B-mibri.list",
+      "composer_key": "Mibri",
+      "composer_rel_dir": "MUSICIANS/M/Mibri",
+      "cluster_id": 2,
+      "dist_to_train_mean": 0.268502205267281,
+      "n_eligible_audit": 50,
+      "n_above_floor": 111,
+      "source": "engine_fingerprint_evalb k=7, top_n=16",
+      "n_sids": 16,
+      "duration_floor_s": 30.0
+    },
+    "eval_b_marquis": {
+      "list_file": "eval-B-marquis.list",
+      "composer_key": "Marquis_Dave",
+      "composer_rel_dir": "MUSICIANS/M/Marquis_Dave",
+      "cluster_id": 3,
+      "dist_to_train_mean": 0.4261422393578787,
+      "n_eligible_audit": 50,
+      "n_above_floor": 130,
+      "source": "engine_fingerprint_evalb k=7, top_n=16",
+      "n_sids": 16,
+      "duration_floor_s": 30.0
+    },
+    "eval_b_dobek": {
+      "list_file": "eval-B-dobek.list",
+      "composer_key": "Dobek_Eric",
+      "composer_rel_dir": "MUSICIANS/D/Dobek_Eric",
+      "cluster_id": 4,
+      "dist_to_train_mean": 0.3536080982653315,
+      "n_eligible_audit": 50,
+      "n_above_floor": 116,
+      "source": "engine_fingerprint_evalb k=7, top_n=16",
+      "n_sids": 16,
+      "duration_floor_s": 30.0
+    },
+    "eval_b_winterberg": {
+      "list_file": "eval-B-winterberg.list",
+      "composer_key": "Winterberg_Michael",
+      "composer_rel_dir": "MUSICIANS/W/Winterberg_Michael",
+      "cluster_id": 6,
+      "dist_to_train_mean": 0.3567541407895815,
+      "n_eligible_audit": 50,
+      "n_above_floor": 139,
+      "source": "engine_fingerprint_evalb k=7, top_n=16",
+      "n_sids": 16,
+      "duration_floor_s": 30.0
+    },
+    "eval_b_wilson": {
+      "list_file": "eval-B-wilson.list",
+      "composer_key": "Wilson_Mark",
+      "composer_rel_dir": "MUSICIANS/W/Wilson_Mark",
+      "cluster_id": 7,
+      "dist_to_train_mean": 0.27071515426179005,
+      "n_eligible_audit": 50,
+      "n_above_floor": 82,
+      "source": "engine_fingerprint_evalb k=7, top_n=16",
+      "n_sids": 16,
+      "duration_floor_s": 30.0
+    }
+  }
+}

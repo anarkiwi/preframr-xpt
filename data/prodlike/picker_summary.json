@@ -1,0 +1,152 @@
+{
+  "hvsc_root": "/scratch/preframr/training-dumps",
+  "duration_floor_s": 30.0,
+  "fingerprint_writes": 2000,
+  "train_top_n": 25,
+  "train_cap_per_composer": 200,
+  "eval_per_composer": 16,
+  "train": {
+    "total_dumps": 4437,
+    "by_composer": {
+      "Bayliss_Richard": {
+        "post_filter_dumps": 1726,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Blues_Muz": {
+        "post_filter_dumps": 1263,
+        "train": 200,
+        "eval_A": 16
+      },
+      "DRAX": {
+        "post_filter_dumps": 770,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Merman": {
+        "post_filter_dumps": 847,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Bond_Alan": {
+        "post_filter_dumps": 287,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Tel_Jeroen": {
+        "post_filter_dumps": 295,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Whittaker_David": {
+        "post_filter_dumps": 161,
+        "train": 145,
+        "eval_A": 16
+      },
+      "Electronic_Speech_Systems": {
+        "post_filter_dumps": 1,
+        "train": 0,
+        "eval_A": 1
+      },
+      "Hubbard_Rob": {
+        "post_filter_dumps": 173,
+        "train": 157,
+        "eval_A": 16
+      },
+      "Cross_Saul": {
+        "post_filter_dumps": 401,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Ass_It": {
+        "post_filter_dumps": 369,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Jammer": {
+        "post_filter_dumps": 336,
+        "train": 200,
+        "eval_A": 16
+      },
+      "JCH": {
+        "post_filter_dumps": 323,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Mermaid": {
+        "post_filter_dumps": 353,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Zyron": {
+        "post_filter_dumps": 407,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Galway_Martin": {
+        "post_filter_dumps": 100,
+        "train": 84,
+        "eval_A": 16
+      },
+      "Laxity": {
+        "post_filter_dumps": 305,
+        "train": 200,
+        "eval_A": 16
+      },
+      "SIDwave": {
+        "post_filter_dumps": 362,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Nagie_Sascha": {
+        "post_filter_dumps": 360,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Detert_Thomas": {
+        "post_filter_dumps": 258,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Nordischsound": {
+        "post_filter_dumps": 283,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Mitch_and_Dane": {
+        "post_filter_dumps": 336,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Leitch_Barry": {
+        "post_filter_dumps": 175,
+        "train": 159,
+        "eval_A": 16
+      },
+      "Waz": {
+        "post_filter_dumps": 255,
+        "train": 200,
+        "eval_A": 16
+      },
+      "Gilmore_Adam": {
+        "post_filter_dumps": 108,
+        "train": 92,
+        "eval_A": 16
+      }
+    }
+  },
+  "eval_A": {
+    "total_dumps": 385,
+    "per_composer": 16
+  },
+  "eval_B": {
+    "Daglish_Ben": {
+      "post_filter_dumps": 169,
+      "eval_B": 16
+    },
+    "Follin_Tim": {
+      "post_filter_dumps": 70,
+      "eval_B": 16
+    }
+  }
+}

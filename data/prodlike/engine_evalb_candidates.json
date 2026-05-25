@@ -1,0 +1,519 @@
+{
+  "families_json": "integration_tests/data/prodlike/engine_families.json",
+  "hvsc_root": "/scratch/preframr/hvsc",
+  "hvsc_version": "#2",
+  "primary_k": 7,
+  "top_n_per_rep": 16,
+  "duration_floor_s": 30.0,
+  "min_cluster_size": 3,
+  "n_representatives": 6,
+  "skipped_clusters": [
+    {
+      "cluster": 5,
+      "reason": "members<3",
+      "members": [
+        "Electronic_Speech_Systems",
+        "SoundLogic"
+      ]
+    }
+  ],
+  "representatives": [
+    {
+      "cluster": 1,
+      "composer": "Crisps",
+      "composer_rel_dir": "MUSICIANS/C/Crisps",
+      "dist_to_train_mean": 0.24008670612475294,
+      "n_eligible_audit": 50,
+      "n_durations_scanned": 106,
+      "n_above_floor": 81,
+      "top_n": [
+        {
+          "rel": "MUSICIANS/C/Crisps/Mineshaft_Gap.2.dump.parquet",
+          "duration_s": 30.0
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Ball_and_Chain.4.dump.parquet",
+          "duration_s": 30.6
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Corescape.7.dump.parquet",
+          "duration_s": 30.6
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Missile_Defence.6.dump.parquet",
+          "duration_s": 30.7
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Shallow_Domains.12.dump.parquet",
+          "duration_s": 31.3
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Shallow_Domains.10.dump.parquet",
+          "duration_s": 31.9
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Shallow_Domains.7.dump.parquet",
+          "duration_s": 32.0
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Minotrace.3.dump.parquet",
+          "duration_s": 35.0
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Zuma-Balls_Like_a_Frog.2.dump.parquet",
+          "duration_s": 35.8
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Shallow_Domains.9.dump.parquet",
+          "duration_s": 38.3
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Mineshaft_Gap.4.dump.parquet",
+          "duration_s": 42.1
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Mineshaft_Gap.5.dump.parquet",
+          "duration_s": 42.1
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Mineshaft_Gap.3.dump.parquet",
+          "duration_s": 42.1
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Shallow_Domains.11.dump.parquet",
+          "duration_s": 43.4
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Ball_and_Chain.3.dump.parquet",
+          "duration_s": 46.0
+        },
+        {
+          "rel": "MUSICIANS/C/Crisps/Soiled_Iron.4.dump.parquet",
+          "duration_s": 51.1
+        }
+      ]
+    },
+    {
+      "cluster": 2,
+      "composer": "Mibri",
+      "composer_rel_dir": "MUSICIANS/M/Mibri",
+      "dist_to_train_mean": 0.268502205267281,
+      "n_eligible_audit": 50,
+      "n_durations_scanned": 116,
+      "n_above_floor": 111,
+      "top_n": [
+        {
+          "rel": "MUSICIANS/M/Mibri/Tenebra_Macabre.3.dump.parquet",
+          "duration_s": 38.3
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Dark_X-mas.1.dump.parquet",
+          "duration_s": 42.3
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Positron_Cannon.1.dump.parquet",
+          "duration_s": 48.0
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Salvaged_Intro.1.dump.parquet",
+          "duration_s": 49.0
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Dumb_Terminal.1.dump.parquet",
+          "duration_s": 51.1
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Getting_in_the_Van.1.dump.parquet",
+          "duration_s": 53.3
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Survival_Cell.1.dump.parquet",
+          "duration_s": 55.1
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Lala_Prologue.4.dump.parquet",
+          "duration_s": 57.5
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Capitulation.1.dump.parquet",
+          "duration_s": 57.5
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Tuna_Guitar.1.dump.parquet",
+          "duration_s": 59.0
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Dragon_Turns_Heel.1.dump.parquet",
+          "duration_s": 60.0
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Saint_Goose.1.dump.parquet",
+          "duration_s": 62.2
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Tenebra_Macabre.4.dump.parquet",
+          "duration_s": 67.0
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Flint-Sharp.1.dump.parquet",
+          "duration_s": 69.0
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Lala_Prologue.2.dump.parquet",
+          "duration_s": 72.8
+        },
+        {
+          "rel": "MUSICIANS/M/Mibri/Halloween-Main_Title.1.dump.parquet",
+          "duration_s": 73.8
+        }
+      ]
+    },
+    {
+      "cluster": 3,
+      "composer": "Marquis_Dave",
+      "composer_rel_dir": "MUSICIANS/M/Marquis_Dave",
+      "dist_to_train_mean": 0.4261422393578787,
+      "n_eligible_audit": 50,
+      "n_durations_scanned": 130,
+      "n_above_floor": 130,
+      "top_n": [
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Mystery_19.1.dump.parquet",
+          "duration_s": 32.6
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Aria_Figaro.1.dump.parquet",
+          "duration_s": 38.5
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Wandering_Minstrel.1.dump.parquet",
+          "duration_s": 43.1
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Mystery_20.1.dump.parquet",
+          "duration_s": 45.6
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Oh_Susanna.1.dump.parquet",
+          "duration_s": 51.2
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Lover_and_His_Lass.1.dump.parquet",
+          "duration_s": 54.9
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Glockenspiel.1.dump.parquet",
+          "duration_s": 55.8
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/With_Cat-Like_Tread.1.dump.parquet",
+          "duration_s": 56.6
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Three_Little_Maids.1.dump.parquet",
+          "duration_s": 58.2
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/O_Sanctissima.1.dump.parquet",
+          "duration_s": 62.7
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Tick_Tock_Polka.1.dump.parquet",
+          "duration_s": 65.6
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Father_of_Victory_March.1.dump.parquet",
+          "duration_s": 67.9
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/When_I_was_a_Lad.1.dump.parquet",
+          "duration_s": 69.3
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Merry_Christmas.1.dump.parquet",
+          "duration_s": 70.9
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Aria_Pastorella.1.dump.parquet",
+          "duration_s": 71.0
+        },
+        {
+          "rel": "MUSICIANS/M/Marquis_Dave/Little_Buttercup.1.dump.parquet",
+          "duration_s": 75.2
+        }
+      ]
+    },
+    {
+      "cluster": 4,
+      "composer": "Dobek_Eric",
+      "composer_rel_dir": "MUSICIANS/D/Dobek_Eric",
+      "dist_to_train_mean": 0.3536080982653315,
+      "n_eligible_audit": 50,
+      "n_durations_scanned": 121,
+      "n_above_floor": 116,
+      "top_n": [
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Reverb_Insanity.1.dump.parquet",
+          "duration_s": 31.2
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Supermorf_2022.1.dump.parquet",
+          "duration_s": 31.9
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Donald_Ducks_Jungle_Gym.1.dump.parquet",
+          "duration_s": 31.9
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Routes_11-15.1.dump.parquet",
+          "duration_s": 34.5
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Professor_Oaks_Theme.1.dump.parquet",
+          "duration_s": 35.0
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Bridge_Zone.1.dump.parquet",
+          "duration_s": 35.7
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Nyan_Chill.1.dump.parquet",
+          "duration_s": 35.8
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Yie_Ar_Kung_Fu_MSX_NES.1.dump.parquet",
+          "duration_s": 37.3
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Screwing_Around_with_DDIII.1.dump.parquet",
+          "duration_s": 38.3
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Guldkorn_High_Score_Short.1.dump.parquet",
+          "duration_s": 38.7
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Snake_Man.1.dump.parquet",
+          "duration_s": 41.5
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Kruis_Woord_2022.1.dump.parquet",
+          "duration_s": 41.7
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Well_Just_You_Wait.1.dump.parquet",
+          "duration_s": 42.1
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Hot_Wheels_2022.1.dump.parquet",
+          "duration_s": 43.1
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Sonic_3-2_Player_Menu.1.dump.parquet",
+          "duration_s": 43.1
+        },
+        {
+          "rel": "MUSICIANS/D/Dobek_Eric/Cerulean_City.1.dump.parquet",
+          "duration_s": 43.4
+        }
+      ]
+    },
+    {
+      "cluster": 6,
+      "composer": "Winterberg_Michael",
+      "composer_rel_dir": "MUSICIANS/W/Winterberg_Michael",
+      "dist_to_train_mean": 0.3567541407895815,
+      "n_eligible_audit": 50,
+      "n_durations_scanned": 147,
+      "n_above_floor": 139,
+      "top_n": [
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Topcross.2.dump.parquet",
+          "duration_s": 31.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Speedy_Music_II.3.dump.parquet",
+          "duration_s": 37.7
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Super_Synth_Sample.3.dump.parquet",
+          "duration_s": 39.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Sound_Sample_V.5.dump.parquet",
+          "duration_s": 41.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/AFL_Intro.1.dump.parquet",
+          "duration_s": 44.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Super_Synth_Sample_II.2.dump.parquet",
+          "duration_s": 48.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Sound_Sample_III.1.dump.parquet",
+          "duration_s": 50.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Waltz.1.dump.parquet",
+          "duration_s": 50.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Sound_Sample_VII.1.dump.parquet",
+          "duration_s": 52.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Dance_Sample.1.dump.parquet",
+          "duration_s": 53.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Super_Synth_Sample.1.dump.parquet",
+          "duration_s": 53.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Super_Synth_Sample_II.1.dump.parquet",
+          "duration_s": 59.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Dance_Sample.2.dump.parquet",
+          "duration_s": 60.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Super_Synth_Sample_II.4.dump.parquet",
+          "duration_s": 62.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Sound_Sample_V.1.dump.parquet",
+          "duration_s": 63.0
+        },
+        {
+          "rel": "MUSICIANS/W/Winterberg_Michael/Sound_Sample_V.4.dump.parquet",
+          "duration_s": 63.0
+        }
+      ]
+    },
+    {
+      "cluster": 7,
+      "composer": "Wilson_Mark",
+      "composer_rel_dir": "MUSICIANS/W/Wilson_Mark",
+      "dist_to_train_mean": 0.27071515426179005,
+      "n_eligible_audit": 50,
+      "n_durations_scanned": 153,
+      "n_above_floor": 82,
+      "top_n": [
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Santas_Christmas_Capers.7.dump.parquet",
+          "duration_s": 31.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Deep_Star.3.dump.parquet",
+          "duration_s": 31.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Round_the_Bend.6.dump.parquet",
+          "duration_s": 31.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Cool_Croc_Twins.3.dump.parquet",
+          "duration_s": 31.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Arbitrator.2.dump.parquet",
+          "duration_s": 31.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Mark_Wilson_Demo_Disk_4_Menu.1.dump.parquet",
+          "duration_s": 31.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Shanghai_Warriors.1.dump.parquet",
+          "duration_s": 31.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Rendezvous.1.dump.parquet",
+          "duration_s": 39.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Device_for_Alien_Destruction.2.dump.parquet",
+          "duration_s": 39.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Obliterator_Remix.3.dump.parquet",
+          "duration_s": 46.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Deep_Star.2.dump.parquet",
+          "duration_s": 51.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Santas_Christmas_Capers.4.dump.parquet",
+          "duration_s": 54.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Hawkeye_Remix.1.dump.parquet",
+          "duration_s": 58.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Xenon_2_Megablast.1.dump.parquet",
+          "duration_s": 58.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Santas_Christmas_Capers.5.dump.parquet",
+          "duration_s": 62.0
+        },
+        {
+          "rel": "MUSICIANS/W/Wilson_Mark/Deep_Star.6.dump.parquet",
+          "duration_s": 62.0
+        }
+      ]
+    }
+  ],
+  "leak_audit_dryrun": {
+    "skipped": false,
+    "rc": 0,
+    "set_sizes": {
+      "train": 4437,
+      "eval-A": 381,
+      "candidate_c1": 16,
+      "candidate_c2": 16,
+      "candidate_c3": 16,
+      "candidate_c4": 16,
+      "candidate_c6": 16,
+      "candidate_c7": 16
+    },
+    "fingerprint_violations": [],
+    "ngram_warnings": [
+      {
+        "set": "eval-A",
+        "rel": "MUSICIANS/G/Galway_Martin/Green_Beret.12.dump.parquet",
+        "n_windows": 3279,
+        "n_overlap": 163,
+        "overlap_frac": 0.04971027752363526
+      },
+      {
+        "set": "eval-A",
+        "rel": "MUSICIANS/H/Hubbard_Rob/Delta_Mix-E-Load_loader.12.dump.parquet",
+        "n_windows": 46123,
+        "n_overlap": 1655,
+        "overlap_frac": 0.03588231468031134
+      },
+      {
+        "set": "eval-A",
+        "rel": "MUSICIANS/J/JCH/Training.1.dump.parquet",
+        "n_windows": 83589,
+        "n_overlap": 1340,
+        "overlap_frac": 0.01603081745205709
+      },
+      {
+        "set": "eval-A",
+        "rel": "MUSICIANS/T/Tel_Jeroen/Hawkeye_loader.2.dump.parquet",
+        "n_windows": 12704,
+        "n_overlap": 280,
+        "overlap_frac": 0.02204030226700252
+      }
+    ],
+    "ngram_aborts": [],
+    "summary_path": "integration_tests/data/prodlike/engine_evalb_candidates.leak_audit_dryrun.json"
+  }
+}

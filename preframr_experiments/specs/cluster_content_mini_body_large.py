@@ -29,7 +29,7 @@ _TRAIN_ARGS = mini_train_args(body="large").replace(
 _CLUSTER_INDEX_SRC = Path(
     os.environ.get(
         "PREFRAMR_CONTENT_CLUSTER_INDEX",
-        "/scratch/anarkiwi/preframr/integration_tests/data/content_clusters/prodlike_991929_structural_c256.json",
+        "/scratch/anarkiwi/preframr-xpt/data/content_clusters/prodlike_991929_structural_c256.json",
     )
 )
 

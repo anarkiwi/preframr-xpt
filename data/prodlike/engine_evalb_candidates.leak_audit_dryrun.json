@@ -1,0 +1,50 @@
+{
+  "hvsc_root": "/scratch/preframr/hvsc",
+  "set_sizes": {
+    "train": 4437,
+    "eval-A": 381,
+    "candidate_c1": 16,
+    "candidate_c2": 16,
+    "candidate_c3": 16,
+    "candidate_c4": 16,
+    "candidate_c6": 16,
+    "candidate_c7": 16
+  },
+  "fingerprint_violations": [],
+  "ngram": {
+    "window": 128,
+    "warn_threshold": 0.01,
+    "abort_threshold": 0.05,
+    "warnings": [
+      {
+        "set": "eval-A",
+        "rel": "MUSICIANS/G/Galway_Martin/Green_Beret.12.dump.parquet",
+        "n_windows": 3279,
+        "n_overlap": 163,
+        "overlap_frac": 0.04971027752363526
+      },
+      {
+        "set": "eval-A",
+        "rel": "MUSICIANS/H/Hubbard_Rob/Delta_Mix-E-Load_loader.12.dump.parquet",
+        "n_windows": 46123,
+        "n_overlap": 1655,
+        "overlap_frac": 0.03588231468031134
+      },
+      {
+        "set": "eval-A",
+        "rel": "MUSICIANS/J/JCH/Training.1.dump.parquet",
+        "n_windows": 83589,
+        "n_overlap": 1340,
+        "overlap_frac": 0.01603081745205709
+      },
+      {
+        "set": "eval-A",
+        "rel": "MUSICIANS/T/Tel_Jeroen/Hawkeye_loader.2.dump.parquet",
+        "n_windows": 12704,
+        "n_overlap": 280,
+        "overlap_frac": 0.02204030226700252
+      }
+    ],
+    "aborts": []
+  }
+}
