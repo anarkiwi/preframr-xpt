@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 import hashlib
 import json
 import logging
@@ -380,12 +381,33 @@ def _dataset_affecting_cargs(extra_cargs: str) -> list[str]:
     return out
 
 
+@functools.lru_cache(maxsize=None)
+def _image_tokens_version(image: str) -> str:
+    """preframr-tokens version baked into ``image`` (queried once per image). Folded into the dataset cache key so a tokenizer upgrade invalidates stale parse/tokenize artefacts instead of silently reusing them. The key is otherwise version-blind: pre-this-fix, a 0.17->0.18 bump kept the same key and served stale tokenization."""
+    out = subprocess.run(
+        [
+            "docker",
+            "run",
+            "--rm",
+            image,
+            "python3",
+            "-c",
+            "import importlib.metadata as m; print(m.version('preframr-tokens'))",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=120,
+    )
+    return out.stdout.strip()
+
+
 def _dataset_cache_key(
     spec: "ExperimentSpec",
     data_layout: dict[str, list[str]],
     extra_cargs: str = "",
 ) -> str:
-    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the spec's pipeline_spec + tier-pinned data + corpus-shape args + the parse/tokenize-affecting slice of the arm's extra_cargs don't change."""
+    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the spec's pipeline_spec + tier-pinned data + corpus-shape args + the parse/tokenize-affecting slice of the arm's extra_cargs + the image's preframr-tokens version don't change."""
     payload = {
         "pipeline_spec": spec.pipeline_spec,
         "seq_len": spec.seq_len,
@@ -396,6 +418,7 @@ def _dataset_cache_key(
         "tier": spec.tier,
         "data_layout": {k: sorted(v) for k, v in data_layout.items()},
         "dataset_cargs": _dataset_affecting_cargs(extra_cargs),
+        "tokens_version": _image_tokens_version(spec.image),
     }
     blob = json.dumps(payload, sort_keys=True, default=str).encode()
     return hashlib.sha256(blob).hexdigest()[:16]
