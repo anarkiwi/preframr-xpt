@@ -109,3 +109,11 @@ smokes 4 profile audits; 5 `tests/` import profile audits):
 - Drop `integration_tests/` from main `Dockerfile`/`Dockerfile.predict`/`run_tests.sh`.
 - `data/` tier metadata → xpt; `fixtures/` follow their tests.
 - Then rebake + smoke the runner+audit path end-to-end before relying on it.
+
+## Future pass: fixtures (no songs tracked in main)
+`integration_tests/fixtures/` (3) are SID songs — can't stay in the framework
+repo (don't track songs). Replace with a **helper that fetches + caches them
+locally (untracked) from the HVSC mirror** (`/scratch/preframr/hvsc`), using
+**Goto80** SIDs (NOT Commando). Tests resolve fixtures via the cache; the repo
+tracks only the helper + the SID id list, never the song data. Do alongside the
+profile/ post-arc move. Also moved this pass: AGENTS.md -> preframr-xpt.
