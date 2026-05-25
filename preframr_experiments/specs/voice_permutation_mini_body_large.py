@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -27,11 +26,8 @@ _TRAIN_ARGS = mini_train_args(body="large").replace(
     "--max-epochs 160", "--max-epochs 60"
 )
 
-_PREFRAMR_SRC_DIR = os.environ.get(
-    "PREFRAMR_SRC_DIR", "/scratch/anarkiwi/preframr/preframr"
-)
-_AUG_SCRIPT = Path(_PREFRAMR_SRC_DIR).parent / (
-    "integration_tests/profile/augment_voice_permutation.py"
+_AUG_SCRIPT = (
+    Path(__file__).resolve().parent.parent / "audit" / "augment_voice_permutation.py"
 )
 
 

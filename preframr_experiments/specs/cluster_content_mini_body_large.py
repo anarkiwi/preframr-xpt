@@ -40,7 +40,7 @@ def _copy_cluster_index(_arm, work_dir: Path) -> None:
         raise FileNotFoundError(
             f"cluster index not found at {_CLUSTER_INDEX_SRC}; "
             f"set PREFRAMR_CONTENT_CLUSTER_INDEX or build via "
-            f"profile/build_content_clusters.py"
+            f"preframr_experiments/audit/build_content_clusters.py"
         )
     dst = Path(work_dir) / "cluster_assignments.json"
     shutil.copy2(_CLUSTER_INDEX_SRC, dst)
