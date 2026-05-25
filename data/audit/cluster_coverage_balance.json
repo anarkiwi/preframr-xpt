@@ -1,0 +1,249 @@
+{
+  "tiers": {
+    "prodlike": {
+      "lists": {
+        "eval-A": {
+          "absent_clusters": [],
+          "histogram": {
+            "0": 37,
+            "1": 45,
+            "2": 47,
+            "3": 48,
+            "4": 31,
+            "5": 1,
+            "6": 62,
+            "7": 110
+          },
+          "n_sids": 381,
+          "present_clusters": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "share_pct": {
+            "0": 9.71,
+            "1": 11.81,
+            "2": 12.34,
+            "3": 12.6,
+            "4": 8.14,
+            "5": 0.26,
+            "6": 16.27,
+            "7": 28.87
+          }
+        },
+        "eval-B-crisps": {
+          "absent_clusters": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "histogram": {
+            "1": 16
+          },
+          "n_sids": 16,
+          "present_clusters": [
+            1
+          ],
+          "share_pct": {
+            "1": 100.0
+          }
+        },
+        "eval-B-daglish": {
+          "absent_clusters": [
+            0,
+            1,
+            2,
+            3,
+            5,
+            6,
+            7
+          ],
+          "histogram": {
+            "4": 16
+          },
+          "n_sids": 16,
+          "present_clusters": [
+            4
+          ],
+          "share_pct": {
+            "4": 100.0
+          }
+        },
+        "eval-B-dobek": {
+          "absent_clusters": [
+            0,
+            1,
+            2,
+            3,
+            5,
+            6,
+            7
+          ],
+          "histogram": {
+            "4": 16
+          },
+          "n_sids": 16,
+          "present_clusters": [
+            4
+          ],
+          "share_pct": {
+            "4": 100.0
+          }
+        },
+        "eval-B-follin": {
+          "absent_clusters": [
+            0,
+            1,
+            2,
+            3,
+            5,
+            6,
+            7
+          ],
+          "histogram": {
+            "4": 16
+          },
+          "n_sids": 16,
+          "present_clusters": [
+            4
+          ],
+          "share_pct": {
+            "4": 100.0
+          }
+        },
+        "eval-B-marquis": {
+          "absent_clusters": [
+            0,
+            1,
+            2,
+            4,
+            5,
+            6,
+            7
+          ],
+          "histogram": {
+            "3": 16
+          },
+          "n_sids": 16,
+          "present_clusters": [
+            3
+          ],
+          "share_pct": {
+            "3": 100.0
+          }
+        },
+        "eval-B-mibri": {
+          "absent_clusters": [
+            0,
+            1,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "histogram": {
+            "2": 16
+          },
+          "n_sids": 16,
+          "present_clusters": [
+            2
+          ],
+          "share_pct": {
+            "2": 100.0
+          }
+        },
+        "eval-B-wilson": {
+          "absent_clusters": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "histogram": {
+            "7": 16
+          },
+          "n_sids": 16,
+          "present_clusters": [
+            7
+          ],
+          "share_pct": {
+            "7": 100.0
+          }
+        },
+        "eval-B-winterberg": {
+          "absent_clusters": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "histogram": {
+            "6": 16
+          },
+          "n_sids": 16,
+          "present_clusters": [
+            6
+          ],
+          "share_pct": {
+            "6": 100.0
+          }
+        },
+        "train": {
+          "absent_clusters": [
+            5
+          ],
+          "histogram": {
+            "0": 433,
+            "1": 560,
+            "2": 600,
+            "3": 545,
+            "4": 400,
+            "6": 681,
+            "7": 1218
+          },
+          "n_sids": 4437,
+          "present_clusters": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            6,
+            7
+          ],
+          "share_pct": {
+            "0": 9.76,
+            "1": 12.62,
+            "2": 13.52,
+            "3": 12.28,
+            "4": 9.02,
+            "6": 15.35,
+            "7": 27.45
+          }
+        }
+      },
+      "tier": "prodlike"
+    }
+  },
+  "train_absent_clusters_per_tier": {
+    "prodlike": [
+      5
+    ]
+  }
+}

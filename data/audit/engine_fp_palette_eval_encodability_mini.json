@@ -1,0 +1,144 @@
+{
+  "canonical_artifact": "/integration_tests/data/mini/engine_fp_palettes.json",
+  "canonical_clusters": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+  ],
+  "canonical_n_programs_per_cluster": {
+    "1": 2488,
+    "2": 3040,
+    "3": 69,
+    "4": 4293,
+    "6": 1469,
+    "7": 6709
+  },
+  "overall": {
+    "encodability_rate": 0.0408,
+    "n_programs_in_canonical": 274,
+    "n_programs_total": 6718
+  },
+  "subsets": [
+    {
+      "cluster_histogram": {
+        "1": 5,
+        "2": 5,
+        "3": 5,
+        "4": 5,
+        "6": 5,
+        "7": 5
+      },
+      "encodability_rate": 0.0654,
+      "n_cross_cluster_collisions": 64,
+      "n_dumps": 30,
+      "n_dumps_with_programs": 30,
+      "n_failed_dumps": 0,
+      "n_programs_in_canonical": 217,
+      "n_programs_total": 3318,
+      "n_unknown_cluster_dumps": 0,
+      "subset": "eval-A"
+    },
+    {
+      "cluster_histogram": {
+        "1": 8
+      },
+      "encodability_rate": 0.0316,
+      "n_cross_cluster_collisions": 12,
+      "n_dumps": 8,
+      "n_dumps_with_programs": 8,
+      "n_failed_dumps": 0,
+      "n_programs_in_canonical": 9,
+      "n_programs_total": 285,
+      "n_unknown_cluster_dumps": 0,
+      "subset": "eval-B-crisps"
+    },
+    {
+      "cluster_histogram": {
+        "4": 8
+      },
+      "encodability_rate": 0.0167,
+      "n_cross_cluster_collisions": 41,
+      "n_dumps": 8,
+      "n_dumps_with_programs": 8,
+      "n_failed_dumps": 0,
+      "n_programs_in_canonical": 15,
+      "n_programs_total": 900,
+      "n_unknown_cluster_dumps": 0,
+      "subset": "eval-B-daglish"
+    },
+    {
+      "cluster_histogram": {
+        "4": 8
+      },
+      "encodability_rate": 0.0007,
+      "n_cross_cluster_collisions": 118,
+      "n_dumps": 8,
+      "n_dumps_with_programs": 8,
+      "n_failed_dumps": 0,
+      "n_programs_in_canonical": 1,
+      "n_programs_total": 1380,
+      "n_unknown_cluster_dumps": 0,
+      "subset": "eval-B-follin"
+    },
+    {
+      "cluster_histogram": {
+        "3": 8
+      },
+      "encodability_rate": 0.0,
+      "n_cross_cluster_collisions": 250,
+      "n_dumps": 8,
+      "n_dumps_with_programs": 8,
+      "n_failed_dumps": 0,
+      "n_programs_in_canonical": 0,
+      "n_programs_total": 269,
+      "n_unknown_cluster_dumps": 0,
+      "subset": "eval-B-marquis"
+    },
+    {
+      "cluster_histogram": {
+        "2": 8
+      },
+      "encodability_rate": 0.0719,
+      "n_cross_cluster_collisions": 4,
+      "n_dumps": 8,
+      "n_dumps_with_programs": 8,
+      "n_failed_dumps": 0,
+      "n_programs_in_canonical": 32,
+      "n_programs_total": 445,
+      "n_unknown_cluster_dumps": 0,
+      "subset": "eval-B-mibri"
+    },
+    {
+      "cluster_histogram": {
+        "7": 8
+      },
+      "encodability_rate": 0.0,
+      "n_cross_cluster_collisions": 0,
+      "n_dumps": 8,
+      "n_dumps_with_programs": 5,
+      "n_failed_dumps": 0,
+      "n_programs_in_canonical": 0,
+      "n_programs_total": 98,
+      "n_unknown_cluster_dumps": 0,
+      "subset": "eval-B-wilson"
+    },
+    {
+      "cluster_histogram": {
+        "6": 8
+      },
+      "encodability_rate": 0.0,
+      "n_cross_cluster_collisions": 0,
+      "n_dumps": 8,
+      "n_dumps_with_programs": 8,
+      "n_failed_dumps": 0,
+      "n_programs_in_canonical": 0,
+      "n_programs_total": 23,
+      "n_unknown_cluster_dumps": 0,
+      "subset": "eval-B-winterberg"
+    }
+  ],
+  "tier": "mini"
+}

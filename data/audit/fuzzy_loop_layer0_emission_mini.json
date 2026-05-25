@@ -1,0 +1,86 @@
+{
+  "by_cluster": [
+    {
+      "base_fuzzy_total": 0,
+      "base_transposed": 316,
+      "cluster": 1,
+      "delta_rows": -2805,
+      "delta_rows_pct": -1.081,
+      "n_dumps": 25,
+      "n_rows_base": 259576,
+      "n_rows_var": 256771,
+      "var_fuzzy_total": 378,
+      "var_transposed": 307
+    },
+    {
+      "base_fuzzy_total": 0,
+      "base_transposed": 476,
+      "cluster": 2,
+      "delta_rows": -23914,
+      "delta_rows_pct": -5.219,
+      "n_dumps": 25,
+      "n_rows_base": 458209,
+      "n_rows_var": 434295,
+      "var_fuzzy_total": 2520,
+      "var_transposed": 446
+    },
+    {
+      "base_fuzzy_total": 0,
+      "base_transposed": 315,
+      "cluster": 3,
+      "delta_rows": -22577,
+      "delta_rows_pct": -5.275,
+      "n_dumps": 25,
+      "n_rows_base": 427964,
+      "n_rows_var": 405387,
+      "var_fuzzy_total": 2513,
+      "var_transposed": 274
+    },
+    {
+      "base_fuzzy_total": 0,
+      "base_transposed": 166,
+      "cluster": 4,
+      "delta_rows": -15715,
+      "delta_rows_pct": -3.455,
+      "n_dumps": 21,
+      "n_rows_base": 454890,
+      "n_rows_var": 439175,
+      "var_fuzzy_total": 1220,
+      "var_transposed": 160
+    },
+    {
+      "base_fuzzy_total": 0,
+      "base_transposed": 226,
+      "cluster": 6,
+      "delta_rows": -5812,
+      "delta_rows_pct": -4.22,
+      "n_dumps": 19,
+      "n_rows_base": 137711,
+      "n_rows_var": 131899,
+      "var_fuzzy_total": 898,
+      "var_transposed": 210
+    },
+    {
+      "base_fuzzy_total": 0,
+      "base_transposed": 1127,
+      "cluster": 7,
+      "delta_rows": -18664,
+      "delta_rows_pct": -4.478,
+      "n_dumps": 23,
+      "n_rows_base": 416811,
+      "n_rows_var": 398147,
+      "var_fuzzy_total": 2618,
+      "var_transposed": 984
+    }
+  ],
+  "n_dumps_audited": 138,
+  "n_dumps_errored": 12,
+  "tier": "mini",
+  "totals": {
+    "delta_rows": -89487,
+    "delta_rows_pct": -4.152,
+    "n_rows_base": 2155161,
+    "n_rows_var": 2065674
+  },
+  "verdict": "GO -- net shrink -4.15% (encoder claim survives)"
+}

@@ -1,0 +1,15 @@
+{
+  "parquet_glob": "/tmp/probe_q_workdir/*.[0-9].parquet",
+  "n_files": 18,
+  "n_unknown_composer_files": 3,
+  "n_play_instrument_rows": 15405,
+  "n_distinct_tuples": 467,
+  "n_distinct_cluster_tuple_keys": 474,
+  "intra_engine_reuse_rate": 0.9705,
+  "cross_engine_collision_rate": 0.015,
+  "phase_a_threshold": 0.15,
+  "phase_b_threshold": 0.3,
+  "phase_a_verdict": "PASS",
+  "phase_b_verdict": "PASS",
+  "note": "Probe uses (reg, subreg, val) as the program tuple proxy. Real global_instr_ids would hash the full program byte payload; rates here are a structural estimate at Layer-0."
+}

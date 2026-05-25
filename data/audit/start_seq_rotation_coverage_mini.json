@@ -1,0 +1,28 @@
+{
+  "df_map_csv": "/scratch/tmp/preframr_experiments/results/fuzzy_loop_ab/fz_on/seed0/df-map.csv",
+  "n_files_total": 164,
+  "n_rotations_total": 328,
+  "per_predict_set": {
+    "train": {
+      "n_files": 124,
+      "n_rotations_total": 248,
+      "n_addressable_via_start_seq": 124,
+      "n_unreachable": 124,
+      "coverage_fraction": 0.5,
+      "rotations_histogram": {
+        "2": 124
+      }
+    },
+    "val": {
+      "n_files": 40,
+      "n_rotations_total": 80,
+      "n_addressable_via_start_seq": 40,
+      "n_unreachable": 40,
+      "coverage_fraction": 0.5,
+      "rotations_histogram": {
+        "2": 40
+      }
+    }
+  },
+  "note": "Current predict_load hard-codes .0.blocks.npy regardless of n_rotations. n_unreachable rotations are addressable via the fix in design/start_seq_rotation_audit_design.md (Option A: flat indexing across (file, rotation) pairs)."
+}

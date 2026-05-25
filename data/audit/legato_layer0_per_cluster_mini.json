@@ -1,0 +1,91 @@
+{
+  "clusters": [
+    {
+      "baseline_distinct_bytes": 7,
+      "cluster": 1,
+      "entropy_delta_bits": 0.0198,
+      "fire_rate": 0.166,
+      "fires": 14651,
+      "h_baseline_byte_bits": 1.3123,
+      "h_legato_nibble_bits": 1.2925,
+      "legato_distinct_nibbles": 6,
+      "n_ctrl_writes": 88270,
+      "n_dumps": 25,
+      "verdict": "PARTIAL"
+    },
+    {
+      "baseline_distinct_bytes": 22,
+      "cluster": 2,
+      "entropy_delta_bits": 1.0722,
+      "fire_rate": 0.1639,
+      "fires": 29748,
+      "h_baseline_byte_bits": 3.4938,
+      "h_legato_nibble_bits": 2.4216,
+      "legato_distinct_nibbles": 7,
+      "n_ctrl_writes": 181481,
+      "n_dumps": 25,
+      "verdict": "PASS"
+    },
+    {
+      "baseline_distinct_bytes": 9,
+      "cluster": 3,
+      "entropy_delta_bits": 0.7849,
+      "fire_rate": 0.2868,
+      "fires": 23029,
+      "h_baseline_byte_bits": 2.2357,
+      "h_legato_nibble_bits": 1.4509,
+      "legato_distinct_nibbles": 3,
+      "n_ctrl_writes": 80293,
+      "n_dumps": 25,
+      "verdict": "PASS"
+    },
+    {
+      "baseline_distinct_bytes": 16,
+      "cluster": 4,
+      "entropy_delta_bits": 0.6021,
+      "fire_rate": 0.2163,
+      "fires": 36709,
+      "h_baseline_byte_bits": 2.8789,
+      "h_legato_nibble_bits": 2.2768,
+      "legato_distinct_nibbles": 7,
+      "n_ctrl_writes": 169702,
+      "n_dumps": 25,
+      "verdict": "PASS"
+    },
+    {
+      "baseline_distinct_bytes": 0,
+      "cluster": 6,
+      "entropy_delta_bits": 0.0,
+      "fire_rate": 0.0,
+      "fires": 0,
+      "h_baseline_byte_bits": 0.0,
+      "h_legato_nibble_bits": 0.0,
+      "legato_distinct_nibbles": 0,
+      "n_ctrl_writes": 73748,
+      "n_dumps": 25,
+      "verdict": "REFUTE"
+    },
+    {
+      "baseline_distinct_bytes": 13,
+      "cluster": 7,
+      "entropy_delta_bits": 1.1089,
+      "fire_rate": 0.2341,
+      "fires": 35613,
+      "h_baseline_byte_bits": 2.2847,
+      "h_legato_nibble_bits": 1.1758,
+      "legato_distinct_nibbles": 4,
+      "n_ctrl_writes": 152147,
+      "n_dumps": 25,
+      "verdict": "PASS"
+    }
+  ],
+  "n_clusters": 6,
+  "n_dumps": 150,
+  "overall_verdict": "PASS \u2014 at least one cluster passes; advance to per-cluster A/B design",
+  "summary": {
+    "partial": 1,
+    "pass": 4,
+    "refute": 1
+  },
+  "tier": "mini"
+}

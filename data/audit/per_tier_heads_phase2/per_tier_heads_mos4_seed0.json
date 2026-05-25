@@ -1,0 +1,7389 @@
+{
+  "ckpt": "/ckpt",
+  "subsets": {
+    "eval": {
+      "per_class": {
+        "2": {
+          "n": 2313,
+          "hits": 1440,
+          "acc": 0.622568093385214,
+          "tier": "structural"
+        },
+        "5": {
+          "n": 3179,
+          "hits": 1891,
+          "acc": 0.5948411450141554,
+          "tier": "structural"
+        },
+        "6": {
+          "n": 1573,
+          "hits": 726,
+          "acc": 0.46153846153846156,
+          "tier": "structural"
+        },
+        "8": {
+          "n": 980,
+          "hits": 66,
+          "acc": 0.0673469387755102,
+          "tier": "structural"
+        },
+        "9": {
+          "n": 1233,
+          "hits": 629,
+          "acc": 0.5101378751013788,
+          "tier": "structural"
+        },
+        "13": {
+          "n": 2579,
+          "hits": 1138,
+          "acc": 0.44125630089181855,
+          "tier": "structural"
+        },
+        "17": {
+          "n": 937,
+          "hits": 181,
+          "acc": 0.19316969050160085,
+          "tier": "mid"
+        },
+        "22": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "24": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "26": {
+          "n": 3080,
+          "hits": 1085,
+          "acc": 0.3522727272727273,
+          "tier": "structural"
+        },
+        "27": {
+          "n": 779,
+          "hits": 300,
+          "acc": 0.3851091142490372,
+          "tier": "mid"
+        },
+        "44": {
+          "n": 160,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "45": {
+          "n": 243,
+          "hits": 16,
+          "acc": 0.06584362139917696,
+          "tier": "content"
+        },
+        "53": {
+          "n": 103,
+          "hits": 1,
+          "acc": 0.009708737864077669,
+          "tier": "content"
+        },
+        "56": {
+          "n": 107,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "58": {
+          "n": 184,
+          "hits": 7,
+          "acc": 0.03804347826086957,
+          "tier": "content"
+        },
+        "61": {
+          "n": 98,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "62": {
+          "n": 274,
+          "hits": 18,
+          "acc": 0.06569343065693431,
+          "tier": "content"
+        },
+        "64": {
+          "n": 180,
+          "hits": 3,
+          "acc": 0.016666666666666666,
+          "tier": "content"
+        },
+        "70": {
+          "n": 278,
+          "hits": 87,
+          "acc": 0.3129496402877698,
+          "tier": "content"
+        },
+        "71": {
+          "n": 168,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "72": {
+          "n": 198,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "74": {
+          "n": 47,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "77": {
+          "n": 129,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "78": {
+          "n": 294,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "79": {
+          "n": 60,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "80": {
+          "n": 123,
+          "hits": 3,
+          "acc": 0.024390243902439025,
+          "tier": "content"
+        },
+        "84": {
+          "n": 54,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "86": {
+          "n": 196,
+          "hits": 8,
+          "acc": 0.04081632653061224,
+          "tier": "content"
+        },
+        "87": {
+          "n": 191,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "88": {
+          "n": 215,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "89": {
+          "n": 192,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "91": {
+          "n": 125,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "92": {
+          "n": 82,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "93": {
+          "n": 214,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "94": {
+          "n": 33,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "95": {
+          "n": 125,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "96": {
+          "n": 134,
+          "hits": 5,
+          "acc": 0.03731343283582089,
+          "tier": "content"
+        },
+        "97": {
+          "n": 43,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "98": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "99": {
+          "n": 72,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "100": {
+          "n": 48,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "101": {
+          "n": 31,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "102": {
+          "n": 87,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "105": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "107": {
+          "n": 315,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "108": {
+          "n": 52,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "109": {
+          "n": 211,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "113": {
+          "n": 62,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "114": {
+          "n": 139,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "115": {
+          "n": 406,
+          "hits": 27,
+          "acc": 0.0665024630541872,
+          "tier": "mid"
+        },
+        "116": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "118": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "120": {
+          "n": 77,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "122": {
+          "n": 130,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "124": {
+          "n": 75,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "125": {
+          "n": 288,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "127": {
+          "n": 192,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "134": {
+          "n": 48,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "135": {
+          "n": 67,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "136": {
+          "n": 56,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "137": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "143": {
+          "n": 35,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "146": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "148": {
+          "n": 64,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "149": {
+          "n": 53,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "153": {
+          "n": 71,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "154": {
+          "n": 118,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "157": {
+          "n": 172,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "159": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "161": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "164": {
+          "n": 85,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "167": {
+          "n": 117,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "168": {
+          "n": 72,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "170": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "171": {
+          "n": 56,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "172": {
+          "n": 93,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "174": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "179": {
+          "n": 71,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "184": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "186": {
+          "n": 117,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "189": {
+          "n": 31,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "191": {
+          "n": 51,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "194": {
+          "n": 30,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "199": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "200": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "203": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "204": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "208": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "211": {
+          "n": 181,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "213": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "216": {
+          "n": 85,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "219": {
+          "n": 44,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "230": {
+          "n": 135,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "235": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "237": {
+          "n": 135,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "240": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "243": {
+          "n": 52,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "247": {
+          "n": 115,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "254": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "255": {
+          "n": 63,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "262": {
+          "n": 1610,
+          "hits": 52,
+          "acc": 0.03229813664596273,
+          "tier": "mid"
+        },
+        "269": {
+          "n": 431,
+          "hits": 76,
+          "acc": 0.17633410672853828,
+          "tier": "content"
+        },
+        "270": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "271": {
+          "n": 82,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "274": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "276": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "278": {
+          "n": 181,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "281": {
+          "n": 57,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "282": {
+          "n": 70,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "283": {
+          "n": 66,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "284": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "288": {
+          "n": 97,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "289": {
+          "n": 30,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "290": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "291": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "293": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "295": {
+          "n": 138,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "296": {
+          "n": 34,
+          "hits": 4,
+          "acc": 0.11764705882352941,
+          "tier": "content"
+        },
+        "297": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "298": {
+          "n": 159,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "300": {
+          "n": 174,
+          "hits": 5,
+          "acc": 0.028735632183908046,
+          "tier": "mid"
+        },
+        "301": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "303": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "306": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "307": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "308": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "309": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "311": {
+          "n": 142,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "313": {
+          "n": 110,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "320": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "324": {
+          "n": 714,
+          "hits": 25,
+          "acc": 0.0350140056022409,
+          "tier": "mid"
+        },
+        "325": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "327": {
+          "n": 49,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "328": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "331": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "336": {
+          "n": 304,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "337": {
+          "n": 68,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "338": {
+          "n": 32,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "341": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "344": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "347": {
+          "n": 56,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "354": {
+          "n": 78,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "359": {
+          "n": 77,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "361": {
+          "n": 45,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "365": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "367": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "368": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "377": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "378": {
+          "n": 230,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "379": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "381": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "384": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "388": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "392": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "393": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "394": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "401": {
+          "n": 29,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "403": {
+          "n": 84,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "404": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "412": {
+          "n": 49,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "413": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "416": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "418": {
+          "n": 98,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "420": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "422": {
+          "n": 72,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "425": {
+          "n": 76,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "427": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "432": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "438": {
+          "n": 180,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "439": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "441": {
+          "n": 167,
+          "hits": 32,
+          "acc": 0.19161676646706588,
+          "tier": "content"
+        },
+        "448": {
+          "n": 65,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "449": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "451": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "452": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "453": {
+          "n": 41,
+          "hits": 6,
+          "acc": 0.14634146341463414,
+          "tier": "content"
+        },
+        "457": {
+          "n": 1112,
+          "hits": 475,
+          "acc": 0.427158273381295,
+          "tier": "mid"
+        },
+        "458": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "459": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "460": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "474": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "477": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "480": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "482": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "486": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "490": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "495": {
+          "n": 132,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "497": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "498": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "500": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "504": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "508": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "511": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "512": {
+          "n": 116,
+          "hits": 2,
+          "acc": 0.017241379310344827,
+          "tier": "content"
+        },
+        "513": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "514": {
+          "n": 264,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "515": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "524": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "528": {
+          "n": 200,
+          "hits": 1,
+          "acc": 0.005,
+          "tier": "content"
+        },
+        "529": {
+          "n": 66,
+          "hits": 6,
+          "acc": 0.09090909090909091,
+          "tier": "content"
+        },
+        "534": {
+          "n": 105,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "538": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "546": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "548": {
+          "n": 122,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "550": {
+          "n": 118,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "552": {
+          "n": 53,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "558": {
+          "n": 82,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "561": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "565": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "569": {
+          "n": 81,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "572": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "579": {
+          "n": 77,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "580": {
+          "n": 52,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "589": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "592": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "602": {
+          "n": 118,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "603": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "609": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "613": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "614": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "615": {
+          "n": 44,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "616": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "625": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "630": {
+          "n": 331,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "631": {
+          "n": 219,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "633": {
+          "n": 132,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "640": {
+          "n": 103,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "645": {
+          "n": 51,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "648": {
+          "n": 90,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "649": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "652": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "657": {
+          "n": 73,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "659": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "666": {
+          "n": 68,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "671": {
+          "n": 104,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "674": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "680": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "681": {
+          "n": 73,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "683": {
+          "n": 83,
+          "hits": 17,
+          "acc": 0.20481927710843373,
+          "tier": "content"
+        },
+        "691": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "695": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "697": {
+          "n": 234,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "699": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "703": {
+          "n": 104,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "704": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "706": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "708": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "711": {
+          "n": 101,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "714": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "719": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "720": {
+          "n": 140,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "728": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "732": {
+          "n": 244,
+          "hits": 1,
+          "acc": 0.004098360655737705,
+          "tier": "mid"
+        },
+        "733": {
+          "n": 41,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "734": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "740": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "744": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "745": {
+          "n": 48,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "747": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "748": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "763": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "764": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "772": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "775": {
+          "n": 49,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "781": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "782": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "788": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "789": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "795": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "802": {
+          "n": 132,
+          "hits": 20,
+          "acc": 0.15151515151515152,
+          "tier": "content"
+        },
+        "804": {
+          "n": 52,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "805": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "810": {
+          "n": 170,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "812": {
+          "n": 73,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "823": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "826": {
+          "n": 72,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "828": {
+          "n": 43,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "830": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "833": {
+          "n": 301,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "845": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "853": {
+          "n": 53,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "861": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "864": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "866": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "867": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "876": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "886": {
+          "n": 246,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "887": {
+          "n": 297,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "895": {
+          "n": 48,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "899": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "900": {
+          "n": 43,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "917": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "918": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "936": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "937": {
+          "n": 111,
+          "hits": 5,
+          "acc": 0.04504504504504504,
+          "tier": "content"
+        },
+        "950": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "952": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "958": {
+          "n": 359,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "964": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "965": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "974": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "982": {
+          "n": 207,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "986": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "994": {
+          "n": 56,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "996": {
+          "n": 29,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1005": {
+          "n": 44,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1014": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1016": {
+          "n": 57,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1024": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1034": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1041": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1046": {
+          "n": 215,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "1052": {
+          "n": 30,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1060": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1066": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1068": {
+          "n": 51,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "1073": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1074": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1075": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1084": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1085": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1092": {
+          "n": 45,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1095": {
+          "n": 31,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1101": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1112": {
+          "n": 58,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1119": {
+          "n": 55,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1130": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1135": {
+          "n": 54,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "1141": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1152": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1153": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1156": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1165": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1168": {
+          "n": 85,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1173": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "1180": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1181": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1192": {
+          "n": 58,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "1200": {
+          "n": 267,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "1202": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1218": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1220": {
+          "n": 39,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1221": {
+          "n": 52,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1231": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1233": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1234": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1236": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1238": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1240": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1244": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1245": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1247": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1249": {
+          "n": 118,
+          "hits": 1,
+          "acc": 0.00847457627118644,
+          "tier": "mid"
+        },
+        "1263": {
+          "n": 353,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1265": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1267": {
+          "n": 214,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1269": {
+          "n": 311,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1270": {
+          "n": 61,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1271": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1280": {
+          "n": 87,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1313": {
+          "n": 177,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1315": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1323": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1332": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1343": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1344": {
+          "n": 103,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1355": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1358": {
+          "n": 186,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1364": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1365": {
+          "n": 80,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1367": {
+          "n": 287,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1390": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1391": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1404": {
+          "n": 90,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1408": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1428": {
+          "n": 85,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1434": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1452": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1454": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1455": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1463": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1469": {
+          "n": 81,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1480": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1481": {
+          "n": 121,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1484": {
+          "n": 202,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1512": {
+          "n": 121,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1517": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1531": {
+          "n": 132,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1533": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1535": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1536": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1541": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1543": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1549": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1559": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1561": {
+          "n": 382,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1564": {
+          "n": 179,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1572": {
+          "n": 72,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "1579": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1588": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1592": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1595": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1606": {
+          "n": 94,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1609": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1610": {
+          "n": 80,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1611": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1630": {
+          "n": 224,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1637": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "1646": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1649": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1657": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1662": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1675": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1688": {
+          "n": 51,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1700": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1713": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1728": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1730": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1779": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1780": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1789": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1802": {
+          "n": 76,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1807": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1810": {
+          "n": 62,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1817": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1818": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1828": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "1843": {
+          "n": 35,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1869": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1874": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1884": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "1903": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "1920": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1922": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1924": {
+          "n": 152,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1926": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "1932": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "1933": {
+          "n": 75,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1936": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "1943": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1950": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1955": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1959": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1990": {
+          "n": 31,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "1999": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2014": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2015": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2033": {
+          "n": 60,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2049": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2051": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2058": {
+          "n": 47,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2059": {
+          "n": 135,
+          "hits": 1,
+          "acc": 0.007407407407407408,
+          "tier": "content"
+        },
+        "2063": {
+          "n": 138,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2075": {
+          "n": 150,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2082": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "2090": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2096": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "2135": {
+          "n": 33,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2155": {
+          "n": 364,
+          "hits": 2,
+          "acc": 0.005494505494505495,
+          "tier": "content"
+        },
+        "2165": {
+          "n": 46,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "2184": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2213": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2246": {
+          "n": 130,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2271": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2285": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2288": {
+          "n": 70,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2305": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2331": {
+          "n": 80,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2332": {
+          "n": 129,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2333": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2342": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2343": {
+          "n": 39,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2379": {
+          "n": 42,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2394": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2400": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2403": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2431": {
+          "n": 44,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "2433": {
+          "n": 111,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2438": {
+          "n": 42,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2447": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2452": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "2454": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2455": {
+          "n": 35,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "2458": {
+          "n": 106,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2459": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2485": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2488": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2500": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "2521": {
+          "n": 519,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2528": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2531": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2555": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2566": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2569": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2577": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2604": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2626": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2634": {
+          "n": 80,
+          "hits": 2,
+          "acc": 0.025,
+          "tier": "content"
+        },
+        "2636": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2661": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "2696": {
+          "n": 49,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2703": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2712": {
+          "n": 115,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2718": {
+          "n": 55,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "2737": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "2738": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2772": {
+          "n": 70,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2778": {
+          "n": 308,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2798": {
+          "n": 103,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2818": {
+          "n": 44,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2820": {
+          "n": 80,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "2822": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "2848": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2852": {
+          "n": 43,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2858": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "2860": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2865": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2905": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2911": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "2935": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2962": {
+          "n": 168,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2965": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2971": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2975": {
+          "n": 69,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2976": {
+          "n": 62,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2977": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2979": {
+          "n": 98,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2983": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2989": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2993": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "2997": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "3023": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3039": {
+          "n": 29,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "3044": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3055": {
+          "n": 471,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3056": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3067": {
+          "n": 92,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3086": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3113": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3116": {
+          "n": 58,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3123": {
+          "n": 69,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3142": {
+          "n": 88,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3143": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3153": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3154": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3165": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3166": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3196": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3212": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3217": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3220": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "3222": {
+          "n": 42,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3228": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3272": {
+          "n": 98,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3283": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3284": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3287": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3304": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3315": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3316": {
+          "n": 31,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3347": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "3349": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3363": {
+          "n": 218,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3377": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3380": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3387": {
+          "n": 80,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3402": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3459": {
+          "n": 81,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3471": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3478": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3486": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3487": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3489": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3496": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3538": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3543": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3560": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3571": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3580": {
+          "n": 35,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3582": {
+          "n": 31,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3597": {
+          "n": 42,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3634": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3656": {
+          "n": 53,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3666": {
+          "n": 118,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "3670": {
+          "n": 71,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "3678": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3687": {
+          "n": 46,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "3744": {
+          "n": 65,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "3747": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3749": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3764": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3770": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3779": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3781": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3788": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3813": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3841": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "3848": {
+          "n": 126,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3869": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3875": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3878": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3880": {
+          "n": 62,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3883": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3956": {
+          "n": 131,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3962": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3967": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "3987": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "4037": {
+          "n": 30,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "4039": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4049": {
+          "n": 63,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4057": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4095": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4096": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "4155": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4167": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4176": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4182": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4211": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4219": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4237": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4246": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4275": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4281": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4282": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4291": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4317": {
+          "n": 79,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4336": {
+          "n": 52,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4346": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "4351": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4396": {
+          "n": 55,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "4433": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4453": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4460": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4462": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4470": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4473": {
+          "n": 53,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "4476": {
+          "n": 53,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4480": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4483": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "4484": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "4515": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4519": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4533": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4601": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4616": {
+          "n": 39,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4621": {
+          "n": 221,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "4684": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4689": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4731": {
+          "n": 75,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4732": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4736": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4756": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4769": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4784": {
+          "n": 33,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4785": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4795": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "4807": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4835": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4850": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "4920": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "4981": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4982": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4994": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "4998": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5016": {
+          "n": 67,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "5046": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "5057": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5094": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5097": {
+          "n": 46,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5114": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5115": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5125": {
+          "n": 42,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5135": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5159": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5198": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "5206": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5214": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5239": {
+          "n": 54,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5283": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5290": {
+          "n": 32,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5301": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5330": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5333": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5352": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5353": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5360": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5366": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5371": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5385": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5394": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5411": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5485": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5507": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5514": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5547": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "5548": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5550": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5595": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "5603": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5614": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "5621": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5627": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5637": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5694": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5704": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5707": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5714": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5719": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5739": {
+          "n": 139,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "5770": {
+          "n": 83,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5786": {
+          "n": 76,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5846": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "5851": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "5854": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5857": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5862": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5880": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "5915": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5957": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5959": {
+          "n": 125,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5992": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "5993": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6009": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6011": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6036": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6050": {
+          "n": 58,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6081": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6137": {
+          "n": 35,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6155": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "6164": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "6166": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6168": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6175": {
+          "n": 30,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "6179": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "6190": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6203": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "6223": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6251": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6263": {
+          "n": 29,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6274": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6285": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6295": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6301": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6311": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6343": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6366": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "6398": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6414": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "6442": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6498": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6504": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6517": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6525": {
+          "n": 31,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6537": {
+          "n": 73,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6557": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6579": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6585": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "6588": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6595": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6626": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6645": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6646": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6648": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6681": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6690": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6715": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6733": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6741": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6769": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6777": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6778": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6788": {
+          "n": 57,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "6789": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6840": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6856": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "6858": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "6869": {
+          "n": 67,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6893": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6896": {
+          "n": 106,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6901": {
+          "n": 34,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "6918": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6931": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6935": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6938": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6952": {
+          "n": 48,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6962": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "6977": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7058": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7074": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7096": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7101": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7108": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7117": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7145": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "7192": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "7214": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7225": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7232": {
+          "n": 46,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7241": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7246": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7267": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7297": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7438": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7448": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7464": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7472": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7477": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7511": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7536": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7543": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7623": {
+          "n": 68,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7752": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7784": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7788": {
+          "n": 42,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7801": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "7817": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "7818": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7822": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7876": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7892": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7895": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7962": {
+          "n": 146,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "7982": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8042": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8052": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "8060": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8087": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8115": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8125": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8127": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8236": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8251": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8281": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "8303": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "8309": {
+          "n": 73,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8365": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "8390": {
+          "n": 104,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8430": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8433": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8454": {
+          "n": 89,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8511": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8519": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "8553": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "8580": {
+          "n": 44,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8668": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8760": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8780": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8852": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8858": {
+          "n": 439,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "8880": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8887": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8898": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8934": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8955": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8986": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "8989": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9006": {
+          "n": 253,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "9007": {
+          "n": 53,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9052": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "9063": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "9196": {
+          "n": 37,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9224": {
+          "n": 75,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9283": {
+          "n": 78,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9313": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9321": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9342": {
+          "n": 51,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9356": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9368": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9378": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9394": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9428": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9452": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9505": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9507": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9530": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9535": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9548": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9562": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "9584": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9593": {
+          "n": 48,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9601": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "9605": {
+          "n": 30,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9606": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "9619": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9796": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "9883": {
+          "n": 222,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9914": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9954": {
+          "n": 58,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9960": {
+          "n": 91,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9971": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "9984": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "10032": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10085": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "10118": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "10120": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "10128": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10149": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "10160": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "10194": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10205": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10236": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10239": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10250": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10273": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10284": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "10290": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10319": {
+          "n": 31,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "10372": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10378": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10381": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10392": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10414": {
+          "n": 35,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10449": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10475": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10603": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10624": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "10650": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10653": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10687": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10691": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10761": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10788": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10806": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "10847": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10872": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10878": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10915": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10928": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10931": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10938": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10972": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "10999": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11006": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11028": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11058": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "11073": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11123": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11163": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11235": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "11257": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11302": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11332": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11400": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11408": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11507": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11537": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "11555": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11663": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11738": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11751": {
+          "n": 26,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11754": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "11772": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11778": {
+          "n": 72,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11801": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "11823": {
+          "n": 148,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11942": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "11979": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12032": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12033": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12070": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12114": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12131": {
+          "n": 25,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12145": {
+          "n": 35,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12150": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12251": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12301": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12376": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12411": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12460": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12506": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "12521": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12575": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "12599": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12601": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12609": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12744": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12746": {
+          "n": 72,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "12770": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12798": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12807": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12814": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12848": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "12902": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12916": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12947": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12951": {
+          "n": 48,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "12996": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13039": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13097": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13106": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13161": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13191": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13215": {
+          "n": 22,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13277": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13280": {
+          "n": 80,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13298": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "13382": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13552": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13634": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13650": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13671": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13780": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13818": {
+          "n": 43,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "13896": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13971": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "13986": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "14005": {
+          "n": 20,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14042": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14058": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "14135": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14181": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14182": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14201": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14210": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14231": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14250": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14284": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "14305": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14319": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14332": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "14360": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14363": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14376": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14390": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14470": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14478": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14485": {
+          "n": 82,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14496": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14517": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14519": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14523": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "14755": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14946": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "14976": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "15038": {
+          "n": 72,
+          "hits": 1,
+          "acc": 0.013888888888888888,
+          "tier": "content"
+        },
+        "15120": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "15133": {
+          "n": 44,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15137": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15177": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15262": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15263": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15317": {
+          "n": 77,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "15491": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "15504": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15535": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15572": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15590": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15616": {
+          "n": 38,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15630": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15638": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15665": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15785": {
+          "n": 264,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15839": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15909": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15911": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "15915": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15918": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15922": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15927": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15932": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15948": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "15982": {
+          "n": 12,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "15998": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16013": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16065": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16242": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16284": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16476": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16515": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16533": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16560": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "16598": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16674": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "16707": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16854": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16863": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "16989": {
+          "n": 32,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17008": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17075": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17127": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17226": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "17228": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17277": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17282": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17297": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17367": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17389": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17396": {
+          "n": 41,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17440": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17452": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17487": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17578": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17685": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17748": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "17781": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18189": {
+          "n": 28,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18217": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18327": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18351": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18391": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18553": {
+          "n": 24,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18673": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18770": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18776": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18820": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18901": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18951": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "18985": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "19007": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19045": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19083": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19106": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19116": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19117": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19154": {
+          "n": 64,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19176": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19216": {
+          "n": 15,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19252": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19378": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19414": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19425": {
+          "n": 30,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19428": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19653": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19680": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19708": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "19762": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "zero"
+        },
+        "20097": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20199": {
+          "n": 10,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20275": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20300": {
+          "n": 66,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20314": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20412": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "20420": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20574": {
+          "n": 39,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20598": {
+          "n": 43,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20781": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20831": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "20882": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20906": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20937": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "20962": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "20993": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21022": {
+          "n": 23,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21033": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21162": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21206": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21298": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21321": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "21522": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21556": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21671": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21713": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21718": {
+          "n": 40,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "21788": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21813": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21925": {
+          "n": 106,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21946": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "21969": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "22035": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "22402": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "22413": {
+          "n": 11,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "22519": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "22634": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "22661": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "22695": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "22713": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "22957": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23013": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23211": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23314": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23328": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23376": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23382": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23408": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23486": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23724": {
+          "n": 7,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23776": {
+          "n": 27,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "23831": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "24072": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "24163": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "24188": {
+          "n": 21,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "24352": {
+          "n": 16,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "25110": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "25321": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "25436": {
+          "n": 4,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "25505": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "25733": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "25794": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "25932": {
+          "n": 9,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "25940": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "26457": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "26483": {
+          "n": 36,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "26620": {
+          "n": 13,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "26698": {
+          "n": 19,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "26804": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "27030": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "27895": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "28071": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "28317": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "28365": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "28702": {
+          "n": 5,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "28719": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "28890": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "29767": {
+          "n": 3,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "29788": {
+          "n": 14,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "30108": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "structural"
+        },
+        "30118": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "30554": {
+          "n": 6,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "31015": {
+          "n": 17,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "31471": {
+          "n": 18,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "31558": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "31583": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "31605": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "31846": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "31899": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "31943": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "mid"
+        },
+        "32118": {
+          "n": 111,
+          "hits": 67,
+          "acc": 0.6036036036036037,
+          "tier": "mid"
+        },
+        "32136": {
+          "n": 8,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "32185": {
+          "n": 776,
+          "hits": 223,
+          "acc": 0.28737113402061853,
+          "tier": "mid"
+        },
+        "32285": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "32294": {
+          "n": 231,
+          "hits": 176,
+          "acc": 0.7619047619047619,
+          "tier": "mid"
+        },
+        "32407": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "32522": {
+          "n": 1,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "32622": {
+          "n": 2,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        },
+        "32706": {
+          "n": 103,
+          "hits": 0,
+          "acc": 0.0,
+          "tier": "content"
+        }
+      },
+      "per_tier": {
+        "content": {
+          "n": 37623,
+          "hits": 323,
+          "acc": 0.008585173962735561
+        },
+        "mid": {
+          "n": 10598,
+          "hits": 1533,
+          "acc": 0.14464993394980186
+        },
+        "structural": {
+          "n": 16877,
+          "hits": 6975,
+          "acc": 0.4132843514842685
+        },
+        "zero": {
+          "n": 438,
+          "hits": 0,
+          "acc": 0.0
+        }
+      },
+      "content_over_structural": 0.020773043866535924,
+      "n_positions": 65536
+    }
+  }
+}

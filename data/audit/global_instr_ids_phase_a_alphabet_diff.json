@@ -1,0 +1,150 @@
+{
+  "base": "/scratch/tmp/preframr_experiments/results/global_instr_ids_phase_a/gi_off/seed0/tokens.csv",
+  "per_op": [
+    {
+      "added": 0,
+      "n_base": 4692,
+      "n_var": 0,
+      "name": "PLAY_INSTRUMENT_OP",
+      "net_delta": -4692,
+      "op": 20,
+      "removed": 4692
+    },
+    {
+      "added": 1705,
+      "n_base": 9132,
+      "n_var": 10476,
+      "name": "SET_OP",
+      "net_delta": 1344,
+      "op": 0,
+      "removed": 361
+    },
+    {
+      "added": 231,
+      "n_base": 4028,
+      "n_var": 3505,
+      "name": "BACK_REF_OP",
+      "net_delta": -523,
+      "op": 15,
+      "removed": 754
+    },
+    {
+      "added": 8,
+      "n_base": 512,
+      "n_var": 446,
+      "name": "PATTERN_OVERLAY_OP",
+      "net_delta": -66,
+      "op": 23,
+      "removed": 74
+    },
+    {
+      "added": 428,
+      "n_base": 2617,
+      "n_var": 2643,
+      "name": "PATTERN_REPLAY_OP",
+      "net_delta": 26,
+      "op": 22,
+      "removed": 402
+    },
+    {
+      "added": 1,
+      "n_base": 409,
+      "n_var": 401,
+      "name": "MODE_VOL_FLIP_OP",
+      "net_delta": -8,
+      "op": 7,
+      "removed": 9
+    },
+    {
+      "added": 0,
+      "n_base": 49,
+      "n_var": 47,
+      "name": "GATE_REPLAY_OP",
+      "net_delta": -2,
+      "op": 19,
+      "removed": 2
+    },
+    {
+      "added": 0,
+      "n_base": 89,
+      "n_var": 88,
+      "name": "FLIP_OP",
+      "net_delta": -1,
+      "op": 3,
+      "removed": 1
+    },
+    {
+      "added": 3,
+      "n_base": 224,
+      "n_var": 225,
+      "name": "TRANSPOSE_OP",
+      "net_delta": 1,
+      "op": 5,
+      "removed": 2
+    },
+    {
+      "added": 0,
+      "n_base": 104,
+      "n_var": 104,
+      "name": "DIFF_OP",
+      "net_delta": 0,
+      "op": 1,
+      "removed": 0
+    },
+    {
+      "added": 0,
+      "n_base": 25,
+      "n_var": 25,
+      "name": "REPEAT_OP",
+      "net_delta": 0,
+      "op": 2,
+      "removed": 0
+    },
+    {
+      "added": 0,
+      "n_base": 8,
+      "n_var": 8,
+      "name": "PWM_OP",
+      "net_delta": 0,
+      "op": 4,
+      "removed": 0
+    },
+    {
+      "added": 0,
+      "n_base": 8,
+      "n_var": 8,
+      "name": "FILTER_SWEEP_OP",
+      "net_delta": 0,
+      "op": 11,
+      "removed": 0
+    },
+    {
+      "added": 1,
+      "n_base": 25,
+      "n_var": 25,
+      "name": "DO_LOOP_OP",
+      "net_delta": 0,
+      "op": 16,
+      "removed": 1
+    },
+    {
+      "added": 0,
+      "n_base": 4,
+      "n_var": 4,
+      "name": "SUBREG_FLUSH_OP",
+      "net_delta": 0,
+      "op": 18,
+      "removed": 0
+    }
+  ],
+  "totals": {
+    "delta": -3921,
+    "delta_pct": -17.883,
+    "n_base": 21926,
+    "n_var": 18005,
+    "only_base": 6298,
+    "only_var": 2377,
+    "shared": 15628
+  },
+  "var": "/scratch/tmp/preframr_experiments/results/global_instr_ids_phase_a/gi_on/seed0/tokens.csv"
+}

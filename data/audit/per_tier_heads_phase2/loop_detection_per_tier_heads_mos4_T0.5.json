@@ -1,0 +1,96 @@
+{
+  "per_file": [
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__per_tier_heads_mos4_seed0_T0.5_00.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__per_tier_heads_mos4_seed0_T0.5_01.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__per_tier_heads_mos4_seed0_T0.5_02.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__per_tier_heads_mos4_seed0_T0.5_03.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__per_tier_heads_mos4_seed0_T0.5_04.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__per_tier_heads_mos4_seed0_T0.5_05.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__per_tier_heads_mos4_seed0_T0.5_00.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__per_tier_heads_mos4_seed0_T0.5_01.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__per_tier_heads_mos4_seed0_T0.5_02.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__per_tier_heads_mos4_seed0_T0.5_03.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__per_tier_heads_mos4_seed0_T0.5_04.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__per_tier_heads_mos4_seed0_T0.5_05.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    }
+  ],
+  "per_arm": {
+    "_default": {
+      "n_samples": 12,
+      "n_collapsed": 0,
+      "collapse_rate": 0.0,
+      "periods": []
+    }
+  }
+}

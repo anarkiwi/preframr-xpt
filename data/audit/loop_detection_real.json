@@ -1,0 +1,127 @@
+{
+  "per_file": [
+    {
+      "arm": "greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_real_greedy_T1.0_00.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 2,
+        "repeats": 64
+      }
+    },
+    {
+      "arm": "greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_real_greedy_T1.0_01.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 2,
+        "repeats": 64
+      }
+    },
+    {
+      "arm": "greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_real_greedy_T1.0_02.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 2,
+        "repeats": 64
+      }
+    },
+    {
+      "arm": "greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_real_greedy_T1.0_03.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 3,
+        "repeats": 42
+      }
+    },
+    {
+      "arm": "greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_real_greedy_T1.0_04.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    },
+    {
+      "arm": "greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_real_greedy_T1.0_05.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    },
+    {
+      "arm": "sample",
+      "path": "/scratch/tmp/audit/phase0/stream_real_sample_T1.0_00.csv",
+      "n_tokens": 2048,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "sample",
+      "path": "/scratch/tmp/audit/phase0/stream_real_sample_T1.0_01.csv",
+      "n_tokens": 2048,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "sample",
+      "path": "/scratch/tmp/audit/phase0/stream_real_sample_T1.0_02.csv",
+      "n_tokens": 2048,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "sample",
+      "path": "/scratch/tmp/audit/phase0/stream_real_sample_T1.0_03.csv",
+      "n_tokens": 2048,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "sample",
+      "path": "/scratch/tmp/audit/phase0/stream_real_sample_T1.0_04.csv",
+      "n_tokens": 2048,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "sample",
+      "path": "/scratch/tmp/audit/phase0/stream_real_sample_T1.0_05.csv",
+      "n_tokens": 2048,
+      "collapsed": false,
+      "cycle": null
+    }
+  ],
+  "per_arm": {
+    "greedy": {
+      "n_samples": 6,
+      "n_collapsed": 6,
+      "collapse_rate": 1.0,
+      "periods": [
+        1,
+        1,
+        2,
+        2,
+        2,
+        3
+      ]
+    },
+    "sample": {
+      "n_samples": 6,
+      "n_collapsed": 0,
+      "collapse_rate": 0.0,
+      "periods": []
+    }
+  }
+}

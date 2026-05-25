@@ -1,0 +1,101 @@
+{
+  "per_file": [
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__baseline_seed0_T0.3_00.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__baseline_seed0_T0.3_01.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__baseline_seed0_T0.3_02.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__baseline_seed0_T0.3_03.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__baseline_seed0_T0.3_04.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_real__baseline_seed0_T0.3_05.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__baseline_seed0_T0.3_00.csv",
+      "n_tokens": 1024,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__baseline_seed0_T0.3_01.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__baseline_seed0_T0.3_02.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__baseline_seed0_T0.3_03.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__baseline_seed0_T0.3_04.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    },
+    {
+      "arm": "_default",
+      "path": "integration_tests/data/audit/per_tier_heads_phase2/streams/stream_random__baseline_seed0_T0.3_05.csv",
+      "n_tokens": 1024,
+      "collapsed": false,
+      "cycle": null
+    }
+  ],
+  "per_arm": {
+    "_default": {
+      "n_samples": 12,
+      "n_collapsed": 1,
+      "collapse_rate": 0.08333333333333333,
+      "periods": [
+        1
+      ]
+    }
+  }
+}

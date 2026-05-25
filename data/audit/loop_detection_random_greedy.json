@@ -1,0 +1,79 @@
+{
+  "per_file": [
+    {
+      "arm": "random_greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_random_greedy_T1.0_00.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    },
+    {
+      "arm": "random_greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_random_greedy_T1.0_01.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    },
+    {
+      "arm": "random_greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_random_greedy_T1.0_02.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    },
+    {
+      "arm": "random_greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_random_greedy_T1.0_03.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    },
+    {
+      "arm": "random_greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_random_greedy_T1.0_04.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    },
+    {
+      "arm": "random_greedy",
+      "path": "/scratch/tmp/audit/phase0/stream_random_greedy_T1.0_05.csv",
+      "n_tokens": 2048,
+      "collapsed": true,
+      "cycle": {
+        "period": 1,
+        "repeats": 128
+      }
+    }
+  ],
+  "per_arm": {
+    "random_greedy": {
+      "n_samples": 6,
+      "n_collapsed": 6,
+      "collapse_rate": 1.0,
+      "periods": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  }
+}

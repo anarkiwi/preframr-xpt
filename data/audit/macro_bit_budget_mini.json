@@ -1,0 +1,205 @@
+{
+  "canonical_id_bit_budget": {
+    "artifact": "/integration_tests/data/mini/engine_fp_palettes.json",
+    "cluster_sizes": {
+      "1": 2488,
+      "2": 3040,
+      "3": 69,
+      "4": 4293,
+      "6": 1469,
+      "7": 6709
+    },
+    "max_cluster_size": 6709,
+    "verdict": "BLOCKED -- max cluster has 6709 programs (>= 4096); slot id needs > 12 bits"
+  },
+  "tier": "mini",
+  "val_rightsize": {
+    "examples": [
+      {
+        "exceeds": [
+          {
+            "max": 65535,
+            "min": 65535,
+            "n_rows": 6,
+            "op": 5,
+            "subreg": 3
+          },
+          {
+            "max": 65535,
+            "min": 65526,
+            "n_rows": 59,
+            "op": 5,
+            "subreg": 5
+          },
+          {
+            "max": 65535,
+            "min": 65535,
+            "n_rows": 12,
+            "op": 5,
+            "subreg": 6
+          },
+          {
+            "max": 65535,
+            "min": 65526,
+            "n_rows": 6,
+            "op": 5,
+            "subreg": 7
+          }
+        ],
+        "path": "/scratch/tmp/preframr_experiments/results/global_instr_ids_phase_a/gi_off/seed0/train/Whittaker_David/Buffalo_Bills_Wild_West_Show.4.1.parquet"
+      },
+      {
+        "exceeds": [
+          {
+            "max": 65534,
+            "min": 65512,
+            "n_rows": 17,
+            "op": 5,
+            "subreg": 3
+          },
+          {
+            "max": 65535,
+            "min": 65530,
+            "n_rows": 12,
+            "op": 5,
+            "subreg": 5
+          },
+          {
+            "max": 65530,
+            "min": 65530,
+            "n_rows": 1,
+            "op": 5,
+            "subreg": 7
+          }
+        ],
+        "path": "/scratch/tmp/preframr_experiments/results/global_instr_ids_phase_a/gi_off/seed0/train/Whittaker_David/Beverly_Hills_Cop.1.1.parquet"
+      },
+      {
+        "exceeds": [
+          {
+            "max": 65535,
+            "min": 65535,
+            "n_rows": 7,
+            "op": 5,
+            "subreg": 3
+          },
+          {
+            "max": 65535,
+            "min": 65511,
+            "n_rows": 16,
+            "op": 5,
+            "subreg": 6
+          },
+          {
+            "max": 65535,
+            "min": 65535,
+            "n_rows": 1,
+            "op": 5,
+            "subreg": 7
+          }
+        ],
+        "path": "/scratch/tmp/preframr_experiments/results/global_instr_ids_phase_a/gi_off/seed0/train/Whittaker_David/Back_to_the_Future_II.4.2.parquet"
+      },
+      {
+        "exceeds": [
+          {
+            "max": 65526,
+            "min": 65523,
+            "n_rows": 3,
+            "op": 5,
+            "subreg": 3
+          },
+          {
+            "max": 65535,
+            "min": 65526,
+            "n_rows": 12,
+            "op": 5,
+            "subreg": 5
+          },
+          {
+            "max": 65535,
+            "min": 65535,
+            "n_rows": 5,
+            "op": 5,
+            "subreg": 6
+          }
+        ],
+        "path": "/scratch/tmp/preframr_experiments/results/global_instr_ids_phase_a/gi_off/seed0/train/Whittaker_David/Blazer.3.0.parquet"
+      },
+      {
+        "exceeds": [
+          {
+            "max": 65535,
+            "min": 65535,
+            "n_rows": 3,
+            "op": 5,
+            "subreg": 3
+          },
+          {
+            "max": 65522,
+            "min": 65522,
+            "n_rows": 2,
+            "op": 5,
+            "subreg": 5
+          },
+          {
+            "max": 65534,
+            "min": 65528,
+            "n_rows": 27,
+            "op": 5,
+            "subreg": 6
+          },
+          {
+            "max": 65532,
+            "min": 65532,
+            "n_rows": 1,
+            "op": 5,
+            "subreg": 7
+          }
+        ],
+        "path": "/scratch/tmp/preframr_experiments/results/global_instr_ids_phase_a/gi_off/seed0/train/Whittaker_David/Back_to_the_Future_II.1.2.parquet"
+      }
+    ],
+    "exceeds_by_op": {
+      "op0_sr-1": 40105,
+      "op15_sr0": 1533,
+      "op22_sr0": 9,
+      "op5_sr3": 2527,
+      "op5_sr5": 2509,
+      "op5_sr6": 2594,
+      "op5_sr7": 312,
+      "op7_sr10": 3,
+      "op7_sr11": 54,
+      "op7_sr13": 36,
+      "op7_sr14": 30,
+      "op7_sr16": 276,
+      "op7_sr17": 3,
+      "op7_sr23": 1,
+      "op7_sr26": 5,
+      "op7_sr27": 3,
+      "op7_sr28": 6,
+      "op7_sr29": 2,
+      "op7_sr3": 4398,
+      "op7_sr30": 5,
+      "op7_sr32": 3,
+      "op7_sr33": 7,
+      "op7_sr4": 1370,
+      "op7_sr41": 3,
+      "op7_sr5": 474,
+      "op7_sr50": 1,
+      "op7_sr6": 315,
+      "op7_sr64": 78,
+      "op7_sr7": 218,
+      "op7_sr8": 15,
+      "op7_sr9": 72
+    },
+    "int16_max": 32767,
+    "int16_min": -32768,
+    "n_files_exceeded": 381,
+    "overall_val_max": 108375,
+    "overall_val_min": -544,
+    "scanned_parquets": 400,
+    "scanned_rows": 6999320,
+    "verdict": "BLOCKED -- 56967 rows exceed Int16 range"
+  }
+}

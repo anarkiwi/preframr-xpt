@@ -1,0 +1,1252 @@
+{
+  "parquet_glob": "/scratch/tmp/preframr_experiments/results/loop_lookahead_prodlike/la1/seed0/train/*.0.parquet",
+  "n_files": 4246,
+  "per_composer": {
+    "Mermaid": {
+      "n_files": 191,
+      "n_pwm_rows": 3751,
+      "n_filtersweep_rows": 148,
+      "n_distinct_keys": 15,
+      "theoretical_replay_fraction": 0.9962
+    },
+    "Waz": {
+      "n_files": 176,
+      "n_pwm_rows": 1333,
+      "n_filtersweep_rows": 21,
+      "n_distinct_keys": 9,
+      "theoretical_replay_fraction": 0.9934
+    },
+    "SIDwave": {
+      "n_files": 178,
+      "n_pwm_rows": 12771,
+      "n_filtersweep_rows": 101,
+      "n_distinct_keys": 15,
+      "theoretical_replay_fraction": 0.9988
+    },
+    "Cross_Saul": {
+      "n_files": 190,
+      "n_pwm_rows": 3183,
+      "n_filtersweep_rows": 114,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9951
+    },
+    "Whittaker_David": {
+      "n_files": 130,
+      "n_pwm_rows": 4565,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 8,
+      "theoretical_replay_fraction": 0.9982
+    },
+    "Nagie_Sascha": {
+      "n_files": 187,
+      "n_pwm_rows": 15952,
+      "n_filtersweep_rows": 2264,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9991
+    },
+    "Merman": {
+      "n_files": 188,
+      "n_pwm_rows": 2325,
+      "n_filtersweep_rows": 166,
+      "n_distinct_keys": 12,
+      "theoretical_replay_fraction": 0.9952
+    },
+    "Laxity": {
+      "n_files": 194,
+      "n_pwm_rows": 4312,
+      "n_filtersweep_rows": 320,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9965
+    },
+    "Bayliss_Richard": {
+      "n_files": 215,
+      "n_pwm_rows": 5707,
+      "n_filtersweep_rows": 267,
+      "n_distinct_keys": 13,
+      "theoretical_replay_fraction": 0.9978
+    },
+    "DRAX": {
+      "n_files": 169,
+      "n_pwm_rows": 3346,
+      "n_filtersweep_rows": 367,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9957
+    },
+    "Nordischsound": {
+      "n_files": 170,
+      "n_pwm_rows": 24478,
+      "n_filtersweep_rows": 1813,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9994
+    },
+    "Ass_It": {
+      "n_files": 162,
+      "n_pwm_rows": 3318,
+      "n_filtersweep_rows": 116,
+      "n_distinct_keys": 14,
+      "theoretical_replay_fraction": 0.9959
+    },
+    "Mitch_and_Dane": {
+      "n_files": 184,
+      "n_pwm_rows": 14557,
+      "n_filtersweep_rows": 2539,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9991
+    },
+    "Jammer": {
+      "n_files": 171,
+      "n_pwm_rows": 2744,
+      "n_filtersweep_rows": 1842,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9965
+    },
+    "Zyron": {
+      "n_files": 177,
+      "n_pwm_rows": 7121,
+      "n_filtersweep_rows": 463,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9979
+    },
+    "Hubbard_Rob": {
+      "n_files": 122,
+      "n_pwm_rows": 7977,
+      "n_filtersweep_rows": 850,
+      "n_distinct_keys": 15,
+      "theoretical_replay_fraction": 0.9983
+    },
+    "Leitch_Barry": {
+      "n_files": 128,
+      "n_pwm_rows": 1992,
+      "n_filtersweep_rows": 21,
+      "n_distinct_keys": 8,
+      "theoretical_replay_fraction": 0.996
+    },
+    "Blues_Muz": {
+      "n_files": 217,
+      "n_pwm_rows": 8728,
+      "n_filtersweep_rows": 992,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9984
+    },
+    "Tel_Jeroen": {
+      "n_files": 163,
+      "n_pwm_rows": 3004,
+      "n_filtersweep_rows": 50,
+      "n_distinct_keys": 12,
+      "theoretical_replay_fraction": 0.9961
+    },
+    "JCH": {
+      "n_files": 169,
+      "n_pwm_rows": 6154,
+      "n_filtersweep_rows": 1178,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9978
+    },
+    "Da_Phuture_Kemist": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "MC": {
+      "n_files": 9,
+      "n_pwm_rows": 743,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 7,
+      "theoretical_replay_fraction": 0.9906
+    },
+    "Gilmore_Adam": {
+      "n_files": 72,
+      "n_pwm_rows": 3678,
+      "n_filtersweep_rows": 8,
+      "n_distinct_keys": 9,
+      "theoretical_replay_fraction": 0.9976
+    },
+    "DJ_Space": {
+      "n_files": 1,
+      "n_pwm_rows": 32,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9688
+    },
+    "Rock": {
+      "n_files": 6,
+      "n_pwm_rows": 1294,
+      "n_filtersweep_rows": 175,
+      "n_distinct_keys": 11,
+      "theoretical_replay_fraction": 0.9925
+    },
+    "Metro": {
+      "n_files": 2,
+      "n_pwm_rows": 221,
+      "n_filtersweep_rows": 2,
+      "n_distinct_keys": 5,
+      "theoretical_replay_fraction": 0.9776
+    },
+    "LukHash": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Detert_Thomas": {
+      "n_files": 184,
+      "n_pwm_rows": 3573,
+      "n_filtersweep_rows": 831,
+      "n_distinct_keys": 16,
+      "theoretical_replay_fraction": 0.9964
+    },
+    "Phobos": {
+      "n_files": 3,
+      "n_pwm_rows": 32,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 5,
+      "theoretical_replay_fraction": 0.8438
+    },
+    "Bond_Alan": {
+      "n_files": 199,
+      "n_pwm_rows": 387,
+      "n_filtersweep_rows": 40,
+      "n_distinct_keys": 15,
+      "theoretical_replay_fraction": 0.9649
+    },
+    "Drumtex": {
+      "n_files": 1,
+      "n_pwm_rows": 1234,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9968
+    },
+    "Galway_Martin": {
+      "n_files": 71,
+      "n_pwm_rows": 2292,
+      "n_filtersweep_rows": 820,
+      "n_distinct_keys": 14,
+      "theoretical_replay_fraction": 0.9955
+    },
+    "Gray_Matt": {
+      "n_files": 3,
+      "n_pwm_rows": 52,
+      "n_filtersweep_rows": 7,
+      "n_distinct_keys": 7,
+      "theoretical_replay_fraction": 0.8814
+    },
+    "NecroPolo": {
+      "n_files": 1,
+      "n_pwm_rows": 7,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.7143
+    },
+    "LMan": {
+      "n_files": 4,
+      "n_pwm_rows": 35,
+      "n_filtersweep_rows": 8,
+      "n_distinct_keys": 7,
+      "theoretical_replay_fraction": 0.8372
+    },
+    "Moon": {
+      "n_files": 2,
+      "n_pwm_rows": 114,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9649
+    },
+    "Remarque": {
+      "n_files": 3,
+      "n_pwm_rows": 40,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.925
+    },
+    "Dunn_David": {
+      "n_files": 1,
+      "n_pwm_rows": 123,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9675
+    },
+    "HIC": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Babyface": {
+      "n_files": 3,
+      "n_pwm_rows": 85,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9529
+    },
+    "Moog": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Bjerregaard_Johannes": {
+      "n_files": 1,
+      "n_pwm_rows": 80,
+      "n_filtersweep_rows": 21,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9604
+    },
+    "Robric": {
+      "n_files": 1,
+      "n_pwm_rows": 1,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Phoenix_Tronix": {
+      "n_files": 1,
+      "n_pwm_rows": 60,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.95
+    },
+    "Muehl_Ulrich": {
+      "n_files": 1,
+      "n_pwm_rows": 19,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9474
+    },
+    "Vincenzo": {
+      "n_files": 2,
+      "n_pwm_rows": 37,
+      "n_filtersweep_rows": 37,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.973
+    },
+    "Tron_Beekveld_Erwin": {
+      "n_files": 1,
+      "n_pwm_rows": 31,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9677
+    },
+    "MCH": {
+      "n_files": 1,
+      "n_pwm_rows": 34,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9412
+    },
+    "Williams_Don": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Patfield_Kent": {
+      "n_files": 1,
+      "n_pwm_rows": 56,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9464
+    },
+    "Stepz": {
+      "n_files": 1,
+      "n_pwm_rows": 93,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9677
+    },
+    "Gregfeel": {
+      "n_files": 2,
+      "n_pwm_rows": 57,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9474
+    },
+    "Danko_Tomas": {
+      "n_files": 2,
+      "n_pwm_rows": 37,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9189
+    },
+    "Brian": {
+      "n_files": 5,
+      "n_pwm_rows": 148,
+      "n_filtersweep_rows": 10,
+      "n_distinct_keys": 5,
+      "theoretical_replay_fraction": 0.9684
+    },
+    "Slaygon": {
+      "n_files": 1,
+      "n_pwm_rows": 169,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9822
+    },
+    "Lindanger_Trond": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Lio": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Blidon_Jens": {
+      "n_files": 1,
+      "n_pwm_rows": 704,
+      "n_filtersweep_rows": 79,
+      "n_distinct_keys": 8,
+      "theoretical_replay_fraction": 0.9898
+    },
+    "Proton": {
+      "n_files": 2,
+      "n_pwm_rows": 384,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9974
+    },
+    "Shogoon": {
+      "n_files": 1,
+      "n_pwm_rows": 2,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Stormont_John": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Linus": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Hugenroth_Andre_and_Frank": {
+      "n_files": 1,
+      "n_pwm_rows": 31,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9355
+    },
+    "LDX40": {
+      "n_files": 1,
+      "n_pwm_rows": 13,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.7692
+    },
+    "Bakewell_Dwayne": {
+      "n_files": 9,
+      "n_pwm_rows": 315,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9873
+    },
+    "Pinov_Vox": {
+      "n_files": 1,
+      "n_pwm_rows": 1,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Sad": {
+      "n_files": 1,
+      "n_pwm_rows": 53,
+      "n_filtersweep_rows": 186,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9874
+    },
+    "Behdad_Arman": {
+      "n_files": 2,
+      "n_pwm_rows": 63,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9683
+    },
+    "Nordic_Beat": {
+      "n_files": 1,
+      "n_pwm_rows": 39,
+      "n_filtersweep_rows": 13,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9231
+    },
+    "LordNikon": {
+      "n_files": 2,
+      "n_pwm_rows": 34,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9118
+    },
+    "Little_SID": {
+      "n_files": 2,
+      "n_pwm_rows": 51,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9412
+    },
+    "Bakker_Nantco": {
+      "n_files": 2,
+      "n_pwm_rows": 487,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9959
+    },
+    "G-Fellow": {
+      "n_files": 1,
+      "n_pwm_rows": 206,
+      "n_filtersweep_rows": 55,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9847
+    },
+    "Prince": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Link": {
+      "n_files": 2,
+      "n_pwm_rows": 35,
+      "n_filtersweep_rows": 31,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9697
+    },
+    "Red_Devil": {
+      "n_files": 1,
+      "n_pwm_rows": 62,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9355
+    },
+    "Luca": {
+      "n_files": 3,
+      "n_pwm_rows": 41,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 6,
+      "theoretical_replay_fraction": 0.8537
+    },
+    "Mark_II": {
+      "n_files": 1,
+      "n_pwm_rows": 124,
+      "n_filtersweep_rows": 43,
+      "n_distinct_keys": 6,
+      "theoretical_replay_fraction": 0.9641
+    },
+    "Ray": {
+      "n_files": 3,
+      "n_pwm_rows": 8,
+      "n_filtersweep_rows": 14,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.8636
+    },
+    "Devilock": {
+      "n_files": 1,
+      "n_pwm_rows": 24,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.8333
+    },
+    "Holt_Hein": {
+      "n_files": 1,
+      "n_pwm_rows": 12,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.8333
+    },
+    "Spike": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Beat_Machine": {
+      "n_files": 7,
+      "n_pwm_rows": 11,
+      "n_filtersweep_rows": 6,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.8235
+    },
+    "Heinmueck": {
+      "n_files": 1,
+      "n_pwm_rows": 4,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.75
+    },
+    "DaFunk": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Little-Nero": {
+      "n_files": 1,
+      "n_pwm_rows": 61,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9344
+    },
+    "Baldwin_Neil": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Lieblich_Russell": {
+      "n_files": 2,
+      "n_pwm_rows": 311,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9904
+    },
+    "Bionic_Hands": {
+      "n_files": 2,
+      "n_pwm_rows": 406,
+      "n_filtersweep_rows": 21,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9906
+    },
+    "Page": {
+      "n_files": 1,
+      "n_pwm_rows": 16,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.75
+    },
+    "Lyon_Legend": {
+      "n_files": 2,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 82,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9878
+    },
+    "Mateus": {
+      "n_files": 2,
+      "n_pwm_rows": 5,
+      "n_filtersweep_rows": 18,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.913
+    },
+    "Teichmann_Axel": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Mad_Donne_Marcel": {
+      "n_files": 3,
+      "n_pwm_rows": 226,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 6,
+      "theoretical_replay_fraction": 0.9735
+    },
+    "Psych858o": {
+      "n_files": 2,
+      "n_pwm_rows": 178,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9831
+    },
+    "Bzyk": {
+      "n_files": 7,
+      "n_pwm_rows": 69,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 5,
+      "theoretical_replay_fraction": 0.9275
+    },
+    "Gaston": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Metal": {
+      "n_files": 2,
+      "n_pwm_rows": 56,
+      "n_filtersweep_rows": 1,
+      "n_distinct_keys": 6,
+      "theoretical_replay_fraction": 0.8947
+    },
+    "SoedeSoft": {
+      "n_files": 1,
+      "n_pwm_rows": 50,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.98
+    },
+    "Harmony_Productions": {
+      "n_files": 1,
+      "n_pwm_rows": 163,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9816
+    },
+    "Hermit": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "V-12": {
+      "n_files": 4,
+      "n_pwm_rows": 61,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9344
+    },
+    "Bart": {
+      "n_files": 2,
+      "n_pwm_rows": 133,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.985
+    },
+    "PCH": {
+      "n_files": 4,
+      "n_pwm_rows": 40,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.925
+    },
+    "Lunatic": {
+      "n_files": 2,
+      "n_pwm_rows": 95,
+      "n_filtersweep_rows": 1,
+      "n_distinct_keys": 7,
+      "theoretical_replay_fraction": 0.9271
+    },
+    "Hultink_Gerard": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Signor": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Maktone": {
+      "n_files": 1,
+      "n_pwm_rows": 196,
+      "n_filtersweep_rows": 86,
+      "n_distinct_keys": 5,
+      "theoretical_replay_fraction": 0.9823
+    },
+    "TheFatman": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Imaic": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 2,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.5
+    },
+    "Longhair": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Rosenstiel_Joerg": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Buddha": {
+      "n_files": 2,
+      "n_pwm_rows": 44,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9318
+    },
+    "Latifah": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Mad-Max": {
+      "n_files": 1,
+      "n_pwm_rows": 28,
+      "n_filtersweep_rows": 13,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9268
+    },
+    "Mr_Lonely": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Surgeon": {
+      "n_files": 1,
+      "n_pwm_rows": 1,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Zardax": {
+      "n_files": 1,
+      "n_pwm_rows": 121,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9835
+    },
+    "Batsman": {
+      "n_files": 5,
+      "n_pwm_rows": 264,
+      "n_filtersweep_rows": 1,
+      "n_distinct_keys": 8,
+      "theoretical_replay_fraction": 0.9698
+    },
+    "Kry": {
+      "n_files": 1,
+      "n_pwm_rows": 40,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.975
+    },
+    "Response": {
+      "n_files": 1,
+      "n_pwm_rows": 960,
+      "n_filtersweep_rows": 52,
+      "n_distinct_keys": 9,
+      "theoretical_replay_fraction": 0.9911
+    },
+    "Rami_Jon": {
+      "n_files": 1,
+      "n_pwm_rows": 24,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9583
+    },
+    "Beggerow_Alan": {
+      "n_files": 1,
+      "n_pwm_rows": 70,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9714
+    },
+    "Stenija": {
+      "n_files": 1,
+      "n_pwm_rows": 37,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.973
+    },
+    "Klax": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Morton_Adam": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Reynolds_Daryll": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Hank": {
+      "n_files": 1,
+      "n_pwm_rows": 23,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.913
+    },
+    "MHD": {
+      "n_files": 1,
+      "n_pwm_rows": 2,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Selles_Ward": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Pepsi": {
+      "n_files": 1,
+      "n_pwm_rows": 44,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.9091
+    },
+    "TMR": {
+      "n_files": 1,
+      "n_pwm_rows": 2,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.5
+    },
+    "Replay": {
+      "n_files": 1,
+      "n_pwm_rows": 31,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9355
+    },
+    "The_Dynamic_Junk": {
+      "n_files": 1,
+      "n_pwm_rows": 64,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9688
+    },
+    "TheDuccinator": {
+      "n_files": 1,
+      "n_pwm_rows": 18,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9444
+    },
+    "Prosonix": {
+      "n_files": 1,
+      "n_pwm_rows": 73,
+      "n_filtersweep_rows": 1,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9595
+    },
+    "Rodger_Andrew": {
+      "n_files": 1,
+      "n_pwm_rows": 8,
+      "n_filtersweep_rows": 7,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.8
+    },
+    "Bax": {
+      "n_files": 1,
+      "n_pwm_rows": 2,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.5
+    },
+    "Roebuck_Kristopher": {
+      "n_files": 1,
+      "n_pwm_rows": 23,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.913
+    },
+    "Sonic_Graffiti": {
+      "n_files": 1,
+      "n_pwm_rows": 15,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.8
+    },
+    "Chock": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Deek": {
+      "n_files": 2,
+      "n_pwm_rows": 1,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Tjelta_Geir": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Bogas_Ed": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Mankeli": {
+      "n_files": 1,
+      "n_pwm_rows": 92,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 6,
+      "theoretical_replay_fraction": 0.9348
+    },
+    "Oedipus": {
+      "n_files": 1,
+      "n_pwm_rows": 119,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9832
+    },
+    "Dr_Piotr": {
+      "n_files": 1,
+      "n_pwm_rows": 3,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.6667
+    },
+    "ZeHa": {
+      "n_files": 1,
+      "n_pwm_rows": 35,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9714
+    },
+    "Hartwig_Stefan": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Mr_Nonplusultra": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Dazz": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Huelsbeck_Chris": {
+      "n_files": 2,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Leming": {
+      "n_files": 1,
+      "n_pwm_rows": 2,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.5
+    },
+    "Raze": {
+      "n_files": 1,
+      "n_pwm_rows": 137,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9854
+    },
+    "Grieve_Nigel": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Nutcase": {
+      "n_files": 1,
+      "n_pwm_rows": 1,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.0
+    },
+    "HTD": {
+      "n_files": 1,
+      "n_pwm_rows": 45,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 5,
+      "theoretical_replay_fraction": 0.8889
+    },
+    "Sequencer": {
+      "n_files": 1,
+      "n_pwm_rows": 142,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 7,
+      "theoretical_replay_fraction": 0.9507
+    },
+    "Ne7": {
+      "n_files": 1,
+      "n_pwm_rows": 87,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.954
+    },
+    "Connolly_Sean": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Maduplec": {
+      "n_files": 1,
+      "n_pwm_rows": 123,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9756
+    },
+    "Spider_Jerusalem": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Page_Jason": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Bleed_Into_One": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Rusty46": {
+      "n_files": 1,
+      "n_pwm_rows": 10,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.7
+    },
+    "Sage": {
+      "n_files": 1,
+      "n_pwm_rows": 132,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.9773
+    },
+    "Isildur": {
+      "n_files": 1,
+      "n_pwm_rows": 28,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 4,
+      "theoretical_replay_fraction": 0.8571
+    },
+    "Pece": {
+      "n_files": 1,
+      "n_pwm_rows": 75,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 3,
+      "theoretical_replay_fraction": 0.96
+    },
+    "Hannula_Antti": {
+      "n_files": 2,
+      "n_pwm_rows": 41,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 5,
+      "theoretical_replay_fraction": 0.878
+    },
+    "Mueller_Markus": {
+      "n_files": 1,
+      "n_pwm_rows": 48,
+      "n_filtersweep_rows": 8,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9643
+    },
+    "Mr_Warp": {
+      "n_files": 1,
+      "n_pwm_rows": 22,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 2,
+      "theoretical_replay_fraction": 0.9091
+    },
+    "Ratpoison": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "Boyd": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    },
+    "MSB": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 3,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.6667
+    },
+    "Deadbeat": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 18,
+      "n_distinct_keys": 1,
+      "theoretical_replay_fraction": 0.9444
+    },
+    "Mephisto": {
+      "n_files": 1,
+      "n_pwm_rows": 0,
+      "n_filtersweep_rows": 0,
+      "n_distinct_keys": 0,
+      "theoretical_replay_fraction": 0.0
+    }
+  },
+  "aggregate": {
+    "n_pwm_rows": 159889,
+    "n_filtersweep_rows": 16332,
+    "n_distinct_keys": 16,
+    "theoretical_replay_fraction": 0.9999
+  },
+  "target_composers": [
+    "Hubbard_Rob",
+    "Galway_Martin",
+    "Daglish_Ben"
+  ],
+  "target_max_replay_fraction": 0.9983,
+  "refutation_threshold": 0.2,
+  "verdict": "PASS"
+}

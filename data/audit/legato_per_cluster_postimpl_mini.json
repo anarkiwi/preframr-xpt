@@ -1,0 +1,45 @@
+{
+  "by_cluster": {
+    "2": {
+      "in_band_fraction": 0.24,
+      "n_dumps": 25,
+      "n_in_band": 6,
+      "total_layer0": 29748,
+      "total_variant": 9558,
+      "verdict": "FAIL (24.0% in band, need \u226580%)"
+    },
+    "3": {
+      "in_band_fraction": 0.44,
+      "n_dumps": 25,
+      "n_in_band": 11,
+      "total_layer0": 23029,
+      "total_variant": 10068,
+      "verdict": "FAIL (44.0% in band, need \u226580%)"
+    },
+    "4": {
+      "in_band_fraction": 0.4,
+      "n_dumps": 25,
+      "n_in_band": 10,
+      "total_layer0": 36709,
+      "total_variant": 18878,
+      "verdict": "FAIL (40.0% in band, need \u226580%)"
+    },
+    "7": {
+      "in_band_fraction": 0.0,
+      "n_dumps": 25,
+      "n_in_band": 0,
+      "total_layer0": 35613,
+      "total_variant": 3988,
+      "verdict": "FAIL (0.0% in band, need \u226580%)"
+    }
+  },
+  "n_dumps_scanned": 100,
+  "n_errors": 0,
+  "overall_verdict": "FAIL (one or more clusters out of band)",
+  "pass_fraction_threshold": 0.8,
+  "tier": "mini",
+  "tolerance_band": [
+    0.7,
+    1.3
+  ]
+}
