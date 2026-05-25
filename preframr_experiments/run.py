@@ -6,10 +6,12 @@ from __future__ import annotations
 import argparse
 import importlib
 import logging
+import os
 import sys
 from pathlib import Path
 
 from preframr_experiments.base import (
+    _PREFRAMR_BIND_SRC_ENV,
     ExperimentSpec,
     preflight_check,
     resolve_data_layout,
@@ -78,12 +80,31 @@ def main():
             "specs in one TB)."
         ),
     )
+    ap.add_argument(
+        "--bind-src",
+        action="store_true",
+        help=(
+            "Bind-mount the working-tree preframr/ over the baked image so "
+            "containers run current code without a rebake. OFF by default: "
+            "runs use the frozen, tested baked image, so a long run can't be "
+            "perturbed by edits and the working tree stays free to change. "
+            "Use only for short iterate-without-rebake loops."
+        ),
+    )
     args = ap.parse_args()
+
+    if args.bind_src:
+        os.environ[_PREFRAMR_BIND_SRC_ENV] = "1"
 
     logging.basicConfig(
         level=logging.INFO, format="[%(asctime)s] %(levelname)s %(message)s"
     )
     logger = logging.getLogger("experiments.run")
+    if args.bind_src:
+        logger.warning(
+            "--bind-src: bind-mounting working-tree preframr/ over the baked "
+            "image; this run reflects uncommitted/un-gated code."
+        )
 
     spec = load_spec(args.experiment)
     if args.seeds is not None:
