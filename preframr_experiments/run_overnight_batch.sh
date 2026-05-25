@@ -12,7 +12,7 @@
 
 set -u
 
-REPO_ROOT="/scratch/anarkiwi/preframr"
+REPO_ROOT="/scratch/anarkiwi/preframr-xpt"
 WORK_ROOT="/scratch/tmp/preframr_experiments"
 LOG="${WORK_ROOT}/overnight_batch.log"
 DONE_MARKER="${WORK_ROOT}/overnight_batch.done"
