@@ -14,7 +14,7 @@ from preframr_experiments.base import (
 )
 
 _BASE_TRANSFORMS = [
-    {"name": "slope"},
+    {"name": "freq_trajectory"},
     {"name": "preset"},
     {"name": "hard_restart"},
     {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},

@@ -56,7 +56,7 @@ class TestDatasetCacheKey(unittest.TestCase):
 
     def test_changes_with_pipeline_spec(self):
         a = _dataset_cache_key(
-            _toy_spec(pipeline_spec={"transforms": [{"name": "slope"}]}),
+            _toy_spec(pipeline_spec={"transforms": [{"name": "freq_trajectory"}]}),
             {"train": ["x"]},
         )
         b = _dataset_cache_key(
@@ -76,7 +76,7 @@ class TestDatasetCacheKey(unittest.TestCase):
         spec = _toy_spec()
         layout = {"train": ["x"]}
         base = _dataset_cache_key(spec, layout, "")
-        macro = _dataset_cache_key(spec, layout, "--vibrato-env-pass --freq-run-pass")
+        macro = _dataset_cache_key(spec, layout, "--freq-nudge-pass --release-update-pass")
         self.assertNotEqual(base, macro)
 
     def test_train_only_cargs_do_not_change_key(self):
@@ -100,9 +100,9 @@ class TestDatasetCacheKey(unittest.TestCase):
         alone -- the train-only part is stripped, the macro part is kept."""
         spec = _toy_spec()
         layout = {"train": ["x"]}
-        macro_only = _dataset_cache_key(spec, layout, "--freq-run-pass")
+        macro_only = _dataset_cache_key(spec, layout, "--freq-nudge-pass")
         mixed = _dataset_cache_key(
-            spec, layout, "--per-tier-heads --freq-run-pass --per-tier-content-mos-k 4"
+            spec, layout, "--per-tier-heads --freq-nudge-pass --per-tier-content-mos-k 4"
         )
         self.assertEqual(macro_only, mixed)
 
