@@ -89,11 +89,13 @@ prompt-conditioning (audit suite); (2) encoding efficiency is secondary;
 (3) predict-host envelope; (4) tracker-authoring prior favoured over
 signal-only compression.
 
-## PROPOSED LAUNCH — vocab-trimmed re-arc (ready, awaiting go-ahead)
+## RUNNING — vocab-trimmed re-arc STAGE 1 (launched 2026-05-25)
 
 Re-run ALL baselines + the 5 refuted model-side specs from scratch on the
 post-FREQ_TRAJ tokenizer at the deployment-efficient config (no metrics
-transfer — vocab/op-alphabet/seq-len changed). Everything is staged:
+transfer — vocab/op-alphabet/seq-len changed). STAGE 1 (mini) launched from
+this repo; status via `check_overnight_batch.sh` (done marker
+`/scratch/tmp/preframr_experiments/overnight_batch.done`). Everything staged:
 
 - **Base:** `anarkiwi/preframr:0.1.0` (tokens 0.19.0, leaned framework, dep
   bumps pandas 3.0.3 / pyarrow 24.0.0 / black 26.5.1), built + verified.
@@ -110,8 +112,11 @@ transfer — vocab/op-alphabet/seq-len changed). Everything is staged:
 
 Launch (host-side, drives the xpt image):
 ```
-cd /scratch/anarkiwi/preframr-xpt && nohup bash preframr_experiments/run_overnight_batch.sh &
+cd /scratch/anarkiwi/preframr-xpt && nohup bash preframr_experiments/run_overnight_batch.sh & disown
 ```
+The runner now sets `REPO_ROOT` to this repo, so `python3 -m
+preframr_experiments.run` resolves from cwd (no PYTHONPATH); src-bind + tier
+data paths are absolute and unaffected.
 Dataset cache (`/scratch/preframr/hvsc/dataset_cache/`, keyed on spec inputs
 + image tokens-version) re-tokenizes on the 0.18→0.19 bump; net re-arc cost
 negligible (mini ~29M; prodlike tokenizes fresh regardless).
@@ -233,6 +238,9 @@ interventions concentrated at the same ~0.13 eval_a content ceiling:
   main+`v*`, `DOCKER_TOKEN`). xpt base pinned to `:0.1.0`. Dep bumps folded
   (pandas 3.0.3 / pyarrow 24.0.0 / black 26.5.1; jetson pins held). Workflow
   nuisance-runs reduced (release on main only).
+- **2026-05-25** — re-arc STAGE 1 (mini) launched from this repo;
+  `run_overnight_batch.sh` REPO_ROOT repointed framework→xpt (the documented
+  launch was dying on ModuleNotFoundError from the framework cwd).
 - **2026-05-25** — `full_macros_prodlike` PASSED (content-confirmed; see Open
   problem). tokens 0.18.0 frame-timing duration fix. Re-arc staged.
 - **2026-05-24** — strict-no-diff tokenizer rework shipped (FREQ_TRAJ unified
