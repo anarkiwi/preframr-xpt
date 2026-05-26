@@ -23,6 +23,44 @@ def _alphabet_size(art: ArmArtefacts) -> float:
         return float(sum(1 for _ in reader))
 
 
+_LONG_TAIL_MAX = 10
+
+
+def _atom_counts_by_family(art: ArmArtefacts):
+    """Yield ((op, reg, subreg), count) per real atom (count>0) from
+    tokens.csv. Empty when tokens.csv is absent."""
+    if not art.tokens_csv.exists():
+        return
+    with open(art.tokens_csv) as f:
+        for row in csv.DictReader(f):
+            c = int(row["count"])
+            if c > 0:
+                yield (row["op"], row["reg"], row["subreg"]), c
+
+
+def _longtail_frac(art: ArmArtefacts) -> float:
+    """Fraction of the atom alphabet (count>0) occurring < _LONG_TAIL_MAX
+    times in training: the data-sparsity signal behind the content
+    ceiling. FREQ_TRAJ collapsed it ~38% -> ~11%."""
+    counts = [c for _, c in _atom_counts_by_family(art)]
+    if not counts:
+        return float("nan")
+    return sum(c < _LONG_TAIL_MAX for c in counts) / len(counts)
+
+
+def _worst_family_longtail_frac(art: ArmArtefacts) -> float:
+    """Max long-tail fraction over (op, reg, subreg) families with >=50
+    atoms: localises sparsity to a register family instead of averaging
+    it away."""
+    fam: dict = {}
+    for key, c in _atom_counts_by_family(art):
+        fam.setdefault(key, []).append(c)
+    big = [v for v in fam.values() if len(v) >= 50]
+    if not big:
+        return float("nan")
+    return max(sum(c < _LONG_TAIL_MAX for c in v) / len(v) for v in big)
+
+
 def _encoded_tokens_per_song(art: ArmArtefacts) -> float:
     """Mean non-pad super-token count per training song. Read from
     ``train/*.blocks.npy`` (each file = one (composer, song, rotation),
@@ -240,6 +278,8 @@ _EVAL_SUBSETS = (
 
 METRIC_REGISTRY: dict[str, Callable[[ArmArtefacts], float]] = {
     "alphabet_size": _alphabet_size,
+    "longtail_frac": _longtail_frac,
+    "worst_family_longtail_frac": _worst_family_longtail_frac,
     "encoded_tokens_per_song": _encoded_tokens_per_song,
     "val_loss_best": _val_loss_best,
     "val_acc_at_best_loss": _val_acc_at_best_loss,

@@ -134,6 +134,8 @@ spec = ExperimentSpec(
     ],
     metrics=[
         "alphabet_size",
+        "longtail_frac",
+        "worst_family_longtail_frac",
         "encoded_tokens_per_song",
         "val_loss_best",
         "val_acc_at_best_loss",
