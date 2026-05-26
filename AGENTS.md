@@ -286,6 +286,12 @@ PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. nohup python3 \
   runner; audition wants target ckpt first).
 - **Renaming a transform** silently disables it in stale specs (no error) —
   grep specs on any pass/transform rename.
+- **Design docs** live in `design/`, indexed by **research axis** in
+  `design/README.md` (Generalization / Correctness & fidelity / Efficiency &
+  deploy / Runner & infra / Data & corpus), with status as a per-row column. A
+  new doc gets a one-line `**Status:**` header + a row under its primary axis;
+  on ship it **moves to `design/landed/`**, on rejection it gets a
+  `data/refuted/<exp>.md` stub. See that index's "How this index is organized".
 
 ### Wallclock anchors
 
