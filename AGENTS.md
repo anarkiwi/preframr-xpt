@@ -301,8 +301,10 @@ per (arm, seed). parse+tokenize ~25 min/prodlike uncached.
   too many control writes; relax/absorb to grow the corpus.
 - **12-SID WAV audition cohort** — non-negotiable gate before flipping any
   tokenizer default + re-cutting training data.
-- **Per-primitive round-trip audio gate** — wire `compare_renders` over ~100
-  songs into CI (≥95% within tolerance).
+- **Per-primitive round-trip audio gate** — the `compare_renders` helper +
+  fidelity unit tests landed in preframr-audio (`fidelity.py`,
+  `test_fidelity.py`/`test_dfs_equivalent.py`); STILL PENDING is the
+  corpus-scale CI gate (run it over ~100 songs at ≥95% within tolerance).
 
 ### Predict-host envelope (queued, post multi-day-training)
 Lead with the deployment envelope: **vocab shrink** (tkvocab ~8× to 4096 —
