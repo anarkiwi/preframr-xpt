@@ -123,34 +123,41 @@ negligible (mini ~29M; prodlike tokenizes fresh regardless).
 
 NOT bundled: effective-batch change, GPU rental, tokenizer-default flips.
 
-### STAGE 1 COMPLETE (batch finished 2026-05-26 01:39 — TRIAGE, `per_class` audit NOT run)
+### STAGE 1 COMPLETE (batch finished 2026-05-26 01:39; `per_class` audit run on per_tier_heads)
 
-7/7 specs ran. Identical tokenization across all (alphabet 3703), so deltas are
-clean A/Bs — but **all-tier val_acc, not content** (mini body=large, 30 epochs,
-3 seeds). Result: **no content signal worth promoting from any spec.**
+7/7 specs ran. Identical tokenization across all (alphabet 3703), clean A/Bs
+(mini body=large, 30 epochs, 3 seeds). **No content signal worth promoting to
+prodlike from any spec.**
 
 - `per_tier_heads_mos4`: +0.057 all-tier val_acc (0.114→0.171), val_loss
-  9.8→5.1 — the **structural-inflation confound** (refuted at prodlike for
-  ignoring content); NOT a content signal.
+  9.8→5.1. **per_class content audit (seed0): mostly structural** (struct
+  0.46→0.60, +0.144) **with a small but real content lift** (content
+  0.0043→0.0375, +0.033 — ~8×, not pure inflation). BUT this is the arch already
+  **refuted at prodlike** (router saturates → content collapses at scale), so
+  the mini content gain is not expected to survive. No new prodlike A/B
+  warranted. (Earlier "structural-only" call was too strong — corrected by the
+  audit.)
 - `content_diffusion`: flat (−0.002 vs mos4_entropy baseline).
 - `contrastive` (InfoNCE): flat (+0.003).
-- `mask_structural_loss`: negative (val_acc 0.018) — re-confirms structural
-  supervision is load-bearing.
-- `voice_permutation_K5` (data aug): **flat** (+0.0007 val_acc, below its
-  +0.005 pass bar). The one data-side bet didn't help at mini either.
+- `mask_structural_loss`: negative (val_acc 0.018) — structural supervision
+  load-bearing.
+- `voice_permutation_K5` (data aug): **flat** (+0.0007, below its +0.005 bar).
+  The one data-side bet didn't help at mini either.
 - `content_floor_check`: body=large baseline content acc ~0.006.
-- `cluster_content` / `cluster_C256`: **INCONCLUSIVE — failed all 3 seeds**, not
-  refuted. Stale `/scratch/preframr/cluster_assignments.json` (built on the old
-  tokenizer; new vocab ids missing → `load_cluster_assignments` ValueError).
-  Regenerate the assignments against the post-FREQ_TRAJ tokenizer, then rerun.
-  (Per-arm ERROR, not a batch-level FAILED — the spec still reported its
-  baseline; check `results/*/logs/train.log`, not just the batch log.)
+- `cluster_content`: target arm `cluster_C256` originally **failed all 3 seeds**
+  on a stale `cluster_assignments.json` (old tokenizer; per-arm ERROR, not a
+  batch-level FAILED — check `results/*/logs/train.log`, not just the batch
+  log). FIXED: rebuilt the structural C256 index against the new tokenizer
+  (`build_content_clusters.py --feature structural` →
+  `data/content_clusters/mini_freqtraj_structural_c256.json`, gates PASS, 2417
+  content vids); **rerun in progress** (point the spec at it via
+  `PREFRAMR_CONTENT_CLUSTER_INDEX`).
 
-Read: model-side AND data-side interventions **reproduce their refutations on
-the corrected tokenizer** — no lift on top of the tokenizer win; leverage is
-representation, not architecture or this augmentation. Still val_acc triage, NOT
-the verdict — run `audit_checkpoint_per_class` on these ckpts before promoting
-to prodlike or touching the Refuted registry. Open infra item: cluster rerun.
+Read: every model-side AND the data-side (voice_permutation) intervention
+reproduces its refutation on the corrected tokenizer — no lift on top of the
+tokenizer win; leverage is representation. The per_tier_heads mini content lift
+is real but small and dies at prodlike. Verdict-level Refuted-registry updates
+pending the cluster rerun result.
 
 ## Tests + runner
 
