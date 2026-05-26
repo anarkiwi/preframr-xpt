@@ -52,7 +52,7 @@ _FULL_MACRO_CARGS = (
 
 _MOTIF_DICT_CONTAINER_PATH = "/scratch/preframr/motif_dict.json"
 _MOTIF_ARM = "full_macros_motif"
-_IMAGE = "anarkiwi/preframr:0.2.0"
+_IMAGE = "anarkiwi/preframr:0.2.2"
 _MOTIF_K = 256
 _MOTIF_MIN_COUNT = 3
 _MOTIF_MIN_COMPOSERS = 6

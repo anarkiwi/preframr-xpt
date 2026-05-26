@@ -7,9 +7,9 @@ high-churn research work happens.
 
 ## Packages (as of 2026-05-26)
 
-- **`preframr` 0.2.0** — framework only (train / inference / model / args /
+- **`preframr` 0.2.2** — framework only (train / inference / model / args /
   parse / stftokenize / utils + `mine_motifs.py`). Image
-  `anarkiwi/preframr:0.2.0` (+ `:latest`). No PyPI package; it ships as the
+  `anarkiwi/preframr:0.2.2` (+ `:latest`). No PyPI package; it ships as the
   docker image. Adds the motif-pass CLI wiring (`--motif-pass` / `--motif-dict`
   in args; `preframr/mine_motifs.py` → `preframr_tokens.mine_dict_from_dumps`).
   `integration_tests/` (audits, probes, fixtures, design docs) was moved OUT to
@@ -31,25 +31,23 @@ mirror; `preframr_experiments` runs from source
 
 ## Images
 
-- **`anarkiwi/preframr`** (`:latest` + `:0.2.0`) — train + test, full deps.
+- **`anarkiwi/preframr`** (`:latest` + `:0.2.2`) — train + test, full deps.
   Builds run `./run_tests.sh`. Entry points: trainer, parse, stftokenize,
   predict, mine_motifs. (`render_play` now lives in tokens.)
 - **`anarkiwi/preframr-predict` / `-xpu` / `-jetson`** — slim eval/predict
   images (`Dockerfile.predict`, + xpu / jetson base overrides). All four
   publish `:latest` + `:${VERSION}`.
 - **`anarkiwi/preframr-xpt`** — layers the runner + audits on top of
-  `anarkiwi/preframr` (pinned `ARG BASE` = `:0.1.0`; override at build to track
+  `anarkiwi/preframr` (pinned `ARG BASE` = `:0.2.2`; override at build to track
   `:latest`). Build runs `pytest tests`; the audits + orchestrator run in this
-  image. Experiment **arms** run in their per-spec `image` (default `:latest` =
-  0.2.0; e.g. the motif spec pins `:0.2.0` for `mine_motifs.py`) — so a 0.2.0
-  per-spec image needs **no** xpt rebuild; the `:0.1.0` xpt base is for the
-  runner/audit gate, not the trained arms.
+  image. Experiment **arms** run in their per-spec `image` (default `:latest`;
+  the motif spec pins `:0.2.2` for `mine_motifs.py`).
 
 Release: `release.yml` publishes on push to `main` + `v*` tags; each image
-tagged `:latest` + `:${VERSION}` (VERSION file in main; currently `0.2.0`).
+tagged `:latest` + `:${VERSION}` (VERSION file in main; currently `0.2.2`).
 Auth via `secrets.DOCKER_TOKEN` (renamed from `DOCKER_PASSWORD` — workflows
 referencing the old name fail login). Local build is faster than waiting on
-the GHA publish: `docker build -f Dockerfile . -t anarkiwi/preframr:0.1.0`.
+the GHA publish: `docker build -f Dockerfile . -t anarkiwi/preframr:0.2.2`.
 
 `build.sh` sources a gitignored `.env` (template `.env.example`) for
 `PIP_OPTS` (proxpi mirror). After a new `preframr-{audio,tokens}` release the
@@ -227,7 +225,7 @@ content should ≈ the 32768 run).
 
 Tests whether the corpus-mined motif pass (tokens 0.20.0) helps. Spec on main
 (`preframr_experiments/specs/motif_mini_body_large.py`), pinned to
-`anarkiwi/preframr:0.2.0`. Both arms run `full_macros`; the target arm adds
+`anarkiwi/preframr:0.2.2`. Both arms run `full_macros`; the target arm adds
 `--motif-pass` with a dict a `pre_run_hook` mines from the staged train dumps
 (docker-runs `/preframr/mine_motifs.py`, motif OFF, same pipeline → matches at
 encode). Launch (GPU; STAGE 2 must be done):
@@ -265,7 +263,7 @@ PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. nohup python3 \
   `PYTHONPATH=. python3 -m preframr_experiments.run <spec> --root <work> [--seeds N --tkvocab 8192 ...]`.
   One spec module per A/B under `preframr_experiments/specs/`; the runner stages
   data → parse → tokenize → train per (arm, seed), each in a `docker run` of
-  `spec.image` (default `anarkiwi/preframr` = `:latest` = 0.2.0; pin per-spec
+  `spec.image` (default `anarkiwi/preframr` = `:latest` = 0.2.2; pin per-spec
   via `image=`). `nohup … & disown` for long runs.
 - **Spec-dependent tokenization** (motif / cluster_content / voice_permutation —
   anything whose `pre_run_hook` mutates staged dumps or mines a per-spec
