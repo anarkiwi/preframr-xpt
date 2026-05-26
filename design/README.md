@@ -92,8 +92,12 @@ AGENTS.md "Predict-host envelope" (deferred).
 
 ## 4. Runner / experiment infra & process
 
+Serves the Generalization axis: `generalization_metric_tracking_design.md` wires
+the decisive content-tier audit + scorecard + cross-run ledger.
+
 | Doc | Summary | Status |
 |---|---|---|
+| [`generalization_metric_tracking_design.md`](generalization_metric_tracking_design.md) | Make the decisive content-tier `per_class` audit a runner stage (not run by hand), add a generalization scorecard (per-eval_b-family content acc + spread + loop/prompt) to the report, and a tokenizer-hash-keyed cross-run ledger that auto-flags confounded comparisons. Reuses existing audits + the metric registry. | Drafted, pending impl (land with no run in flight; tokenizer-health metrics landed) |
 | [`runner_iteration_efficiency_design.md`](runner_iteration_efficiency_design.md) | Per-run overhead: (1) cache key on parse/tokenize cargs — **landed**; (2) symlink-farm + RO dump mount (no 2.7 GB copy) — **landed**; (3) drop the post-step chown container — pending. | #1+#2 landed; #3 pending |
 | [`flag_stage_routing_design.md`](flag_stage_routing_design.md) | `FLAG_STAGES` registry + `add_stage_args` for stage-aware flag forwarding (parse/tokenize/train). | Pending impl |
 | [`auto_early_abort_design.md`](auto_early_abort_design.md) | Spec-declared `decision_rule` evaluated after each (arm, seed); writes a refutation stub on falsification. | Deferred (cloud-rental prereq) |
