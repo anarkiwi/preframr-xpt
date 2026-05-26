@@ -1,5 +1,10 @@
 # Music-LLM landscape + cheap fail-fast experiment plan
 
+**SUPERSEDED (2026-05-25):** this plan's pivot — the diffusion prodlike verdict
+— came back FAIL, and the content win instead came **tokenizer-side**
+(`full_macros` / FREQ_TRAJ). The model-side fail-fast arc is closed; kept as a
+dated snapshot. Current state: `../AGENTS.md`.
+
 **Status (2026-05-23):** strategic survey to leverage findings from
 adjacent music-LM work, ranked alongside the preframr-specific cheap
 probes we can run on CPU (no GPU contention with the in-flight

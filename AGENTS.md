@@ -123,6 +123,31 @@ negligible (mini ~29M; prodlike tokenizes fresh regardless).
 
 NOT bundled: effective-batch change, GPU rental, tokenizer-default flips.
 
+### STAGE 1 progress (2026-05-26, mid-batch — TRIAGE ONLY, `per_class` audit NOT run)
+
+5/7 specs done, no FAILED, healthy. Cleared `content_diffusion` (where the
+prior run was stopped); `voice_permutation` running — its
+`augment_voice_permutation.py` pre_run_hook (kept here, NOT moved to
+preframr-aug) emits 750 variants/seed clean; `cluster_content` (cache-disabled)
+last. Identical tokenization across all specs (alphabet 3703), so the deltas
+are clean model-side A/Bs — but **all-tier val_acc, not content**:
+
+- `per_tier_heads_mos4`: +0.057 all-tier val_acc (0.114→0.171), val_loss
+  9.8→5.1 — the **structural-inflation confound** (refuted at prodlike for
+  ignoring content); NOT a content signal.
+- `content_diffusion`: flat (−0.002 vs mos4_entropy baseline).
+- `contrastive` (InfoNCE): flat (+0.003).
+- `mask_structural_loss`: negative (val_acc 0.018) — re-confirms structural
+  supervision is load-bearing.
+- `content_floor_check`: body=large baseline content acc ~0.006.
+
+Read so far: the model-side specs **reproduce their refutations on the
+corrected tokenizer** — no content lift on top of the tokenizer win; leverage
+is representation/data, not architecture. This is val_acc triage, NOT the
+verdict: run `audit_checkpoint_per_class` on these ckpts before promoting
+anything to prodlike or touching the Refuted registry. Data-side
+`voice_permutation` is the one still worth watching (augmentation, not arch).
+
 ## Tests + runner
 
 - Framework tests (in `anarkiwi/preframr`): `./run_tests.sh` (black, pytest

@@ -1,10 +1,11 @@
 # Content-tier discrete diffusion head (Approach A)
 
-**Status:** Draft, pending review. Fallback for the in-flight
-`per_tier_heads_prodlike` Phase 3 if it refutes. Supersedes the
-"Approach A" bullet in `multi_modal_objective_design.md`. Reuses
-the per-tier head + router infrastructure landed by Phase 1 of
-`per_tier_heads_design.md`.
+**Status:** **REFUTED** — the sampling-side change didn't move the CE outcome,
+and `per_tier_heads_prodlike` (the approach this was the fallback for) also
+refuted. Re-seen flat in the 2026-05 re-arc mini triage (−0.002 val_acc vs the
+mos4+entropy baseline). Was the "Approach A" fallback; superseded that bullet
+in `multi_modal_objective_design.md`. Reused the per-tier head + router
+infrastructure from `per_tier_heads_design.md`.
 
 ## Problem (re-anchored after Approach C)
 

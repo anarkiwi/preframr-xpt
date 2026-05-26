@@ -1,10 +1,13 @@
 # Model / loss experiment queue
 
-**Status:** Reference index. Backlog of model + loss interventions
-queued behind Approach C (`per_tier_heads_design.md`, in flight at
-prodlike) and Approach A (`content_diffusion_design.md`, drafted as
-the immediate fallback). Each entry is a thumbnail; promote to a
-full design doc on approval.
+**Status:** Reference index (decision tree retained; framing closed). The
+B→C→A model-side arc is **done**: Approach C (`per_tier_heads_design.md`) and
+Approach A (`content_diffusion_design.md`) both **refuted at prodlike** (see
+`../data/refuted/`). The content win came **tokenizer-side** (`full_macros` /
+FREQ_TRAJ, 2026-05-25) — not from any queue item here. Model-side bets were
+re-tested on the new tokenizer in the 2026-05 re-arc; triage reproduces the
+refutations (see `../AGENTS.md` STAGE 1 progress). Each entry is a thumbnail;
+promote on approval.
 
 ## Why this doc
 

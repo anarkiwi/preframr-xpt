@@ -1,8 +1,12 @@
 # Per-tier output heads + MoS content head (Approach C)
 
-**Status:** Pending review. Supersedes `multi_modal_objective_design.md`
-Approach C bullet after `contrastive_infonce_auxiliary` refuted at
-mini sweep + prodlike (see `../data/refuted/contrastive_infonce_auxiliary.md`).
+**Status:** **REFUTED at prodlike** (mos + entropy variants — router posterior
+saturates, outputs ignore prompt content; see
+`../data/refuted/per_tier_heads_mos_prodlike.md` +
+`per_tier_heads_entropy_prodlike.md`). The all-tier val_acc lift it produces is
+**structural, not content** (re-seen in the 2026-05 re-arc mini triage: +0.057
+all-tier acc, content unverified). Superseded `multi_modal_objective_design.md`
+Approach C bullet after `contrastive_infonce_auxiliary` refuted.
 
 ## Problem (re-anchored)
 
