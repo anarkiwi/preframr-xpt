@@ -1,0 +1,104 @@
+{
+  "covered_clusters_eval_b": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+  ],
+  "covered_clusters_train": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+  ],
+  "eval_a_per_composer": 5,
+  "eval_b_per_subset": 8,
+  "eval_b_subsets": [
+    {
+      "cluster": 4,
+      "n_dumps": 8,
+      "source_list": "prodlike/eval-B-daglish.list",
+      "stem": "daglish"
+    },
+    {
+      "cluster": 4,
+      "n_dumps": 8,
+      "source_list": "prodlike/eval-B-follin.list",
+      "stem": "follin"
+    },
+    {
+      "cluster": 1,
+      "n_dumps": 8,
+      "source_list": "prodlike/eval-B-crisps.list",
+      "stem": "crisps"
+    },
+    {
+      "cluster": 2,
+      "n_dumps": 8,
+      "source_list": "prodlike/eval-B-mibri.list",
+      "stem": "mibri"
+    },
+    {
+      "cluster": 3,
+      "n_dumps": 8,
+      "source_list": "prodlike/eval-B-marquis.list",
+      "stem": "marquis"
+    },
+    {
+      "cluster": 6,
+      "n_dumps": 8,
+      "source_list": "prodlike/eval-B-winterberg.list",
+      "stem": "winterberg"
+    },
+    {
+      "cluster": 7,
+      "n_dumps": 8,
+      "source_list": "prodlike/eval-B-wilson.list",
+      "stem": "wilson"
+    }
+  ],
+  "pick_version": "mini_stratified_v1",
+  "train_composers": [
+    {
+      "cluster": 1,
+      "n_eval_a": 5,
+      "n_train": 25,
+      "name": "DRAX"
+    },
+    {
+      "cluster": 2,
+      "n_eval_a": 5,
+      "n_train": 25,
+      "name": "Goto80"
+    },
+    {
+      "cluster": 3,
+      "n_eval_a": 5,
+      "n_train": 25,
+      "name": "Whittaker_David"
+    },
+    {
+      "cluster": 4,
+      "n_eval_a": 5,
+      "n_train": 25,
+      "name": "Jammer"
+    },
+    {
+      "cluster": 6,
+      "n_eval_a": 5,
+      "n_train": 25,
+      "name": "Galway_Martin"
+    },
+    {
+      "cluster": 7,
+      "n_eval_a": 5,
+      "n_train": 25,
+      "name": "Hubbard_Rob"
+    }
+  ],
+  "train_per_composer": 25
+}

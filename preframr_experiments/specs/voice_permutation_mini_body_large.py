@@ -1,8 +1,7 @@
-"""Phase 1 mini A/B for voice-permutation augmentation. Target: voice_permutation_K5 (each train dump emits 5 non-identity voice permutations alongside, parser re-encodes macros on each variant). Baseline: no augmentation. 3 seeds, mini body=large, 60 epochs. Pass: val_acc on eval_a >= baseline + 0.005 AND no structural-tier regression > 1sigma. Sibling to melody_transfer_augmentation cross-song splice (see integration_tests/design/melody_transfer_augmentation_design.md 'Voice permutation variant'). Requires the pre_run_hook to bake permuted dumps into work_dir before the parse stage; PREFRAMR_DATASET_CACHE_DISABLE=1 because the augmented dumps are spec-dependent (different than the baseline's cache key would suggest)."""
+"""Phase 1 mini A/B for voice-permutation augmentation. Target: voice_permutation_K5 (each train dump emits 5 non-identity voice permutations alongside, parser re-encodes macros on each variant). Baseline: no augmentation. 3 seeds, mini body=large, 60 epochs. Pass: val_acc on eval_a >= baseline + 0.005 AND no structural-tier regression > 1sigma. Sibling to melody_transfer_augmentation cross-song splice (see preframr-aug:design/melody_transfer_augmentation_design.md 'Voice permutation variant'). Requires the pre_run_hook to bake permuted dumps into work_dir before the parse stage; PREFRAMR_DATASET_CACHE_DISABLE=1 because the augmented dumps are spec-dependent (different than the baseline's cache key would suggest)."""
 
 from __future__ import annotations
 
-import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -27,11 +26,8 @@ _TRAIN_ARGS = mini_train_args(body="large").replace(
     "--max-epochs 160", "--max-epochs 60"
 )
 
-_PREFRAMR_SRC_DIR = os.environ.get(
-    "PREFRAMR_SRC_DIR", "/scratch/anarkiwi/preframr/preframr"
-)
-_AUG_SCRIPT = Path(_PREFRAMR_SRC_DIR).parent / (
-    "integration_tests/profile/augment_voice_permutation.py"
+_AUG_SCRIPT = (
+    Path(__file__).resolve().parent.parent / "audit" / "augment_voice_permutation.py"
 )
 
 

@@ -1,0 +1,18 @@
+{
+  "groups": {
+    "real": {
+      "n_pairs": 15,
+      "mean_jaccard": 0.10731025113482646,
+      "std_jaccard": 0.04982519644241067,
+      "mean_ngram4": 0.0005937225898262815
+    },
+    "random": {
+      "n_pairs": 15,
+      "mean_jaccard": 0.25293174816155484,
+      "std_jaccard": 0.05885420987454486,
+      "mean_ngram4": 0.03245006522313773
+    }
+  },
+  "diversity_ratio": 1.194923953291244,
+  "verdict": "prompt_ignored"
+}

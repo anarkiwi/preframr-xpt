@@ -7,7 +7,9 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
+from preframr_experiments import base as xpt_base
 from preframr_experiments.base import (
     ExperimentSpec,
     Arm,
@@ -47,7 +49,18 @@ def _populate_work_dir(work_dir: Path, data_layout):
         (sub / "Composer" / "Song.0.blocks.npy").write_bytes(b"npy-bytes")
 
 
-class TestDatasetCacheKey(unittest.TestCase):
+class _CacheKeyTestCase(unittest.TestCase):
+    """Stub the per-image tokens-version docker query so cache-key tests stay hermetic (no docker)."""
+
+    def setUp(self):
+        p = mock.patch.object(
+            xpt_base, "_image_tokens_version", return_value="test-0.0.0"
+        )
+        p.start()
+        self.addCleanup(p.stop)
+
+
+class TestDatasetCacheKey(_CacheKeyTestCase):
     def test_stable_under_layout_reordering(self):
         spec = _toy_spec()
         a = _dataset_cache_key(spec, {"train": ["x", "y"], "eval": ["e"]})
@@ -76,7 +89,9 @@ class TestDatasetCacheKey(unittest.TestCase):
         spec = _toy_spec()
         layout = {"train": ["x"]}
         base = _dataset_cache_key(spec, layout, "")
-        macro = _dataset_cache_key(spec, layout, "--freq-nudge-pass --release-update-pass")
+        macro = _dataset_cache_key(
+            spec, layout, "--freq-nudge-pass --release-update-pass"
+        )
         self.assertNotEqual(base, macro)
 
     def test_train_only_cargs_do_not_change_key(self):
@@ -102,7 +117,9 @@ class TestDatasetCacheKey(unittest.TestCase):
         layout = {"train": ["x"]}
         macro_only = _dataset_cache_key(spec, layout, "--freq-nudge-pass")
         mixed = _dataset_cache_key(
-            spec, layout, "--per-tier-heads --freq-nudge-pass --per-tier-content-mos-k 4"
+            spec,
+            layout,
+            "--per-tier-heads --freq-nudge-pass --per-tier-content-mos-k 4",
         )
         self.assertEqual(macro_only, mixed)
 
@@ -115,8 +132,23 @@ class TestDatasetCacheKey(unittest.TestCase):
         unknown = _dataset_cache_key(spec, layout, "--some-new-pass")
         self.assertNotEqual(base, unknown)
 
+    def test_changes_with_tokens_version(self):
+        """A tokenizer upgrade busts the key so stale parse/tokenize artefacts
+        from the prior version are never silently reused."""
+        spec = _toy_spec()
+        layout = {"train": ["x"]}
+        with mock.patch.object(
+            xpt_base, "_image_tokens_version", return_value="0.17.0"
+        ):
+            v17 = _dataset_cache_key(spec, layout)
+        with mock.patch.object(
+            xpt_base, "_image_tokens_version", return_value="0.18.0"
+        ):
+            v18 = _dataset_cache_key(spec, layout)
+        self.assertNotEqual(v17, v18)
 
-class TestDatasetCachePopulateAndHit(unittest.TestCase):
+
+class TestDatasetCachePopulateAndHit(_CacheKeyTestCase):
     def test_miss_when_no_cache(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
@@ -250,7 +282,7 @@ class TestStageDumps(unittest.TestCase):
             self.assertFalse((dst / "Composer" / "Gone.9.dump.parquet").exists())
 
 
-class TestCacheExcludesDumps(unittest.TestCase):
+class TestCacheExcludesDumps(_CacheKeyTestCase):
     def test_populate_skips_dump_files(self):
         """The cache stores parse/tokenize OUTPUTS only -- never the raw dumps
         (real or symlinked), which already live at src_root."""

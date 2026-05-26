@@ -120,20 +120,16 @@ for entry in "${SPECS[@]}"; do
     cp "${src}" "${var_dir}/${composer}/"
 
     docker run --rm \
-        -v "${REPO}/preframr":/preframr \
         -v "${base_dir}":/scratch/preframr \
-        -w / \
         anarkiwi/preframr \
-        /preframr/core/parse.py --no-require-pq --max-files 1 \
+        /preframr/parse.py --no-require-pq --max-files 1 \
             ${base_cargs} \
             --reglogs '/scratch/preframr/*/*.dump.parquet' > "${base_dir}/parse.log" 2>&1 &
     base_pid=$!
     docker run --rm \
-        -v "${REPO}/preframr":/preframr \
         -v "${var_dir}":/scratch/preframr \
-        -w / \
         anarkiwi/preframr \
-        /preframr/core/parse.py --no-require-pq --max-files 1 \
+        /preframr/parse.py --no-require-pq --max-files 1 \
             ${var_cargs} \
             --reglogs '/scratch/preframr/*/*.dump.parquet' > "${var_dir}/parse.log" 2>&1 &
     var_pid=$!

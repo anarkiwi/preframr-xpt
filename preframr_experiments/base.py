@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 import hashlib
 import json
 import logging
@@ -20,12 +21,18 @@ PREFLIGHT_DIR = PACKAGE_DIR / "preflight"
 
 _PREFRAMR_SRC_ENV = "PREFRAMR_SRC_DIR"
 _PREFRAMR_SRC_DEFAULT = Path("/scratch/anarkiwi/preframr/preframr")
+_PREFRAMR_BIND_SRC_ENV = "PREFRAMR_BIND_SRC"
 
 
 def _preframr_src_dir() -> Path:
-    """Path on the host to the main repo's ``preframr/`` source tree. Bind-mounted into preflight + train + tokenize containers. Override with ``$PREFRAMR_SRC_DIR``."""
+    """Path on the host to the main repo's ``preframr/`` source tree. Bind-mounted over the baked image only when ``_src_bind_enabled()``. Override with ``$PREFRAMR_SRC_DIR``."""
     raw = os.environ.get(_PREFRAMR_SRC_ENV)
     return Path(raw) if raw else _PREFRAMR_SRC_DEFAULT
+
+
+def _src_bind_enabled() -> bool:
+    """Whether to bind-mount the working-tree ``preframr/`` over the baked image code. OFF by default: runs use the frozen, tested baked image, so a long run can't be perturbed by edits and the working tree stays free to change. Set ``$PREFRAMR_BIND_SRC=1`` (run.py ``--bind-src``) to opt in for iterating without a rebake."""
+    return os.environ.get(_PREFRAMR_BIND_SRC_ENV, "") not in ("", "0")
 
 
 _DATASET_CACHE_SUBDIR = "dataset_cache"
@@ -374,12 +381,33 @@ def _dataset_affecting_cargs(extra_cargs: str) -> list[str]:
     return out
 
 
+@functools.lru_cache(maxsize=None)
+def _image_tokens_version(image: str) -> str:
+    """preframr-tokens version baked into ``image`` (queried once per image). Folded into the dataset cache key so a tokenizer upgrade invalidates stale parse/tokenize artefacts instead of silently reusing them. The key is otherwise version-blind: pre-this-fix, a 0.17->0.18 bump kept the same key and served stale tokenization."""
+    out = subprocess.run(
+        [
+            "docker",
+            "run",
+            "--rm",
+            image,
+            "python3",
+            "-c",
+            "import importlib.metadata as m; print(m.version('preframr-tokens'))",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=120,
+    )
+    return out.stdout.strip()
+
+
 def _dataset_cache_key(
     spec: "ExperimentSpec",
     data_layout: dict[str, list[str]],
     extra_cargs: str = "",
 ) -> str:
-    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the spec's pipeline_spec + tier-pinned data + corpus-shape args + the parse/tokenize-affecting slice of the arm's extra_cargs don't change."""
+    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the spec's pipeline_spec + tier-pinned data + corpus-shape args + the parse/tokenize-affecting slice of the arm's extra_cargs + the image's preframr-tokens version don't change."""
     payload = {
         "pipeline_spec": spec.pipeline_spec,
         "seq_len": spec.seq_len,
@@ -390,6 +418,7 @@ def _dataset_cache_key(
         "tier": spec.tier,
         "data_layout": {k: sorted(v) for k, v in data_layout.items()},
         "dataset_cargs": _dataset_affecting_cargs(extra_cargs),
+        "tokens_version": _image_tokens_version(spec.image),
     }
     blob = json.dumps(payload, sort_keys=True, default=str).encode()
     return hashlib.sha256(blob).hexdigest()[:16]
@@ -479,8 +508,7 @@ def _docker_run(
     name: Optional[str] = None,
     role: str = "train",
 ) -> int:
-    """Single ``docker run --rm`` invocation. Streams stdout+stderr to ``log_path``; returns the container exit code. ``role`` selects which side of the preframr/ tree is bind-mounted over the bake: ``"train"`` mounts ``preframr/train/`` only; ``"inference"`` mounts ``preframr/inference/`` only. See ``design/train_inference_split_design.md``."""
-    repo_preframr_pkg = _preframr_src_dir()
+    """Single ``docker run --rm`` invocation. Streams stdout+stderr to ``log_path``; returns the container exit code. By default the container runs the baked image code. When ``_src_bind_enabled()``, ``role`` selects which side of the working-tree preframr/ tree is bind-mounted over the bake: ``"train"`` mounts ``preframr/train/`` only; ``"inference"`` mounts ``preframr/inference/`` only. See ``design/train_inference_split_design.md``."""
     cmd = [
         "docker",
         "run",
@@ -490,10 +518,12 @@ def _docker_run(
         "-v",
         f"{bind_root}:/scratch/preframr",
     ]
-    if role == "inference":
-        cmd += ["-v", f"{repo_preframr_pkg / 'inference'}:/preframr/inference"]
-    else:
-        cmd += ["-v", f"{repo_preframr_pkg / 'train'}:/preframr/train"]
+    if _src_bind_enabled():
+        repo_preframr_pkg = _preframr_src_dir()
+        if role == "inference":
+            cmd += ["-v", f"{repo_preframr_pkg / 'inference'}:/preframr/inference"]
+        else:
+            cmd += ["-v", f"{repo_preframr_pkg / 'train'}:/preframr/train"]
     for host_path, container_path in extra_volumes or []:
         cmd += ["-v", f"{host_path}:{container_path}"]
     if gpus:
@@ -731,9 +761,9 @@ def preflight_check(
         "--memory=4g",
         "-v",
         f"{PREFLIGHT_DIR.resolve()}:/preflight",
-        "-v",
-        f"{_preframr_src_dir().resolve()}:/preframr",
     ]
+    if _src_bind_enabled():
+        cmd += ["-v", f"{_preframr_src_dir().resolve()}:/preframr"]
     if _gpu_available():
         cmd += ["--gpus=all"]
     cmd += [spec.image, "python3", "/preflight/train_preflight_smoke.py"]

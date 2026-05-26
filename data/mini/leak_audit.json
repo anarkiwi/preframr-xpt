@@ -1,0 +1,22 @@
+{
+  "hvsc_root": "/scratch/preframr/hvsc",
+  "set_sizes": {
+    "train": 150,
+    "eval-A": 30,
+    "eval-B-daglish": 8,
+    "eval-B-follin": 8,
+    "eval-B-crisps": 8,
+    "eval-B-mibri": 8,
+    "eval-B-marquis": 8,
+    "eval-B-winterberg": 8,
+    "eval-B-wilson": 8
+  },
+  "fingerprint_violations": [],
+  "ngram": {
+    "window": 128,
+    "warn_threshold": 0.01,
+    "abort_threshold": 0.05,
+    "warnings": [],
+    "aborts": []
+  }
+}

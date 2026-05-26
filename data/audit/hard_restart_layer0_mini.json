@@ -1,0 +1,67 @@
+{
+  "by_cluster": {
+    "1": {
+      "hr_per_raw_row": 0.021477,
+      "hr_sequences": 18229,
+      "n_dumps": 25,
+      "n_rows": 848758
+    },
+    "2": {
+      "hr_per_raw_row": 0.013461,
+      "hr_sequences": 23170,
+      "n_dumps": 25,
+      "n_rows": 1721268
+    },
+    "3": {
+      "hr_per_raw_row": 0.032532,
+      "hr_sequences": 31611,
+      "n_dumps": 25,
+      "n_rows": 971693
+    },
+    "4": {
+      "hr_per_raw_row": 0.007796,
+      "hr_sequences": 28772,
+      "n_dumps": 25,
+      "n_rows": 3690538
+    },
+    "6": {
+      "hr_per_raw_row": 0.004472,
+      "hr_sequences": 11253,
+      "n_dumps": 25,
+      "n_rows": 2516137
+    },
+    "7": {
+      "hr_per_raw_row": 0.002663,
+      "hr_sequences": 5946,
+      "n_dumps": 25,
+      "n_rows": 2232485
+    }
+  },
+  "by_flavor": {
+    "0_test_only": 10241,
+    "1_test_gate": 57583,
+    "2_gate_clear": 51157
+  },
+  "by_voice": {
+    "0": 41689,
+    "1": 41950,
+    "2": 35342
+  },
+  "compression_factor_assumed": 8.0,
+  "n_dumps": 150,
+  "per_song": {
+    "est_atoms_reduction_pct": 4.272,
+    "est_atoms_reduction_pct_aggregate": 7.945,
+    "hr_per_raw_row": 0.009931,
+    "hr_per_song_mean": 793.21
+  },
+  "tier": "mini",
+  "totals": {
+    "hr_next_frame": 55006,
+    "hr_same_frame": 63975,
+    "hr_sequences": 118981,
+    "n_ctrl_writes": 745641,
+    "n_rows": 11980879
+  },
+  "verdict": "SOFT (3-5% same-frame -- proceed but expect Hold, not Flip)"
+}

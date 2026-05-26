@@ -1,0 +1,93 @@
+{
+  "by_cluster": {
+    "1": {
+      "fuzzy_undercount": 59130,
+      "lz_undercount": 6662,
+      "n_back_ref": 6662,
+      "n_dumps": 25,
+      "n_fuzzy": 2736,
+      "n_overlays_on_fuzzy": 26829,
+      "n_transposed": 327,
+      "total_undercount": 67100,
+      "transposed_undercount": 1308
+    },
+    "2": {
+      "fuzzy_undercount": 120164,
+      "lz_undercount": 19890,
+      "n_back_ref": 19890,
+      "n_dumps": 25,
+      "n_fuzzy": 6144,
+      "n_overlays_on_fuzzy": 53938,
+      "n_transposed": 1231,
+      "total_undercount": 144978,
+      "transposed_undercount": 4924
+    },
+    "3": {
+      "fuzzy_undercount": 164126,
+      "lz_undercount": 6298,
+      "n_back_ref": 6298,
+      "n_dumps": 25,
+      "n_fuzzy": 7209,
+      "n_overlays_on_fuzzy": 74854,
+      "n_transposed": 384,
+      "total_undercount": 171960,
+      "transposed_undercount": 1536
+    },
+    "4": {
+      "fuzzy_undercount": 137248,
+      "lz_undercount": 12624,
+      "n_back_ref": 12624,
+      "n_dumps": 21,
+      "n_fuzzy": 5399,
+      "n_overlays_on_fuzzy": 63225,
+      "n_transposed": 306,
+      "total_undercount": 151096,
+      "transposed_undercount": 1224
+    },
+    "6": {
+      "fuzzy_undercount": 54872,
+      "lz_undercount": 5915,
+      "n_back_ref": 5915,
+      "n_dumps": 19,
+      "n_fuzzy": 2765,
+      "n_overlays_on_fuzzy": 24671,
+      "n_transposed": 259,
+      "total_undercount": 61823,
+      "transposed_undercount": 1036
+    },
+    "7": {
+      "fuzzy_undercount": 142228,
+      "lz_undercount": 12266,
+      "n_back_ref": 12266,
+      "n_dumps": 23,
+      "n_fuzzy": 7403,
+      "n_overlays_on_fuzzy": 63711,
+      "n_transposed": 1366,
+      "total_undercount": 159958,
+      "transposed_undercount": 5464
+    }
+  },
+  "observed_row_delta_from_emission_probe": 309295,
+  "per_emission_undercount_doc": {
+    "lz_exact": "_back_ref_rows emits 2 rows; save uses ref_cost=1 \u2192 off by 1",
+    "lz_fuzzy": "_pattern_replay_rows (3) + n_overlays \u00d7 _pattern_overlay_rows (3) = 3+3n emit; save uses 1+n charge \u2192 off by 2+2n",
+    "lz_transposed": "_pattern_replay_rows (3) + _pattern_overlay_rows (3) = 6 emit; save uses ref_cost+1=2 \u2192 off by 4"
+  },
+  "tier": "mini",
+  "totals": {
+    "fuzzy_emit_rows": 1016652,
+    "fuzzy_undercount": 677768,
+    "lz_emit_rows": 127310,
+    "lz_undercount": 63655,
+    "n_back_ref": 63655,
+    "n_dumps": 138,
+    "n_fuzzy": 31656,
+    "n_overlays_on_fuzzy": 307228,
+    "n_rows_var": 2468742,
+    "n_transposed": 3873,
+    "total_undercount": 756915,
+    "transposed_emit_rows": 23238,
+    "transposed_undercount": 15492
+  },
+  "undercount_explains_pct": 244.7
+}

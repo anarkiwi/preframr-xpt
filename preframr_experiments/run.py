@@ -6,10 +6,13 @@ from __future__ import annotations
 import argparse
 import importlib
 import logging
+import os
+import re
 import sys
 from pathlib import Path
 
 from preframr_experiments.base import (
+    _PREFRAMR_BIND_SRC_ENV,
     ExperimentSpec,
     preflight_check,
     resolve_data_layout,
@@ -30,6 +33,16 @@ def load_spec(name: str) -> ExperimentSpec:
     if not isinstance(spec, ExperimentSpec):
         raise SystemExit(f"{mod_name} must expose a top-level ``spec: ExperimentSpec``")
     return spec
+
+
+def _override_train_arg(train_args: str, flag: str, value) -> str:
+    """Replace ``<flag> <n>`` (or ``<flag>=<n>``) in a train-arg string; append if absent. No-op when value is None."""
+    if value is None:
+        return train_args
+    new, n = re.subn(
+        rf"({re.escape(flag)})(=|\s+)\S+", rf"\g<1>\g<2>{value}", train_args
+    )
+    return new if n else f"{train_args} {flag} {value}"
 
 
 def main():
@@ -57,6 +70,31 @@ def main():
         help="Override spec.seeds. Useful for fast smoke runs.",
     )
     ap.add_argument(
+        "--tkvocab",
+        type=int,
+        default=None,
+        help=(
+            "Override spec.tkvocab (e.g. vocab-trim re-runs). Folds into the "
+            "dataset-cache key, so a trimmed cap re-tokenizes rather than "
+            "serving a stale tokenization."
+        ),
+    )
+    ap.add_argument(
+        "--batch-size",
+        type=int,
+        default=None,
+        help=(
+            "Override --batch-size (micro-batch) in spec.train_args. Pair with "
+            "--accumulate-grad-batches to hold the effective batch constant."
+        ),
+    )
+    ap.add_argument(
+        "--accumulate-grad-batches",
+        type=int,
+        default=None,
+        help="Override --accumulate-grad-batches in spec.train_args.",
+    )
+    ap.add_argument(
         "--only-arm",
         type=str,
         default=None,
@@ -78,16 +116,52 @@ def main():
             "specs in one TB)."
         ),
     )
+    ap.add_argument(
+        "--bind-src",
+        action="store_true",
+        help=(
+            "Bind-mount the working-tree preframr/ over the baked image so "
+            "containers run current code without a rebake. OFF by default: "
+            "runs use the frozen, tested baked image, so a long run can't be "
+            "perturbed by edits and the working tree stays free to change. "
+            "Use only for short iterate-without-rebake loops."
+        ),
+    )
     args = ap.parse_args()
+
+    if args.bind_src:
+        os.environ[_PREFRAMR_BIND_SRC_ENV] = "1"
 
     logging.basicConfig(
         level=logging.INFO, format="[%(asctime)s] %(levelname)s %(message)s"
     )
     logger = logging.getLogger("experiments.run")
+    if args.bind_src:
+        logger.warning(
+            "--bind-src: bind-mounting working-tree preframr/ over the baked "
+            "image; this run reflects uncommitted/un-gated code."
+        )
 
     spec = load_spec(args.experiment)
     if args.seeds is not None:
         spec.seeds = args.seeds
+    if args.tkvocab is not None:
+        spec.tkvocab = args.tkvocab
+    spec.train_args = _override_train_arg(
+        spec.train_args, "--batch-size", args.batch_size
+    )
+    spec.train_args = _override_train_arg(
+        spec.train_args, "--accumulate-grad-batches", args.accumulate_grad_batches
+    )
+    if args.tkvocab is not None or args.batch_size is not None or (
+        args.accumulate_grad_batches is not None
+    ):
+        logger.info(
+            "overrides: tkvocab=%s batch_size=%s accumulate_grad_batches=%s",
+            args.tkvocab,
+            args.batch_size,
+            args.accumulate_grad_batches,
+        )
     validate_metric_names(spec)
 
     data_layout = resolve_data_layout(spec)

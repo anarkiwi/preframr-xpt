@@ -1,0 +1,52 @@
+{
+  "hvsc_root": "/scratch/preframr/training-dumps",
+  "duration_floor_s": 30.0,
+  "fingerprint_writes": 2000,
+  "train_top_n": 0,
+  "train_cap_per_composer": 200,
+  "eval_per_composer": 16,
+  "train": {
+    "total_dumps": 789,
+    "by_composer": {
+      "Goto80": {
+        "post_filter_dumps": 164,
+        "train": 148,
+        "eval_A": 16
+      },
+      "Hubbard_Rob": {
+        "post_filter_dumps": 173,
+        "train": 157,
+        "eval_A": 16
+      },
+      "Galway_Martin": {
+        "post_filter_dumps": 100,
+        "train": 84,
+        "eval_A": 16
+      },
+      "Tel_Jeroen": {
+        "post_filter_dumps": 295,
+        "train": 200,
+        "eval_A": 16
+      },
+      "DRAX": {
+        "post_filter_dumps": 770,
+        "train": 200,
+        "eval_A": 16
+      }
+    }
+  },
+  "eval_A": {
+    "total_dumps": 80,
+    "per_composer": 16
+  },
+  "eval_B": {
+    "Daglish_Ben": {
+      "post_filter_dumps": 169,
+      "eval_B": 16
+    },
+    "Follin_Tim": {
+      "post_filter_dumps": 70,
+      "eval_B": 16
+    }
+  }
+}
