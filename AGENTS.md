@@ -144,8 +144,10 @@ prodlike from any spec.**
 - `voice_permutation_K5` (data aug): **flat** (+0.0007, below its +0.005 bar).
   The one data-side bet didn't help at mini either.
 - `content_floor_check`: body=large baseline content acc ~0.006.
-- `cluster_content`: **still blocked — INCONCLUSIVE, needs a code fix, not a
-  data regen.** Rebuilt the structural C256 index against the new tokenizer
+- `cluster_content`: **INCONCLUSIVE — deferred by decision** (low-value: an
+  already-refuted model-side bet; a mini number wouldn't move the verdict).
+  Blocked on a code fix, not a data regen — documented here, not actioned.
+  Rebuilt the structural C256 index against the new tokenizer
   (range now correct `[0,3702]`, gates PASS) — fixed the gross stale mismatch,
   but the rerun `cluster_C256` still fails all 3 seeds:
   `load_cluster_assignments` ValueError `vocab id 60 (local 32) ... missing`.
@@ -163,8 +165,9 @@ prodlike from any spec.**
 Read: every model-side AND the data-side (voice_permutation) intervention
 reproduces its refutation on the corrected tokenizer — no lift on top of the
 tokenizer win; leverage is representation. The per_tier_heads mini content lift
-is real but small and dies at prodlike. Verdict-level Refuted-registry updates
-pending the cluster rerun result.
+is real but small and dies at prodlike. **STAGE 1 concluded** (cluster cell
+deferred, above). Next prodlike effort goes to the **representation/tokenizer
+axis** where the win lives (`full_macros`), not more model-side A/Bs.
 
 ## Tests + runner
 
