@@ -1,4 +1,4 @@
-"""Phase 2 mini A/B for per-tier heads + MoS content head (Approach C); 3 seeds, body=large mini, 60 epochs. Spec details in the main preframr repo at `integration_tests/design/per_tier_heads_design.md`."""
+"""Phase 2 mini A/B for per-tier heads + MoS content head (Approach C); 3 seeds, body=large mini, 60 epochs. Spec details at `design/per_tier_heads_design.md` (this repo)."""
 
 from __future__ import annotations
 

@@ -8,6 +8,8 @@ import subprocess
 import sys
 from collections import defaultdict
 
+_INTEGRATION_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 def parse_list(path):
     """Return list of (rel_path, composer) tuples from a picker .list file."""
@@ -68,10 +70,10 @@ def run_one(args, label):
         "-v",
         "/scratch/anarkiwi/preframr/preframr:/preframr",
         "-v",
-        "/scratch/anarkiwi/preframr/integration_tests:/integration_tests",
+        f"{_INTEGRATION_DIR}:/integration",
         args.image,
         "python3",
-        "/integration_tests/eval_per_composer.py",
+        "/integration/eval_per_composer.py",
         "--no-require-pq",
         "--no-max-autotune",
         "--seq-len",

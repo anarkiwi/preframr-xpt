@@ -31,7 +31,7 @@ historical context; consult git log for the actual commits.
 |---|---|
 | [`alphabet_cooccurrence_audit_design.md`](alphabet_cooccurrence_audit_design.md) | `profile/alphabet_cooccurrence_audit.py` for per-tier co-occurrence checks. |
 | [`audio_fidelity_helper_design.md`](audio_fidelity_helper_design.md) | Shared render-and-compare helper. Originally landed at `integration_tests/audio_fidelity.py`; subsequently moved to `preframr-audio/preframr_audio/fidelity.py` (where it sits next to the renderer it depends on). |
-| [`encodability_metric_design.md`](encodability_metric_design.md) | Per-cluster Eval-B encodability metric extractor. |
+| [`encodability_metric_design.md`](encodability_metric_design.md) | Per-cluster Eval-B encodability metric extractor. **Retired** — served the refuted `global_instr_ids` Phase A; impl removed in the repo-focus cleanup. |
 | [`orinnx_audition_design.md`](orinnx_audition_design.md) | Orin NX predict-host audition harness. |
 
 ## Tokenizer / encoding

@@ -329,11 +329,14 @@ Lead with the deployment envelope: **vocab shrink** (tkvocab ~8× to 4096 —
 slope/preset/transpose are cent-binned (lossy by design; content-tier-OFF is
 byte-perfect vs raw). Lossless rework deferred.
 
-### xpt cleanup pending (post-render_play-move)
-`encodability_metric.py` still mounts main's (gone) `integration_tests` + runs
-`integration_tests.profile.audit_engine_fp_palette_eval_encodability` — needs
-repointing to run inside the xpt image. `build_prodlike_4x_list.py` default
-paths + some docstrings still reference moved-out paths.
+### xpt path cleanup (RESOLVED 2026-05-26)
+No `integration_tests` refs remain in xpt `.py`. `encodability_metric.py` was
+removed (unused; served the refuted `global_instr_ids` Phase A; its audit module
+was not carried through the extraction and is unrecoverable from git).
+`build_prodlike_4x_list.py` + `pick_mini_stratified.py` defaults, the
+`run_eval_per_composer_8k.py` docker mount, and the spec/audit docstrings now
+point at xpt paths. Remaining repo-focus items: the fixtures move-out (below) +
+the data/audit tracking decision — see `design/repo_focus_cleanup_scope.md`.
 
 ### Fixtures move-out pending
 SID songs must NOT be tracked here. Build a helper that creates + caches

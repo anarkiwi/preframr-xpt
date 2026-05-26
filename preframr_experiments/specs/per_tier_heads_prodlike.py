@@ -1,4 +1,4 @@
-"""Phase 3 prodlike A/B for per-tier heads + MoS K=4 (Approach C); 1 seed, canonical body, 60 epochs. Spec details in the main preframr repo at `integration_tests/design/per_tier_heads_design.md`. Revisited evidence at `preframr_experiments/data/refuted/per_tier_heads_mos_revisited.md` (Phase 2 PASS at sampling T>=0.5)."""
+"""Phase 3 prodlike A/B for per-tier heads + MoS K=4 (Approach C); 1 seed, canonical body, 60 epochs. Spec details at `design/per_tier_heads_design.md` (this repo). Revisited evidence at `preframr_experiments/data/refuted/per_tier_heads_mos_revisited.md` (Phase 2 PASS at sampling T>=0.5)."""
 
 from __future__ import annotations
 
