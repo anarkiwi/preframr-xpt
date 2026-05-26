@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline content-tier cluster index builder for the cluster-conditional content head (Phase 0). See integration_tests/design/cluster_conditional_content_head_design.md."""
+"""Offline content-tier cluster index builder for the cluster-conditional content head (Phase 0). See design/cluster_conditional_content_head_design.md."""
 
 from __future__ import annotations
 

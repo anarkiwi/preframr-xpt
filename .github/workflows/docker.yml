@@ -1,0 +1,31 @@
+name: docker-test
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      # The Dockerfile layers the runner + audits on the pinned public
+      # anarkiwi/preframr base and runs `pytest tests` during the build, so the
+      # build is itself the test gate. pyproject declares no deps and the image
+      # installs --no-deps, so no PIP_OPTS / proxpi mirror is needed in CI.
+      - name: Build xpt image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          load: true
+          tags: anarkiwi/preframr-xpt:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # Run the full suite explicitly in the built image: surfaces test output in
+      # the log, runs even on a build-layer cache hit, and covers the host-side
+      # test_src_bind_gate (pure unit, subprocess mocked) the Dockerfile skips.
+      - name: Run tests in image
+        run: docker run --rm anarkiwi/preframr-xpt:ci python3 -m pytest tests -q

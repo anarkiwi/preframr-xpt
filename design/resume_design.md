@@ -1,15 +1,15 @@
 # --resume — design note
 
 Cloud-rental prereq. Today the runner blows away each (arm, seed)
-work-dir on re-run (`shutil.rmtree(work_dir)` at
-`base.py:run_arm:507-510`); cached parse + tokenize artefacts are
+work-dir on re-run (`shutil.rmtree(work_dir)` in
+`base.py:run_arm` (line 786)); cached parse + tokenize artefacts are
 discarded. `--resume` reuses what's on disk so a partial run can
 recover without re-burning parse (~5-20 min) and tokenize (~15-30
 min) per (arm, seed).
 
 Sibling docs: `auto_early_abort_design.md`,
 `max_parallel_arms_design.md`. All three target
-`experiments/base.py` + `run.py`; **base.py edits are blocked while
+`preframr_experiments/base.py` + `run.py`; **base.py edits are blocked while
 `loop_lookahead_prodlike` is in flight** per AGENTS.md §Mid-run code
 edits. This is design-only; implementation lands post-prodlike.
 
@@ -143,7 +143,7 @@ resume from a `last.ckpt`. Two modes:
 ## CLI
 
 ```
-python3 -m integration_tests.experiments.run <spec> --resume [--resume-from <stage>]
+python3 -m preframr_experiments.run <spec> --resume [--resume-from <stage>]
 ```
 
 - `--resume` (default off): on per-(arm, seed), evaluate cache keys
@@ -163,7 +163,7 @@ re-runs one arm with its cached stages reused.
   `_resume.json` (and the new key differs), invalidate.
 - **`preframr/macros/` change.** Parse key includes the macros sha →
   invalidation is automatic.
-- **`integration_tests/experiments/base.py` change.** Not covered
+- **`preframr_experiments/base.py` change.** Not covered
   by any stage key. The operator is responsible for not editing
   base.py while a resumable run is paused. (The mid-run-edit rule
   already forbids it; `--resume` doesn't change the rule.)

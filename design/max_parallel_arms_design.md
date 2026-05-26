@@ -1,7 +1,7 @@
 # --max-parallel-arms — design note
 
 Cloud-rental prereq. Today the runner serialises every (arm, seed)
-through one GPU (`run.py:113-145`). `--max-parallel-arms N` lets
+through one GPU (`run.py`). `--max-parallel-arms N` lets
 multiple (arm, seed) pairs run concurrently when the host has >1
 GPU. The intended use is cloud-rental on an 8×A100/H100 box:
 2 arms × 3 seeds = 6 concurrent runs, ~6-11 hr wallclock instead of
@@ -31,7 +31,7 @@ sequential cadence offers no value over local.
 ## Contract
 
 ```
-python3 -m integration_tests.experiments.run <spec> --max-parallel-arms N
+python3 -m preframr_experiments.run <spec> --max-parallel-arms N
 ```
 
 `N` is the maximum number of concurrent (arm, seed) runs. `N=1`

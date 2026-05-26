@@ -1,6 +1,6 @@
 """Aggregator over the corpus_structural_index parquet shards.
 Emits per-corpus aggregates under ``<index-root>/aggregates/``. See
-``integration_tests/design/corpus_structural_index_design.md`` for the
+``design/landed/corpus_structural_index_design.md`` for the
 schema and audit→column mapping. Pure pandas/pyarrow; no extra deps."""
 
 from __future__ import annotations

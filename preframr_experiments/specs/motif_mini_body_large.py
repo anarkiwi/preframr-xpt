@@ -52,7 +52,7 @@ _FULL_MACRO_CARGS = (
 
 _MOTIF_DICT_CONTAINER_PATH = "/scratch/preframr/motif_dict.json"
 _MOTIF_ARM = "full_macros_motif"
-_IMAGE = "anarkiwi/preframr:0.2.0"
+_IMAGE = "anarkiwi/preframr:0.2.2"
 _MOTIF_K = 256
 _MOTIF_MIN_COUNT = 3
 _MOTIF_MIN_COMPOSERS = 6
@@ -134,6 +134,8 @@ spec = ExperimentSpec(
     ],
     metrics=[
         "alphabet_size",
+        "longtail_frac",
+        "worst_family_longtail_frac",
         "encoded_tokens_per_song",
         "val_loss_best",
         "val_acc_at_best_loss",

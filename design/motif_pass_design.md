@@ -2,7 +2,7 @@
 
 **Status:** Shipped in preframr-tokens **0.20.0** (per-block, lossless,
 dry-run validated). Framework support (`--motif-pass`/`--motif-dict`, mine CLI)
-merged to preframr main → image `anarkiwi/preframr:0.2.0`. **Compression is real
+merged to preframr main → image `anarkiwi/preframr:0.2.2`. **Compression is real
 at deployment scale (~11.4% fewer tokens, measured — see Findings)**; whether it
 also helps the model is the open question (the A/B's per_class content audit).
 OFF by default.
@@ -117,7 +117,7 @@ Decisive read: **per_class content-tier val_acc** (motif tokens are loss-tier
 zero, so content is measured on the un-collapsed atoms) + **loop_collapse /
 prompt-conditioning** (generalization). `encoded_tokens_per_song` reports the
 real deployment compression. Needs `PREFRAMR_DATASET_CACHE_DISABLE=1` and image
-`anarkiwi/preframr:0.2.0`. GPU frees after STAGE 2.
+`anarkiwi/preframr:0.2.2`. GPU frees after STAGE 2.
 
 ## Open risks
 

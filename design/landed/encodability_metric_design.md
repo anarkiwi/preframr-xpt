@@ -1,5 +1,13 @@
 # Encodability-rate metric for `global_instr_ids` Phase A
 
+**Status: RETIRED.** `global_instr_ids` Phase A was REFUTED (2026-05-17; see
+`preframr_experiments/data/refuted/global_instr_ids_phase_a.md`). The metric
+helper (`preframr_experiments/audit/encodability_metric.py`) was removed in the
+repo-focus cleanup — it was unused and its audit module
+(`audit_engine_fp_palette_eval_encodability`) was not carried through the
+main→xpt extraction (unrecoverable from git). Retained as a design record; rebuild
+from here if encodability is ever revisited for a non-refuted experiment.
+
 ## Why this doc
 
 The Phase A aggregation design's §Validation L6 lists "encodability

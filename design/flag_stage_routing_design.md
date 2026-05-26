@@ -1,7 +1,7 @@
 # flag stage routing — design note
 
 Framework follow-up from AGENTS.md §Framework follow-ups:
-`run_arm` (`integration_tests/experiments/base.py:528-650`) forwards
+`run_arm` (`preframr_experiments/base.py:786`) forwards
 `arm.extra_cargs` and `cargs` to every stage (parse, tokenize,
 train); train-only flags need stage-aware routing.
 
@@ -17,7 +17,7 @@ routing reduces the surface for "this flag had no effect because
 the stage doesn't read it" debugging.
 
 **Implementation blocked on `loop_lookahead_prodlike` completion**
-(touches `experiments/base.py`). Design only this commit.
+(touches `preframr_experiments/base.py`). Design only this commit.
 
 ## Current state
 
@@ -30,7 +30,7 @@ parser. Stages call `add_args(argparse.ArgumentParser())` +
 - `train.py`: lines 142-143.
 - `predict.py`: lines 541-542.
 
-`run_arm` (`base.py:548-650`) constructs `cargs` once and
+`run_arm` (`preframr_experiments/base.py:786`) constructs `cargs` once and
 `shlex.split()`s it onto each stage's docker command line:
 
 ```python

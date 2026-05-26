@@ -59,11 +59,11 @@ def main(argv: list[str] | None = None) -> int:
         "--out-dir",
         type=Path,
         default=None,
-        help="defaults to <repo-root>/integration_tests/data/mini",
+        help="defaults to <repo-root>/preframr_experiments/data/mini",
     )
     args = ap.parse_args(argv)
 
-    data_dir = args.repo_root / "integration_tests" / "data"
+    data_dir = args.repo_root / "preframr_experiments" / "data"
     out_dir = args.out_dir or (data_dir / "mini")
     out_dir.mkdir(parents=True, exist_ok=True)
 

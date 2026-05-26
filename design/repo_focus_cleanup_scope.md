@@ -88,8 +88,13 @@ framework. (Superseded options: relax-charter-in-place; keep audits in main.)
 
 ## Decisions for the user
 1. **xpt purity:** RESOLVED via the layered image (above).
-2. **design/ docs:** split (framework stays / research moves) or move all to xpt?
-3. **data/audit/ (195 generated):** move-and-track, or gitignore + regenerate?
+2. **design/ docs:** RESOLVED de-facto — all 42 (incl. framework-architecture
+   docs) live in `preframr-xpt/design/`; not split back to main. Revisit only if
+   main wants its architecture docs co-located with the code.
+3. **data/audit/ (195 generated):** still OPEN — currently move-**and-tracked**
+   (195 files tracked, not gitignored). Large palette blobs
+   (`data/{canonical,mini}/engine_fp_palettes.json`) are tracked too. Gitignore +
+   regenerate remains the alternative if these prove reproducible.
 
 ## Executed (2026-05-25, during the live re-arc)
 Moved out (safe — no runtime/build/test dep, untouched by the arc):
@@ -100,15 +105,21 @@ Moved out (safe — no runtime/build/test dep, untouched by the arc):
 Main `integration_tests/` 293 → **45 files** (profile/ 26 + data/ 16 + fixtures/ 3).
 Verified: no remaining import references a moved file; black clean.
 
-**Deferred to post-arc** (entangled — the live mini stage reads
-`data/content_clusters/` + `profile/augment_voice_permutation.py` host-side; the
-monitor still runs `profile/audit_checkpoint_per_class`; `Dockerfile.predict`
-smokes 4 profile audits; 5 `tests/` import profile audits):
-- `profile/` audits → `preframr_experiments/audit/` (run via the layered image).
-- Move the 5 audit-testing `tests/` to xpt.
-- Drop `integration_tests/` from main `Dockerfile`/`Dockerfile.predict`/`run_tests.sh`.
-- `data/` tier metadata → xpt; `fixtures/` follow their tests.
-- Then rebake + smoke the runner+audit path end-to-end before relying on it.
+**Executed post-arc (after STAGE 1, verified 2026-05-26):**
+- ✅ `profile/` audits → `preframr_experiments/audit/` (23 modules, run via the
+  layered image). Main repo has **no** `integration_tests/`.
+- ✅ The audit-testing `tests/` moved to xpt.
+- ✅ `integration_tests/` dropped from main `Dockerfile`/`run_tests.sh` (no refs).
+- ✅ `data/` tier metadata (`prodlike`/`mini`/`canonical`) lives in xpt.
+- ✅ Runner+audit path smoked end-to-end (STAGE 1/2 ran with per_class audits).
+- ✅ Two stale-path scripts fixed: `build_prodlike_4x_list.py` defaults repointed
+  to the xpt package data; `encodability_metric.py` **removed** (unused, served
+  the refuted `global_instr_ids` Phase A, audit module unrecoverable).
+
+**Still open:**
+- **Fixtures helper** (see "Future pass" below) — not built; no SID songs are
+  tracked in xpt, but the Goto80 fetch-and-cache helper does not exist yet.
+- **data/audit/ tracking** — decision #3 above (track vs gitignore+regenerate).
 
 ## Future pass: fixtures (no songs tracked in main)
 `integration_tests/fixtures/` (3) are SID songs — can't stay in the framework

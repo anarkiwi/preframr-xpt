@@ -12,9 +12,10 @@ from pathlib import Path
 
 import pandas as pd
 
+_DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 DEFAULT_MANIFEST = "/scratch/preframr/corpus_index_full/manifest.parquet"
-DEFAULT_PRODLIKE_DIR = "/scratch/anarkiwi/preframr/integration_tests/data/prodlike"
-DEFAULT_OUT_DIR = "/scratch/anarkiwi/preframr/integration_tests/data/prodlike_4x"
+DEFAULT_PRODLIKE_DIR = str(_DATA_DIR / "prodlike")
+DEFAULT_OUT_DIR = str(_DATA_DIR / "prodlike_4x")
 
 EVAL_B_HOLDOUT_COMPOSERS = frozenset(
     {

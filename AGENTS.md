@@ -7,9 +7,9 @@ high-churn research work happens.
 
 ## Packages (as of 2026-05-26)
 
-- **`preframr` 0.2.0** — framework only (train / inference / model / args /
+- **`preframr` 0.2.2** — framework only (train / inference / model / args /
   parse / stftokenize / utils + `mine_motifs.py`). Image
-  `anarkiwi/preframr:0.2.0` (+ `:latest`). No PyPI package; it ships as the
+  `anarkiwi/preframr:0.2.2` (+ `:latest`). No PyPI package; it ships as the
   docker image. Adds the motif-pass CLI wiring (`--motif-pass` / `--motif-dict`
   in args; `preframr/mine_motifs.py` → `preframr_tokens.mine_dict_from_dumps`).
   `integration_tests/` (audits, probes, fixtures, design docs) was moved OUT to
@@ -31,21 +31,23 @@ mirror; `preframr_experiments` runs from source
 
 ## Images
 
-- **`anarkiwi/preframr`** (`:latest` + `:0.2.0`) — train + test, full deps.
+- **`anarkiwi/preframr`** (`:latest` + `:0.2.2`) — train + test, full deps.
   Builds run `./run_tests.sh`. Entry points: trainer, parse, stftokenize,
   predict, mine_motifs. (`render_play` now lives in tokens.)
 - **`anarkiwi/preframr-predict` / `-xpu` / `-jetson`** — slim eval/predict
   images (`Dockerfile.predict`, + xpu / jetson base overrides). All four
   publish `:latest` + `:${VERSION}`.
 - **`anarkiwi/preframr-xpt`** — layers the runner + audits on top of
-  `anarkiwi/preframr` (pinned `ARG BASE`). Build runs `pytest tests`;
-  the arc runs in this image.
+  `anarkiwi/preframr` (pinned `ARG BASE` = `:0.2.2`; override at build to track
+  `:latest`). Build runs `pytest tests`; the audits + orchestrator run in this
+  image. Experiment **arms** run in their per-spec `image` (default `:latest`;
+  the motif spec pins `:0.2.2` for `mine_motifs.py`).
 
 Release: `release.yml` publishes on push to `main` + `v*` tags; each image
-tagged `:latest` + `:${VERSION}` (VERSION file in main; currently `0.2.0`).
+tagged `:latest` + `:${VERSION}` (VERSION file in main; currently `0.2.2`).
 Auth via `secrets.DOCKER_TOKEN` (renamed from `DOCKER_PASSWORD` — workflows
 referencing the old name fail login). Local build is faster than waiting on
-the GHA publish: `docker build -f Dockerfile . -t anarkiwi/preframr:0.1.0`.
+the GHA publish: `docker build -f Dockerfile . -t anarkiwi/preframr:0.2.2`.
 
 `build.sh` sources a gitignored `.env` (template `.env.example`) for
 `PIP_OPTS` (proxpi mirror). After a new `preframr-{audio,tokens}` release the
@@ -197,14 +199,21 @@ content should ≈ the 32768 run).
   ```
 - **2 arms × 3 seeds = 6 arm-seeds** (`full_macros` target + `baseline`); OOM
   gate passed at B=4 (steady ~17.7/24 GiB vs B=8's OOM).
-- **STATUS (2026-05-26 ~20:00):** `full_macros` arm **COMPLETE** — all 3 seeds,
+- **STATUS (2026-05-26 ~21:40):** `full_macros` arm **COMPLETE** — all 3 seeds,
   all-tier val_acc **0.379 / 0.382 / 0.387** (eval_a 0.380/0.383/0.389), tight
-  (±0.004 → the win is seed-stable). `baseline` arm **in progress** (seed0 done,
-  seed1 mid-train, seed2 pending; ~hours left). **DECISIVE METRIC NOT YET
-  COMPUTED:** all-tier val_acc is CONFOUNDED across the two tokenizations; the
-  full_macros-vs-baseline call needs the **content-tier per_class audit** run on
-  the checkpoints (see Tests + runner) — compare to the passed single-seed
+  (±0.004 → the win is seed-stable). `baseline` 5/6 (seed0+seed1 done, eval_a
+  ~0.311; **seed2 final, training** → ~00:30 UTC 2026-05-27). **DECISIVE METRIC
+  NOT YET COMPUTED:** all-tier val_acc is CONFOUNDED across the two tokenizations;
+  the full_macros-vs-baseline call needs the **content-tier per_class audit** run
+  on the checkpoints (see Tests + runner) — compare to the passed single-seed
   content 0.160→0.287. Do NOT read all-tier as the content result.
+- **Cross-engine eval_b stratification (2026-05-26, all-tier — CONFOUNDED, to
+  re-confirm on the content tier):** failure is strongly **engine-family-specific,
+  not uniform** — full_macros spans **0.245 (marquis) → 0.556 (winterberg)** across
+  the 8 families (spread 0.31, stdev 0.090); laggards marquis + wilson (+dobek),
+  leaders winterberg + crisps. full_macros beats baseline on **all 8** (+0.024…
+  +0.136). Implication: the lagging families are **targeted-augmentation** candidates
+  (see preframr-aug), not an architectural gap. Probe: `/scratch/tmp/evalb_stratify.py`.
 - **Monitor:** `tail /scratch/tmp/preframr_stage2/run.log` (arm/seed
   transitions); `pgrep -f 'preframr_experiments.run full_macros_prodlike'`
   (orchestrator alive); per-seed `metrics.json` under
@@ -216,7 +225,7 @@ content should ≈ the 32768 run).
 
 Tests whether the corpus-mined motif pass (tokens 0.20.0) helps. Spec on main
 (`preframr_experiments/specs/motif_mini_body_large.py`), pinned to
-`anarkiwi/preframr:0.2.0`. Both arms run `full_macros`; the target arm adds
+`anarkiwi/preframr:0.2.2`. Both arms run `full_macros`; the target arm adds
 `--motif-pass` with a dict a `pre_run_hook` mines from the staged train dumps
 (docker-runs `/preframr/mine_motifs.py`, motif OFF, same pipeline → matches at
 encode). Launch (GPU; STAGE 2 must be done):
@@ -245,13 +254,16 @@ PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. nohup python3 \
 - Framework tests (in `anarkiwi/preframr`): `./run_tests.sh` (black, pytest
   `/tests`, pylint curated, pyright, coverage ≥77).
 - Runner + audits (in `anarkiwi/preframr-xpt`): `pytest tests` runs at image
-  build (no separate CI on this repo — run `pytest tests` in
-  `anarkiwi/preframr:0.2.0` before merging). Host CLI (orchestrates docker;
+  build, gated in CI by `.github/workflows/docker.yml` (builds `Dockerfile` on
+  push to `main` + every PR — the build runs the test gate, then the full suite
+  re-runs explicitly in the image; no proxpi mirror needed, base is public +
+  pyproject is dep-free). Locally, `docker build -f Dockerfile .` reproduces it.
+  Host CLI (orchestrates docker;
   the host needs only `preframr_experiments` on `PYTHONPATH`, not torch):
   `PYTHONPATH=. python3 -m preframr_experiments.run <spec> --root <work> [--seeds N --tkvocab 8192 ...]`.
   One spec module per A/B under `preframr_experiments/specs/`; the runner stages
   data → parse → tokenize → train per (arm, seed), each in a `docker run` of
-  `spec.image` (default `anarkiwi/preframr` = `:latest` = 0.2.0; pin per-spec
+  `spec.image` (default `anarkiwi/preframr` = `:latest` = 0.2.2; pin per-spec
   via `image=`). `nohup … & disown` for long runs.
 - **Spec-dependent tokenization** (motif / cluster_content / voice_permutation —
   anything whose `pre_run_hook` mutates staged dumps or mines a per-spec
@@ -279,6 +291,12 @@ PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. nohup python3 \
   runner; audition wants target ckpt first).
 - **Renaming a transform** silently disables it in stale specs (no error) —
   grep specs on any pass/transform rename.
+- **Design docs** live in `design/`, indexed by **research axis** in
+  `design/README.md` (Generalization / Correctness & fidelity / Efficiency &
+  deploy / Runner & infra / Data & corpus), with status as a per-row column. A
+  new doc gets a one-line `**Status:**` header + a row under its primary axis;
+  on ship it **moves to `design/landed/`**, on rejection it gets a
+  `data/refuted/<exp>.md` stub. See that index's "How this index is organized".
 
 ### Wallclock anchors
 
@@ -294,8 +312,10 @@ per (arm, seed). parse+tokenize ~25 min/prodlike uncached.
   too many control writes; relax/absorb to grow the corpus.
 - **12-SID WAV audition cohort** — non-negotiable gate before flipping any
   tokenizer default + re-cutting training data.
-- **Per-primitive round-trip audio gate** — wire `compare_renders` over ~100
-  songs into CI (≥95% within tolerance).
+- **Per-primitive round-trip audio gate** — the `compare_renders` helper +
+  fidelity unit tests landed in preframr-audio (`fidelity.py`,
+  `test_fidelity.py`/`test_dfs_equivalent.py`); STILL PENDING is the
+  corpus-scale CI gate (run it over ~100 songs at ≥95% within tolerance).
 
 ### Predict-host envelope (queued, post multi-day-training)
 Lead with the deployment envelope: **vocab shrink** (tkvocab ~8× to 4096 —
@@ -322,11 +342,14 @@ Lead with the deployment envelope: **vocab shrink** (tkvocab ~8× to 4096 —
 slope/preset/transpose are cent-binned (lossy by design; content-tier-OFF is
 byte-perfect vs raw). Lossless rework deferred.
 
-### xpt cleanup pending (post-render_play-move)
-`encodability_metric.py` still mounts main's (gone) `integration_tests` + runs
-`integration_tests.profile.audit_engine_fp_palette_eval_encodability` — needs
-repointing to run inside the xpt image. `build_prodlike_4x_list.py` default
-paths + some docstrings still reference moved-out paths.
+### xpt path cleanup (RESOLVED 2026-05-26)
+No `integration_tests` refs remain in xpt `.py`. `encodability_metric.py` was
+removed (unused; served the refuted `global_instr_ids` Phase A; its audit module
+was not carried through the extraction and is unrecoverable from git).
+`build_prodlike_4x_list.py` + `pick_mini_stratified.py` defaults, the
+`run_eval_per_composer_8k.py` docker mount, and the spec/audit docstrings now
+point at xpt paths. Remaining repo-focus items: the fixtures move-out (below) +
+the data/audit tracking decision — see `design/repo_focus_cleanup_scope.md`.
 
 ### Fixtures move-out pending
 SID songs must NOT be tracked here. Build a helper that creates + caches

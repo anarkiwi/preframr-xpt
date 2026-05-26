@@ -1,7 +1,7 @@
 # `--start-seq` rotation semantics audit + fix — design note
 
 Pipeline coverage hole from AGENTS.md §Pipeline coverage holes:
-`RegDataset.predict_load` (`preframr/regdataset.py:869-924`) selects
+`RegDataset.predict_load` (`preframr/train/regdataset.py`) selects
 the predict target by `--start-seq` index into a df-map filtered by
 `predict_set`. The selection IGNORES `n_rotations`: regardless of
 the dump's rotation count, `predict_load` always loads
@@ -11,12 +11,12 @@ For `MAX_PERM > 1` (e.g. prodlike `max_perm=2`, mini `max_perm=2`),
 half (or more) of the rotations on disk are unreachable via
 predict.
 
-Docs-only this commit. Implementation = `preframr/regdataset.py`
+Docs-only this commit. Implementation = `preframr/train/regdataset.py`
 edit, blocked on prodlike completion.
 
 ## Symptom evidence
 
-`preframr/regdataset.py:887-924` (predict_load):
+`preframr/train/regdataset.py` (predict_load):
 
 ```python
 df_map = df_map.drop_duplicates("dump_file").reset_index(drop=True)
@@ -32,7 +32,7 @@ target.add(blocks_path, SeqMeta(irq=irq, df_file=target_file, i=0))
 stage (e.g. n_rotations=2 for max_perm=2). The predict path
 discards it and hard-codes rotation index 0.
 
-Compare with the training-side `load()` path (`regdataset.py:780-799`):
+Compare with the training-side `load()` path (`preframr/train/regdataset.py`):
 
 ```python
 for _, row in df_map_df.iterrows():
@@ -73,7 +73,7 @@ Before implementing the fix, run a quick probe to confirm the
 expected scope:
 
 ```python
-# integration_tests/profile/audit_start_seq_rotations.py
+# preframr_experiments/audit/audit_start_seq_rotations.py
 """Count rotations on disk + rotations addressable by --start-seq.
 
 For a given workdir's df-map.csv:
@@ -162,10 +162,10 @@ intuition true.
 
 ## Implementation plan (Option A)
 
-1. **Land the audit probe** (`profile/audit_start_seq_rotations.py`)
+1. **Land the audit probe** (`preframr_experiments/audit/audit_start_seq_rotations.py`)
    as a standalone script with no side effects. Run it on the
    current prodlike workdir to baseline the coverage ratio.
-2. **Update `predict_load`** in `preframr/regdataset.py`:
+2. **Update `predict_load`** in `preframr/train/regdataset.py`:
    - Replace the `kind_df.iloc[start_seq]` indexing with the
      flattened `(file, rot)` list.
    - Pass the rotation index into `SeqMeta` and `blocks_path`
@@ -226,7 +226,7 @@ completes (touches `preframr/*`).
 ## Order of operations
 
 1. Land this design (reviewer pass).
-2. Land audit probe (`profile/audit_start_seq_rotations.py`) —
+2. Land audit probe (`preframr_experiments/audit/audit_start_seq_rotations.py`) —
    no side effects; can land mid-run if useful for diagnostics,
    but realistically waits for prodlike completion to bundle.
 3. Run the probe; commit baseline output to

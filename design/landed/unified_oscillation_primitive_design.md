@@ -1,7 +1,9 @@
 # Unified FREQ-trajectory primitive (SLOPE + OSCILLATE_ENV + FREQ_VIBRATO + FREQ_RUN)
 
-**Status (2026-05-25):** Phase 0 implementation **LANDED** (preframr-tokens
-`feat/freq-traj-and-profiling`, uncommitted WIP; not yet released). **Reviewed
+**Status: LANDED + RELEASED** (archived). FREQ_TRAJ shipped in preframr-tokens
+0.16/0.17 and is now the live deployment tokenizer (drives STAGE 1/2). The
+detail below is retained for reference. Phase 0 implementation **LANDED**
+(preframr-tokens `feat/freq-traj-and-profiling`). **Reviewed
 against `OSCILLATE_REWORK.md` — matches the spec:** `FreqTrajectoryPass` +
 `FreqTrajectoryDecoder` + 2-atom `FREQ_NUDGE`, SUBTYPE MONOTONE_RAMP/OSCILLATE/RUN,
 locked gap2/alt0.5/hc3, SLOPE's lossy ramp fit preserved, delta payload with
