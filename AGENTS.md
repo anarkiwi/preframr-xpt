@@ -123,14 +123,11 @@ negligible (mini ~29M; prodlike tokenizes fresh regardless).
 
 NOT bundled: effective-batch change, GPU rental, tokenizer-default flips.
 
-### STAGE 1 progress (2026-05-26, mid-batch — TRIAGE ONLY, `per_class` audit NOT run)
+### STAGE 1 COMPLETE (batch finished 2026-05-26 01:39 — TRIAGE, `per_class` audit NOT run)
 
-5/7 specs done, no FAILED, healthy. Cleared `content_diffusion` (where the
-prior run was stopped); `voice_permutation` running — its
-`augment_voice_permutation.py` pre_run_hook (kept here, NOT moved to
-preframr-aug) emits 750 variants/seed clean; `cluster_content` (cache-disabled)
-last. Identical tokenization across all specs (alphabet 3703), so the deltas
-are clean model-side A/Bs — but **all-tier val_acc, not content**:
+7/7 specs ran. Identical tokenization across all (alphabet 3703), so deltas are
+clean A/Bs — but **all-tier val_acc, not content** (mini body=large, 30 epochs,
+3 seeds). Result: **no content signal worth promoting from any spec.**
 
 - `per_tier_heads_mos4`: +0.057 all-tier val_acc (0.114→0.171), val_loss
   9.8→5.1 — the **structural-inflation confound** (refuted at prodlike for
@@ -139,14 +136,21 @@ are clean model-side A/Bs — but **all-tier val_acc, not content**:
 - `contrastive` (InfoNCE): flat (+0.003).
 - `mask_structural_loss`: negative (val_acc 0.018) — re-confirms structural
   supervision is load-bearing.
+- `voice_permutation_K5` (data aug): **flat** (+0.0007 val_acc, below its
+  +0.005 pass bar). The one data-side bet didn't help at mini either.
 - `content_floor_check`: body=large baseline content acc ~0.006.
+- `cluster_content` / `cluster_C256`: **INCONCLUSIVE — failed all 3 seeds**, not
+  refuted. Stale `/scratch/preframr/cluster_assignments.json` (built on the old
+  tokenizer; new vocab ids missing → `load_cluster_assignments` ValueError).
+  Regenerate the assignments against the post-FREQ_TRAJ tokenizer, then rerun.
+  (Per-arm ERROR, not a batch-level FAILED — the spec still reported its
+  baseline; check `results/*/logs/train.log`, not just the batch log.)
 
-Read so far: the model-side specs **reproduce their refutations on the
-corrected tokenizer** — no content lift on top of the tokenizer win; leverage
-is representation/data, not architecture. This is val_acc triage, NOT the
-verdict: run `audit_checkpoint_per_class` on these ckpts before promoting
-anything to prodlike or touching the Refuted registry. Data-side
-`voice_permutation` is the one still worth watching (augmentation, not arch).
+Read: model-side AND data-side interventions **reproduce their refutations on
+the corrected tokenizer** — no lift on top of the tokenizer win; leverage is
+representation, not architecture or this augmentation. Still val_acc triage, NOT
+the verdict — run `audit_checkpoint_per_class` on these ckpts before promoting
+to prodlike or touching the Refuted registry. Open infra item: cluster rerun.
 
 ## Tests + runner
 
