@@ -250,6 +250,385 @@ in cache width.
 Harness + raw logs: `/scratch/tmp/perf_probe.py`, `/scratch/tmp/sweep.sh`,
 `/scratch/tmp/vekx-*.log` on vek-x. No code changes made (measurement only).
 
+## Update (2026-05-26): CUDA/Orin confirm — width is NOT the lever here, copies are
+
+Ported the identical `perf_probe.py` harness to the **actual deployment target**
+(Jetson Orin NX, `anarkiwi/preframr-jetson:latest`, `--runtime=nvidia`, CUDA)
+and ran the same width sweep on the **same vocab-8192 mini checkpoint**
+(`voice_permutation_mini_body_large/baseline/seed0`). Harness/log:
+`/scratch/tmp/orin_sweep.sh`, `/scratch/tmp/orin-sweep.log`. Measurement only.
+
+**The XPU "SDPA-over-allocated-width dominates" finding does NOT carry to CUDA.**
+
+| cache L | CUDA ms/tok | XPU ms/tok |
+|---|---|---|
+| 1024 | 22.19 | 12.4 |
+| 2048 | 22.75 | 13.7 |
+| 4096 | 23.20 | 15.2 |
+| 8192 | 23.68 | 19.2 |
+
+CUDA fits `≈ 21.9 + 0.0002·L`: an **~22 ms fixed floor** with **near-zero width
+dependence** — 8× the allocated cache width costs only **+6.7%** (vs +55% on
+XPU). So **dynamic KV-windowing (ladder item 5) and the `--max-seq-len`
+right-size stopgap give ≈0 on the Orin.** They were an XPU/i915-specific win
+(the i915 fused `micro_sdpa` processed the full allocated width); CUDA's
+attention does not, so there is nothing to reclaim by windowing on the target.
+
+**Where the time actually goes on CUDA (profiler, 64 steps, L=8192, Self CUDA %):**
+
+| op | Self CUDA % | notes |
+|---|---|---|
+| `aten::copy_` | **48.0%** | 6215 calls ≈ **97 copies/token** — the dominant cost |
+| `aten::bmm` | 18.4% | attention; flat in L (confirms width isn't the lever) |
+| `aten::mul` | 14.4% | |
+| `aten::mm` | 4.4% | per-token GEMMs |
+| `aten::add_` | 2.8% | |
+| `aten::_to_copy` | (15.6% CPU, 400 ms CUDA total) | dtype/device conversions |
+| `aten::rms_norm` | 0.7% CUDA / 366 µs-per-call CPU dispatch | non-fused (fp32-act/bf16-wt) |
+
+The XPU profile's `aten::copy_` (15% there, ~94/token) is the **same ~97
+copies/token**, but on CUDA they are now #1 at 48% because the GEMMs/attention
+are comparatively cheaper. The heavy `aten::_to_copy` + non-fused `rms_norm`
+corroborate the fp32-activation / bf16-weight mismatch flagged above.
+
+**Revised ladder for the Orin/CUDA target (this vocab/model regime):**
+1. **Per-token copy elimination — now the headline win (48% of CUDA time).**
+   Trim the per-step clones/H2D: `masked.clone()` (predict.py:185), `x =
+   tok.clone()` / `generated = torch.cat(...)` host appends (predict.py:204-212),
+   and the mask `from_numpy().to(device)` H2D. Keep the GPU-resident generated
+   buffer instead of `torch.cat` per token.
+2. **RMSNorm dtype-consistency fix — doubly indicated.** Restores the fused
+   norm AND removes the `aten::_to_copy` conversions it forces. Cheap,
+   both-platform.
+3. **KV-windowing / `--max-seq-len` right-size — DROP for Orin.** ~0 here;
+   keep only as an XPU-host note.
+4. CUDA-graph / GPU-resident `StreamState` — still ≈0 at this vocab (the floor
+   is copies + tiny GEMMs, not the `.item()` sync); unchanged from the XPU read.
+
+Caveat: this is the mini body at vocab 8192. `bmm`/`mm` being cheap is partly
+small-model/small-vocab; at a larger body or vocab the GEMM/attention share
+rises and width could re-matter. Re-confirm on the `full_macros_prodlike`
+checkpoint (vocab 8192, canonical body) once STAGE 2 finishes.
+
+## Update (2026-05-26): surgical fixes landed + measured — ~5–7% on Orin, parity-clean
+
+Implemented the two surgical items (1+2 above) in
+`preframr/inference/predict.py` and re-ran the identical Orin sweep with the
+edited source bind-mounted over the baked package. Edits:
+`_keep_norms_fp32` (keep RMSNorm `scale` fp32 after the bf16 cast); dropped the
+redundant `masked.clone()` (`mask_logits`' `masked_fill` already returns a fresh
+tensor); preallocated the `generated` buffer (write-in-place vs O(n²) per-token
+`torch.cat`); `x = tok` vs `tok.clone()` in the caches path. Left the KVCache
+`index_put` (torchtune-internal, compile-deliberate) and the `mask_logits` H2D
+(in the `preframr_tokens` package).
+
+**Correctness: byte-identical.** Greedy (top_k=1) 128-token continuation from an
+identical prompt — baked sha1 `4df915ef12e4` == edited sha1 `4df915ef12e4`,
+finite. The fp32-norm-weight change did not flip a single argmax. Framework
+`tests/predict` 26/26 pass on the edited source.
+
+**Perf (Orin NX, vocab 8192, constrained, ms/token):**
+
+| L | baked | edited | Δ |
+|---|---|---|---|
+| 1024 | 22.19 | 20.64 | −7.0% |
+| 2048 | 22.75 | 21.02 | −7.6% |
+| 4096 | 23.20 | 21.96 | −5.3% |
+| 8192 | 23.68 | 22.62 | −4.5% |
+
+**Mechanism confirmed by the profiler (edited, L=8192):** `aten::_fused_rms_norm`
+now dispatches (8.9 µs/call CUDA, 66 ms CPU total) — the non-fused `rms_norm` at
+**366 µs/call / 304 ms CPU dispatch is gone**, no "cannot dispatch" warning. That
+CPU-dispatch saving is most of the wallclock win. `aten::copy_` is still ~49%
+(6153 calls, −62 vs baked) — confirming the residual copies are the **KVCache
+`index_put` (~2/layer × 16)**, which only the custom-decode rewrite reaches.
+`aten::_to_copy` barely moved (the `x.float()` upcast inside torchtune's
+fp32-norm is inherent).
+
+**Read:** the cheap, both-platform tier is done and banked (~5–7%, zero quality
+cost — the fused-norm restore also helps XPU and de-risks the autocast
+fp32-promotion trap). Going further is the **custom llama3_2 decode runtime**
+(in-place KV write + fused attention), gated on a logits-parity test and the
+architecture freezing post-prodlike. Harness: `/scratch/tmp/parity_probe.py`,
+`/scratch/tmp/orin_validate.sh`, `/scratch/tmp/orin-edited-sweep.log`.
+
+## Update (2026-05-26): CUDA-graph capture — 1.9–3.1× on Orin, parity-clean (the real win)
+
+**Root cause of the ~22 ms floor: the decoder ran eager at inference.**
+`factory.cuda_compile` only adds `triton.cudagraphs` when
+`accumulate_grad_batches == 1` (a *training* condition), and the decode loop
+calls `self.model.model` directly — bypassing the compiled Lightning wrapper's
+`forward`. So the per-token forward executed eager: ~454 `cudaLaunchKernel`/token
+= a launch-bound floor.
+
+**Fix (sandbox `predict_fast.py`):** compile the decoder explicitly for the CUDA
+inference path —
+`torch.compile(model.model, options={"epilogue_fusion": True, "triton.cudagraphs": True})`.
+torchtune's KVCache is cudagraph-safe by design (tensor `cache_pos` advances
+under replay), so capture is valid.
+
+**Parity: byte-identical** — greedy sha1 `4df915ef12e4` at every width (== the
+committed-predict baseline). **Perf (Orin NX, vocab 8192, ms/token):**
+
+| L | eager (committed predict) | cudagraph | speedup |
+|---|---|---|---|
+| 1024 | 20.64 | 6.64 | 3.1× |
+| 2048 | 21.02 | 8.66 | 2.4× |
+| 4096 | 21.96 | 10.91 | 2.0× |
+| 8192 | 22.62 | 12.14 | 1.9× |
+
+At the production 8192 width that halves per-token cost (a 6k-token render
+~136 s → ~73 s).
+
+**This reverses the earlier "width is not the lever on CUDA" call — *for the
+cudagraph regime*.** Eager was launch-bound, so width was masked (flat-in-L).
+With launches gone, the cudagraph path is strongly **width-dependent**
+(6.64→12.14, +83%): the SDPA-over-allocated-width compute is now the critical
+path. So the copy-attrib full-width GQA work was real, just hidden behind launch
+latency in eager. **Net: after cudagraphs lands, `--max-seq-len` right-sizing /
+dynamic cache-windowing / the custom in-place-KV forward all re-open as genuine
+CUDA wins** (e.g. capping width 8192→1024 is 12.14→6.64, ~45%).
+
+**Recommendation:** land the cudagraph compile in production `predict.py`, gated
+to CUDA inference (independent of the training `accumulate_grad_batches` arg);
+keep a disable path for configs that don't capture cleanly. First token per run
+pays the capture/compile warmup (~30–60 s), then steady-state is the table
+above. Then pursue width right-sizing as the next lever.
+
+Caveat: mini body; the launch-bound→cudagraph win should hold or grow at
+prodlike (more layers = more launches eliminated), but re-confirm on the
+`full_macros_prodlike` checkpoint once STAGE 2 finishes. Harness:
+`/scratch/tmp/fast_probe.py`, `/scratch/tmp/orin_cudagraph_sweep.sh`,
+`/scratch/tmp/orin-cudagraph-sweep.log`.
+
+## Update (2026-05-26): roofline — how far from the hardware ceiling, and the big levers
+
+Measured the memory-bandwidth roofline + a forward-vs-overhead decomposition on
+the Orin (mini, cudagraph). Harness: `/scratch/tmp/roofline_probe.py`,
+`/scratch/tmp/orin-roofline.log`. Achievable LPDDR5 BW (copy_ microbench)
+**72–75 GB/s** (~72% of the 102 GB/s spec).
+
+| L | bytes/tok | mem-BW floor | forward-only (GPU) | **% of BW peak** | full step | CPU overhead |
+|---|---|---|---|---|---|---|
+| 1024 | 19.2 MB | 0.26 ms | 2.66 ms | **9.9%** | 6.47 ms | 3.81 ms (59%) |
+| 8192 | 44.0 MB | 0.59 ms | 7.39 ms | **8.0%** | 19.5 ms | 12.1 ms (62%) |
+
+Two structural findings:
+1. **The GPU forward runs at only ~8–10% of the memory-bandwidth ceiling.** At
+   batch-1 the small model under-occupies the GPU (tiny seq_len=1 GEMMs don't
+   fill the 1024 cores) — we are **occupancy-bound, not bandwidth-bound**. ~90%
+   of the LPDDR is idle.
+2. **~40–60% of the full step is CPU overhead** (`mask_logits` numpy +
+   `_tt_sample` + `tok.item()` sync + `StreamState.update`, all OUTSIDE the
+   cudagraph; the share varies with prompt/content). So **full-step
+   GPU-resident decode (lever 3) can roughly halve the per-token time**,
+   bringing the full step toward the forward-only floor (~7.4 ms @8192 mini).
+
+### The levers that GREATLY improve (ranked), vs the small-beer
+
+Because batch-1 leaves ~90% of the hardware idle, the multiplicative wins are
+about *filling* the GPU, not shaving the single stream:
+
+1. **Batching / speculative decode (multiplicative).** Render an audition cohort
+   in parallel, or use a tiny draft model verified K-at-a-time — amortizes the
+   per-token weight read across many tokens/sequences. With ~10× idle headroom
+   this is the only path to a large (≫2×) throughput gain.
+2. **Quantization (int4 weights / int8 KV)** — the lever for the *memory-bound
+   prodlike* regime (weights 226 MB + KV 134 MB/tok @8192 = ~360 MB → floor
+   ~4.5 ms): ~4× fewer weight bytes, ~2× fewer KV bytes raises the floor 2–3×.
+3. **Full-step GPU-resident decode (lever 3)** — eliminate the ~40–60% CPU
+   overhead by moving the constrained mask + sampling + state onto the GPU and
+   capturing the whole step. ~halves the single-stream time.
+4. Windowing / `--max-seq-len` right-size — small-beer; deprioritized.
+
+Caveat: all numbers are the **mini** body. The deployment model is **prodlike**
+(~113M params, ~360 MB/tok @8192, mem-BW floor ~4.5 ms, ~3–4× the forward work);
+re-run `roofline_probe.py` + `tokens_per_frame.py` on the `full_macros_prodlike`
+checkpoint once STAGE 2 finishes for the deployment-accurate ceiling and the
+real-time verdict.
+
+### Real-time verdict
+
+Token→audio compression measured over 105 real song blocks (≈62 min of audio,
+`tokens_per_frame.py`): **4.25 tokens/frame**, 50.12 frames/s (PAL) → **213
+tokens/s of audio**. So staying ahead of real-time needs **≤ 4.70 ms/token**
+(≥213 tok/s).
+
+| stage | mini @8192 | mini @1024 | clears RT? |
+|---|---|---|---|
+| eager | 22.6 ms (44 t/s) | — | no (0.2×) |
+| cudagraph | 12.1 ms (83 t/s) | 6.6 ms (152 t/s) | no (0.4–0.7×) |
+| + lever-3 (GPU-resident) | 7.4 ms (135 t/s) | **2.7 ms (370 t/s)** | only @short ctx (1.7×) |
+
+So even on mini, only **lever-3 at short context** clears real-time; nothing
+single-stream clears at the full-8192 audition width. **Prodlike** (mem-BW floor
+~4.5 ms ≈ the 4.70 ms threshold) cannot clear real-time single-stream at bf16 —
+at 30–60% BW efficiency it lands ~8–15 ms/token (1.5–3× too slow). **The lever
+that makes prodlike real-time is quantization:** int8 weights+KV → ~180 MB/tok →
+floor ~2.25 ms, below threshold with margin (int4 weights lower still), so
+lever-3 + windowing can then reach it. Batching/speculative gives >real-time for
+offline cohort rendering.
+
+### Prodlike (deployment) roofline — measured, and the corrected real-time gap
+
+Re-ran `roofline_probe.py` on the finished `full_macros_prodlike/full_macros/seed0`
+checkpoint (107M params, 16 layers, d768) — deployment-accurate, replacing the
+mini extrapolation. Achievable BW 75 GB/s.
+
+| L | bytes/tok | mem-floor | forward-only | % BW peak | full step | tok/s |
+|---|---|---|---|---|---|---|
+| 2048 | 247.6 MB | 3.30 ms | 10.6 ms | 31.2% | 23.1 ms | 43 |
+| 8192 | 348.2 MB | 4.64 ms | 29.9 ms | 15.5% | 42.9 ms | 23 |
+
+Findings:
+- **Prodlike is meaningfully memory-bound** (15–31% of BW peak vs mini's ~8%) —
+  bigger GEMMs use the GPU better, so **quantization should help here** (unlike
+  mini, where it wouldn't).
+- **The forward is strongly width-dependent under cudagraph** (10.6→29.9 ms as
+  2048→8192): with launch overhead gone, SDPA over the full allocated cache
+  width dominates. So **windowing / cache right-sizing re-opens as a genuine
+  lever on prodlike** (it was ~0 on mini, but mini was launch-bound).
+- **Real-time gap is ~9×, not 1.5–3×.** Full step @8192 = 42.9 ms (23 tok/s) vs
+  the 4.70 ms (213 tok/s) threshold. Stacking the levers:
+  lever-3 (−13 ms CPU overhead) → ~29.9 ms (6.4× over); + windowing (avg ctx
+  ~5120 → forward ~18 ms) → ~18 ms (3.8× over); + quant (measuring; optimistic
+  2–3× on the memory-bound part) → ~8–12 ms (still ~2× over).
+- **Verdict: prodlike single-stream real-time on Orin is NOT reachable** with
+  these levers stacked (~9× gap, levers give ~4–6× combined). Live/interactive
+  real-time would need a smaller/distilled model. **Offline auditions are fine:**
+  at 42.9 ms/tok × ~9137 tokens/song ≈ 6.5 min/song, within the <10 min target —
+  and that is *with* the cudagraph win already (eager would be ~2× worse).
+- Throughput (offline cohort) scales with **batching** — orthogonal to the
+  single-stream latency wall above.
+
+### Quantization measured (prodlike @8192) — does NOT help single-stream; needs batching
+
+torchao 0.17 in the jetson image, applied to the decoder before the cudagraph
+compile, measured vs bf16 (33.5 ms/token in this probe; greedy token-match as a
+quality proxy). `/scratch/tmp/quant_probe.py`, `/scratch/tmp/orin-quant-sweep.log`.
+
+| quant | ms/token | quality | outcome |
+|---|---|---|---|
+| bf16 | 33.5 | — | reference |
+| int8 weight-only | **64.3** | **100% token match** | composes + lossless-greedy, but **2× SLOWER** |
+| int4 weight-only | — | — | unavailable (`ImportError: Requires mslk >= 1.0.0`) |
+| int8 dyn-act+wt | — | — | fails: `self.size(0) needs to be > 16, but got 1` |
+
+**Quantization does not help single-token (batch-1) decode on this Orin/torchao
+stack**, and the failure modes say why:
+- int8 weight-only is **2× slower** (quality perfect) — at M=1 there is no fast
+  int8×bf16 GEMM kernel, so torchao dequantizes to bf16 and the dequant overhead
+  exceeds the weight-bandwidth savings. The savings need a large GEMM.
+- int8 dynamic-activation **requires M ≥ 16** — i.e. it only works **batched**.
+- int4 needs a kernel lib absent from the image.
+
+This confirms the roofline headline: **low-precision speedups require batching**
+(M≥16), the same regime as the multiplicative throughput win. For single-stream
+latency, **cudagraph is the ceiling** (the committed win); quantization is only
+worth it if/when batched decode (cohort rendering or speculative) is built.
+Offline single-stream auditions are already within budget (~6.5 min/song).
+
+**Net inference-opt conclusion:** landed = surgical fixes + cudagraph
+(single-stream prize). Further *single-stream* gains are marginal (windowing
+~17% on prodlike; lever-3 ~CPU-overhead removal) and none reach real-time.
+**Real-time and large throughput both require batching** (then int8 dyn-act
+quant applies); that is a deployment-model change, deferred as a decision.
+
+### Speculative decoding (single-song latency) — Step 0 accept-rate measured
+
+For single-song latency (cohort batching does not help one song), the lever is
+speculative decoding: a draft proposes K tokens, the target verifies all K in
+one forward (≈free given the idle compute), advancing 1+accepted tokens/forward.
+Greedy (top_k=1) is **lossless by construction** (only tokens the target would
+itself emit are accepted) — same parity gate as cudagraph.
+
+Step 0 (no model, no GPU): simulated **prompt-lookup (n-gram) drafting** on 300
+real prodlike `full_macros` token blocks (~2.65M tokens), `/scratch/tmp/spec_accept.py`:
+
+| n-gram | K | speedup (tokens/forward) | mean accepted | ≥1 hit |
+|---|---|---|---|---|
+| 1 | 4 | 1.69× | 0.69 | 34% |
+| 2 | 4 | 1.99× | 0.99 | 40% |
+| 2 | 8 | 2.23× | 1.23 | 37% |
+| 3 | 8 | 2.24× | 1.24 | 31% |
+
+**~2.2× single-stream, zero training, lossless** — SID repetition makes the
+n-gram draft effective (best n=2). Caveats: (1) verify-K compute trims high K
+(prodlike 15.5% of peak → K=8 verify ~1.2–1.5× a 1-token forward, not free; K=4
+stays ~free) → realistic **~1.8–2.0×**; (2) the sim uses the *real* stream as a
+proxy for the target's argmax — the target's greedy output (val_acc 0.38) is
+likely *more* self-repetitive, so ~2× is probably a conservative floor (confirm
+by running the target greedily and re-measuring on its own output).
+
+**Verdict: worth building** — biggest remaining single-song lever, lossless,
+exploits the idle compute the roofline exposed, stacks on cudagraph (prodlike
+~33–43 → ~16–22 ms/token). Does NOT reach real-time (4.7 ms) alone. Build:
+prompt-lookup draft (no training) + greedy verify with KV rollback + the
+existing `StreamState` mask driving both draft and verify + fixed-K cudagraph;
+parity gate = sha1 identical to non-speculative greedy. ~1–2 weeks. Cheap next
+step before committing: **Step 0b** — confirm the accept rate on the *target's
+own* greedy output (GPU, prodlike ckpt) rather than the real-stream proxy.
+
+**Step 0b result (2026-05-26): prompt-lookup speculative is a NO-GO.** Generated
+4096 tokens from the prodlike target (`gen_dump.py`) and re-ran the accept sim on
+its OWN output:
+- **greedy → distinct=1** (single repeated token — total loop collapse; unusable
+  audio, and its 5–9× accept is a degenerate artifact).
+- **sampled (temp=1.0, distinct=638, the realistic deployment mode) → ~1.0–1.18×**
+  (n=1: 15.5% hit / 1.18×; n=2: 6%; n=3: 2%).
+
+The Step 0 ~2.2× was a **proxy artifact**: real songs are deterministic/repetitive,
+but the model is deployed with **temperature sampling** (greedy collapses), and
+high-entropy sampled output is unpredictable by an n-gram draft (speculative
+speedup is bounded by how close the draft distribution is to the target's, and
+n-gram is far from a temp-sampled high-entropy target). **Do not build
+prompt-lookup speculative.** A *trained* draft model could do better (~1.5–2×,
+uncertain) but needs draft training + the full build (~2–3 weeks) and the
+high-entropy / val_acc-0.38 target makes it harder than typical LLM speculative.
+
+**Single-song latency — final standing:** the **cudagraph win (1.9–3.1×, landed)
+is the realistic ceiling**. Remaining options: **lever-3** (GPU-resident decode,
+removes the ~13 ms CPU overhead → ~1.4× @8192 / ~2.2× @2048, lossless, moderate
+effort) is the best achievable next step; trained-draft speculative is a bigger
+uncertain bet. None reach real-time (4.70 ms). Confirm-before-build (Step 0b)
+saved ~1–2 weeks here.
+
+### Lever-3 Phase 0 result (2026-05-26): NO-GO — the "CPU overhead" was a probe artifact
+
+Phase 0 (2), state analysis: the constrained-decode mask/update are vectorized
+array-arithmetic over per-vocab tables + ~6 scalar state values (`pending_slot`∈8,
+`pending_overlay_slot`∈3, `frame_count`, `frame_budget`, `remaining_steps`,
+`current_dist_hi`) — **no state-space blowup**; a GPU port would be a direct
+numpy→torch translation. So lever-3 is *feasible*. But Phase 0 (1) kills the
+*motivation*: a controlled micro-benchmark of every per-token component
+(`overhead_probe.py`) sums to **~0.43 ms/token**, NOT the ~13 ms the roofline's
+full-minus-forward-only implied:
+
+| numpy mask | H2D | masked_fill | sample | item() | update | total |
+|---|---|---|---|---|---|---|
+| 0.062 | 0.057 | 0.081 | 0.193 | 0.031 | 0.003 | **~0.43 ms** |
+
+The ~13 ms "CPU overhead" (and the earlier "40–60% of step") was a
+**`roofline_probe` artifact** — its full-step timing is systematically inflated
+vs the clean sweep + quant probes (mini: roofline full 19.5 ms vs sweep 12.1;
+prodlike: roofline full 42.9 vs quant-bf16 33.5). The real per-token CPU work is
+~0.43 ms (~1–3% of the ~30 ms forward).
+
+**Airtight NO-GO:** lever-3 can only remove the CPU ops it eliminates (≤0.43 ms),
+and it cannot recover anything more — autoregressive decode is **inherently
+serial** (token N+1 depends on token N), so there is no lost pipelining for a
+no-sync/full-step-capture rewrite to reclaim. ~1% gain for ~1–3 weeks → drop it.
+
+**FINAL single-song conclusion:** the **forward IS the cost** (~30 ms/token,
+memory/occupancy-bound at 15.5% of BW peak at batch-1), and **cudagraph (landed)
+is the single-song ceiling.** Every other single-song lever is dead or marginal
+(windowing ~0 on CUDA; quant 2× slower at M=1; speculative ~1.1× under sampling;
+lever-3 ~1%). Cutting the forward further requires a **smaller/quantized model**
+or **batching** (throughput, not latency) — both deployment-model changes, not
+decode-path tweaks. Inference-opt is concluded; the banked win is surgical +
+cudagraph (1.9–3.1×), and the design is now a complete measured map of the dead
+ends so this isn't re-explored.
+
 ## Cross-reference
 
 - Vocab shrink details: see `accuracy_push_prodlike_4x` AGENTS.md

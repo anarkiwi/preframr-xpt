@@ -194,6 +194,10 @@ content should ≈ the 32768 run).
   ```
 - Early risk to watch: OOM at B=4 prodlike (B=8 OOMed); if it OOMs, drop to
   B=2/accum=16.
+- **OOM gate PASSED (2026-05-26 ~03:30):** parse done 03:27, training live at
+  B=4 — steady 17.7 GiB / 24 GiB, GPU 100% util (vs B=8's 23.3 GiB OOM; ~7 GiB
+  headroom). full_macros seed0 reached epoch 12/60 (val_acc 0.197) by 04:11.
+  Healthy; no OOM/error. ~2 arms × 3 seeds = 6 arm-seeds; ETA holds.
 
 ## Tests + runner
 
