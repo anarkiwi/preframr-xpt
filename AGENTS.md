@@ -201,14 +201,21 @@ content should ≈ the 32768 run).
   ```
 - **2 arms × 3 seeds = 6 arm-seeds** (`full_macros` target + `baseline`); OOM
   gate passed at B=4 (steady ~17.7/24 GiB vs B=8's OOM).
-- **STATUS (2026-05-26 ~20:00):** `full_macros` arm **COMPLETE** — all 3 seeds,
+- **STATUS (2026-05-26 ~21:40):** `full_macros` arm **COMPLETE** — all 3 seeds,
   all-tier val_acc **0.379 / 0.382 / 0.387** (eval_a 0.380/0.383/0.389), tight
-  (±0.004 → the win is seed-stable). `baseline` arm **in progress** (seed0 done,
-  seed1 mid-train, seed2 pending; ~hours left). **DECISIVE METRIC NOT YET
-  COMPUTED:** all-tier val_acc is CONFOUNDED across the two tokenizations; the
-  full_macros-vs-baseline call needs the **content-tier per_class audit** run on
-  the checkpoints (see Tests + runner) — compare to the passed single-seed
+  (±0.004 → the win is seed-stable). `baseline` 5/6 (seed0+seed1 done, eval_a
+  ~0.311; **seed2 final, training** → ~00:30 UTC 2026-05-27). **DECISIVE METRIC
+  NOT YET COMPUTED:** all-tier val_acc is CONFOUNDED across the two tokenizations;
+  the full_macros-vs-baseline call needs the **content-tier per_class audit** run
+  on the checkpoints (see Tests + runner) — compare to the passed single-seed
   content 0.160→0.287. Do NOT read all-tier as the content result.
+- **Cross-engine eval_b stratification (2026-05-26, all-tier — CONFOUNDED, to
+  re-confirm on the content tier):** failure is strongly **engine-family-specific,
+  not uniform** — full_macros spans **0.245 (marquis) → 0.556 (winterberg)** across
+  the 8 families (spread 0.31, stdev 0.090); laggards marquis + wilson (+dobek),
+  leaders winterberg + crisps. full_macros beats baseline on **all 8** (+0.024…
+  +0.136). Implication: the lagging families are **targeted-augmentation** candidates
+  (see preframr-aug), not an architectural gap. Probe: `/scratch/tmp/evalb_stratify.py`.
 - **Monitor:** `tail /scratch/tmp/preframr_stage2/run.log` (arm/seed
   transitions); `pgrep -f 'preframr_experiments.run full_macros_prodlike'`
   (orchestrator alive); per-seed `metrics.json` under
