@@ -25,11 +25,17 @@ caps at ~13% eval_a acc** regardless of architecture. The bottleneck
 keeps re-locating to "model can't disambiguate near-equivalent
 content tokens from sparse data".
 
-**Cheap probe (just landed):** 38.2% of the 7376 base atoms appear
-<10 times in training. The worst content family (`SET freq_lo voice
-0`) has **65% of its 1926 atoms as long-tail**. Long-tail data
-sparsity is empirically confirmed; vocab compression / data
-augmentation are the load-bearing levers we haven't pulled.
+**Cheap probe (this snapshot, pre-FREQ_TRAJ):** 38.2% of the 7376 base
+atoms appear <10 times in training. The worst content family (`SET
+freq_lo voice 0`) has **65% of its 1926 atoms as long-tail**.
+
+**Update (2026-05-26, post-FREQ_TRAJ, prodlike `full_macros`):** re-measured
+from `tokens.csv`, the long tail is now **~11% of ~5491 atoms** and the
+Unigram vocab is **100% used at tkvocab 8192** — FREQ_TRAJ + the vocab trim
+largely closed the sparsity this snapshot flagged (and `full_macros` was the
+content win). The composer-token fail-fast (#1) also resolves: prodlike has
+**24** distinct composers (< the 50 floor → KILL); `prodlike_4x` has **100**
+(viable). See `tokenization_vs_music_llms.md` for the current numbers.
 
 ## Cross-LLM landscape
 

@@ -25,8 +25,8 @@ register-write patterns into recognised ops, organised by a loss tier:
   (PW/FC table snap), `transpose` (16-cent freq-delta bin). Trade
   bit-exactness for compression; mostly inaudible (measurable).
 
-Atoms (~10K) train a **Unigram** sub-token model (HF `tokenizers`,
-`tkvocab`). Decode is deterministic and cheap: tokens → registers →
+Atoms (~5.5K after the FREQ_TRAJ rework; was ~10K) train a **Unigram**
+sub-token model (HF `tokenizers`, `tkvocab`). Decode is deterministic and cheap: tokens → registers →
 `pyresidfp` → exact 6581/8580 audio. No neural vocoder.
 
 ## The paradigm landscape
@@ -47,7 +47,7 @@ Atoms (~10K) train a **Unigram** sub-token model (HF `tokenizers`,
 | Decode | deterministic, exact, ~free | deterministic given a synth | heavy neural, lossy |
 | Inductive bias | hardware-faithful, event-sparse, macro = hand-coded musical prior | score structure (bars/voices) | none (raw acoustics) |
 | Seq length / song | long, frame-locked (~10K Unigram tokens) | short (note events) | long (50 Hz × K books) |
-| Vocab | ~10K atoms → Unigram, heavy long tail | small, dense | fixed codebook, fully used |
+| Vocab | ~5.5K atoms → Unigram (8192 vocab, 100% used; ~11% long-tail post-FREQ_TRAJ) | small, dense | fixed codebook, fully used |
 | Cross-instrument transfer | none (SID-specific) | high (MIDI is universal) | high (any audio) |
 | Data scale available | HVSC (~tens of K songs) | internet-scale MIDI | internet-scale audio |
 | Augmentation | verified-inaudible perturbation + transfer (audio ground truth exists) | transposition (no audio check) | hard (no symbolic handle) |
@@ -82,9 +82,18 @@ Atoms (~10K) train a **Unigram** sub-token model (HF `tokenizers`,
 2. **Engine specificity.** The vocabulary only means anything for the
    SID. No cross-instrument/genre transfer; we cannot borrow the
    internet-scale corpora that make audio/MIDI models work.
-3. **Data scale.** HVSC is the ceiling (~tens of K songs). The empirical
-   symptom: 38% of atoms occur <10× (worst content family 65% long-tail)
-   → capacity wasted on rare atoms, the ~13% content-acc ceiling. Codecs
+3. **Data scale.** HVSC is the ceiling (~tens of K songs). The *original*
+   symptom (pre-FREQ_TRAJ): 38% of ~7376 atoms occurred <10×, capacity
+   wasted on a long tail behind the ~13% content-acc ceiling.
+   **Measured update (2026-05-26, prodlike `full_macros`; from the
+   `tokens.csv` count column):** the FREQ_TRAJ rework + 8192 vocab trim
+   largely closed this — alphabet ~5491 atoms, **only ~11% long-tail
+   (<10×)**, and the Unigram vocab is **100% utilised at tkvocab 8192**
+   (the "~91% dead" was an artifact of the oversized 32768 cap). The worst
+   per-family long-tail is still ~66% but on far smaller families (≤210
+   atoms, vs the old 1926). This tracks `full_macros` being the content win
+   (eval_a content 0.160→0.287): the long-tail + dead-vocab levers this
+   bullet names are the ones that got pulled, tokenizer-side. Codecs still
    have small, fully-utilised codebooks; MIDI/audio models drown the tail
    in data.
 4. **Hand-engineered = brittle.** The macro layer is bespoke and
