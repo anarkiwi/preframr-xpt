@@ -164,6 +164,92 @@ them on the post-rework `full_macros_prodlike` checkpoint + tokenizer.
   pre-filter by block-file existence rather than scanning
   sequentially. Orthogonal but caught two failed renders.
 
+## Update (2026-05-26): instrumented XPU measurement — sync is NOT the bottleneck
+
+Profiled the real decode path on **vek-x (Intel Arc, Meteor Lake-P, i915)**
+with a current post-rework `mini_body_large` baseline checkpoint
+(`voice_permutation_mini_body_large/baseline/seed0`, **vocab 8192**) via
+`/scratch/tmp/perf_probe.py` (loads the ckpt, self-generates a structurally
+valid prompt from the constrained decoder, then times steady-state per-token
+decode). XPU vs CPU is the *same* image (`anarkiwi/preframr-xpu` on the new
+8.5 GB slim base); CPU = run without `--device /dev/dri`.
+
+This is XPU, not Orin/CUDA, but it's the **identical** `_predict_constrained`
+path, so the structural conclusions carry. (The 2026-05-19 "~700 ms/token,
+4% util" figure was at vocab=32,768 — the 512 MB logit slab dominated; at
+vocab 8192 the picture below is very different.)
+
+**Headline (ms/token, constrained decode, compile on):**
+
+| | CPU | XPU | XPU/CPU |
+|---|---|---|---|
+| constrained | 9.1 | 19.5 | 2.1× |
+| unconstrained (torchtune `generate`) | 11.2 | 23.0 | 2.05× |
+
+**The per-token `tok.item()` sync is not the dominant cost at this vocab.**
+Two independent proofs:
+1. The XPU/CPU ratio is ~2× **with and without** constrained decode — if the
+   sync (only present in the constrained path) were the cause, the ratios
+   would diverge. They don't.
+2. Holding the constrained path (same `.item()` count) and only shrinking the
+   KV cache `--max-seq-len` 8192→512 cut CPU 9.1→3.7 and XPU 19.5→12.5. The
+   sync count is identical across those two runs; the 7 ms came purely from
+   attention width.
+
+**Where the time actually goes (XPU profiler, 64 steps):** fused attention
+`micro_sdpa` **48%**, `aten::mm` 18%, `aten::copy_` **15% (~94 copies/token)**.
+The fused SDPA processes the **full allocated cache width every step**
+(torchtune does not slice k/v to `cache_pos`), so at MAX=8192 every decode
+step attends 8192-wide from the first generated token.
+
+**Cost vs cache width (XPU, clean; CPU noisy under host load):**
+
+| cache L | CPU | XPU |
+|---|---|---|
+| 512 | 3.7 | 12.5 |
+| 1024 | 6.0 | 12.4 |
+| 2048 | 7.2 | 13.7 |
+| 4096 | (noisy) | 15.2 |
+| 8192 | ~9–11 | 19.2 |
+
+XPU fits `cost(L) ≈ 12.0 + 0.00087·L` ms/token: a **~12 ms fixed floor**
+(small per-token GEMMs + ~94 copies/token + overhead) plus attention ~linear
+in cache width.
+
+### Implications for the optimisation ladder
+
+- **Item 5 (streaming-window / right-sized KV) is undervalued, not "small
+  wallclock gain."** Because per-step attention scales with the *allocated*
+  cache width, windowing to the filled length is a real wallclock win on
+  **both** platforms. Production projection (PROMPT=2048/MAX=8192, gen 6144,
+  avg ctx ~5120): current 19.2 → windowed `cost(5120)` ≈ 16.5 ms/tok ≈ **~14%
+  on XPU**; up to ~35% for short generations. **Cheapest variant, zero code:**
+  set `--max-seq-len` to the run's actual total (cost tracks cache width
+  directly), e.g. `--max-seq-len 4096` → 15.2 vs 19.2 = 21%. Dynamic
+  per-step windowing only adds value when MAX must stay large but most steps
+  sit at lower context.
+- **Items 2+3 (CUDA-graph + GPU-resident state to kill the `.item()` sync)
+  give ≈0 at this vocab.** constrained ≈ unconstrained and the cache-width
+  proof both show the sync isn't load-bearing here. Revisit only if a future
+  config makes per-token GPU work tiny again (e.g. far smaller model), or
+  fold into Phase 0a's "is masking load-bearing" decision. Note this only
+  re-weights the ladder for the *current* small-vocab regime; at vocab 32,768
+  the old logit-slab story still dominates (→ item 1 vocab shrink first).
+- **No software change closes the 2× XPU<CPU gap.** It's the ~12 ms fixed
+  floor (XPU) vs ~3–7 ms (CPU) — the iGPU is just slower at the tiny
+  seq_len=1 GEMMs and the per-token copies. Windowing/sync/compile shave a
+  fraction off both but don't change the ratio. For this small-model
+  single-token decode, **CPU is the faster predict host**; the GPU only wins
+  once per-token work is large (big vocab/model or batched/speculative).
+- **New cheap find:** RMSNorm logs `input dtype=float, weight dtype=BFloat16,
+  Cannot dispatch to fused implementation` — an fp32-activation / bf16-weight
+  mismatch forcing the non-fused norm on both platforms. Worth a
+  dtype-consistency pass (cheap, both-platform); also trim per-token clones
+  (`masked.clone()`, the mask `from_numpy().to(device)` H2D).
+
+Harness + raw logs: `/scratch/tmp/perf_probe.py`, `/scratch/tmp/sweep.sh`,
+`/scratch/tmp/vekx-*.log` on vek-x. No code changes made (measurement only).
+
 ## Cross-reference
 
 - Vocab shrink details: see `accuracy_push_prodlike_4x` AGENTS.md
