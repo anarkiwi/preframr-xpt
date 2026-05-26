@@ -347,7 +347,15 @@ fp32-norm is inherent).
 
 **Read:** the cheap, both-platform tier is done and banked (~5–7%, zero quality
 cost — the fused-norm restore also helps XPU and de-risks the autocast
-fp32-promotion trap). Going further is the **custom llama3_2 decode runtime**
+fp32-promotion trap). **XPU confirmed (2026-05-26, vek-x Arc, mini ckpt):** the
+fp32-norm fix removes the "Cannot dispatch to fused implementation" RMSNorm
+warning on XPU and gives 12.98→12.12 ms/tok @1024 (−6.6%) / 19.03→18.80 @8192
+(−1.2%) — same shape as Orin (bigger at short context where norm/copy is a
+larger fraction; SDPA-over-width dominates at 8192). Parity holds by the Orin
+argument (device-agnostic, byte-identical there). Note: the XPU *decoder still
+runs eager* (cudagraph is CUDA-only; compiling the XPU decoder is an untested
+follow-up) and CPU remains the faster predict host for this small model.
+Going further is the **custom llama3_2 decode runtime**
 (in-place KV write + fused attention), gated on a logits-parity test and the
 architecture freezing post-prodlike. Harness: `/scratch/tmp/parity_probe.py`,
 `/scratch/tmp/orin_validate.sh`, `/scratch/tmp/orin-edited-sweep.log`.
