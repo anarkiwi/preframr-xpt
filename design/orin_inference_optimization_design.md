@@ -70,7 +70,12 @@ the FREQ_TRAJ rework roughly halved the alphabet and the used set:
 - atom alphabet **5,492**; tkmodel still 32,768 slots.
 - only **2,929 distinct IDs used (8.9%)**, usage-weighted **1.23
   atoms/token** (top tokens are single atoms — compression is the
-  atom-level macros, not Unigram merges).
+  atom-level macros, not Unigram merges). This light-merge regime is
+  load-bearing for the motif pass: because Unigram barely merges at
+  deployment scale, a motif dictionary is NOT redundant with it
+  (measured ~11.4% fewer tokens at vocab 8192; see
+  `motif_pass_design.md`). The mini dry-run's 0.6% was an over-merged
+  small-corpus regime, not this one.
 - **Correction to the pre-rework "all used IDs < 8,192" claim:** the
   used IDs now span the *whole* range (max used id **32,766**); only
   660 are < 4,096 (66.7% of token mass), 1,105 < 8,192 (69.8%). So a
