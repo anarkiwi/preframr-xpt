@@ -245,8 +245,11 @@ PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. nohup python3 \
 - Framework tests (in `anarkiwi/preframr`): `./run_tests.sh` (black, pytest
   `/tests`, pylint curated, pyright, coverage ≥77).
 - Runner + audits (in `anarkiwi/preframr-xpt`): `pytest tests` runs at image
-  build (no separate CI on this repo — run `pytest tests` in
-  `anarkiwi/preframr:0.2.0` before merging). Host CLI (orchestrates docker;
+  build, gated in CI by `.github/workflows/docker.yml` (builds `Dockerfile` on
+  push to `main` + every PR — the build runs the test gate, then the full suite
+  re-runs explicitly in the image; no proxpi mirror needed, base is public +
+  pyproject is dep-free). Locally, `docker build -f Dockerfile .` reproduces it.
+  Host CLI (orchestrates docker;
   the host needs only `preframr_experiments` on `PYTHONPATH`, not torch):
   `PYTHONPATH=. python3 -m preframr_experiments.run <spec> --root <work> [--seeds N --tkvocab 8192 ...]`.
   One spec module per A/B under `preframr_experiments/specs/`; the runner stages
