@@ -107,8 +107,9 @@ this repo; status via `check_overnight_batch.sh` (done marker
   `cluster_content_mini_body_large`), `--tkvocab 8192` (UNK=0, provably; vocab
   is ~91% dead, 2929/32768 used), frozen baked code. cluster spec runs with
   `PREFRAMR_DATASET_CACHE_DISABLE=1`.
-- **STAGE 2 (prodlike):** follows once mini is clean — `B=4 / accum=8`
-  (effective batch 32; `B=8` OOMed at 23.3 GiB).
+- **STAGE 2 (prodlike): LAUNCHED 2026-05-26** — reoriented to the representation
+  axis (mini found no model-side candidate). `B=4 / accum=8` (effective batch
+  32; `B=8` OOMed at 23.3 GiB). See "STAGE 2 RUNNING" below.
 
 Launch (host-side, drives the xpt image):
 ```
@@ -168,6 +169,31 @@ tokenizer win; leverage is representation. The per_tier_heads mini content lift
 is real but small and dies at prodlike. **STAGE 1 concluded** (cluster cell
 deferred, above). Next prodlike effort goes to the **representation/tokenizer
 axis** where the win lives (`full_macros`), not more model-side A/Bs.
+
+### STAGE 2 RUNNING (launched 2026-05-26 02:47)
+
+`full_macros_prodlike` **×3 seeds** at the deployment config
+(`--tkvocab 8192 --batch-size 4 --accumulate-grad-batches 8`) — a **variance
+bound** on the single-seed confirmed win (content 0.160→0.287), moved onto the
+shipping-efficient config. The passed run was 1 seed at tkvocab 32768 /
+B=2/accum=16; this is the new info (seed variance + stable B=4 training), not
+the vocab trim (prodlike alphabet ~4628 < 8192, so 8192 drops no tokens —
+content should ≈ the 32768 run).
+
+- `--root /scratch/tmp/preframr_stage2` (preserves the passed seed0 artifacts
+  under `…/preframr_experiments/results/full_macros_prodlike/`). Log:
+  `/scratch/tmp/preframr_stage2/run.log`. Per-seed content audit via runner gate.
+- **ETA ~36-66h** (6 arm-seeds × 6-11h; tokenizes fresh ~25 min, then cached).
+  GPU fully booked — keep foreground work non-GPU.
+- Launch (host-side from this repo):
+  ```
+  nohup python3 -m preframr_experiments.run full_macros_prodlike \
+    --root /scratch/tmp/preframr_stage2 --seeds 3 \
+    --tkvocab 8192 --batch-size 4 --accumulate-grad-batches 8 \
+    > /scratch/tmp/preframr_stage2/run.log 2>&1 & disown
+  ```
+- Early risk to watch: OOM at B=4 prodlike (B=8 OOMed); if it OOMs, drop to
+  B=2/accum=16.
 
 ## Tests + runner
 
@@ -280,6 +306,13 @@ interventions concentrated at the same ~0.13 eval_a content ceiling:
 
 ## Resolved log (compact; details in git log)
 
+- **2026-05-26** — re-arc STAGE 1 (mini) concluded: no model-side or data-side
+  content signal on the corrected tokenizer (per_class audit on per_tier_heads —
+  +0.033 content at mini, dies at prodlike); `voice_permutation` flat;
+  `cluster_content` deferred (builder/model content-vid mismatch). Augmentation
+  tooling + design moved to `preframr-aug` (new self-contained repo: Dockerfile,
+  tests, CI). STAGE 2 prodlike launched — `full_macros_prodlike` ×3-seed
+  variance bound at the deployment config (see STAGE 2 RUNNING).
 - **2026-05-25** — Lean-core + 0.1.0 release. `integration_tests/` (audits,
   fixtures, design docs) moved to this repo's `audit/` + `tests/` + data tree;
   main is framework-only. `render_play` moved to preframr-tokens 0.19.0.
