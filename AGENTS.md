@@ -5,16 +5,19 @@ runner + spec registry + audits + design docs + tier data + refuted registry.
 The framework, libraries, and corpus live elsewhere; this is where the
 high-churn research work happens.
 
-## Packages (as of 2026-05-25)
+## Packages (as of 2026-05-26)
 
-- **`preframr` 0.1.0** — framework only (train / inference / model / args /
-  parse / stftokenize / utils). First *versioned* release. Image
-  `anarkiwi/preframr:0.1.0` (+ `:latest`). No PyPI package; it ships as the
-  docker image. `integration_tests/` (audits, probes, fixtures, design docs)
-  was moved OUT to this repo; main carries only the framework.
-- **`preframr-tokens` 0.19.0** (PyPI) — torch-free parser/tokenizer +
-  macros + `render_play` (the parse→wav/live utility, moved here from main;
-  run `python3 -m preframr_tokens.render_play`). Main floors `>=0.19.0`.
+- **`preframr` 0.2.0** — framework only (train / inference / model / args /
+  parse / stftokenize / utils + `mine_motifs.py`). Image
+  `anarkiwi/preframr:0.2.0` (+ `:latest`). No PyPI package; it ships as the
+  docker image. Adds the motif-pass CLI wiring (`--motif-pass` / `--motif-dict`
+  in args; `preframr/mine_motifs.py` → `preframr_tokens.mine_dict_from_dumps`).
+  `integration_tests/` (audits, probes, fixtures, design docs) was moved OUT to
+  this repo; main carries only the framework.
+- **`preframr-tokens` 0.20.0** (PyPI) — torch-free parser/tokenizer +
+  macros + `render_play` + the **corpus-mined motif pass** (per-block, lossless;
+  `MotifPass`/`MotifDict`/`mine_motifs`/`mine_dict_from_dumps`/`get_motif_dict`,
+  OFF by default). Main floors `>=0.20.0`. See `design/motif_pass_design.md`.
 - **`preframr-audio` 0.5.1** (PyPI) — SID audio rendering primitives.
 - **`preframr-experiments`** (this repo; editable / PYTHONPATH, no PyPI) —
   runner + specs + `audit/` (moved from `integration_tests/profile/`) + tests.
@@ -28,18 +31,18 @@ mirror; `preframr_experiments` runs from source
 
 ## Images
 
-- **`anarkiwi/preframr`** (`:latest` + `:0.1.0`) — train + test, full deps.
+- **`anarkiwi/preframr`** (`:latest` + `:0.2.0`) — train + test, full deps.
   Builds run `./run_tests.sh`. Entry points: trainer, parse, stftokenize,
-  predict. (`render_play` now lives in tokens.)
+  predict, mine_motifs. (`render_play` now lives in tokens.)
 - **`anarkiwi/preframr-predict` / `-xpu` / `-jetson`** — slim eval/predict
   images (`Dockerfile.predict`, + xpu / jetson base overrides). All four
   publish `:latest` + `:${VERSION}`.
 - **`anarkiwi/preframr-xpt`** — layers the runner + audits on top of
-  `anarkiwi/preframr:0.1.0` (pinned `ARG BASE`). Build runs `pytest tests`;
+  `anarkiwi/preframr` (pinned `ARG BASE`). Build runs `pytest tests`;
   the arc runs in this image.
 
 Release: `release.yml` publishes on push to `main` + `v*` tags; each image
-tagged `:latest` + `:${VERSION}` (VERSION file in main; currently `0.1.0`).
+tagged `:latest` + `:${VERSION}` (VERSION file in main; currently `0.2.0`).
 Auth via `secrets.DOCKER_TOKEN` (renamed from `DOCKER_PASSWORD` — workflows
 referencing the old name fail login). Local build is faster than waiting on
 the GHA publish: `docker build -f Dockerfile . -t anarkiwi/preframr:0.1.0`.
@@ -192,25 +195,75 @@ content should ≈ the 32768 run).
     --tkvocab 8192 --batch-size 4 --accumulate-grad-batches 8 \
     > /scratch/tmp/preframr_stage2/run.log 2>&1 & disown
   ```
-- Early risk to watch: OOM at B=4 prodlike (B=8 OOMed); if it OOMs, drop to
-  B=2/accum=16.
-- **OOM gate PASSED (2026-05-26 ~03:30):** parse done 03:27, training live at
-  B=4 — steady 17.7 GiB / 24 GiB, GPU 100% util (vs B=8's 23.3 GiB OOM; ~7 GiB
-  headroom). full_macros seed0 reached epoch 12/60 (val_acc 0.197) by 04:11.
-  Healthy; no OOM/error. ~2 arms × 3 seeds = 6 arm-seeds; ETA holds.
+- **2 arms × 3 seeds = 6 arm-seeds** (`full_macros` target + `baseline`); OOM
+  gate passed at B=4 (steady ~17.7/24 GiB vs B=8's OOM).
+- **STATUS (2026-05-26 ~20:00):** `full_macros` arm **COMPLETE** — all 3 seeds,
+  all-tier val_acc **0.379 / 0.382 / 0.387** (eval_a 0.380/0.383/0.389), tight
+  (±0.004 → the win is seed-stable). `baseline` arm **in progress** (seed0 done,
+  seed1 mid-train, seed2 pending; ~hours left). **DECISIVE METRIC NOT YET
+  COMPUTED:** all-tier val_acc is CONFOUNDED across the two tokenizations; the
+  full_macros-vs-baseline call needs the **content-tier per_class audit** run on
+  the checkpoints (see Tests + runner) — compare to the passed single-seed
+  content 0.160→0.287. Do NOT read all-tier as the content result.
+- **Monitor:** `tail /scratch/tmp/preframr_stage2/run.log` (arm/seed
+  transitions); `pgrep -f 'preframr_experiments.run full_macros_prodlike'`
+  (orchestrator alive); per-seed `metrics.json` under
+  `…/results/full_macros_prodlike/<arm>/seed<N>/`; the running seed's
+  `…/<arm>/seed<N>/logs/train.log` (current epoch/val_acc). Done = all 6
+  `metrics.json` present / orchestrator gone.
+
+### NEXT — motif A/B (`motif_mini_body_large`, queued; needs GPU after STAGE 2)
+
+Tests whether the corpus-mined motif pass (tokens 0.20.0) helps. Spec on main
+(`preframr_experiments/specs/motif_mini_body_large.py`), pinned to
+`anarkiwi/preframr:0.2.0`. Both arms run `full_macros`; the target arm adds
+`--motif-pass` with a dict a `pre_run_hook` mines from the staged train dumps
+(docker-runs `/preframr/mine_motifs.py`, motif OFF, same pipeline → matches at
+encode). Launch (GPU; STAGE 2 must be done):
+```
+PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. nohup python3 \
+  -m preframr_experiments.run motif_mini_body_large --root /scratch/tmp/preframr_motif \
+  > /scratch/tmp/preframr_motif/run.log 2>&1 & disown
+```
+- **Why it's worth running — but temper expectations:** compression is the
+  WRONG framing. Measured at deployment scale (vocab 8192, ~150 songs): motifs
+  give **~11.4% fewer tokens** (atom-level collapse ~23%, but Unigram light-merge
+  at deployment — 1.17 atoms/token — leaves room; a tiny over-provisioned dry-run
+  misleadingly showed 0.6%). The A/B's real question is **learnability**: does an
+  explicit cross-composer-constrained motif vocab help the model, vs Unigram's
+  likelihood-greedy chunking?
+- **Decisive gate:** per_class **content-tier** val_acc (motif tokens are
+  loss-tier zero; content is measured on the un-collapsed atoms) + loop_collapse
+  / prompt-conditioning (the open risk: motifs absorb content/melodic atoms ~45%
+  — floor-invariant to `min_composers` — so a longer horizon of memorized figures
+  is the failure mode). NOT all-tier val_acc.
+- Full rationale + the per-block architecture (and why parse-end fails) in
+  `design/motif_pass_design.md`.
 
 ## Tests + runner
 
 - Framework tests (in `anarkiwi/preframr`): `./run_tests.sh` (black, pytest
   `/tests`, pylint curated, pyright, coverage ≥77).
 - Runner + audits (in `anarkiwi/preframr-xpt`): `pytest tests` runs at image
-  build; host CLI is
-  `PYTHONPATH=. python3 -m preframr_experiments.run <spec> --root <work> --tkvocab 8192`.
+  build (no separate CI on this repo — run `pytest tests` in
+  `anarkiwi/preframr:0.2.0` before merging). Host CLI (orchestrates docker;
+  the host needs only `preframr_experiments` on `PYTHONPATH`, not torch):
+  `PYTHONPATH=. python3 -m preframr_experiments.run <spec> --root <work> [--seeds N --tkvocab 8192 ...]`.
+  One spec module per A/B under `preframr_experiments/specs/`; the runner stages
+  data → parse → tokenize → train per (arm, seed), each in a `docker run` of
+  `spec.image` (default `anarkiwi/preframr` = `:latest` = 0.2.0; pin per-spec
+  via `image=`). `nohup … & disown` for long runs.
+- **Spec-dependent tokenization** (motif / cluster_content / voice_permutation —
+  anything whose `pre_run_hook` mutates staged dumps or mines a per-spec
+  artifact): launch with `PREFRAMR_DATASET_CACHE_DISABLE=1` so the hook runs
+  every seed (the dataset cache key would otherwise reuse stale artefacts).
 - **Content-tier audit (decisive gate):** run
   `python3 -m preframr_experiments.audit.audit_checkpoint_per_class` in the
-  xpt image; `audit_*.json` land under `/scratch/tmp`.
-- Outputs under `/scratch/tmp/preframr_experiments/`. Status:
-  `check_overnight_batch.sh`; done marker `overnight_batch.done`.
+  xpt image; `audit_*.json` land under `/scratch/tmp`. All-tier val_acc is
+  CONFOUNDED across tokenizations — only the content-tier per_class audit
+  settles a representation A/B. Always run it before calling a win.
+- Outputs under `/scratch/tmp/preframr_experiments/` (or the `--root` given).
+  Status: `check_overnight_batch.sh`; done marker `overnight_batch.done`.
 
 ## Conventions
 

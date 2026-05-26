@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# local Claude Code agent state (scheduled-task locks, etc.)
+.claude/
