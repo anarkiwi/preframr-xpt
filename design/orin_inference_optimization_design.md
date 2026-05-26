@@ -647,7 +647,7 @@ ends so this isn't re-explored.
 - Vocab shrink details: see `accuracy_push_prodlike_4x` AGENTS.md
   block + this doc's "Vocab shrink interaction" section.
 - Streaming-unembed-CE (training-side): existing design at
-  `integration_tests/design/streaming_unembed_ce_design.md`.
+  `design/streaming_unembed_ce_design.md`.
 - The atom-vs-merge tokenizer-ID analysis: produced 2026-05-19
   during accuracy_push_prodlike_4x audition; data in
   `/scratch/tmp/preframr_experiments/results/accuracy_push_prodlike_4x/apush4x/seed0/tkmodel.json`.

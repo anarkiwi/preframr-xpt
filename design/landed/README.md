@@ -34,6 +34,13 @@ historical context; consult git log for the actual commits.
 | [`encodability_metric_design.md`](encodability_metric_design.md) | Per-cluster Eval-B encodability metric extractor. |
 | [`orinnx_audition_design.md`](orinnx_audition_design.md) | Orin NX predict-host audition harness. |
 
+## Tokenizer / encoding
+
+| Doc | What landed |
+|---|---|
+| [`unified_oscillation_primitive_design.md`](unified_oscillation_primitive_design.md) | Unified `FREQ_TRAJ` op (SLOPE + OSCILLATE_ENV + FREQ_VIBRATO + FREQ_RUN) + 2-atom `FREQ_NUDGE`; shipped preframr-tokens 0.16/0.17, now the live deployment tokenizer (drives STAGE 1/2). |
+| [`tokenizer_profiling_tooling_design.md`](tokenizer_profiling_tooling_design.md) | Torch-free tokenizer profiling: `python -m preframr_tokens.tokenizer_profile` + `audit_primitives` reductions (`op_atom_profile`, `register_state`, `trajectory_coverage`) + `tokenizer_config` source-of-truth; shipped preframr-tokens 0.20.0. |
+
 ## Bug fixes
 
 | Doc | What landed |

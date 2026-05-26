@@ -1,15 +1,12 @@
 # Permanent tokenizer profiling tooling (efficiency + correctness)
 
-**Status (2026-05-25):** Drafted, **not yet implemented** (checked
-`feat/freq-traj-and-profiling`: `audit_primitives` still has only its original 3
-fns; no `tokenizer_config` / `tokenizer_profile` / `trajectory_coverage`). The
-other agent is finishing it; the 0.16.0 CHANGELOG pre-stage *claims* profiling
-tools that don't exist yet. **Blocks FREQ_TRAJ validation:** the
-`unified_oscillation_primitive_design.md` Phase-0 coverage (≥40% oscillatory
-motion) + efficiency (FREQ atoms/song < current) gates need
-`tokenizer_profile`/`trajectory_coverage` — **I run those gates once this lands.**
-The op-tier/decode reductions can settle now that the API + FREQ_TRAJ op set are
-stable.
+**Status: LANDED** (archived). Shipped in preframr-tokens 0.20.0:
+`python -m preframr_tokens.tokenizer_profile` plus the `audit_primitives`
+reductions (`op_atom_profile`, `register_state`, `trajectory_coverage`) and the
+`tokenizer_config` source-of-truth. The FREQ_TRAJ Phase-0 coverage + efficiency
+gates that blocked on it have since passed (see
+`unified_oscillation_primitive_design.md`). The design below is retained for
+reference.
 
 ## Problem
 

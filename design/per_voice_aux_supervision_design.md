@@ -108,7 +108,7 @@ categorical phase is enough for supervision.
 
 ## Dataset wiring
 
-`preframr/core/regdataset.py`'s training-block construction needs to
+`preframr/train/regdataset.py`'s training-block construction needs to
 emit the aux labels alongside the existing input/target token
 arrays:
 
@@ -239,7 +239,7 @@ logits that callers ignore unless training).
    function returning the 5 label arrays for a df.
 2. `preframr/core/reglogparser.py`: call aux label generator after
    `_add_voice_reg`, stash columns in df, persist in `*.0.parquet`.
-3. `preframr/core/regdataset.py`: load aux columns from parquet,
+3. `preframr/train/regdataset.py`: load aux columns from parquet,
    build block-aligned aux arrays alongside inputs/targets, write
    `*.aux.npy`.
 4. `preframr/core/model.py`: `PreframrLM` gains `aux_heads` ModuleDict
@@ -248,7 +248,7 @@ logits that callers ignore unless training).
    into model.
 6. `preframr/core/args.py`: `--aux-supervision-weight FLOAT`
    (default 0.0 = disabled, backward compatible).
-7. `integration_tests/experiments/aux_supervision_mini.py`: 3-arm
+7. `preframr_experiments/specs/aux_supervision_mini.py`: 3-arm
    A/B spec.
 8. Tests:
    - Label derivation unit tests (gate transitions, pitch class

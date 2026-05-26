@@ -1,10 +1,9 @@
 # Design notes index
 
 Tracked design docs for ongoing + queued work. Refuted hypotheses
-live as one-paragraph stubs at
-`/scratch/anarkiwi/preframr-xpt/preframr_experiments/data/refuted/<exp>.md`
-(sibling repo) — start there before reopening any previously-rejected
-direction.
+also have one-paragraph stubs at
+`preframr_experiments/data/refuted/<exp>.md` (this repo) — start
+there before reopening any previously-rejected direction.
 
 ## Status legend
 
@@ -16,18 +15,27 @@ direction.
 - **Deferred**: design reviewed; implementation deferred until a
   specific condition is met (typically generalization approach
   lands).
+- **Refuted**: hypothesis tried and rejected; see the refuted
+  registry. Doc retained for reference.
 - **Landed**: moved to [`landed/`](landed/) — reference only.
 
 ## In flight / drafted
 
 | Doc | Summary | Status |
 |---|---|---|
-| [`unified_oscillation_primitive_design.md`](unified_oscillation_primitive_design.md) | One `FREQ_TRAJ` op (45) with a SUBTYPE folding SLOPE+OSCILLATE_ENV+FREQ_VIBRATO+FREQ_RUN: MONOTONE_RAMP keeps SLOPE's lossy fit; OSCILLATE/RUN share a lossless delta+1-byte payload (locked gap2/alt0.5/hc3 → 44% of FREQ motion; FREQ_NUDGE → 2-atom delta; −30% FREQ atoms). Sweep done; work order at `preframr-tokens:OSCILLATE_REWORK.md`. | Impl landed + reviewed; **all 3 validation gates PASS (2026-05-25): fidelity oracle byte-exact, coverage 0.522, efficiency** — release-ready |
-| [`per_tier_heads_design.md`](per_tier_heads_design.md) | Shared body + 4 tier output heads + router; MoS-NLL on content head; uncertainty-weighted multi-task loss. | In flight (Phase 3 prodlike mos4) |
-| [`content_diffusion_design.md`](content_diffusion_design.md) | D3PM absorbing-state discrete-diffusion content head (Approach A). Body + structural/mid/zero heads unchanged. | Drafted, pending trigger (Approach C Phase 3 refute) |
-| [`multi_modal_objective_design.md`](multi_modal_objective_design.md) | Umbrella framing of per-token CE bottleneck on multi-modal content tier. B (InfoNCE) refuted; C (per-tier MoS) in flight; A (diffusion) drafted. | Reference (umbrella) |
+| [`motif_pass_design.md`](motif_pass_design.md) | Corpus-mined, per-block, lossless motif pass (preframr-tokens 0.20.0): mines a cross-composer motif dictionary, collapses motifs into `MOTIF_OP` atoms (loss-tier zero; expanded byte-exact on decode). ~11.4% fewer tokens at deployment vocab; the A/B tests **learnability**, not just compression. | In flight — shipped (tokens 0.20.0); mini A/B (`motif_mini_body_large`) queued, pending GPU after STAGE 2 |
 | [`tokenization_vs_music_llms.md`](tokenization_vs_music_llms.md) | Critical comparison of preframr's register-event + macro Unigram tokenization vs symbolic/MIDI, audio-codec, and VQ paradigms; argues the content ceiling is tokenization-induced, motivating compound tokens / acoustic-equivalence / augmentation. | Reference (positioning) |
 | [`music_llm_landscape_and_fail_fast_plan.md`](music_llm_landscape_and_fail_fast_plan.md) | Cross-LLM idea survey + ranked cheap fail-fast probes (composer token, vocab pruning, audio-equivalence Phase 0, compound-token prototype). | Reference (strategy) |
+
+## Representation axis (the active leverage)
+
+The confirmed win is tokenizer-side (`full_macros`); these are the queued
+representation/tokenization bets that follow it.
+
+| Doc | Summary | Status |
+|---|---|---|
+| [`compound_token_design.md`](compound_token_design.md) | Approach D: compound-token tokenizer + parallel-attribute heads (CompoundWord, Hsiao et al. 2021 / OctupleMIDI). Strategic pivot from the refuted per-token content-head architectures to a multi-attribute-per-token reorganization. | Draft, design review pending |
+| [`audio_equivalence_normalization_design.md`](audio_equivalence_normalization_design.md) | Tokenizer-side data normalization that collapses `(op, reg, val)` tuples producing perceptually-equivalent SID output into canonical forms (parameter-space collapse). | Draft 2026-05-23 |
 
 ## Queued model/loss bets
 
@@ -41,7 +49,6 @@ direction.
 
 | Doc | Summary | Status |
 |---|---|---|
-| [`tokenizer_profiling_tooling_design.md`](tokenizer_profiling_tooling_design.md) | Permanent torch-free tokenizer efficiency+correctness tooling **in preframr-tokens**: `tokenizer_config` arg source-of-truth + `audit_primitives` reductions (`op_atom_profile`, `register_state`, `trajectory_coverage`) + `python -m preframr_tokens.tokenizer_profile` (op histogram / atoms-per-song / before-after compare). Retires the `/scratch/tmp/*_probe.py` scripts; main-repo audits import the shared `register_state`. Work order `preframr-tokens:PROFILING_TOOLS.md`. | Drafted, NOT built yet (other agent finishing); blocks FREQ_TRAJ coverage/atoms validation |
 | [`generalize_min_val_acc_floor_design.md`](generalize_min_val_acc_floor_design.md) | Calibrate `GENERALIZE_MIN_VAL_ACC` floor as 2/3 × median val_acc once 2-3 canonical baselines run. | Pending impl |
 | [`start_seq_rotation_audit_design.md`](start_seq_rotation_audit_design.md) | `predict_load` hard-codes rotation 0; 50% rotations unreachable at max_perm=2. Flat-indexing fix. | Pending impl |
 
@@ -65,13 +72,35 @@ Open only after generalization approach lands. See AGENTS.md "Multi-GPU rental d
 | [`max_parallel_arms_design.md`](max_parallel_arms_design.md) | `concurrent.futures` slot allocator with flock; refuses N>1 on single-GPU hosts. | Deferred |
 | [`resume_design.md`](resume_design.md) | Per-stage `_resume.json` manifest for partial-run recovery. Dataset cache (landed in `preframr_experiments/base.py`) already addresses the parse+tokenize portion. | Deferred (partial coverage from dataset cache) |
 
+## Refuted (reference)
+
+The per-token content-objective arc — all rejected at the same ~0.13 eval_a
+content ceiling; detailed "do not revisit without" conditions in
+`preframr_experiments/data/refuted/`. Leverage proved to be representation, not
+the output objective.
+
+| Doc | Summary | Status |
+|---|---|---|
+| [`multi_modal_objective_design.md`](multi_modal_objective_design.md) | Umbrella framing of the per-token CE bottleneck on the multi-modal content tier. | Refuted (umbrella; B/C/A all rejected) |
+| [`per_tier_heads_design.md`](per_tier_heads_design.md) | Shared body + 4 tier output heads + router; MoS-NLL on content head; uncertainty-weighted multi-task loss (Approach C). | Refuted at prodlike (router posterior saturates → outputs ignore prompt content) |
+| [`content_diffusion_design.md`](content_diffusion_design.md) | D3PM absorbing-state discrete-diffusion content head (Approach A). | Refuted (sampling-side change didn't move the CE outcome) |
+| [`cluster_conditional_content_head_design.md`](cluster_conditional_content_head_design.md) | Cluster-conditional content head (queue item 2). | Refuted (same ceiling, diversity ~1.0–1.2) |
+
+## Process / scope
+
+| Doc | Summary | Status |
+|---|---|---|
+| [`repo_focus_cleanup_scope.md`](repo_focus_cleanup_scope.md) | Plan to keep `preframr` (main) = core framework, moving experiment orchestration + audits + tier data + design docs to `preframr-xpt`. | Largely executed — see [`landed/experiments_extraction_design.md`](landed/experiments_extraction_design.md) |
+
 ## Landed (archived)
 
 Reference docs whose implementations are in HEAD. Index:
 [`landed/README.md`](landed/README.md). Includes the
 preframr-{audio,tokens,experiments} extractions, the
 train/inference container split, the per-tier infrastructure
-fragility fixes, and the corpus / HVSC / Orin audit landings.
+fragility fixes, the corpus / HVSC / Orin audit landings, the
+**FREQ_TRAJ unified-oscillation primitive** (shipped tokens 0.16/0.17), and
+the **tokenizer profiling tooling** (shipped tokens 0.20.0).
 
 ## Conventions
 
@@ -81,8 +110,8 @@ fragility fixes, and the corpus / HVSC / Orin audit landings.
 - **Decision rules.** Mirror prior precedent: 3σ-on-val_acc to flip
   default; capacity-attenuation refuses if prodlike Δ < ¼ × mini Δ;
   per-Eval-B-* breakouts confirm cross-composer transfer.
-- **Refuted alternatives.** Move detailed evidence to the sibling
-  repo's `preframr_experiments/data/refuted/<exp>.md`; the design
+- **Refuted alternatives.** Move detailed evidence to
+  `preframr_experiments/data/refuted/<exp>.md`; the design
   doc retains a status header pointing there. Future re-design
   starts by reading the refuted entry's "do not revisit without"
   condition.

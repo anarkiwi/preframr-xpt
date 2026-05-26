@@ -38,8 +38,12 @@ mirror; `preframr_experiments` runs from source
   images (`Dockerfile.predict`, + xpu / jetson base overrides). All four
   publish `:latest` + `:${VERSION}`.
 - **`anarkiwi/preframr-xpt`** — layers the runner + audits on top of
-  `anarkiwi/preframr` (pinned `ARG BASE`). Build runs `pytest tests`;
-  the arc runs in this image.
+  `anarkiwi/preframr` (pinned `ARG BASE` = `:0.1.0`; override at build to track
+  `:latest`). Build runs `pytest tests`; the audits + orchestrator run in this
+  image. Experiment **arms** run in their per-spec `image` (default `:latest` =
+  0.2.0; e.g. the motif spec pins `:0.2.0` for `mine_motifs.py`) — so a 0.2.0
+  per-spec image needs **no** xpt rebuild; the `:0.1.0` xpt base is for the
+  runner/audit gate, not the trained arms.
 
 Release: `release.yml` publishes on push to `main` + `v*` tags; each image
 tagged `:latest` + `:${VERSION}` (VERSION file in main; currently `0.2.0`).

@@ -8,7 +8,7 @@ refutation stub and exits, releasing the GPU.
 Sibling docs: `resume_design.md`, `max_parallel_arms_design.md`. All
 three target `experiments/base.py` + `run.py`; **base.py edits are
 blocked while `loop_lookahead_prodlike` is in flight** (mid-run
-`integration_tests/experiments/` changes shift runner semantics between
+`preframr_experiments/` changes shift runner semantics between
 (arm, seed) pairs and silently invalidate the A/B per AGENTS.md
 §Mid-run code edits). This is design-only; implementation lands after
 the prodlike run completes.
@@ -128,7 +128,7 @@ shared registry (per the §Refuted-arm registry framework follow-up).
 ## Standard rule library
 
 Each rule is a free function in
-`integration_tests/experiments/decision_rules.py` (new module). Specs
+`preframr_experiments/decision_rules.py` (new module). Specs
 import + parameterise; the spec stays declarative.
 
 ### `capacity_attenuation`
@@ -194,7 +194,7 @@ Current spec docstring rule:
 After landing:
 
 ```python
-from integration_tests.experiments.decision_rules import (
+from preframr_experiments.decision_rules import (
     capacity_attenuation, regression_floor, any_of,
 )
 

@@ -1,9 +1,11 @@
 # Cluster-conditional content head (queue item 2)
 
-**Status:** Draft, design review pending. Anticipatory work while
-`per_tier_heads_entropy_prodlike_v12` (lambda=0.02) trains. Shelved
-if v12 PASSES; promoted to Phase 1 impl if v12 lands the predicted
-~1.14 diversity_ratio.
+**Status: REFUTED** (shelved). The `per_tier_heads_entropy_prodlike_v12` run
+this was gated on refuted, and `cluster_conditional_content_head` is itself in
+the refuted registry (same ~0.13 eval_a content ceiling, diversity ~1.0–1.2).
+Retained for reference; do not reopen without the condition in
+`preframr_experiments/data/refuted/`. Originally drafted as anticipatory work
+while v12 (lambda=0.02) trained.
 
 ## Problem (re-anchored after v11 + v12)
 

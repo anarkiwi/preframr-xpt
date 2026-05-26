@@ -1,5 +1,12 @@
 # Multi-modal output objective design
 
+**Status: REFUTED (umbrella, concluded).** All three branches of the per-token
+CE-bottleneck thesis were tried and refuted at prodlike: B (InfoNCE contrastive),
+C (per-tier MoS + entropy), and A (discrete diffusion). The leverage proved to be
+**representation/tokenization** (the `full_macros` tokenizer win), not the output
+objective. Retained as the umbrella framing; the live successor thread is the
+compound-token / motif representation work, not a new objective.
+
 ## Problem
 
 Argmax cross-entropy assumes a unimodal next-token distribution. SID
