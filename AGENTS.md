@@ -144,14 +144,21 @@ prodlike from any spec.**
 - `voice_permutation_K5` (data aug): **flat** (+0.0007, below its +0.005 bar).
   The one data-side bet didn't help at mini either.
 - `content_floor_check`: body=large baseline content acc ~0.006.
-- `cluster_content`: target arm `cluster_C256` originally **failed all 3 seeds**
-  on a stale `cluster_assignments.json` (old tokenizer; per-arm ERROR, not a
-  batch-level FAILED — check `results/*/logs/train.log`, not just the batch
-  log). FIXED: rebuilt the structural C256 index against the new tokenizer
-  (`build_content_clusters.py --feature structural` →
-  `data/content_clusters/mini_freqtraj_structural_c256.json`, gates PASS, 2417
-  content vids); **rerun in progress** (point the spec at it via
-  `PREFRAMR_CONTENT_CLUSTER_INDEX`).
+- `cluster_content`: **still blocked — INCONCLUSIVE, needs a code fix, not a
+  data regen.** Rebuilt the structural C256 index against the new tokenizer
+  (range now correct `[0,3702]`, gates PASS) — fixed the gross stale mismatch,
+  but the rerun `cluster_C256` still fails all 3 seeds:
+  `load_cluster_assignments` ValueError `vocab id 60 (local 32) ... missing`.
+  Root cause: `build_content_clusters._content_vocab_ids` classifies a
+  different subset as "content" (2417 of 3703 vids) than the model's
+  content-tier definition demands — the two diverged post-FREQ_TRAJ. Fix
+  options: align the builder's content-vid selection with the model's content
+  tier; OR cluster every vid so none is ever missing (the model only looks up
+  the ids it needs); OR a fallback in `load_cluster_assignments`. Index at
+  `data/content_clusters/mini_freqtraj_structural_c256.json`
+  (`PREFRAMR_CONTENT_CLUSTER_INDEX`). Does NOT change the STAGE 1 read —
+  cluster was already a refuted model-side bet; baseline (mos4_entropy,
+  val_acc 0.170) is the comparator.
 
 Read: every model-side AND the data-side (voice_permutation) intervention
 reproduces its refutation on the corrected tokenizer — no lift on top of the
