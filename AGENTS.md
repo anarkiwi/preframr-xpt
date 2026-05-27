@@ -199,27 +199,30 @@ content should ≈ the 32768 run).
   ```
 - **2 arms × 3 seeds = 6 arm-seeds** (`full_macros` target + `baseline`); OOM
   gate passed at B=4 (steady ~17.7/24 GiB vs B=8's OOM).
-- **STATUS (2026-05-26 ~21:40):** `full_macros` arm **COMPLETE** — all 3 seeds,
-  all-tier val_acc **0.379 / 0.382 / 0.387** (eval_a 0.380/0.383/0.389), tight
-  (±0.004 → the win is seed-stable). `baseline` 5/6 (seed0+seed1 done, eval_a
-  ~0.311; **seed2 final, training** → ~00:30 UTC 2026-05-27). **DECISIVE METRIC
-  NOT YET COMPUTED:** all-tier val_acc is CONFOUNDED across the two tokenizations;
-  the full_macros-vs-baseline call needs the **content-tier per_class audit** run
-  on the checkpoints (see Tests + runner) — compare to the passed single-seed
-  content 0.160→0.287. Do NOT read all-tier as the content result.
-- **Cross-engine eval_b stratification (2026-05-26, all-tier — CONFOUNDED, to
-  re-confirm on the content tier):** failure is strongly **engine-family-specific,
-  not uniform** — full_macros spans **0.245 (marquis) → 0.556 (winterberg)** across
-  the 8 families (spread 0.31, stdev 0.090); laggards marquis + wilson (+dobek),
-  leaders winterberg + crisps. full_macros beats baseline on **all 8** (+0.024…
-  +0.136). Implication: the lagging families are **targeted-augmentation** candidates
-  (see preframr-aug), not an architectural gap. Probe: `/scratch/tmp/evalb_stratify.py`.
-- **Monitor:** `tail /scratch/tmp/preframr_stage2/run.log` (arm/seed
-  transitions); `pgrep -f 'preframr_experiments.run full_macros_prodlike'`
-  (orchestrator alive); per-seed `metrics.json` under
-  `…/results/full_macros_prodlike/<arm>/seed<N>/`; the running seed's
-  `…/<arm>/seed<N>/logs/train.log` (current epoch/val_acc). Done = all 6
-  `metrics.json` present / orchestrator gone.
+### STAGE 2 COMPLETE (2026-05-27 00:33) — full_macros content win CONFIRMED ×3 seeds
+
+6/6 done. **DECISIVE content-tier per_class audit** (run on all 6 best ckpts,
+cuda, whole eval set; `audit_per_class.json` per seed dir + parser
+`/scratch/tmp/parse_per_class.py`):
+
+- **eval_a CONTENT-tier acc: full_macros 0.324 ± 0.006** (0.318/0.323/0.330) vs
+  **baseline 0.219 ± 0.011** → **Δ +0.105, seed-stable.** content_over_structural
+  0.479 vs 0.322. The single-seed pass (0.160→0.287, tkvocab 32768) **HOLDS** at
+  the deployment config (8192/B=4) — both arms sit higher, full_macros content
+  (0.324) exceeds the old 0.287. **This is the program's first confirmed,
+  multi-seed, un-confounded content/generalization win — and it is tokenizer-side.**
+- All-tier (confounded, for ref): eval_a val_acc 0.384±0.005 vs 0.313±0.009.
+- **Content-tier eval_b stratification (CONFIRMS the all-tier read on the content
+  tier):** full_macros beats baseline on **all 8** families (Δ +0.010…+0.135), but
+  content is sharply **family-specific** — 0.031 (marquis) → 0.479 (winterberg),
+  stdev 0.121. Laggards **marquis (0.031), dobek (0.172), wilson (0.236)**.
+  marquis's all-tier 0.245 was almost all *structural* — its content is ~zero,
+  visible only on the content tier → top **targeted-augmentation** target
+  (preframr-aug). Parser `/scratch/tmp/parse_per_class.py`.
+- **Next:** motif A/B (launched, see NEXT), then targeted augmentation for the
+  laggard families. LESSON reinforced: all-tier hid that marquis content ≈ 0;
+  always read the content tier (and wire the decisive audit per
+  `design/generalization_metric_tracking_design.md`).
 
 ### NEXT — motif A/B (`motif_mini_body_large`, queued; needs GPU after STAGE 2)
 
