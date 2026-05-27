@@ -43,11 +43,30 @@ mirror; `preframr_experiments` runs from source
   image. Experiment **arms** run in their per-spec `image` (default `:latest`;
   the motif spec pins `:0.2.2` for `mine_motifs.py`).
 
-Release: `release.yml` publishes on push to `main` + `v*` tags; each image
-tagged `:latest` + `:${VERSION}` (VERSION file in main; currently `0.2.2`).
-Auth via `secrets.DOCKER_TOKEN` (renamed from `DOCKER_PASSWORD` — workflows
-referencing the old name fail login). Local build is faster than waiting on
-the GHA publish: `docker build -f Dockerfile . -t anarkiwi/preframr:0.2.2`.
+**Releasing (two distinct mechanisms — easy to conflate; I have):**
+- **PyPI libs** (`preframr-tokens`, `preframr-audio`): `release.yml` fires on
+  **`v*` tags ONLY** → PyPI (trusted-publisher OIDC). Version is **dynamic**
+  (setuptools-scm from the tag); `pyproject` `fallback_version` is only the
+  no-tag fallback — bump it to match the tag. **Merging to `main` publishes
+  NOTHING** (runs CI only); only a `v*` tag releases. `release.yml` does PyPI
+  only — create the GH Release object separately (`gh release create`).
+- **Images** (`anarkiwi/preframr` + `-predict`/`-xpu`/`-jetson`; xpt builds via
+  `docker.yml` `push:false`): `release.yml` fires on **push to `main` AND `v*`
+  tags** → Docker Hub, tagged `:latest` + `:${VERSION}` read from the **VERSION
+  file** (NOT the git tag name; currently `0.2.2`). Auth `secrets.DOCKER_TOKEN`
+  (renamed from `DOCKER_PASSWORD` — old name fails login). Merge-to-`main`
+  republishes the versioned image (intended, safe). **Gotcha:** image tag = the
+  VERSION file, not the tag name — **bump VERSION in the release commit**, or a
+  `vX.Y.Z` tag ships the stale `:VERSION` (the v0.2.1→`:0.2.0` episode; fixed by
+  VERSION→0.2.2). Local build beats waiting on GHA:
+  `docker build -f Dockerfile . -t anarkiwi/preframr:0.2.2`.
+- **Merging a PR is always safe** — everything is versioned and new code is
+  opt-in. The deliberate *release* is the **tag** (PyPI) or the **VERSION bump +
+  push** (images); gate THAT on the experiment verdict, not the merge.
+- **Cross-repo order when a tokenizer change ripples up:** `preframr-tokens`
+  PyPI (push `vX.Y.Z` tag, bump `fallback_version`) → `preframr` framework image
+  (floor `preframr-tokens>=X.Y.Z`, bump VERSION, push `main`/tag) → `preframr-xpt`
+  (`ARG BASE` bump + per-spec `image=` pins).
 
 `build.sh` sources a gitignored `.env` (template `.env.example`) for
 `PIP_OPTS` (proxpi mirror). After a new `preframr-{audio,tokens}` release the
