@@ -84,17 +84,35 @@ encoding*. Every melodic lever — targeted augmentation for laggard families, a
 model-side content objective, cross-engine transfer — is capped until the melodic signal
 is anchored. This is the prerequisite representation fix. It is tokenizer-side,
 annotation-only (no token-stream change by itself, byte-exact round-trip preserved), and
-opt-out-gated, so it is low-risk to land.
+opt-in-gated (`--trajectory-anchor-pass`, default OFF), so it is low-risk to land.
 
-## After it lands (validation plan)
-1. Land the tokens pass + tests (see the impl doc); FREQ_TRAJ byte-exact round-trip
-   must stay green.
-2. Re-cut a mini `full_macros` dataset with `trajectory_anchor_pass` on; **re-run the
-   content-tier per_class audit** — does FREQ_TRAJ acc rise from ~0.026, and does
-   overall content-tier acc lift beyond the SET-scaffolding plateau? That is the decisive
-   test that the anchor fix makes melody learnable.
-3. If yes, this supersedes the SET-only content win and re-opens the melodic-augmentation
-   thread (preframr-aug) on a learnable substrate.
+## Learnability hypothesis (what the A/B tests)
+The defect is not that melody is high-entropy — gate-/sweep-anchored base-note sequences
+are *lower* entropy than the raw stream (Hubbard bass 4.09→2.68 bits). It is that the
+model has **no stable token to predict the note-onset pitch from**: under value-run
+segmentation the onset pitch is a delta off a musically-meaningless boundary, so it
+manifests as the FREQ_TRAJ failure mode we measured (op 45 ~0.026 acc; a *different* op
+predicted 73% of the time at FREQ_TRAJ positions; tolerance-banding does not rescue it —
+so it is an **encoding** defect, not a metric artifact and not demonstrably aleatoric).
+Anchoring gives every trajectory a stable, musically-meaningful `V0` at the note/sweep
+origin; the prediction target becomes "next anchored base note", which is what the source
+drivers actually sequence. **Prediction:** FREQ_TRAJ content acc rises off ~0.026 and
+overall content-tier acc lifts beyond the SET-scaffolding plateau (~0.32). Risk: if the
+core is genuinely aleatoric *after* anchoring, the A/B stays flat — that is the
+`freq_core_ablation_mini` question (core learnable vs drowned by PW/filter noise), the
+complementary diagnostic.
+
+## Validation plan (status)
+1. **DONE** — tokens pass + tests landed (`TrajectoryAnchorPass`, preframr-tokens 0.25.0);
+   FREQ_TRAJ byte-exact round-trip green. Framework toggle wired
+   (`--trajectory-anchor-pass`, opt-in, preframr 0.2.6, PR #138).
+2. **STAGED/RUNNING** — `specs/trajectory_anchor_mini.py`: mini `full_macros` anchor-on
+   vs anchor-off, 3 seeds, on `:0.2.6`. Decisive read = **content-tier per_class audit by
+   op** (FREQ_TRAJ op45 rise + overall content lift past the SET plateau). all-tier is
+   confounded (the arms tokenize FREQ_TRAJ differently).
+3. **If it wins:** supersedes the SET-only content win; re-opens the melodic-augmentation
+   thread (preframr-aug) on a learnable substrate. If flat: pair the read with
+   `freq_core_ablation_mini` before concluding aleatoric.
 
 ## Supersedes / relationship to refuted work
 - **Naive "anchor on gate"** is wrong and explicitly superseded: gate is one observable,

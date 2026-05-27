@@ -227,11 +227,13 @@ cuda, whole eval set; `audit_per_class.json` per seed dir + parser
   marquis's all-tier 0.245 was almost all *structural* — its content is ~zero,
   visible only on the content tier → top **targeted-augmentation** target
   (preframr-aug). Parser `/scratch/tmp/parse_per_class.py`.
-- **Next:** motif A/B is now REFUTED (see below) → targeted augmentation for the
-  laggard families is the open content lever (preframr-aug). LESSON reinforced:
-  all-tier hid that marquis content ≈ 0;
-  always read the content tier (and wire the decisive audit per
-  `design/generalization_metric_tracking_design.md`).
+- **Next:** the open content lever is the **trajectory-anchoring encoding fix** (the
+  FREQ_TRAJ ~0.026 root cause — see "Follow-on probe" below + `design/trajectory_anchoring.md`),
+  landed tokens 0.25.0 + preframr 0.2.6, staged as `trajectory_anchor_mini` (anchor on/off,
+  content-tier op45 gate). Targeted augmentation for the laggard families (preframr-aug)
+  sits **behind** it — it needs a learnable melodic substrate first. LESSON reinforced:
+  all-tier hid that marquis content ≈ 0; always read the content tier (and wire the
+  decisive audit per `design/generalization_metric_tracking_design.md`).
 
 ### Motif pass — REFUTED 2026-05-27 (both v1 exact + v2 templated)
 
@@ -254,14 +256,19 @@ re-scans blow up). NOT fixed (motif refuted); fix direction in the stub. Repro
 `/scratch/tmp/motif_v1_hang_repro.py`. The v2 templated miner is frame-filtered up
 front and unaffected.
 
-**Follow-on probe (live):** the content-tier per_class audit shows the full_macros
-win is carried by **SET register values** (acc 0.44, one class SET val=21 at 0.835),
-NOT melody — **FREQ_TRAJ (op 45) is ~0.026 acc, 0.6% of content hits despite 9% of
-positions**. FREQ_TRAJ `val` is a contiguous ordinal freq bin 0..256, so exact-match
-gives near-misses zero credit. Tolerance-band audit
-(`/scratch/tmp/audit_freqtraj_tolerance.py`, on the prodlike win ckpt) tests whether
-FREQ_TRAJ noise is aleatoric vs a metric/encoding artifact — if recoverable, coarser/
-ordinal FREQ_TRAJ binning is the next content lever (representation axis).
+**Follow-on probe — DIAGNOSED → trajectory anchoring (A/B live):** the content-tier
+per_class audit showed the full_macros win is carried by **SET register values** (acc
+0.44, one class SET val=21 at 0.835), NOT melody — **FREQ_TRAJ (op 45) ~0.026 acc, 0.6%
+of content hits despite 9% of positions**, and a *different* op is predicted 73% of the
+time at FREQ_TRAJ positions. Tolerance-banding the metric did NOT rescue it
+(`/scratch/tmp/audit_freqtraj_tolerance.py`, prodlike win ckpt) → not a metric artifact.
+Root cause: the **un-anchored encoding** — `FreqTrajectoryPass` segments on value-runs
+and discards the gate/sweep anchor, so the note-onset pitch reaches the model as noise.
+Fix landed: `TrajectoryAnchorPass` (tokens 0.25.0) + opt-in `--trajectory-anchor-pass`
+(preframr 0.2.6). Decisive mini A/B **`trajectory_anchor_mini` running** on `:0.2.6`
+(anchor on vs off, content-tier op45 gate) — does FREQ_TRAJ rise off 0.026 and content
+lift past the SET plateau? `design/trajectory_anchoring.md`. Complementary diagnostic:
+`freq_core_ablation_mini` (core aleatoric vs drowned by PW/filter noise).
 
 ## Tests + runner
 
