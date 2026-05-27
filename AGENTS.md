@@ -227,14 +227,16 @@ cuda, whole eval set; `audit_per_class.json` per seed dir + parser
   marquis's all-tier 0.245 was almost all *structural* — its content is ~zero,
   visible only on the content tier → top **targeted-augmentation** target
   (preframr-aug). Parser `/scratch/tmp/parse_per_class.py`.
-- **Next:** **trajectory anchoring** (`design/trajectory_anchoring.md`) — landed tokens
-  0.25.0 + preframr 0.2.6; mini A/B `trajectory_anchor_mini` (2026-05-27) is a **seed-stable
-  content win (content-tier 0.036→0.080, val_acc 0.113→0.137) but SET-carried (op0
-  0.063→0.175); FREQ_TRAJ op45 flat at the floor (~0.002).** Mini can't test melody (op45 ~0
-  both arms; prodlike baseline 0.067) → **prodlike A/B is the open decision** (only regime
-  with op45 signal). Targeted augmentation (preframr-aug) still sits behind a learnable
-  melodic substrate. LESSON reinforced: all-tier hid that marquis content ≈ 0; always read
-  the content tier — now via the reusable `audit.content_tier_report` (by-op).
+- **Next:** **interval-coded freq V0** (`design/freq_v0_interval.md`; tokens PR #19 + framework
+  PR #139, opt-in `--freq-v0-interval`). Anchoring (tokens 0.25.0 / 0.2.6) gave a seed-stable
+  but **SET-carried** mini content win (0.036→0.080; op45/melody flat ~0.002); probes localised
+  the cause — the onset line is trigram-0.79 predictable yet V0-onset acc is **0.000** because V0
+  is **absolute pitch** (no cross-key transfer). Interval-coding the onset (transposition-invariant)
+  is the fix; the absolute-encoding prodlike was stopped. **Plan:** merge tokens-first → build
+  0.2.7 → mini A/B (anchored+interval vs anchored-absolute), V0-onset subreg split + predictability
+  → interval-vs-absolute prodlike. Augmentation (preframr-aug) still sits behind a learnable
+  substrate. LESSON: always read the content tier — now via reusable `audit.content_tier_report`
+  (by-op) + `melody_predictability` (the predictability ceiling).
 
 ### Motif pass — REFUTED 2026-05-27 (both v1 exact + v2 templated)
 
@@ -274,11 +276,17 @@ distribution confirms the mechanism: anchoring is **anti-compressive** (tok/song
 anchor tokens (op0)**; corpus **FREQ_TRAJ atom count is ~flat (−1.7%)** — NOT the dramatic
 consolidation the design predicted (the eval standalone-op45 drop 29.5k→16.0k is post-merge
 displacement, not fewer FREQ_TRAJ). Mini can't test melody: op45 ~0 in *both* arms (prodlike baseline 0.067).
-→ **prodlike A/B `trajectory_anchor_prodlike` RUNNING** (launched 2026-05-27 ~20:16,
-`--root /scratch/tmp/preframr_anchor_prodlike`, 3 seeds, tkvocab 8192 / B=4 accum=8, ETA
-~36-66h): does the content win hold AND does op45 rise where it has signal? Read via
-`audit.content_tier_report` (per-seed `audit_checkpoint_per_class` first). Complementary diagnostic:
-`freq_core_ablation_mini` (core aleatoric vs drowned by PW/filter noise).
+**ROOT CAUSE → INTERVAL-V0 pivot:** probes localised the V0-onset failure — the onset line is
+highly predictable (cond. entropy 2.2 bits, trigram **0.79**) yet the model predicts the **V0
+onset exactly 0.000** (subreg-split + `audit.melody_predictability`). Cause: V0 is **absolute
+pitch**, so a motif at a different key is a different token sequence → no cross-song transfer.
+**Fix implemented:** interval-coded freq V0 (`--freq-v0-interval`, opt-in, byte-exact) — tokens
+**PR #19** (fallback 0.26.0) + framework **PR #139** (floor 0.26.0, VERSION 0.2.7);
+`design/freq_v0_interval.md` + `freq_trajectory_anchoring.md` top-lever. The absolute-encoding
+`trajectory_anchor_prodlike` was **STOPPED** (~2h, 0 ckpts; melody result predictable). **Next:**
+merge tokens-first → build 0.2.7 → mini A/B `anchored+interval` vs `anchored-absolute`, decided on
+the **V0-onset subreg split** + predictability; then interval-vs-absolute prodlike. Complementary:
+`freq_core_ablation_mini`.
 `design/trajectory_anchoring.md`.
 
 ## Tests + runner

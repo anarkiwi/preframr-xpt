@@ -1,13 +1,15 @@
 # Trajectory anchoring — correcting the noise-corrupted melodic encoding
 
-**Status:** **LANDED + MINI A/B DONE (content win, melody hypothesis unconfirmed at mini);
-PRODLIKE A/B QUEUED.** `TrajectoryAnchorPass` shipped in preframr-tokens 0.25.0; framework
-toggle `--trajectory-anchor-pass` wired in preframr 0.2.6 (PR #138). Mini
-`trajectory_anchor_mini` (2026-05-27): **content-tier acc 0.036→0.080 (+0.044, seed-stable),
-all-tier val_acc 0.113→0.137 — but SET-carried (op0 0.063→0.175); FREQ_TRAJ op45 flat at the
-floor (0.001→0.002).** Mini is too data-starved to test melody (op45 ~0 in both arms; prodlike
-baseline was 0.067), so the melody claim is **deferred to a prodlike A/B** (see Validation
-plan). Impl spec: [`preframr-tokens/design/freq_trajectory_anchoring.md`](../../preframr-tokens/design/freq_trajectory_anchoring.md).
+**Status:** **LANDED + MINI A/B DONE; root cause found → pivoted to INTERVAL-V0.**
+`TrajectoryAnchorPass` shipped (tokens 0.25.0, framework 0.2.6 PR #138). Mini
+`trajectory_anchor_mini` (2026-05-27): content-tier 0.036→0.080 (+0.044, seed-stable), val_acc
+0.113→0.137 — but **SET-carried (op0 0.063→0.175); FREQ_TRAJ op45 flat (~0.002)**. Probes then
+localised the cause: the onset line is highly predictable (cond. entropy 2.2 bits, trigram 0.79)
+yet the model predicts the **V0 onset exactly 0.000** — because V0 is **absolute pitch**, so motifs
+don't transfer across keys. **Fix implemented:** interval-coded freq V0 (tokens PR #19, framework
+PR #139, opt-in `--freq-v0-interval`) — see `design/freq_v0_interval.md` + "Top lever" below. The
+absolute-encoding prodlike A/B was **stopped** (its melody result is predictable). Impl spec:
+[`preframr-tokens/design/freq_trajectory_anchoring.md`](../../preframr-tokens/design/freq_trajectory_anchoring.md).
 This doc is the research-level framing + why it gates the program.
 
 **Re-frame at impl (gating):** the impl doc proposed an opt-*out* gate "mirroring
@@ -159,13 +161,21 @@ in degree — but the prodlike read MUST report V0-onset acc split from DELTA, n
    ~30–60× higher; mini wrong-op 99% vs prodlike 73%), so mini cannot test the melody
    hypothesis — it confirms only that anchoring is a real, seed-stable content gain (SET) and
    does not regress, clearing the bar for prodlike.
-3. **Prodlike A/B (RUNNING, launched 2026-05-27 ~20:16; `specs/trajectory_anchor_prodlike.py`,
-   `--root /scratch/tmp/preframr_anchor_prodlike`, ETA ~36-66h)** — the only regime that tests the melody claim: does the content
-   win hold AND does op45 rise where it has baseline signal (0.067)? If op45 moves → melody
-   is learnable, supersedes the SET-only story, re-opens preframr-aug on a learnable
-   substrate. If op45 stays flat while op0/content rise → anchoring is another SET-scaffolding
-   gain, not the melodic fix; pair with `freq_core_ablation_mini` (core aleatoric vs drowned
-   by PW/filter) before concluding melody is intrinsically unlearnable under this encoding.
+3. **Prodlike A/B (STOPPED 2026-05-27 ~2h in, 0 ckpts) — superseded by interval-V0.** The
+   `trajectory_anchor_prodlike` spec tests anchored-*absolute* vs unanchored-absolute; the
+   subreg-split + predictability probes made its melody result predictable (absolute V0 can't
+   transfer — V0 acc 0 vs trigram 0.79), so it was stopped to free GPU. Its open question (does
+   the SET content win hold at scale?) folds into the **interval-vs-absolute prodlike** below,
+   which carries an absolute baseline arm. Spec retained; relaunchable.
+
+## Top lever: interval-coded freq V0 → `design/freq_v0_interval.md`
+The V0 onset is **absolute pitch**, so the same motif at a different key is a different token
+sequence and melodic structure can't transfer across songs — the cause of V0 acc 0 despite
+trigram 0.79. **Fix implemented** (tokens PR #19, framework PR #139, opt-in `--freq-v0-interval`,
+byte-exact): encode each freq onset as a **signed interval from the previous voice onset** →
+transposition-invariant, collapsed onset alphabet. Plan: merge (tokens first) → build 0.2.7 →
+mini A/B `anchored+interval` vs `anchored-absolute`, decided on the **V0-onset subreg split** +
+`audit.melody_predictability` → if the onset finally moves, a prodlike interval-vs-absolute A/B.
 
 ## Supersedes / relationship to refuted work
 - **Naive "anchor on gate"** is wrong and explicitly superseded: gate is one observable,
