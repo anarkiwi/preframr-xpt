@@ -227,38 +227,41 @@ cuda, whole eval set; `audit_per_class.json` per seed dir + parser
   marquis's all-tier 0.245 was almost all *structural* — its content is ~zero,
   visible only on the content tier → top **targeted-augmentation** target
   (preframr-aug). Parser `/scratch/tmp/parse_per_class.py`.
-- **Next:** motif A/B (launched, see NEXT), then targeted augmentation for the
-  laggard families. LESSON reinforced: all-tier hid that marquis content ≈ 0;
+- **Next:** motif A/B is now REFUTED (see below) → targeted augmentation for the
+  laggard families is the open content lever (preframr-aug). LESSON reinforced:
+  all-tier hid that marquis content ≈ 0;
   always read the content tier (and wire the decisive audit per
   `design/generalization_metric_tracking_design.md`).
 
-### NEXT — motif A/B (`motif_mini_body_large`, queued; needs GPU after STAGE 2)
+### Motif pass — REFUTED 2026-05-27 (both v1 exact + v2 templated)
 
-Tests whether the corpus-mined motif pass (tokens 0.20.0) helps. Spec on main
-(`preframr_experiments/specs/motif_mini_body_large.py`), pinned to
-`anarkiwi/preframr:0.2.2`. Both arms run `full_macros`; the target arm adds
-`--motif-pass` with a dict a `pre_run_hook` mines from the staged train dumps
-(docker-runs `/preframr/mine_motifs.py`, motif OFF, same pipeline → matches at
-encode). Launch (GPU; STAGE 2 must be done):
-```
-PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. nohup python3 \
-  -m preframr_experiments.run motif_mini_body_large --root /scratch/tmp/preframr_motif \
-  > /scratch/tmp/preframr_motif/run.log 2>&1 & disown
-```
-- **Why it's worth running — but temper expectations:** compression is the
-  WRONG framing. Measured at deployment scale (vocab 8192, ~150 songs): motifs
-  give **~11.4% fewer tokens** (atom-level collapse ~23%, but Unigram light-merge
-  at deployment — 1.17 atoms/token — leaves room; a tiny over-provisioned dry-run
-  misleadingly showed 0.6%). The A/B's real question is **learnability**: does an
-  explicit cross-composer-constrained motif vocab help the model, vs Unigram's
-  likelihood-greedy chunking?
-- **Decisive gate:** per_class **content-tier** val_acc (motif tokens are
-  loss-tier zero; content is measured on the un-collapsed atoms) + loop_collapse
-  / prompt-conditioning (the open risk: motifs absorb content/melodic atoms ~45%
-  — floor-invariant to `min_composers` — so a longer horizon of memorized figures
-  is the failure mode). NOT all-tier val_acc.
-- Full rationale + the per-block architecture (and why parse-end fails) in
-  `design/motif_pass_design.md`.
+The corpus-mined motif pass does NOT help on the decisive content-tier gate.
+3-arm mini A/B (full_macros base): **v2 templated content 0.036 ± 0.001 vs no-motif
+baseline 0.045 ± 0.011 vs v1 exact 0.019** (subset `eval`). v2 recovers most of v1's
+−0.026 regression (de-fragmentation + MOTIF_ARG→content exposure stop v1 "hiding"
+content in zero-tier MOTIF_OP, content n 93k→104k) but lands *at/below* plain
+full_macros — never beats it. No compression either (v2 61 templates, enc/song 7586 ≈
+baseline 7561). Comparability: v2 from `:0.2.4`, baseline+v1 from the prior `:0.2.2`
+`motif_mini_body_large` run; identical spec config, image delta is motif-only code.
+loop/prompt guards not run (gated on a content win; none). Stub
+`data/refuted/motif_pass.md`; designs `design/motif_pass_design.md`,
+`design/motif_templates_v2_impl_design.md`.
+
+**Known regression captured in the stub:** tokens 0.23.0's frame-guard fix regressed
+`mine_motifs` (v1 BPE) into an O(k²·N) ~2.4 h spin (frame atoms become permanently
+unmergeable → pile up at the top of `most_common()`; scan + O(N) `_ncomposers`
+re-scans blow up). NOT fixed (motif refuted); fix direction in the stub. Repro
+`/scratch/tmp/motif_v1_hang_repro.py`. The v2 templated miner is frame-filtered up
+front and unaffected.
+
+**Follow-on probe (live):** the content-tier per_class audit shows the full_macros
+win is carried by **SET register values** (acc 0.44, one class SET val=21 at 0.835),
+NOT melody — **FREQ_TRAJ (op 45) is ~0.026 acc, 0.6% of content hits despite 9% of
+positions**. FREQ_TRAJ `val` is a contiguous ordinal freq bin 0..256, so exact-match
+gives near-misses zero credit. Tolerance-band audit
+(`/scratch/tmp/audit_freqtraj_tolerance.py`, on the prodlike win ckpt) tests whether
+FREQ_TRAJ noise is aleatoric vs a metric/encoding artifact — if recoverable, coarser/
+ordinal FREQ_TRAJ binning is the next content lever (representation axis).
 
 ## Tests + runner
 
@@ -381,6 +384,9 @@ interventions concentrated at the same ~0.13 eval_a content ceiling:
   prompt-conditioning.
 - `cluster_conditional_content_head` — same ceiling, diversity ~1.0-1.2.
 - `content_diffusion` — sampling-side change didn't move the CE outcome.
+- `motif_pass` (tokenizer-side: v1 exact + v2 templated) — content-tier
+  neutral-to-negative vs no-motif full_macros (v2 0.036 vs baseline 0.045);
+  no compression. `data/refuted/motif_pass.md`.
 - Earlier nulls: `legato_ab`, `palette_merge`, `head_row_class`,
   `adsr_equivalence`, `macro_coarsening`, `b2_unblock`, `palette_pwm_prereqs`,
   `global_instr_ids_phase_a`, `weighted_token_loss`, `learnable_class_loss`,

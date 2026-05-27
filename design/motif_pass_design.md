@@ -1,6 +1,10 @@
 # Corpus-mined motif pass
 
-**Status:** Shipped in preframr-tokens **0.20.0** (per-block, lossless,
+**Status:** **REFUTED 2026-05-27** — the 3-arm content-tier A/B settled the open
+question: motif (v1 exact + v2 templated) is neutral-to-negative vs no-motif
+full_macros (v2 content 0.036 vs baseline 0.045), and gives no compression. See
+`data/refuted/motif_pass.md`. History below.
+Shipped in preframr-tokens **0.20.0** (per-block, lossless,
 dry-run validated). Framework support (`--motif-pass`/`--motif-dict`, mine CLI)
 merged to preframr main → image `anarkiwi/preframr:0.2.2`. **Compression is real
 at deployment scale (~11.4% fewer tokens, measured — see Findings)**; whether it

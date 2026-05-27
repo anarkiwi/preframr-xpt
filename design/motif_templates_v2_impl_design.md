@@ -1,6 +1,9 @@
 # MotifDict v2 — value-slotted motif templates (implementation design)
 
-**Status:** Drafted impl design, pending build. Implements the "Proposed fix" in
+**Status:** **REFUTED 2026-05-27** — built (tokens 0.21.0–0.23.0) and A/B'd. v2
+de-fragmented + content-exposed the slot and recovered most of v1's regression, but
+content-tier did not beat no-motif full_macros (v2 0.036 vs baseline 0.045). See
+`data/refuted/motif_pass.md`. Was: Drafted impl design. Implements the "Proposed fix" in
 `motif_pass_design.md`; tokenizer-side (preframr-tokens) + an xpt A/B. **No model
 change in Phases 0–2** (the win is tested with the existing single-head model);
 the field-factorized variant is Phase 3 = `compound_token_design.md`.
