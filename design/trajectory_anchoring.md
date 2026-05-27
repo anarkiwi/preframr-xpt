@@ -119,10 +119,15 @@ complementary diagnostic.
    (+0.044, seed-stable ~2.2×); content/structural
    0.096→0.222; all-tier val_acc 0.113→0.137.** BUT the lift is **SET-carried (op0
    0.063→0.175)** — **FREQ_TRAJ (op45) stayed at the floor (0.001→0.002).** The prediction
-   "op45 rises" did NOT hold at mini. **Caveat:** op45 is ~0 in *both* arms at mini (prodlike
-   baseline op45 was 0.067, ~30–60× higher), so mini cannot test the melody hypothesis —
-   it confirms only that anchoring is a real, seed-stable content gain (SET) and does not
-   regress, clearing the bar for prodlike.
+   "op45 rises" did NOT hold at mini. **Tolerance audit (`audit.ordinal_tolerance_audit`,
+   3 seeds/arm) refutes a sub-exact-match recovery:** at op45 positions the model predicts a
+   *different op* ~99% of the time (anchored 98.8–99.8%, unanchored 99.5–99.9%; vs 73% at
+   prodlike) — <0.5% are even same-family FREQ_TRAJ, so within-|Δval| acc is ~0 across all
+   bands in BOTH arms. Anchoring does not move melodic prediction even below exact-match at
+   mini. **Caveat:** op45 is ~0 in *both* arms at mini (prodlike baseline op45 was 0.067,
+   ~30–60× higher; mini wrong-op 99% vs prodlike 73%), so mini cannot test the melody
+   hypothesis — it confirms only that anchoring is a real, seed-stable content gain (SET) and
+   does not regress, clearing the bar for prodlike.
 3. **Prodlike A/B (RUNNING, launched 2026-05-27 ~20:16; `specs/trajectory_anchor_prodlike.py`,
    `--root /scratch/tmp/preframr_anchor_prodlike`, ETA ~36-66h)** — the only regime that tests the melody claim: does the content
    win hold AND does op45 rise where it has baseline signal (0.067)? If op45 moves → melody
