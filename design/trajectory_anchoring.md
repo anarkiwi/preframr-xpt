@@ -121,6 +121,20 @@ it fail even the onset a trigram nails (then the encoding buries it → make the
 first-class, separable target / interval-code V0)? This also re-frames the prodlike read:
 the decisive op45 number to watch is the **V0-onset** accuracy, not aggregate op45.
 
+**Subreg-split DONE (mini, both arms): the model gets the V0 onset EXACTLY ZERO times**
+(V0 subreg1/2 acc = 0.0000, 0 hits / 7332 anchored, 0 / 10416 unanchored; DELTA 0.0000;
+other header ~0.003). So it is **neither aleatoric (trigram 0.79) nor a metric artifact
+(V0 specifically = 0)** — the model totally fails a trivially-predictable signal. **Likely
+cause:** the onset line is *shredded* — adjacent onsets (which carry the 2.2-bit n-gram
+structure) are separated in the token stream by ~100+ high-entropy DELTA/other-voice tokens,
+and the rare onset is swamped in the CE loss by the ~98% DELTA shape budget. Anchoring fixed
+*where* the onset is; it did not make the onset *sequence* attendable/learnable. **Concrete
+levers (the real "then what", all untried):** (1) separate the onset stream from the shape
+(a melody tier/channel or per-tier head so onsets are adjacent/attendable); (2) tier-off or
+coarsen the high-entropy DELTA shape (free loss+capacity for the predictable onset; cf.
+`freq_core_ablation`); (3) interval-code V0. Mini model is tiny (6L) so prodlike may differ
+in degree — but the prodlike read MUST report V0-onset acc split from DELTA, not aggregate op45.
+
 ## Validation plan (status)
 1. **DONE** — tokens pass + tests landed (`TrajectoryAnchorPass`, preframr-tokens 0.25.0);
    FREQ_TRAJ byte-exact round-trip green. Framework toggle wired
