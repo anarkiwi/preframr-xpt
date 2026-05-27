@@ -271,8 +271,10 @@ melody.** Anchoring consolidated FREQ_TRAJ as designed (op45 atoms 29.5k→16.0k
 of content) and lifted **content-tier 0.036→0.080 (+0.044, seed-stable), val_acc
 0.113→0.137** — but **SET-carried (op0 0.063→0.175); op45 stayed at the floor
 (0.001→0.002).** Mini can't test melody: op45 ~0 in *both* arms (prodlike baseline 0.067).
-→ **prodlike A/B is the open decision** (the only regime with op45 signal): does the content
-win hold AND does op45 rise? Read via `audit.content_tier_report`. Complementary diagnostic:
+→ **prodlike A/B `trajectory_anchor_prodlike` RUNNING** (launched 2026-05-27 ~20:16,
+`--root /scratch/tmp/preframr_anchor_prodlike`, 3 seeds, tkvocab 8192 / B=4 accum=8, ETA
+~36-66h): does the content win hold AND does op45 rise where it has signal? Read via
+`audit.content_tier_report` (per-seed `audit_checkpoint_per_class` first). Complementary diagnostic:
 `freq_core_ablation_mini` (core aleatoric vs drowned by PW/filter noise).
 `design/trajectory_anchoring.md`.
 

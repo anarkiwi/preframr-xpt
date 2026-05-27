@@ -119,7 +119,8 @@ complementary diagnostic.
    baseline op45 was 0.067, ~30–60× higher), so mini cannot test the melody hypothesis —
    it confirms only that anchoring is a real, seed-stable content gain (SET) and does not
    regress, clearing the bar for prodlike.
-3. **Prodlike A/B (queued)** — the only regime that tests the melody claim: does the content
+3. **Prodlike A/B (RUNNING, launched 2026-05-27 ~20:16; `specs/trajectory_anchor_prodlike.py`,
+   `--root /scratch/tmp/preframr_anchor_prodlike`, ETA ~36-66h)** — the only regime that tests the melody claim: does the content
    win hold AND does op45 rise where it has baseline signal (0.067)? If op45 moves → melody
    is learnable, supersedes the SET-only story, re-opens preframr-aug on a learnable
    substrate. If op45 stays flat while op0/content rise → anchoring is another SET-scaffolding
