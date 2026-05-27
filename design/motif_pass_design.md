@@ -5,7 +5,9 @@ dry-run validated). Framework support (`--motif-pass`/`--motif-dict`, mine CLI)
 merged to preframr main → image `anarkiwi/preframr:0.2.2`. **Compression is real
 at deployment scale (~11.4% fewer tokens, measured — see Findings)**; whether it
 also helps the model is the open question (the A/B's per_class content audit).
-OFF by default.
+OFF by default. **A 2026-05-27 dict+corpus analysis found exact (shape,value)
+mining leaves ~54% of motif-shape instances uncaptured (value-shift
+fragmentation) → motivates a value-slotted v2 (see Findings + Proposed fix).**
 
 ## Problem / motivation
 
@@ -130,6 +132,86 @@ real deployment compression. Needs `PREFRAMR_DATASET_CACHE_DISABLE=1` and image
 - **Learnability of denser tokens.** Each motif token packs more information →
   harder per-token prediction. The content audit tests whether the model learns
   them.
+
+## Findings — exact (shape,value) mining leaves the majority uncaptured (2026-05-27)
+
+Mining is exact, ordered, **timing-exact** (`diff` in the key), with **no
+canonicalization** — so a motif is a byte-identical contiguous sequence, and any
+value-shift (transposition), reorder, voice-swap (`reg` change) or retiming is a
+*distinct* sequence. Measured on the live mini dict (256 motifs) + a CPU corpus
+scan whose parse matches the dict exactly (104 blocks / 6 composers;
+`/scratch/tmp/motif_tail_scan.py`):
+
+- **The 256 motifs collapse to 10 transposition-invariant shapes** (7 len-2 + 3
+  len-3): 255/256 differ from a sibling only in `val`; the largest shape was
+  mined as **73 separate value-instances**. 64 motifs (32 clusters) are pure
+  reorderings.
+- **Of all corpus windows matching those 10 shapes, only 45.7% are in-dict;
+  54.3% (714,741 occ) are out-of-dict** value-variants. **6,260 distinct
+  out-of-dict (shape,value) variants** vs 256 mined. **292 of them (153,639 occ)
+  clear the dict's own ≥3-occ/≥6-composer floor** — dropped only by `k=256`.
+  The single most frequent escapee occurs **6,780×** across **5** composers —
+  dropped only by `min_composers=6`. *(Overlapping windows inflate absolute
+  counts; the 46/54 split + the 6,260-vs-256 variant count are robust.)*
+
+So exact-match captures **less than half** of its own shapes' instances. Two
+consequences: (1) compression is left on the table (the value axis escapes); (2)
+the same gesture is tokenized as a motif token in 46% of cases and as raw atoms
+in 54% — **representational fragmentation**, the opposite of a unifying vocab,
+and a concrete mechanism for harmed learnability (consistent with the motif
+arm's low, flat all-tier val_acc; the A/B's content-tier audit is the real test).
+Raising `k` / lowering `min_composers` does not fix this — it just mines more
+per-value motifs (vocab grows, fragmentation persists).
+
+## Proposed fix — value-slotted motif templates (MotifDict v2)
+
+Capture the value-shift family with **one template + a value parameter**,
+losslessly. A motif becomes a *compound*: structural template + content slot(s).
+
+1. **Template = structural shape.** Key on the `(op, reg, subreg, diff)` sequence,
+   not the absolute `val`s. Val positions that are constant across the template's
+   occurrences are baked in; positions that vary become **value slots** (one per
+   varying position — handles motifs mixing register families with independent
+   value axes).
+2. **Mine on templates.** `min_count` / `min_composers` apply to the *template*
+   (pooled over all its value-instances), so the transposition family qualifies as
+   one idiom — e.g. the 6,780× / 5-composer escapee is captured once its shape's
+   values pool across ≥6 composers.
+3. **Encode.** A window matching a template → `MOTIF_OP[template_id]` + the slot
+   value(s) emitted as ordinary value tokens (**reuse the existing `val`
+   vocabulary** → no vocab explosion; ~10 templates replace 6,260 instances).
+4. **Expand (lossless).** template constants + slot values → exact atoms; keep the
+   per-frame oracle + `compare_renders` green (non-negotiable — the pass is
+   lossless).
+5. **Model view.** Predict the template (structural idiom) **then** its slot
+   value(s) (content) — a structure/content factorization that **aligns with the
+   loss-tier split** and is exactly `compound_token_design`'s template+attribute
+   idea scoped to motifs (CP-Words-style attribute grouping). This is the crux:
+   structure and content are predicted *separately* instead of fused into one
+   fragmented token.
+
+**Why it fixes both:** compression — collapses 6,260 variants → ~10 templates and
+absorbs the 54% tail (well above v1's 11.4%, with a *smaller* motif vocab);
+learnability — the same gesture is always the same template token (+ a value
+slot), removing the motif-vs-raw fragmentation; the model learns the shared idiom
+once and predicts value as content (which it must do regardless).
+
+**What it does NOT solve / caveats.** Templating removes *structural*
+fragmentation only — the model still predicts the slot value (content), so expect
+gains on sequence/consistency, not a content-acc miracle. A value-shift is
+different pitch/content, so slots are **not** free to merge — keep them exact
+(lossless); optionally layer `audio_equivalence_normalization` to *quantize* slot
+values (lossy, content-tier) as an orthogonal knob. Per-template slot-value
+entropy should be monitored: a template whose slot distribution is huge/multimodal
+is a weak idiom (conflates distinct figures) and should not merge.
+
+**Validation gates (mirror v1):** byte-exact round-trip (oracle + compare_renders);
+untruncated encoded-tokens delta in the deployment vocab regime (target: most of
+the 54% tail); template vocab ≪ per-value count (~tens); per_class content-tier
+val_acc ≥ baseline + loop/prompt not worse. **Mechanics:** re-mine on shape keys
+(cleaner than a post-pass clustering of the exact v1 dict). Could land as a
+`MotifDict` v2 in preframr-tokens behind a flag, or fold into the compound-token
+tokenizer.
 
 ## Cross-references
 
