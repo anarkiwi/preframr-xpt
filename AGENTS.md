@@ -290,11 +290,17 @@ lift past the SET plateau? `design/trajectory_anchoring.md`. Complementary diagn
   anything whose `pre_run_hook` mutates staged dumps or mines a per-spec
   artifact): launch with `PREFRAMR_DATASET_CACHE_DISABLE=1` so the hook runs
   every seed (the dataset cache key would otherwise reuse stale artefacts).
-- **Content-tier audit (decisive gate):** run
-  `python3 -m preframr_experiments.audit.audit_checkpoint_per_class` in the
-  xpt image; `audit_*.json` land under `/scratch/tmp`. All-tier val_acc is
-  CONFOUNDED across tokenizations — only the content-tier per_class audit
-  settles a representation A/B. Always run it before calling a win.
+- **Content-tier audit (decisive gate):** per arm-seed, run
+  `audit.audit_checkpoint_per_class --ckpt … --work-dir … --out audit_per_class.json`
+  in the xpt image (forwards eval blocks → per-class/per-tier acc). Then read the A/B
+  with **`python3 -m preframr_experiments.audit.content_tier_report --results-root <dir>`**
+  (torch-free, host-runnable): per-tier content/structural Δ vs baseline, `eval_b_*`
+  per-family, and a **by-op** breakdown (FREQ_TRAJ op45 first-class). All-tier val_acc is
+  CONFOUNDED across tokenizations — only the content-tier read settles a representation
+  A/B. Always run it before calling a win. The audit suite (reusable tested modules vs the
+  `audit/probes/` reference archive) is indexed in
+  [`preframr_experiments/audit/README.md`](preframr_experiments/audit/README.md) — use the
+  tested readers, not bespoke `/scratch/tmp` scripts.
 - Outputs under `/scratch/tmp/preframr_experiments/` (or the `--root` given).
   Status: `check_overnight_batch.sh`; done marker `overnight_batch.done`.
 
