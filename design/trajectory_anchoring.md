@@ -1,12 +1,20 @@
 # Trajectory anchoring — correcting the noise-corrupted melodic encoding
 
-**Status:** **UNIMPLEMENTED — CRITICALLY BLOCKING.** The current FREQ_TRAJ / PW /
-filter encoding corrupts the melodic signal before the model sees it; until this is
-fixed, melodic content is effectively un-anchored noise and the content/generalization
-ceiling cannot lift. Implementation-level spec (preframr-tokens, self-contained):
-[`preframr-tokens/design/freq_trajectory_anchoring.md`](../../preframr-tokens/design/freq_trajectory_anchoring.md)
-(landed uncommitted on tokens `main`). This doc is the research-level framing + why it
-gates the program.
+**Status:** **LANDED (tokens), STAGED FOR A/B — CRITICALLY BLOCKING the content/melody
+ceiling until validated.** `TrajectoryAnchorPass` shipped in preframr-tokens 0.25.0;
+framework toggle `--trajectory-anchor-pass` wired in preframr 0.2.6 (PR #138).
+Implementation spec: [`preframr-tokens/design/freq_trajectory_anchoring.md`](../../preframr-tokens/design/freq_trajectory_anchoring.md).
+The decisive mini A/B is staged as `specs/trajectory_anchor_mini.py` (anchor on vs off,
+3 seeds, content-tier per_class gate); **awaiting run** on `:0.2.6`. This doc is the
+research-level framing + why it gates the program.
+
+**Re-frame at impl (gating):** the impl doc proposed an opt-*out* gate "mirroring
+FreqTrajectoryPass" (default ON). The tokens pass shipped that way, but default-ON
+silently anchored every 0.2.5 parse with no toggle — confounding baselines and making
+the A/B impossible. The framework flag is therefore **opt-in (default OFF)** and is NOT
+registered in `_PIPELINE_NAME_TO_FLAG` (it modifies `freq_trajectory` like the absorber
+macros / `--motif-pass`, toggled per-arm via `extra_cargs`). Promote to default-ON only
+if the A/B wins the content-tier gate.
 
 ## The corruption
 
