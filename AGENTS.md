@@ -267,10 +267,13 @@ Root cause: the **un-anchored encoding** — `FreqTrajectoryPass` segments on va
 and discards the gate/sweep anchor, so the note-onset pitch reaches the model as noise.
 Fix landed: `TrajectoryAnchorPass` (tokens 0.25.0) + opt-in `--trajectory-anchor-pass`
 (preframr 0.2.6). **Mini A/B `trajectory_anchor_mini` (2026-05-27): content WIN but NOT
-melody.** Anchoring consolidated FREQ_TRAJ as designed (op45 atoms 29.5k→16.0k, 14.1%→6.9%
-of content) and lifted **content-tier 0.036→0.080 (+0.044, seed-stable), val_acc
-0.113→0.137** — but **SET-carried (op0 0.063→0.175); op45 stayed at the floor
-(0.001→0.002).** Mini can't test melody: op45 ~0 in *both* arms (prodlike baseline 0.067).
+melody.** It lifted **content-tier 0.036→0.080 (+0.044, seed-stable), val_acc 0.113→0.137**
+— but **SET-carried (op0 0.063→0.175); op45 stayed at the floor (0.001→0.002).** Token
+distribution confirms the mechanism: anchoring is **anti-compressive** (tok/song 7561→8039,
++6.3%; alphabet 4255→4211, slightly cleaner) and its biggest atom-level effect is **+9% SET
+anchor tokens (op0)**; corpus **FREQ_TRAJ atom count is ~flat (−1.7%)** — NOT the dramatic
+consolidation the design predicted (the eval standalone-op45 drop 29.5k→16.0k is post-merge
+displacement, not fewer FREQ_TRAJ). Mini can't test melody: op45 ~0 in *both* arms (prodlike baseline 0.067).
 → **prodlike A/B `trajectory_anchor_prodlike` RUNNING** (launched 2026-05-27 ~20:16,
 `--root /scratch/tmp/preframr_anchor_prodlike`, 3 seeds, tkvocab 8192 / B=4 accum=8, ETA
 ~36-66h): does the content win hold AND does op45 rise where it has signal? Read via

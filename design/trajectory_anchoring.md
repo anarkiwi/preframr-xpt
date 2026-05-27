@@ -110,9 +110,13 @@ complementary diagnostic.
    (`--trajectory-anchor-pass`, opt-in, preframr 0.2.6, PR #138).
 2. **DONE (mini, 2026-05-27) — content win, melody hypothesis NOT confirmed at mini.**
    `trajectory_anchor_mini` (3 seeds, `:0.2.6`; read via the reusable
-   `audit.content_tier_report`). Tokenization differs as intended (alphabet 4211 vs 4255;
-   tok/song 8039 vs 7561; op45 atoms 16.0k vs 29.5k — arps/vibrato collapsed, 14.1%→6.9% of
-   content). **Content-tier acc 0.036→0.080 (+0.044, seed-stable ~2.2×); content/structural
+   `audit.content_tier_report`). Tokenization differs as intended, but the token-level
+   effect is **NOT FREQ_TRAJ consolidation**: corpus FREQ_TRAJ atom count is ~flat (−1.7%),
+   the biggest mover is **+9% SET anchor tokens (op0)**, and the stream is **anti-compressive**
+   (tok/song 7561→8039, +6.3%; alphabet 4255→4211, longtail 0.187→0.172 — slightly cleaner).
+   (The eval standalone-op45 drop 29.5k→16.0k / 14.1%→6.9% of content is post-merge
+   displacement by the new SET anchors, not fewer FREQ_TRAJ.) **Content-tier acc 0.036→0.080
+   (+0.044, seed-stable ~2.2×); content/structural
    0.096→0.222; all-tier val_acc 0.113→0.137.** BUT the lift is **SET-carried (op0
    0.063→0.175)** — **FREQ_TRAJ (op45) stayed at the floor (0.001→0.002).** The prediction
    "op45 rises" did NOT hold at mini. **Caveat:** op45 is ~0 in *both* arms at mini (prodlike
