@@ -120,6 +120,46 @@ def test_compare_and_deltas(tmp_path):
     assert anc["op_pool"][10] == (200, 400)
 
 
+def test_ft_subreg_bucket():
+    assert ctr.ft_subreg_bucket(1) == "V0 onset"
+    assert ctr.ft_subreg_bucket(2) == "V0 onset"
+    assert ctr.ft_subreg_bucket(6) == "DELTA shape"
+    assert ctr.ft_subreg_bucket(0) == "other header"
+
+
+def test_onset_breakdown(tmp_path):
+    toks = [(45, 0, 1, 0), (45, 0, 2, 0), (45, 0, 6, 0), (0, 1, -1, 0)]
+    arm = tmp_path / "interval" / "seed0"
+    arm.mkdir(parents=True)
+    with open(arm / "tokens.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["op", "reg", "subreg", "val", "count", "n"])
+        w.writeheader()
+        for op, reg, sr, val in toks:
+            w.writerow(
+                {"op": op, "reg": reg, "subreg": sr, "val": val, "count": 0, "n": 0}
+            )
+    doc = {
+        "subsets": {
+            "eval": {
+                "per_class": {
+                    "0": {"n": 100, "hits": 40, "acc": 0.4, "tier": "content"},
+                    "1": {"n": 100, "hits": 40, "acc": 0.4, "tier": "content"},
+                    "2": {"n": 200, "hits": 10, "acc": 0.05, "tier": "content"},
+                    "3": {"n": 50, "hits": 25, "acc": 0.5, "tier": "content"},
+                },
+                "per_tier": {"content": {"n": 450, "hits": 115, "acc": 0.255}},
+            }
+        }
+    }
+    (arm / "audit_per_class.json").write_text(json.dumps(doc))
+    rep = ctr.onset_breakdown(tmp_path, op=45)
+    arms = rep["arms"]["interval"]
+    assert arms["V0 onset"] == (80, 200)
+    assert arms["DELTA shape"] == (10, 200)
+    assert "other header" not in arms
+    assert ctr.pooled_acc([arms["V0 onset"]]) == 80 / 200
+
+
 def test_format_text_renders_spotlight_and_family(tmp_path):
     _write_arm(tmp_path, "anchored", op45_hits=30, set_hits=100, famx=0.30)
     _write_arm(tmp_path, "unanchored", op45_hits=5, set_hits=100, famx=0.20)

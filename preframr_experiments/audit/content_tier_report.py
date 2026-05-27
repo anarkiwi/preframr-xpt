@@ -64,6 +64,76 @@ def by_op_content(per_class: dict, id_op: dict[int, int]) -> dict[int, tuple[int
     return {op: (h, n) for op, (h, n) in acc.items()}
 
 
+def id_to_op_subreg(tokens_csv: Path) -> dict[int, tuple[int, int]]:
+    """Token id -> (op, subreg)."""
+    out: dict[int, tuple[int, int]] = {}
+    with open(tokens_csv) as f:
+        for i, row in enumerate(csv.DictReader(f)):
+            out[i] = (int(row["op"]), int(row["subreg"]))
+    return out
+
+
+_FT_ONSET_SUBREGS = (1, 2)
+_FT_DELTA_SUBREGS = (6,)
+
+
+def ft_subreg_bucket(subreg: int) -> str:
+    """FREQ_TRAJ subreg -> melodic role: V0 onset (1,2) vs DELTA shape (6) vs header."""
+    if subreg in _FT_ONSET_SUBREGS:
+        return "V0 onset"
+    if subreg in _FT_DELTA_SUBREGS:
+        return "DELTA shape"
+    return "other header"
+
+
+_FT_BUCKETS = ("V0 onset", "DELTA shape", "other header")
+
+
+def onset_breakdown(
+    results_root: Path, op: int = FREQ_TRAJ_OP, baseline_arm: Optional[str] = None
+) -> dict:
+    """Per arm, pooled (hits, n) for ``op`` split by FREQ_TRAJ subreg role (V0 onset /
+    DELTA shape / header), on each arm's spotlight subset across seeds. The V0-onset acc
+    is the decisive melodic-learnability number (vs the shape-dominated aggregate op acc).
+    """
+    arms: dict[str, dict] = {}
+    for arm_dir in discover_arms(results_root):
+        pooled: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+        for sd in seed_dirs(arm_dir):
+            d = json.load(open(sd / "audit_per_class.json"))
+            subs = d.get("subsets", {})
+            if not subs:
+                continue
+            id_os = id_to_op_subreg(sd / "tokens.csv")
+            sp = max(subs, key=lambda k: _content_n(subs[k]))
+            for sid, cls in subs[sp]["per_class"].items():
+                meta = id_os.get(int(sid))
+                if not meta or meta[0] != op:
+                    continue
+                bucket = pooled[ft_subreg_bucket(meta[1])]
+                bucket[0] += int(cls["hits"])
+                bucket[1] += int(cls["n"])
+        arms[arm_dir.name] = {b: (h, n) for b, (h, n) in pooled.items()}
+    return {"op": op, "baseline": pick_baseline(list(arms), baseline_arm), "arms": arms}
+
+
+def format_onset(report: dict) -> str:
+    op, base, arms = report["op"], report["baseline"], report["arms"]
+    order = [a for a in arms if a != base] + ([base] if base in arms else [])
+    lines = [
+        f"=== op{op} acc by subreg role (V0 onset = the melody), pooled across seeds ==="
+    ]
+    for a in order:
+        parts = []
+        for b in _FT_BUCKETS:
+            hn = arms[a].get(b)
+            parts.append(
+                f"{b} {_fmt(pooled_acc([hn]) if hn else None)} (n={hn[1] if hn else 0})"
+            )
+        lines.append(f"  {a:12} " + "  ".join(parts))
+    return "\n".join(lines)
+
+
 def _content_n(subset_obj: dict) -> int:
     c = subset_obj.get("per_tier", {}).get("content", {})
     return int(c.get("n", 0)) if isinstance(c, dict) else 0
@@ -232,6 +302,12 @@ def main() -> int:
         help="Spotlight op (default 45 = FREQ_TRAJ).",
     )
     ap.add_argument(
+        "--onset",
+        action="store_true",
+        help="Also split --op accuracy by subreg role (V0 onset vs DELTA shape) -- the "
+        "decisive melodic-learnability read for FREQ_TRAJ.",
+    )
+    ap.add_argument(
         "--json", action="store_true", help="Emit raw comparison JSON instead of text."
     )
     cli = ap.parse_args()
@@ -240,6 +316,13 @@ def main() -> int:
         print(json.dumps(comparison, indent=2, default=str))
     else:
         print(format_text(comparison, cli.op))
+        if cli.onset:
+            print()
+            print(
+                format_onset(
+                    onset_breakdown(cli.results_root, cli.op, cli.baseline_arm)
+                )
+            )
     return 0
 
 
