@@ -137,6 +137,18 @@ coarsen the high-entropy DELTA shape (free loss+capacity for the predictable ons
 `freq_core_ablation`); (3) interval-code V0. Mini model is tiny (6L) so prodlike may differ
 in degree — but the prodlike read MUST report V0-onset acc split from DELTA, not aggregate op45.
 
+## freq_v0_interval_mini result (2026-05-27) — representation fixed, model still 0 (mini inconclusive)
+Interval-coding (tokens 0.26.0) did its job at the representation level: onset marginal entropy
+7.05→5.52 bits, the most-common interval (=0, "repeat last note") now covers **31%** of onsets
+(vs 2.4% for the absolute mode), tok/song 8039→7860. But the model's **V0-onset acc stayed 0.000**
+(absolute 0.002; content/all-tier unchanged 0.078 / 0.126). Mini cannot decide interval-coding
+(V0-onset was already 0 for anchored-absolute at mini — too data-starved for melody). **Sharper
+signal:** the model fails even the *trivial copy floor* — 31% of onsets repeat the previous pitch,
+yet acc is 0 — implicating **shredding / loss-dilution** (onset ~100+ tokens deep behind the ~98%
+DELTA-shape budget) over representation. Next fork: (a) prodlike interval-vs-absolute (spec arbiter,
+where op45 has signal) vs (b) structural lever first — de-interleave the onset stream / tier-off or
+coarsen the high-entropy DELTA shape (cheap mini test). Read: `audit.content_tier_report --onset`.
+
 ## Validation plan (status)
 1. **DONE** — tokens pass + tests landed (`TrajectoryAnchorPass`, preframr-tokens 0.25.0);
    FREQ_TRAJ byte-exact round-trip green. Framework toggle wired
