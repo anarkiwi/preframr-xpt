@@ -1,5 +1,11 @@
 # Design notes index
 
+**Orientation:** [`architecture_overview.md`](architecture_overview.md) — which
+part lives in which repo (tokens / audio / framework / xpt / aug) and **why**, the
+dependency layering, and how to **derive the release process** (PyPI-tag vs
+image-VERSION; the public-PyPI-propagation gotcha). Read it before any cross-repo
+change or release.
+
 Organized by **research axis** (the project's priority order), not by lifecycle:
 status is a per-row column so refuted/landed work sits next to the live work in
 the same thread. Refuted hypotheses also have one-paragraph stubs at
