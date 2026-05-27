@@ -104,6 +104,23 @@ core is genuinely aleatoric *after* anchoring, the A/B stays flat — that is th
 `freq_core_ablation_mini` question (core learnable vs drowned by PW/filter noise), the
 complementary diagnostic.
 
+## Predictability ceiling — melody is NOT aleatoric (2026-05-27)
+`audit.melody_predictability` on the anchored onset line (V0 per trajectory, freq regs
+0/7/14, mini both arms): conditional entropy **k=2 ≈ 2.2 bits (~4.6 eff. pitches)** —
+matching the design's ~2.68b prediction — and a trivial **trigram predicts the next onset
+at 0.79** (bigram 0.46; copy-from-history 0.22 @ 61% coverage). So the gate-/sweep-anchored
+melodic line is **highly predictable in principle** — Branch A (aleatoric) is **refuted**.
+**Crucial caveat / reframe:** the model's op45 acc (mini 0.002, prodlike 0.067) is over ALL
+op45 tokens, ~98% of which are the high-entropy per-frame DELTA *shape* samples (subreg 6),
+NOT the V0 onset (~1–2% of op45 tokens). So that number is dominated by trajectory shape and
+is **not** the onset accuracy — the predictable melody is a tiny minority of the op45 budget
+and is drowned in the aggregate. **Next diagnostic (cheap):** split op45 accuracy by subreg
+(V0 onset vs DELTA shape) on the existing ckpts — does the model already capture the
+predictable onset (then "melody unlearnable" was a metric/encoding-budget artifact), or does
+it fail even the onset a trigram nails (then the encoding buries it → make the onset a
+first-class, separable target / interval-code V0)? This also re-frames the prodlike read:
+the decisive op45 number to watch is the **V0-onset** accuracy, not aggregate op45.
+
 ## Validation plan (status)
 1. **DONE** — tokens pass + tests landed (`TrajectoryAnchorPass`, preframr-tokens 0.25.0);
    FREQ_TRAJ byte-exact round-trip green. Framework toggle wired
