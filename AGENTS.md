@@ -70,17 +70,29 @@ structural accuracy without lifting content (5 interventions, all at the same
 **tokenization-induced**, not model-capacity.
 
 **Active pivot — strict-no-diff tokenizer (preframr-tokens):** every token is
-a structured trajectory primitive or an enumerated carveout. Unified
-`FREQ_TRAJ` op + 4 CLI-only absorber macros
+a structured trajectory primitive or an enumerated carveout. The tokenizer is
+the unified `FREQ_TRAJ` op + 4 CLI-only absorber macros
 (CTRL_TRIPLE / FREQ_NUDGE / RELEASE_UPDATE / lonely_catch_all). Per-frame
 fidelity oracle byte-exact; 0.18.0 fixed a duration-drop bug (macro round-trip
 0–0.5% of baseline).
 
-**PASSED (2026-05-25): `full_macros_prodlike`.** First non-refuted,
-content-confirmed intervention — and it is tokenizer-side. Verdict via the
-**content-tier per_class audit** (the decisive, un-confounded gate):
-- eval_a content **0.160→0.287 (+0.127)**; structural only +0.040.
-- eval_b content **8/8 non-negative** (mean +0.0997).
+**PASSED — `full_macros_prodlike` (single seed 2026-05-25; ×3-seed CONFIRMED
+2026-05-27).** First non-refuted, content-confirmed intervention, tokenizer-side.
+**What the A/B isolates (verified in every seed's `pipeline_spec.json`):**
+FREQ_TRAJ rides in the shared base pipeline — it is in **both** arms — so this A/B
+does NOT test FREQ_TRAJ. The sole arm difference is the target's four absorber
+macros (`--ctrl-triple-pass --freq-nudge-pass --release-update-pass
+--lonely-catch-all`). The win is attributable to those absorbers stacked on an
+already-FREQ_TRAJ baseline — **not** to FREQ_TRAJ, whose own content contribution
+this A/B does not measure. Verdict via the **content-tier per_class audit** (the
+decisive, un-confounded gate):
+- eval_a content **0.219→0.324 (+0.105), ×3 seeds, seed-stable** (baseline
+  0.228/0.207/0.223; full_macros 0.318/0.323/0.330). Single-seed precursor was
+  0.160→0.287.
+- eval_b content **8/8 non-negative** (Δ +0.010…+0.135).
+- **Not compression:** alphabet grew 4628→5492 and encoded_tokens/song was ~flat
+  (9095→9137, slightly up). The absorbers re-type residual SETs, they don't
+  shrink the stream; the lift is representation/learnability, not fewer tokens.
 - All-tier val_acc is CONFOUNDED (different tokenizations inflate structural
   tokens) — only the content-tier audit settles content vs structural.
   **Always run it before calling an encoder A/B a win.**
