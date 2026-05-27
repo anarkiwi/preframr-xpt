@@ -213,6 +213,13 @@ val_acc ≥ baseline + loop/prompt not worse. **Mechanics:** re-mine on shape ke
 `MotifDict` v2 in preframr-tokens behind a flag, or fold into the compound-token
 tokenizer.
 
+**Implementation design: `motif_templates_v2_impl_design.md`** — data model,
+shape-keyed mining, lossless expand, tier wiring, phased work order. It also
+**corrects the compression framing above**: separate template+slot tokens are
+compression-neutral-to-worse on the len-2-dominated dict; the primary win is
+*consistency* (vocab 10 vs 6260) + exposing motif-carried content to the content
+tier. Compression is a measured gate, not a premise.
+
 ## Cross-references
 
 - `orin_inference_optimization_design.md` — the 1.23 atoms/token deployment
