@@ -6,13 +6,13 @@ val,diff) BPE) vs v2 (--motif-mine-version 2: shape templates + content-tier val
 slots). 3 seeds, mini body=large, 60 epochs.
 
 Decisive read: per_class CONTENT-tier val_acc (run post-hoc in the xpt image, which
-must layer on :0.2.3 so MOTIF_ARG classifies as content) + loop_collapse /
+must layer on :0.2.4 so MOTIF_ARG classifies as content) + loop_collapse /
 prompt-conditioning. The v1 A/B already showed exact-match doesn't help and is
 confounded (it hides content in zero-tier MOTIF_OP); v2 exposes the slot as content
 and de-fragments — this arm tests whether that helps vs v1 and no-motif.
 
 Requires PREFRAMR_DATASET_CACHE_DISABLE=1 (the hook mines a per-arm dict every seed)
-and image anarkiwi/preframr:0.2.3 (the --motif-mine-version flag + v2 tokenizer +
+and image anarkiwi/preframr:0.2.4 (the --motif-mine-version flag + v2 tokenizer +
 the MOTIF_ARG->content tier fix)."""
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ _FULL_MACRO_CARGS = (
 )
 
 _MOTIF_DICT_CONTAINER_PATH = "/scratch/preframr/motif_dict.json"
-_IMAGE = "anarkiwi/preframr:0.2.3"
+_IMAGE = "anarkiwi/preframr:0.2.4"
 _MOTIF_K = 256
 _MOTIF_MIN_COUNT = 3
 _MOTIF_MIN_COMPOSERS = 6
@@ -111,7 +111,7 @@ spec = ExperimentSpec(
         "motif vs no-motif. 3 seeds, mini body=large, 60 epochs. Decisive gate = "
         "per_class content-tier val_acc + loop/prompt; all-tier is CONFOUNDED "
         "(each arm tokenizes differently). Requires PREFRAMR_DATASET_CACHE_DISABLE=1 "
-        "and image anarkiwi/preframr:0.2.3."
+        "and image anarkiwi/preframr:0.2.4."
     ),
     tier="mini",
     arms=[
