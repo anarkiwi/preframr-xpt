@@ -1,12 +1,14 @@
 # Trajectory anchoring — correcting the noise-corrupted melodic encoding
 
-**Status:** **LANDED (tokens), STAGED FOR A/B — CRITICALLY BLOCKING the content/melody
-ceiling until validated.** `TrajectoryAnchorPass` shipped in preframr-tokens 0.25.0;
-framework toggle `--trajectory-anchor-pass` wired in preframr 0.2.6 (PR #138).
-Implementation spec: [`preframr-tokens/design/freq_trajectory_anchoring.md`](../../preframr-tokens/design/freq_trajectory_anchoring.md).
-The decisive mini A/B is staged as `specs/trajectory_anchor_mini.py` (anchor on vs off,
-3 seeds, content-tier per_class gate); **awaiting run** on `:0.2.6`. This doc is the
-research-level framing + why it gates the program.
+**Status:** **LANDED + MINI A/B DONE (content win, melody hypothesis unconfirmed at mini);
+PRODLIKE A/B QUEUED.** `TrajectoryAnchorPass` shipped in preframr-tokens 0.25.0; framework
+toggle `--trajectory-anchor-pass` wired in preframr 0.2.6 (PR #138). Mini
+`trajectory_anchor_mini` (2026-05-27): **content-tier acc 0.036→0.080 (+0.044, seed-stable),
+all-tier val_acc 0.113→0.137 — but SET-carried (op0 0.063→0.175); FREQ_TRAJ op45 flat at the
+floor (0.001→0.002).** Mini is too data-starved to test melody (op45 ~0 in both arms; prodlike
+baseline was 0.067), so the melody claim is **deferred to a prodlike A/B** (see Validation
+plan). Impl spec: [`preframr-tokens/design/freq_trajectory_anchoring.md`](../../preframr-tokens/design/freq_trajectory_anchoring.md).
+This doc is the research-level framing + why it gates the program.
 
 **Re-frame at impl (gating):** the impl doc proposed an opt-*out* gate "mirroring
 FreqTrajectoryPass" (default ON). The tokens pass shipped that way, but default-ON
@@ -106,13 +108,23 @@ complementary diagnostic.
 1. **DONE** — tokens pass + tests landed (`TrajectoryAnchorPass`, preframr-tokens 0.25.0);
    FREQ_TRAJ byte-exact round-trip green. Framework toggle wired
    (`--trajectory-anchor-pass`, opt-in, preframr 0.2.6, PR #138).
-2. **STAGED/RUNNING** — `specs/trajectory_anchor_mini.py`: mini `full_macros` anchor-on
-   vs anchor-off, 3 seeds, on `:0.2.6`. Decisive read = **content-tier per_class audit by
-   op** (FREQ_TRAJ op45 rise + overall content lift past the SET plateau). all-tier is
-   confounded (the arms tokenize FREQ_TRAJ differently).
-3. **If it wins:** supersedes the SET-only content win; re-opens the melodic-augmentation
-   thread (preframr-aug) on a learnable substrate. If flat: pair the read with
-   `freq_core_ablation_mini` before concluding aleatoric.
+2. **DONE (mini, 2026-05-27) — content win, melody hypothesis NOT confirmed at mini.**
+   `trajectory_anchor_mini` (3 seeds, `:0.2.6`; read via the reusable
+   `audit.content_tier_report`). Tokenization differs as intended (alphabet 4211 vs 4255;
+   tok/song 8039 vs 7561; op45 atoms 16.0k vs 29.5k — arps/vibrato collapsed, 14.1%→6.9% of
+   content). **Content-tier acc 0.036→0.080 (+0.044, seed-stable ~2.2×); content/structural
+   0.096→0.222; all-tier val_acc 0.113→0.137.** BUT the lift is **SET-carried (op0
+   0.063→0.175)** — **FREQ_TRAJ (op45) stayed at the floor (0.001→0.002).** The prediction
+   "op45 rises" did NOT hold at mini. **Caveat:** op45 is ~0 in *both* arms at mini (prodlike
+   baseline op45 was 0.067, ~30–60× higher), so mini cannot test the melody hypothesis —
+   it confirms only that anchoring is a real, seed-stable content gain (SET) and does not
+   regress, clearing the bar for prodlike.
+3. **Prodlike A/B (queued)** — the only regime that tests the melody claim: does the content
+   win hold AND does op45 rise where it has baseline signal (0.067)? If op45 moves → melody
+   is learnable, supersedes the SET-only story, re-opens preframr-aug on a learnable
+   substrate. If op45 stays flat while op0/content rise → anchoring is another SET-scaffolding
+   gain, not the melodic fix; pair with `freq_core_ablation_mini` (core aleatoric vs drowned
+   by PW/filter) before concluding melody is intrinsically unlearnable under this encoding.
 
 ## Supersedes / relationship to refuted work
 - **Naive "anchor on gate"** is wrong and explicitly superseded: gate is one observable,

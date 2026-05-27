@@ -227,13 +227,14 @@ cuda, whole eval set; `audit_per_class.json` per seed dir + parser
   marquis's all-tier 0.245 was almost all *structural* — its content is ~zero,
   visible only on the content tier → top **targeted-augmentation** target
   (preframr-aug). Parser `/scratch/tmp/parse_per_class.py`.
-- **Next:** the open content lever is the **trajectory-anchoring encoding fix** (the
-  FREQ_TRAJ ~0.026 root cause — see "Follow-on probe" below + `design/trajectory_anchoring.md`),
-  landed tokens 0.25.0 + preframr 0.2.6, staged as `trajectory_anchor_mini` (anchor on/off,
-  content-tier op45 gate). Targeted augmentation for the laggard families (preframr-aug)
-  sits **behind** it — it needs a learnable melodic substrate first. LESSON reinforced:
-  all-tier hid that marquis content ≈ 0; always read the content tier (and wire the
-  decisive audit per `design/generalization_metric_tracking_design.md`).
+- **Next:** **trajectory anchoring** (`design/trajectory_anchoring.md`) — landed tokens
+  0.25.0 + preframr 0.2.6; mini A/B `trajectory_anchor_mini` (2026-05-27) is a **seed-stable
+  content win (content-tier 0.036→0.080, val_acc 0.113→0.137) but SET-carried (op0
+  0.063→0.175); FREQ_TRAJ op45 flat at the floor (~0.002).** Mini can't test melody (op45 ~0
+  both arms; prodlike baseline 0.067) → **prodlike A/B is the open decision** (only regime
+  with op45 signal). Targeted augmentation (preframr-aug) still sits behind a learnable
+  melodic substrate. LESSON reinforced: all-tier hid that marquis content ≈ 0; always read
+  the content tier — now via the reusable `audit.content_tier_report` (by-op).
 
 ### Motif pass — REFUTED 2026-05-27 (both v1 exact + v2 templated)
 
@@ -265,10 +266,15 @@ time at FREQ_TRAJ positions. Tolerance-banding the metric did NOT rescue it
 Root cause: the **un-anchored encoding** — `FreqTrajectoryPass` segments on value-runs
 and discards the gate/sweep anchor, so the note-onset pitch reaches the model as noise.
 Fix landed: `TrajectoryAnchorPass` (tokens 0.25.0) + opt-in `--trajectory-anchor-pass`
-(preframr 0.2.6). Decisive mini A/B **`trajectory_anchor_mini` running** on `:0.2.6`
-(anchor on vs off, content-tier op45 gate) — does FREQ_TRAJ rise off 0.026 and content
-lift past the SET plateau? `design/trajectory_anchoring.md`. Complementary diagnostic:
+(preframr 0.2.6). **Mini A/B `trajectory_anchor_mini` (2026-05-27): content WIN but NOT
+melody.** Anchoring consolidated FREQ_TRAJ as designed (op45 atoms 29.5k→16.0k, 14.1%→6.9%
+of content) and lifted **content-tier 0.036→0.080 (+0.044, seed-stable), val_acc
+0.113→0.137** — but **SET-carried (op0 0.063→0.175); op45 stayed at the floor
+(0.001→0.002).** Mini can't test melody: op45 ~0 in *both* arms (prodlike baseline 0.067).
+→ **prodlike A/B is the open decision** (the only regime with op45 signal): does the content
+win hold AND does op45 rise? Read via `audit.content_tier_report`. Complementary diagnostic:
 `freq_core_ablation_mini` (core aleatoric vs drowned by PW/filter noise).
+`design/trajectory_anchoring.md`.
 
 ## Tests + runner
 
