@@ -70,9 +70,11 @@ mirror; `preframr_experiments` runs from source
 
 `build.sh` sources a gitignored `.env` (template `.env.example`) for
 `PIP_OPTS` (proxpi mirror). After a new `preframr-{audio,tokens}` release the
-mirror serves a stale index until busted:
-`curl -X DELETE http://192.168.5.1:5001/cache/<pkg>`, confirm at
-`.../index/<pkg>/`, then rebake.
+mirror serves a stale index until busted — run
+`preframr_experiments/bust_release.sh <pkg> [version]` (busts the cache + polls
+until the version is served; no version = bust + print latest), then rebake.
+Manual equivalent: `curl -X DELETE http://192.168.5.1:5001/cache/<pkg>`, confirm
+at `.../index/<pkg>/`.
 
 ## Project goal (OVERRIDING)
 
