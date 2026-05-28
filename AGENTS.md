@@ -228,17 +228,19 @@ cuda, whole eval set; `audit_per_class.json` per seed dir + parser
   visible only on the content tier → top **targeted-augmentation** target
   (preframr-aug). Parser `/scratch/tmp/parse_per_class.py`.
 - **Next:** **melody learnability** is the active research arc → `design/melody_learnability.md`.
-  Converged across **5 mini A/Bs** + probes: melody onset is **predictable** (trigram 0.79–0.82,
-  not aleatoric), the model has **capacity** (freq_core lifted SET 0.078→0.419), melody is
-  **~13.4% of stream** (not rare; fragmented across op0-SET-freq / op45 V0 / op47 NUDGE pitch),
-  yet V0-onset = **0.000 every time at mini** — scale-bound hard cross-song prediction (only
-  prodlike has moved it, op45=0.067). Landed encoding/loss stack: anchoring (0.25.0/0.2.6) +
-  interval V0 (0.26.0/0.2.7) + FREQ_ONSET channel (0.27.0/0.2.9) + `--onset-loss-weight`
-  (0.2.8). In flight: `freq_onset_channel_mini` (de-fragmentation + metric un-confound on the
-  best stack). Open decisive test = **prodlike full-stack arbiter** (anchor + interval +
-  freq-onset-channel + onset-weight vs absolute). Reserve: distributional/perceptual melody
-  metric pivot. Augmentation (preframr-aug) still sits behind a learnable substrate. LESSON:
-  always read the content tier — via reusable `audit.content_tier_report --onset` (op-aware
+  **6 mini A/Bs** converged: melody onset is **predictable** (trigram 0.79–0.82, not aleatoric),
+  model has **capacity** (freq_core: SET 0.08→0.42; freq_onset_channel: SET 0.15→0.83), melody
+  is **~13.4% of stream** (not rare), yet V0-onset = **0.000 every time at mini** → scale-bound
+  hard cross-song prediction (only prodlike has moved it, op45=0.067). The freq_onset_channel
+  mini gave the biggest SET-cleanup content lift (content-tier 0.076→0.249) — still SET-carried.
+  Landed encoding/loss stack: anchoring (0.25.0/0.2.6) + interval V0 (0.26.0/0.2.7) +
+  FREQ_ONSET channel (0.27.0/0.2.9) + `--onset-loss-weight` (0.2.8). **RUNNING:**
+  `melody_stack_prodlike` (full_stack vs full_macros, 3 seeds, deployment config on `:0.2.9`)
+  — the deferred decisive test, dual-purpose (melody at scale + SET-cleanup scale-confirmation),
+  seed-major so a 1-seed cross-arm signal comes ~6–11h in not 30h. Reserve: distributional/
+  perceptual melody metric pivot. Augmentation (preframr-aug) sits behind a learnable
+  substrate. LESSON: always read the content tier — via reusable `audit.content_tier_report
+  --onset` (op-aware
   unified `melodic_onset_bucket`) + `melody_predictability` (the predictability ceiling).
 
 ### Motif pass — REFUTED 2026-05-27 (both v1 exact + v2 templated)

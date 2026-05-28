@@ -55,15 +55,18 @@ hold at scale — folds into the prodlike A/B as a co-confirmed content lift.
 
 
 ## Open frontier
-1. **Prodlike full-stack arbiter — the deferred decisive test.** Anchor + interval +
-   freq-onset-channel + onset-loss-weight (sweep W) vs the absolute baseline, at the scale
-   where op45 has non-zero signal (0.067). Five mini A/Bs have exhausted cheap diligence; mini
-   provably cannot learn melody. The prodlike read = unified V0-onset acc.
-2. **Generative / distributional metric pivot — in reserve.** If even the prodlike full stack
-   doesn't lift V0-onset meaningfully, exact next-onset prediction may be intrinsically
-   scale-hungry / partly aleatoric for generalization. Pivot the melody success metric to
-   interval/n-gram statistics + the 12-SID WAV audition gate (`music_llm_landscape_and_fail_fast_plan.md`
-   territory).
+1. **`melody_stack_prodlike` — RUNNING** (the deferred decisive test). full_macros +
+   anchor + interval V0 + FREQ_ONSET channel + `--onset-loss-weight 10` vs plain full_macros,
+   3 seeds, deployment config (tkvocab 8192, B=4/accum=8) on `:0.2.9`. Dual-purpose:
+   (a) does unified V0-onset acc rise above the absolute baseline's op45 = 0.067 → real
+   melody at scale; (b) does the SET-cleanup content lift (mini 0.076→0.249) hold at
+   prodlike scale → content/deployment win regardless. Seed-major runner gives a 1-seed
+   cross-arm signal ~6–11 h in, not 30 h. Read: `content_tier_report --onset`.
+2. **Generative / distributional metric pivot — in reserve.** If `melody_stack_prodlike`
+   shows the SET-cleanup win at scale but V0-onset stays flat (~0.067 absolute baseline), the
+   encoding/loss axis is exhausted for exact-next-onset and we pivot the melody success
+   metric to interval/n-gram statistics + the 12-SID WAV audition gate
+   (`music_llm_landscape_and_fail_fast_plan.md` territory).
 
 ## Reusable readers (audit/)
 - **`content_tier_report.py --onset`** — per-tier + by-op + the unified `melodic_onset_bucket`
