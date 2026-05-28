@@ -149,6 +149,21 @@ DELTA-shape budget) over representation. Next fork: (a) prodlike interval-vs-abs
 where op45 has signal) vs (b) structural lever first — de-interleave the onset stream / tier-off or
 coarsen the high-entropy DELTA shape (cheap mini test). Read: `audit.content_tier_report --onset`.
 
+## freq_core_ablation_mini result (2026-05-28) — dilution unlocks SET, NOT melody
+Ablating PW+filter (the staged diagnostic) lifted **op0 SET acc 0.078→0.419** (~5×;
+content-tier 0.042→0.173, all-tier val_acc 0.120→0.146, val_loss 11.91→9.51) — so timbral
+dilution WAS drowning content and the model has ample mini capacity. **But FREQ V0-onset acc
+stayed 0.000** (full 0.000 too), while the onset line is trigram-0.82 predictable. **Converged
+diagnosis:** across four mini conditions (full_macros / anchored / anchored+interval /
+freq_core) the V0-onset is **0.000 every time** — not representation, not aleatoric (trigram
+0.79–0.82), not timbral dilution. The onset is **rare and the model isn't compelled to spend
+capacity on it** (it nails dominant SET, ignores the sparse onset). The only thing that has ever
+moved onset off 0 is **scale** (prodlike absolute op45 0.067). Fork: (a) prodlike
+interval-vs-absolute — does the good (anchor+interval) onset encoding compound where onset is
+already non-zero? (b) onset-prioritization (loss up-weight / dedicated onset head / onset
+sub-sequence) at mini — caveat: generic token-weighting was previously refuted, but not
+onset-targeted on the anchored encoding.
+
 ## Validation plan (status)
 1. **DONE** — tokens pass + tests landed (`TrajectoryAnchorPass`, preframr-tokens 0.25.0);
    FREQ_TRAJ byte-exact round-trip green. Framework toggle wired
