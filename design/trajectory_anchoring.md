@@ -164,6 +164,17 @@ already non-zero? (b) onset-prioritization (loss up-weight / dedicated onset hea
 sub-sequence) at mini — caveat: generic token-weighting was previously refuted, but not
 onset-targeted on the anchored encoding.
 
+## onset_loss_weight_mini result (2026-05-28) — W=10 nudges onset 0→0.002, no all-tier cost
+Up-weighting FREQ V0-onset CE 10x: **V0-onset 0.000→0.002** (n=8349; ~17 hits vs 0), op45
+0.002→0.005, content-tier flat (0.074), all-tier val_acc +0.005 / val_loss -0.02 — i.e. the
+lever moved onset *directionally* with **no all-tier penalty** (the over-focus risk didn't bite
+at W=10), but nowhere near a meaningful number. **Fifth** mini condition with onset ≈ 0
+(full / anchored / interval / freq_core / onset_w10). Two reads: (a) the lever works but is far
+under-powered at W=10 — sweep W (50/200), there's headroom; (b) mini simply can't make the rare
+onset learnable and only scale will (prodlike 0.067). Next: W-sweep mini (cheap, tests if the
+nudge scales with W + the all-tier tradeoff) OR commit the full stack (anchor+interval+onset-weight)
+to a prodlike interval-vs-absolute arbiter.
+
 ## Validation plan (status)
 1. **DONE** — tokens pass + tests landed (`TrajectoryAnchorPass`, preframr-tokens 0.25.0);
    FREQ_TRAJ byte-exact round-trip green. Framework toggle wired
