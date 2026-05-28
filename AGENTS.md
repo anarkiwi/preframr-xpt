@@ -337,8 +337,10 @@ via `audit.content_tier_report --onset` with the unified `melodic_onset_bucket`
   `tests/test_lint.py` rejects narrative `#` and >5-line docstrings.
 - **NFS hygiene:** no lingering `tail -f` on workdir files (silly-renames);
   stop `preframr_tb` before deleting tb_logs subtrees.
-- **Arm ordering:** target arm first in `spec.arms`, baseline last (sequential
-  runner; audition wants target ckpt first).
+- **Arm ordering:** target arm first in `spec.arms`, baseline last. The runner is
+  **seed-major**: it loops `for seed: for arm: run`, so each seed runs target→baseline
+  back-to-back, and a 1-seed cross-arm comparison is available the moment seed0 finishes
+  both arms (early-signal-friendly, audition still gets target ckpt first per seed).
 - **Renaming a transform** silently disables it in stale specs (no error) —
   grep specs on any pass/transform rename.
 - **Design docs** live in `design/`, indexed by **research axis** in

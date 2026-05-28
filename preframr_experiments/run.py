@@ -153,8 +153,10 @@ def main():
     spec.train_args = _override_train_arg(
         spec.train_args, "--accumulate-grad-batches", args.accumulate_grad_batches
     )
-    if args.tkvocab is not None or args.batch_size is not None or (
-        args.accumulate_grad_batches is not None
+    if (
+        args.tkvocab is not None
+        or args.batch_size is not None
+        or (args.accumulate_grad_batches is not None)
     ):
         logger.info(
             "overrides: tkvocab=%s batch_size=%s accumulate_grad_batches=%s",
@@ -176,11 +178,11 @@ def main():
 
     results: dict[str, list[dict]] = {arm.label: [] for arm in spec.arms}
 
-    for arm in spec.arms:
-        if args.only_arm and arm.label != args.only_arm:
-            logger.info("skipping arm %s (--only-arm=%s)", arm.label, args.only_arm)
-            continue
-        for seed in range(spec.seeds):
+    for seed in range(spec.seeds):
+        for arm in spec.arms:
+            if args.only_arm and arm.label != args.only_arm:
+                logger.info("skipping arm %s (--only-arm=%s)", arm.label, args.only_arm)
+                continue
             work_dir = results_dir / arm.label / f"seed{seed}"
             try:
                 artefacts = run_arm(
