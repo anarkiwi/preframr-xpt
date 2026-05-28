@@ -227,16 +227,19 @@ cuda, whole eval set; `audit_per_class.json` per seed dir + parser
   marquis's all-tier 0.245 was almost all *structural* — its content is ~zero,
   visible only on the content tier → top **targeted-augmentation** target
   (preframr-aug). Parser `/scratch/tmp/parse_per_class.py`.
-- **Next:** **interval-coded freq V0** (`design/freq_v0_interval.md`; tokens PR #19 + framework
-  PR #139, opt-in `--freq-v0-interval`). Anchoring (tokens 0.25.0 / 0.2.6) gave a seed-stable
-  but **SET-carried** mini content win (0.036→0.080; op45/melody flat ~0.002); probes localised
-  the cause — the onset line is trigram-0.79 predictable yet V0-onset acc is **0.000** because V0
-  is **absolute pitch** (no cross-key transfer). Interval-coding the onset (transposition-invariant)
-  is the fix; the absolute-encoding prodlike was stopped. **Plan:** merge tokens-first → build
-  0.2.7 → mini A/B (anchored+interval vs anchored-absolute), V0-onset subreg split + predictability
-  → interval-vs-absolute prodlike. Augmentation (preframr-aug) still sits behind a learnable
-  substrate. LESSON: always read the content tier — now via reusable `audit.content_tier_report`
-  (by-op) + `melody_predictability` (the predictability ceiling).
+- **Next:** **melody learnability** is the active research arc → `design/melody_learnability.md`.
+  Converged across **5 mini A/Bs** + probes: melody onset is **predictable** (trigram 0.79–0.82,
+  not aleatoric), the model has **capacity** (freq_core lifted SET 0.078→0.419), melody is
+  **~13.4% of stream** (not rare; fragmented across op0-SET-freq / op45 V0 / op47 NUDGE pitch),
+  yet V0-onset = **0.000 every time at mini** — scale-bound hard cross-song prediction (only
+  prodlike has moved it, op45=0.067). Landed encoding/loss stack: anchoring (0.25.0/0.2.6) +
+  interval V0 (0.26.0/0.2.7) + FREQ_ONSET channel (0.27.0/0.2.9) + `--onset-loss-weight`
+  (0.2.8). In flight: `freq_onset_channel_mini` (de-fragmentation + metric un-confound on the
+  best stack). Open decisive test = **prodlike full-stack arbiter** (anchor + interval +
+  freq-onset-channel + onset-weight vs absolute). Reserve: distributional/perceptual melody
+  metric pivot. Augmentation (preframr-aug) still sits behind a learnable substrate. LESSON:
+  always read the content tier — via reusable `audit.content_tier_report --onset` (op-aware
+  unified `melodic_onset_bucket`) + `melody_predictability` (the predictability ceiling).
 
 ### Motif pass — REFUTED 2026-05-27 (both v1 exact + v2 templated)
 
@@ -282,11 +285,12 @@ onset exactly 0.000** (subreg-split + `audit.melody_predictability`). Cause: V0 
 pitch**, so a motif at a different key is a different token sequence → no cross-song transfer.
 **Fix implemented:** interval-coded freq V0 (`--freq-v0-interval`, opt-in, byte-exact) — tokens
 **PR #19** (fallback 0.26.0) + framework **PR #139** (floor 0.26.0, VERSION 0.2.7);
-`design/freq_v0_interval.md` + `freq_trajectory_anchoring.md` top-lever. The absolute-encoding
-`trajectory_anchor_prodlike` was **STOPPED** (~2h, 0 ckpts; melody result predictable). **Next:**
-merge tokens-first → build 0.2.7 → mini A/B `anchored+interval` vs `anchored-absolute`, decided on
-the **V0-onset subreg split** + predictability; then interval-vs-absolute prodlike. Complementary:
-`freq_core_ablation_mini`.
+See `design/melody_learnability.md` (active arc) + the landed encoding/loss stack
+(anchoring → interval V0 → FREQ_ONSET channel → onset-loss-weight). The absolute-encoding
+`trajectory_anchor_prodlike` was **STOPPED** (~2h, 0 ckpts; result predictable). Current read
+via `audit.content_tier_report --onset` with the unified `melodic_onset_bucket`
+(op45 V0 + op48 FREQ_ONSET + op47 NUDGE pitch on freq regs). Complementary:
+`freq_core_ablation_mini` (PW/filter noise removed → confirmed mini capacity, not melody).
 `design/trajectory_anchoring.md`.
 
 ## Tests + runner
