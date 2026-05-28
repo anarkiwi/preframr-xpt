@@ -64,26 +64,51 @@ def by_op_content(per_class: dict, id_op: dict[int, int]) -> dict[int, tuple[int
     return {op: (h, n) for op, (h, n) in acc.items()}
 
 
-def id_to_op_subreg(tokens_csv: Path) -> dict[int, tuple[int, int]]:
-    """Token id -> (op, subreg)."""
-    out: dict[int, tuple[int, int]] = {}
+def id_to_op_subreg(tokens_csv: Path) -> dict[int, tuple[int, int, int]]:
+    """Token id -> (op, reg, subreg)."""
+    out: dict[int, tuple[int, int, int]] = {}
     with open(tokens_csv) as f:
         for i, row in enumerate(csv.DictReader(f)):
-            out[i] = (int(row["op"]), int(row["subreg"]))
+            out[i] = (int(row["op"]), int(row["reg"]), int(row["subreg"]))
     return out
 
 
 _FT_ONSET_SUBREGS = (1, 2)
 _FT_DELTA_SUBREGS = (6,)
+_FREQ_TRAJ_REGS_FROZEN = frozenset((0, 7, 14))
+_NUDGE_PITCH_SUBREGS = frozenset((2, 3))
+FREQ_TRAJ_OP_CONST = 45
+FREQ_ONSET_OP_CONST = 48
+FREQ_NUDGE_OP_CONST = 47
 
 
 def ft_subreg_bucket(subreg: int) -> str:
-    """FREQ_TRAJ subreg -> melodic role: V0 onset (1,2) vs DELTA shape (6) vs header."""
+    """FREQ_TRAJ subreg -> melodic role: V0 onset (1,2) vs DELTA shape (6) vs header.
+    Subreg-only legacy bucket; the unified-melody read uses ``melodic_onset_bucket``."""
     if subreg in _FT_ONSET_SUBREGS:
         return "V0 onset"
     if subreg in _FT_DELTA_SUBREGS:
         return "DELTA shape"
     return "other header"
+
+
+def melodic_onset_bucket(op: int, reg: int, subreg: int):
+    """Op-aware melodic-content bucket on FREQ regs (0/7/14): groups op45 trajectory V0 +
+    op48 FREQ_ONSET + op47 FREQ_NUDGE pitch (HI/LO) as the unified V0 onset, op45 subreg 6
+    as DELTA shape. Non-freq / non-melodic rows return None."""
+    if reg not in _FREQ_TRAJ_REGS_FROZEN:
+        return None
+    if op == FREQ_ONSET_OP_CONST:
+        return "V0 onset"
+    if op == FREQ_TRAJ_OP_CONST and subreg in _FT_ONSET_SUBREGS:
+        return "V0 onset"
+    if op == FREQ_NUDGE_OP_CONST and subreg in _NUDGE_PITCH_SUBREGS:
+        return "V0 onset"
+    if op == FREQ_TRAJ_OP_CONST and subreg in _FT_DELTA_SUBREGS:
+        return "DELTA shape"
+    if op == FREQ_TRAJ_OP_CONST:
+        return "other header"
+    return None
 
 
 _FT_BUCKETS = ("V0 onset", "DELTA shape", "other header")
@@ -108,11 +133,14 @@ def onset_breakdown(
             sp = max(subs, key=lambda k: _content_n(subs[k]))
             for sid, cls in subs[sp]["per_class"].items():
                 meta = id_os.get(int(sid))
-                if not meta or meta[0] != op:
+                if not meta:
                     continue
-                bucket = pooled[ft_subreg_bucket(meta[1])]
-                bucket[0] += int(cls["hits"])
-                bucket[1] += int(cls["n"])
+                m_op, m_reg, m_subreg = meta
+                name = melodic_onset_bucket(m_op, m_reg, m_subreg)
+                if name is None:
+                    continue
+                pooled[name][0] += int(cls["hits"])
+                pooled[name][1] += int(cls["n"])
         arms[arm_dir.name] = {b: (h, n) for b, (h, n) in pooled.items()}
     return {"op": op, "baseline": pick_baseline(list(arms), baseline_arm), "arms": arms}
 

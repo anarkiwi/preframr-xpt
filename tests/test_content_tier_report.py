@@ -127,6 +127,21 @@ def test_ft_subreg_bucket():
     assert ctr.ft_subreg_bucket(0) == "other header"
 
 
+def test_melodic_onset_bucket_unifies_op45_op48_op47_on_freq_regs():
+    assert ctr.melodic_onset_bucket(45, 0, 1) == "V0 onset"
+    assert ctr.melodic_onset_bucket(45, 7, 2) == "V0 onset"
+    assert ctr.melodic_onset_bucket(48, 0, -1) == "V0 onset"
+    assert ctr.melodic_onset_bucket(48, 14, -1) == "V0 onset"
+    assert ctr.melodic_onset_bucket(47, 0, 2) == "V0 onset"
+    assert ctr.melodic_onset_bucket(47, 0, 3) == "V0 onset"
+    assert ctr.melodic_onset_bucket(45, 0, 6) == "DELTA shape"
+    assert ctr.melodic_onset_bucket(45, 0, 0) == "other header"
+    assert ctr.melodic_onset_bucket(45, 2, 1) is None
+    assert ctr.melodic_onset_bucket(48, 2, -1) is None
+    assert ctr.melodic_onset_bucket(0, 0, -1) is None
+    assert ctr.melodic_onset_bucket(47, 0, 0) is None
+
+
 def test_onset_breakdown(tmp_path):
     toks = [(45, 0, 1, 0), (45, 0, 2, 0), (45, 0, 6, 0), (0, 1, -1, 0)]
     arm = tmp_path / "interval" / "seed0"
