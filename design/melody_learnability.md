@@ -34,8 +34,9 @@ Evidence chain:
 | feature | tokens / preframr | what it does | landed design |
 |---|---|---|---|
 | `TrajectoryAnchorPass` | 0.25.0 / 0.2.6 | anchor FREQ_TRAJ at gate/sweep origins (not value-run boundaries) | [`landed/trajectory_anchoring.md`](landed/trajectory_anchoring.md) |
-| `--freq-v0-interval` | 0.26.0 / 0.2.7 | encode V0 as a signed interval from the previous voice onset → transposition-invariant | preframr-tokens `landed/freq_v0_interval.md` |
-| `--freq-onset-pass` (FREQ_ONSET op48) | 0.27.0 / 0.2.9 | re-tag residual op0 SET on TRAJ_REGS → 1-token onset; SET only carries control/ADSR/routing | preframr-tokens `landed/freq_onset_channel.md` |
+| `--freq-v0-interval` | 0.26.0 / 0.2.7 | encode V0 as a signed interval from the previous voice onset → transposition-invariant | [`landed/freq_v0_interval.md`](landed/freq_v0_interval.md) |
+| `--freq-onset-pass` (FREQ_ONSET op48) | 0.27.0 / 0.2.9 | re-tag residual op0 SET on TRAJ_REGS → 1-token onset; SET only carries control/ADSR/routing | [`landed/freq_onset_channel.md`](landed/freq_onset_channel.md) |
+| `--melody-merge-split` | 0.28.0 / 0.2.10 | post-Unigram-encode pass: split cross-melody-boundary merges so pitch is a separable prediction target | [`landed/melody_merge_split.md`](landed/melody_merge_split.md) |
 | `--onset-loss-weight` | preframr 0.2.8 | up-weight FREQ V0-onset CE class — force capacity onto the rare-and-ignored onset | [`landed/onset_loss_prioritization.md`](landed/onset_loss_prioritization.md) |
 
 Decisive read: `audit.content_tier_report --onset` with the op-aware `melodic_onset_bucket`
