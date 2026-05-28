@@ -18,6 +18,13 @@ COPY tests ./tests
 # pyproject declares no deps, so PIP_OPTS only matters once audits add any.
 RUN pip install ${PIP_OPTS} --no-deps --break-system-packages -e .
 
+# Audit-only deps: muspy + pretty_midi power preframr_experiments.audit.
+# melody_features. Drop --no-deps so the small closure (music21,
+# importlib_resources, bidict, mido, etc.) installs cleanly; the upgrade
+# strategy keeps the base image's torch/numpy in place.
+RUN pip install ${PIP_OPTS} --upgrade-strategy only-if-needed --break-system-packages \
+    muspy==0.5.0 pretty_midi==0.2.11
+
 # Validate the runner (+ audits once migrated) against the base's preframr.
 # test_src_bind_gate exercises host docker --bind-src plumbing (no DinD in the
 # build); it is covered host-side by `pytest tests`.

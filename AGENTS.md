@@ -44,41 +44,50 @@ across engines (stretch) — inside:
 - **Predict:** Jetson Orin NX (15.6 GB) at PROMPT=2048 / MAX=8192. KV cache
   at prodlike dims ~16 KiB/token → 128 MiB at MAX; bounded by seq_len.
 
-## Current arc — melody learnability
+## Current arc — substrate is the lever; V0 pitch is the open problem
 
-**Where we are.** `full_macros_prodlike` PASSED ×3 seeds (content-tier
-eval_a 0.219 → 0.324, Δ +0.105; eval_b 8/8 non-negative). Decisive read was
-the content-tier per_class audit. But the lift is **SET-carried** — op45
-FREQ_TRAJ ~0.026, model never emits a melody primitive. Six mini A/Bs
-converged: melody onset is predictable (trigram 0.79–0.82), model has
-capacity (SET 0.83 in `freq_onset_channel_mini`), melody is ~13.4% of
-stream — yet V0-onset = 0.000 every time at mini. Only prodlike has moved
-it (op45 ~0.067 baseline).
+**Decisive 2026-05-28: `melody_substrate_iter_mini` (×3 seeds).** PW+filter
+substrate ablation lifts content acc 0.056 → 0.089 (Δ +0.033) and op45
+(FREQ_TRAJ) 0.085 → 0.206 — **2.4× on the melody primitive**, seed-stable.
+Absorber macros add **zero** on the clean substrate (`substrate_no_macros`
+≡ `substrate_full_macros` at 0.089 on every content metric, slightly better
+on the audition headline). V0 onset (the pitch atom) stays near zero in
+all three arms — model learns trajectory STRUCTURE not melody PITCH. Full
+write-up: `design/landed/substrate_ablation_v1.md`.
 
-**Landed encoding/loss stack (tokens 0.25–0.29 + preframr 0.2.6–0.2.11):**
-anchoring → interval V0 → FREQ_ONSET channel → `--onset-loss-weight`.
-See `design/melody_learnability.md`.
+**Architecture exonerated.** `framework_arch_test` (torchtune llama3_2 at
+mini body=large, 5.5M params) trained on a synthetic deterministic-motif
+task gets train acc 1.000, val acc 0.903 on UNSEEN held-out motifs, gap
+0.097. The core body can generalize; SID failure is downstream.
 
-**Known-broken audit instruments** (fix-then-iterate; the rest of the live
-arc reads off these):
-- `content_tier_report.id_to_op` row-index proxy **FIXED 2026-05-28** —
-  emit + consume `vocab_atom` (uid → (op, reg, subreg)) from
-  `audit_per_class.json`. Older audit dumps fall back with a RuntimeWarning.
-  All per-op deltas in the design history pre-this-fix are unreliable.
-- Macros absorb melody **before** encoding (`.blocks.npy` has zero
-  op=45/47/48 atoms); melody encoding stack operates on a layer the model
-  never sees. See `project_macros_absorb_melody.md`.
-- `expand_to_literal` strips freq passes back to op=0 SETs; `PASSES`
-  re-applies only PW/filter/ctrl. Freq stack silently dropped pre-tokenize
-  unless wired explicitly. See `project_expand_literal_strips_freq_passes.md`.
+**Next experiment (high-confidence): `melody_substrate_prodlike`.** Take
+`substrate_no_macros` to prodlike. Deployment config (`--tkvocab 8192
+--batch-size 4 --accumulate-grad-batches 8`). Macros explicitly OFF (they
+add nothing on substrate). Reserved budget ~30–66h on the 4090.
 
-**Next experiment (STAGED, not yet launched).** `melody_substrate_iter_mini`
-(3 arms × 3 seeds on PW+filter-ablated substrate; extends the diagnostic
-`freq_core_ablation_mini`). Drops filter (regs 21/22/23) + forces PW to 50%
-constant; freq+ctrl/gate+ADSR+frame remain. Tests whether op45/op48 lift off
-0 when filter+PW SETs no longer dominate the stream — the cleanest substrate
-for melody learnability before reaching for augmentation. Requires the
-vocab_atom fix in the xpt image (rebake or `--bind-src` with OK).
+**Open: V0 absolute pitch.** Interval-V0 (`--freq-v0-interval`) was on in
+all substrate arms — V0 onset still 0. Either V0 interval is bugged (e.g.
+resets per-block), or pitch is genuinely scale-bound at mini and needs
+prodlike. Two cheap probes before prodlike:
+1. Grep `pipeline_spec.json` per arm-seed to confirm interval flag landed.
+2. Run `audit.melody_predictability` on the ablated corpus. If V0 trigram
+   ceiling rises from the noisy-corpus 0.79 baseline, scale is the issue;
+   if flat, V0 encoding is.
+
+**Automation landed.** `audit.melody_features` + `melody_baseline_corpus`
++ `melody_score_generation` + `melody_compare_arms` give an end-to-end
+audio-side musicality score on any prediction dump (muspy-backed:
+pitch_class_entropy, scale_consistency, pitch_in_scale_rate, plus
+SID-specific gate density / note duration / interval distribution).
+Framework patch: `predict.py --predict-dump <path>` captures the
+prediction-window audio_df as parquet. Replaces per-WAV ear audits.
+
+**Closed audit bugs (history, design-history pre-this-date is suspect):**
+- `content_tier_report.id_to_op` row-index proxy — fixed via `vocab_atom`
+  emission in `audit_checkpoint_per_class`. Per-op deltas pre-2026-05-28
+  are ~58% mis-assigned; ignore them.
+- `iter_self_contained_row_blocks` stripped freq passes — fixed by
+  `freq_passes_re_fire_on_blocks` (commit `a71f676`).
 
 ## Tests + runner
 
@@ -196,11 +205,18 @@ lifted by tokenizer-side `full_macros`):
 
 ## Resolved log (compact; details in git log + design/landed/ + data/refuted/)
 
-- **2026-05-28** — `content_tier_report` uid→op fix landed: `audit_per_class.json`
-  carries `vocab_atom` (uid → (op, reg, subreg)); consumer prefers it,
-  warns on fallback. All pre-fix per-op deltas in the design history are
-  unreliable. `melody_substrate_iter_mini` spec staged (3-arm, extends
-  `freq_core_ablation_mini`).
+- **2026-05-28** — `melody_substrate_iter_mini` PASSED ×3 seeds:
+  substrate ablation lifts op45 0.085 → 0.206; macros add zero on the
+  clean substrate. `framework_arch_test` PASSED — torchtune llama3_2
+  generalizes at mini scale on synthetic (train 1.000, val 0.903 on
+  UNSEEN motifs). Melody-features automation landed
+  (`melody_features`/`melody_baseline_corpus`/`melody_score_generation`/
+  `melody_compare_arms` + muspy in the xpt image + framework
+  `--predict-dump` flag). Full write-up:
+  `design/landed/substrate_ablation_v1.md`. Earlier same day:
+  `content_tier_report` uid→op fix landed (`vocab_atom` sidecar; all
+  pre-fix per-op deltas unreliable). Next: scale
+  `substrate_no_macros` to prodlike.
 - **2026-05-27** — full_macros content win CONFIRMED ×3 seeds (content-tier
   eval_a 0.324 ± 0.006 vs 0.219 ± 0.011, Δ +0.105). Melody-stack landed
   (anchoring + interval V0 + FREQ_ONSET + onset-loss-weight). Motif pass
