@@ -356,6 +356,7 @@ _TRAIN_ONLY_CARG_FLAGS = {
     "--mask-structural-tier-loss": False,
     "--infonce-content-loss-weight": True,
     "--infonce-distractors": True,
+    "--onset-loss-weight": True,
 }
 
 
