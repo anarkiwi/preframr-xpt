@@ -19,6 +19,7 @@ import argparse
 import csv
 import json
 import statistics
+import warnings
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional
@@ -27,8 +28,21 @@ FREQ_TRAJ_OP = 45
 _BASELINE_HINTS = ("baseline", "unanchored", "full", "control", "off")
 
 
+def vocab_atom_from_audit(audit_json: dict) -> Optional[dict[int, tuple[int, int, int]]]:
+    """Authoritative uid -> (op, reg, subreg) read straight from the audit JSON's
+    ``vocab_atom`` field (emitted by ``audit_checkpoint_per_class``). Returns
+    None on older dumps that don't carry it; callers fall back to the legacy
+    row-index reader with a warning."""
+    va = audit_json.get("vocab_atom")
+    if not va:
+        return None
+    return {int(uid): tuple(v) for uid, v in va.items()}
+
+
 def id_to_op(tokens_csv: Path) -> dict[int, int]:
-    """Token id (row index in tokens.csv) -> op."""
+    """DEPRECATED row-index proxy: treats tokens.csv row index as the unigram
+    uid, which is wrong on a Unigram tokenizer (~58% mis-assigned in spot
+    checks). Kept only as a fallback when audit JSON lacks ``vocab_atom``."""
     out: dict[int, int] = {}
     with open(tokens_csv) as f:
         for i, row in enumerate(csv.DictReader(f)):
@@ -65,12 +79,32 @@ def by_op_content(per_class: dict, id_op: dict[int, int]) -> dict[int, tuple[int
 
 
 def id_to_op_subreg(tokens_csv: Path) -> dict[int, tuple[int, int, int]]:
-    """Token id -> (op, reg, subreg)."""
+    """DEPRECATED row-index proxy; see ``id_to_op``. Use ``vocab_atom_from_audit``."""
     out: dict[int, tuple[int, int, int]] = {}
     with open(tokens_csv) as f:
         for i, row in enumerate(csv.DictReader(f)):
             out[i] = (int(row["op"]), int(row["reg"]), int(row["subreg"]))
     return out
+
+
+def _load_uid_to_atom(seed_dir: Path) -> tuple[dict[int, tuple[int, int, int]], bool]:
+    """Resolve uid -> (op, reg, subreg) for one seed, preferring the audit JSON's
+    vocab_atom and falling back to the deprecated tokens.csv row-index proxy
+    (emitting a one-time warning per seed). Second return is True iff the
+    fallback was used."""
+    audit_path = seed_dir / "audit_per_class.json"
+    audit_doc = json.load(open(audit_path))
+    va = vocab_atom_from_audit(audit_doc)
+    if va is not None:
+        return va, False
+    warnings.warn(
+        f"{audit_path} has no vocab_atom field; falling back to tokens.csv row-index "
+        "(unreliable on Unigram tokenizers — re-run audit_checkpoint_per_class to "
+        "emit vocab_atom).",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    return id_to_op_subreg(seed_dir / "tokens.csv"), True
 
 
 _FT_ONSET_SUBREGS = (1, 2)
@@ -129,7 +163,7 @@ def onset_breakdown(
             subs = d.get("subsets", {})
             if not subs:
                 continue
-            id_os = id_to_op_subreg(sd / "tokens.csv")
+            id_os, _ = _load_uid_to_atom(sd)
             sp = max(subs, key=lambda k: _content_n(subs[k]))
             for sid, cls in subs[sp]["per_class"].items():
                 meta = id_os.get(int(sid))
@@ -191,7 +225,8 @@ def aggregate_arm(arm_dir: Path) -> dict:
         subs = d.get("subsets", {})
         if not subs:
             continue
-        id_op = id_to_op(sd / "tokens.csv")
+        uid_atom, _ = _load_uid_to_atom(sd)
+        id_op = {uid: meta[0] for uid, meta in uid_atom.items()}
         spotlight = max(subs, key=lambda k: _content_n(subs[k]))
         for name, obj in subs.items():
             pt = obj.get("per_tier", {})

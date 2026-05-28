@@ -13,8 +13,32 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from preframr_tokens import tier_accuracy
+from preframr_tokens import RegTokenizer, tier_accuracy
 from preframr.train.model import Model, build_tier_map
+
+
+def build_vocab_atom_map(args, tkmodel, tokens, n_vocab: int) -> dict[str, list[int]]:
+    """Per-uid [op, reg, subreg] of the FIRST base atom; -1s when out of range.
+    Reconstructs an rt so the mapping matches the tokenizer's merge layout, not
+    tokens.csv row order — the row-index proxy mis-assigned ~58% of ops on a
+    Unigram tokenizer (see content_tier_report.id_to_op deprecation)."""
+    rt = RegTokenizer(args, tokens)
+    if tkmodel is not None and not isinstance(tkmodel, str):
+        tkmodel = tkmodel.to_str()
+    rt.load(tkmodel, tokens)
+    n_atoms = len(tokens) if tokens is not None else 0
+    out: dict[str, list[int]] = {}
+    for uid in range(n_vocab):
+        base_ids = rt.decode([uid]) if rt.tkmodel else [uid]
+        op, reg, subreg = -1, -1, -1
+        for bid in base_ids:
+            bid = int(bid)
+            if 0 <= bid < n_atoms:
+                row = tokens.iloc[bid]
+                op, reg, subreg = int(row["op"]), int(row["reg"]), int(row["subreg"])
+                break
+        out[str(uid)] = [op, reg, subreg]
+    return out
 
 
 def _iter_eval_blocks(work_dir: Path, max_blocks_per_subset: int):
@@ -74,6 +98,9 @@ def audit(ckpt_path: Path, work_dir: Path, max_blocks_per_subset: int, device: s
     out: dict = {
         "ckpt": str(ckpt_path),
         "subsets": {},
+        "vocab_atom": build_vocab_atom_map(
+            args, hparams["tkmodel"], hparams["tokens"], model.n_vocab
+        ),
     }
     for name in sorted(per_subset_preds):
         out["subsets"][name] = tier_accuracy(

@@ -4,7 +4,11 @@ audit_per_class.json + tokens.csv fixtures (no torch, no real checkpoints)."""
 
 import csv
 import json
+import warnings
 from pathlib import Path
+from typing import Optional
+
+import pytest
 
 from preframr_experiments.audit import content_tier_report as ctr
 
@@ -58,18 +62,31 @@ def _famsubset(acc, n=50):
     }
 
 
-def _write_arm(root: Path, arm: str, op45_hits, set_hits, famx, n_seeds=2) -> None:
+_VOCAB_ATOM = {str(i): [t["op"], t["reg"], t["subreg"]] for i, t in enumerate(_TOKENS)}
+
+
+def _write_arm(
+    root: Path,
+    arm: str,
+    op45_hits,
+    set_hits,
+    famx,
+    n_seeds=2,
+    vocab_atom: Optional[dict] = _VOCAB_ATOM,
+) -> None:
     for s in range(n_seeds):
         sd = root / arm / f"seed{s}"
         sd.mkdir(parents=True)
         _write_tokens(sd / "tokens.csv")
-        doc = {
+        doc: dict = {
             "ckpt": f"{arm}/seed{s}",
             "subsets": {
                 "eval_a": _subset(op45_hits, set_hits),
                 "eval_b_famx": _famsubset(famx),
             },
         }
+        if vocab_atom is not None:
+            doc["vocab_atom"] = vocab_atom
         (sd / "audit_per_class.json").write_text(json.dumps(doc))
 
 
@@ -77,6 +94,87 @@ def test_id_to_op(tmp_path):
     _write_tokens(tmp_path / "tokens.csv")
     id_op = ctr.id_to_op(tmp_path / "tokens.csv")
     assert id_op == {0: 45, 1: 45, 2: 10, 3: 99, 4: 0}
+
+
+def test_vocab_atom_from_audit_present_and_absent():
+    assert ctr.vocab_atom_from_audit({"vocab_atom": {"0": [45, 0, 1]}}) == {
+        0: (45, 0, 1)
+    }
+    assert ctr.vocab_atom_from_audit({}) is None
+    assert ctr.vocab_atom_from_audit({"vocab_atom": {}}) is None
+
+
+def test_vocab_atom_overrides_row_index_proxy(tmp_path):
+    """When uid != row_index (Unigram tokenizer reality), vocab_atom drives the
+    op grouping, not tokens.csv. This is the bug fix: the row-index reader
+    would mis-bucket the uids."""
+    sd = tmp_path / "arm" / "seed0"
+    sd.mkdir(parents=True)
+    _write_tokens(sd / "tokens.csv")
+    permuted = {"0": [10, 1, 0], "1": [99, 2, 0], "2": [45, 0, 0], "3": [45, 0, 0]}
+    doc = {
+        "subsets": {
+            "eval_a": {
+                "per_class": {
+                    "0": {"n": 100, "hits": 10, "acc": 0.1, "tier": "content"},
+                    "1": {"n": 100, "hits": 20, "acc": 0.2, "tier": "content"},
+                    "2": {"n": 100, "hits": 30, "acc": 0.3, "tier": "content"},
+                    "3": {"n": 100, "hits": 40, "acc": 0.4, "tier": "content"},
+                },
+                "per_tier": {"content": {"n": 400, "hits": 100, "acc": 0.25}},
+                "content_over_structural": 0.25,
+            }
+        },
+        "vocab_atom": permuted,
+    }
+    (sd / "audit_per_class.json").write_text(json.dumps(doc))
+    rep = ctr.aggregate_arm(sd.parent)
+    pool = rep["op_pool"]
+    assert pool[10] == (10, 100)
+    assert pool[45] == (70, 200)
+    assert 99 not in pool or pool[99] == (20, 100)
+
+
+def test_fallback_warns_when_vocab_atom_missing(tmp_path):
+    _write_arm(tmp_path, "anchored", op45_hits=30, set_hits=100, famx=0.30, vocab_atom=None)
+    _write_arm(tmp_path, "unanchored", op45_hits=5, set_hits=100, famx=0.20, vocab_atom=None)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        ctr.compare(tmp_path)
+    fallback_warns = [w for w in caught if issubclass(w.category, RuntimeWarning)]
+    assert fallback_warns, "expected RuntimeWarning when vocab_atom absent"
+    assert "vocab_atom" in str(fallback_warns[0].message)
+
+
+def test_onset_breakdown_uses_vocab_atom(tmp_path):
+    arm = tmp_path / "interval" / "seed0"
+    arm.mkdir(parents=True)
+    _write_tokens(arm / "tokens.csv")
+    vocab_atom = {
+        "0": [45, 0, 1],
+        "1": [45, 0, 2],
+        "2": [45, 0, 6],
+        "3": [0, 1, -1],
+    }
+    doc = {
+        "subsets": {
+            "eval": {
+                "per_class": {
+                    "0": {"n": 100, "hits": 40, "acc": 0.4, "tier": "content"},
+                    "1": {"n": 100, "hits": 40, "acc": 0.4, "tier": "content"},
+                    "2": {"n": 200, "hits": 10, "acc": 0.05, "tier": "content"},
+                    "3": {"n": 50, "hits": 25, "acc": 0.5, "tier": "content"},
+                },
+                "per_tier": {"content": {"n": 450, "hits": 115, "acc": 0.255}},
+            }
+        },
+        "vocab_atom": vocab_atom,
+    }
+    (arm / "audit_per_class.json").write_text(json.dumps(doc))
+    rep = ctr.onset_breakdown(tmp_path, op=45)
+    arms = rep["arms"]["interval"]
+    assert arms["V0 onset"] == (80, 200)
+    assert arms["DELTA shape"] == (10, 200)
 
 
 def test_by_op_content_groups_and_excludes_non_content():
