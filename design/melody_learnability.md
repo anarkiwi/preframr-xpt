@@ -42,11 +42,17 @@ Decisive read: `audit.content_tier_report --onset` with the op-aware `melodic_on
 (op45 V0 + op48 FREQ_ONSET + op47 NUDGE pitch on freq regs 0/7/14) gives the full freq-pitch
 accuracy — not just op45's slice.
 
-## In flight
-- `freq_onset_channel_mini` (2026-05-28): anchored + interval + `--freq-onset-pass` vs split
-  baseline. Tests whether the unified onset channel + SET cleanup move anything at mini on top
-  of the best stack. Mini is scale-bound for melody; primary value is metric un-confounding +
-  SET homogeneity + the de-fragmentation signal.
+## freq_onset_channel_mini result (2026-05-28) — biggest SET-cleanup win to date, melody still 0
+3-seed mini, onset_chan (anchored + interval + `--freq-onset-pass`) vs split baseline. Massive
+all-tier + content-tier lift: **val_acc 0.125→0.215 (+0.09), val_loss 11.23→8.22 (−3.0)**,
+**content-tier 0.076→0.249 (+0.173)**, **content/structural 0.237→1.835** — biggest content
+lift the program has seen at mini. But the mechanism is **SET cleanup, not melody**: op0 SET
+**0.154→0.831 (~5.4×)** because removing the 12% freq-pitch noise (now in op48) leaves SET as
+homogeneous control/ADSR/routing — same lever as freq_core_ablation, larger pull. **V0-onset
+acc = 0.000 in both arms** (unified bucket op45 V0 + op48 + op47 pitch). Sixth mini confirmation
+that melody is scale-bound. The encoding-stack win for *content* (SET) is real and likely to
+hold at scale — folds into the prodlike A/B as a co-confirmed content lift.
+
 
 ## Open frontier
 1. **Prodlike full-stack arbiter — the deferred decisive test.** Anchor + interval +
