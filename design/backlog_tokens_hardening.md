@@ -1,0 +1,158 @@
+# Backlog: preframr-tokens hardening — precise implementation instructions
+
+**Status:** QUEUED 2026-05-29, blocked on the ornament-codebook/parametric work landing
+(op-code churn must settle first). Three independent items: (#9) dead-wood removal,
+(#10) real-pipeline structural/balance tests, (#11) driver-truth RESID-completeness fixtures.
+Reference: [`tokens_architecture.md`](tokens_architecture.md) (the pass framework + parse
+pipeline) and [`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md) (driver
+mechanics). All paths below are under `/scratch/anarkiwi/preframr-tokens/`.
+
+Shared docker gate (run for every item before commit; host bridge reaches public PyPI, not
+the proxpi mirror):
+```
+docker run --rm -v "$PWD":/src -v /scratch:/scratch -w /src python:3.12 bash -c "
+  git config --global --add safe.directory /src
+  pip install -q -e '.[dev]'
+  black --check preframr_tokens tests && pylint preframr_tokens tests && pyright preframr_tokens \
+    && pytest -q --cov=preframr_tokens --cov-report=term-missing --cov-fail-under=85
+"
+```
+Tokens lint (`tests/test_lint.py`): ≤5-line one-paragraph docstrings; **no non-directive `#`
+comments** (only `pylint:`/`noqa`/`type: ignore`/`fmt:`/shebang). `tests/test_flag_registry.py`
+fails if a pass reads a boolean arg with no declaration — relevant when removing passes.
+
+---
+
+## The pass-framework 3-layer model (you touch all three per op)
+An op exists only when **Pass + Decoder + Transform** line up (see `tokens_architecture.md`):
+1. **Pass** — `MacroPass` subclass in `preframr_tokens/macros/<name>_pass.py` (or `passes.py`),
+   `GATE_FLAGS={"<flag>"}`. Listed in one of the run lists in `macros/__init__.py`
+   (`FREQ_BLOCK_PASSES` / `PASSES` / `POST_NORM_PRE_VOICE_PASSES`) and/or called inline in
+   `reglogparser.py:RegLogParser.parse()`.
+2. **Decoder** — `MacroDecoder` `op_code=<OP>` in `macros/decoders.py`, registered in the
+   `DECODERS = {d.op_code: d for d in (...)}` tuple. `macros/decode.py:expand_ops` **asserts
+   `DECODERS.get(op) is not None`** — a dangling op hard-crashes decode (this is the tripwire).
+3. **Transform** — `@register("<name>")` `PassBackedTransform` in
+   `macros/transforms_*.py`, ties `OP_CODES`/`LOSS_TIER`/`REQUIRES_ARGS`/`PASS_CLASS`/
+   `DECODER_CLASS`. Flag names auto-derive from `GATE_FLAGS`/`REQUIRES_ARGS` via
+   `macros/flag_registry.py`.
+Ops + subregs are in `stfconstants.py`. The default-on pipeline is
+`macros/default_pipeline.py:DEFAULT_PIPELINE_SPEC`.
+
+---
+
+## #9 — Remove dead-wood transforms/macros
+
+**Targets** (refuted/unused; confirm zero refs per the procedure before each removal):
+
+| transform / pass | files | op(s) freed |
+|---|---|---|
+| `set_to_diff` | `macros/transforms_set_to_diff.py` (+ any `set_to_diff` pass) | (verify: may reuse `DIFF_OP=1` — frees nothing) |
+| `voice_trajectory` | `macros/transforms_voice_trajectory.py` | `TRACK_REF_OP=46`, `VOICE_TRAJ_REG=-123` (verify decoder `TrackRefDecoder`) |
+| `voice_trajectory_distributed` | `macros/transforms_voice_trajectory_distributed.py` | — |
+| `super_frame` | `macros/transforms_superframe.py` | `SUPER_FRAME_REG=-124` |
+| `ctrl_update` | `macros/ctrl_update_pass.py` | `CTRL_UPDATE_OP=51` |
+| `flip2` | `macros/passes.py` (`Flip2Pass`) + its transform | `FLIP2_OP=7` (verify `FlipDecoder`/`Flip2Decoder`) |
+| `motif` | `macros/motif_pass.py` + `motif_mine.py` | `MOTIF_OP=52`, `MOTIF_ARG=53` |
+
+**Per-target procedure:**
+1. **Verify dead** (do NOT skip):
+   - `grep -rn "<name>" /scratch/anarkiwi/preframr-xpt/preframr_experiments/specs/` → must be 0
+     (motif: only its own refuted-experiment specs — delete those specs too, or leave them and
+     skip motif).
+   - Not in `DEFAULT_PIPELINE_SPEC` (`macros/default_pipeline.py`).
+   - Not in `FREQ_BLOCK_PASSES`/`PASSES`/`POST_NORM_PRE_VOICE_PASSES` (`macros/__init__.py`) nor
+     the inline `parse()` calls in `reglogparser.py`.
+2. **Remove**, in order: the `@register` transform class (`transforms_*.py`); the pass class +
+   file; the decoder class + its entry in the `DECODERS` tuple (`decoders.py`); the op/reg/subreg
+   constants in `stfconstants.py`; exports in `preframr_tokens/__init__.py` (`import` + `__all__`)
+   and `macros/__init__.py`; the tests (`tests/test_<name>*.py`).
+3. **Op-code policy:** prefer to **leave a one-line reserved comment** at the freed op number
+   (`# 46 reserved (was TRACK_REF)`) rather than renumbering survivors — renumbering churns every
+   vocab. Only the removed op's atoms disappear.
+4. **Framework + xpt fallout** (motif only): remove `preframr/preframr/mine_motifs.py` entrypoint,
+   the `--motif-dict` arg in `preframr/preframr/args.py`, and any motif `pre_run_hook` in xpt specs.
+5. **Gate** (shared gate above) — `expand_ops` assert + `test_flag_registry` + `test_full_pipeline_fidelity`
+   are the ones that catch a botched removal. Coverage may rise (less code) — fine.
+6. **Release:** bump `pyproject.toml fallback_version`; CHANGELOG `### Removed` — **BREAKING:
+   op-code/vocab change, re-cut corpora/checkpoints, no metric transfer** (all removed work is
+   refuted, so nothing to lose). One PR, ~1.6k LOC net.
+
+**Do NOT remove** `ctrl_triple` or `freq_nudge` (still spec-referenced; borderline, separate call).
+
+---
+
+## #10 — Real-pipeline structural + balance tests
+
+**Why:** synthetic-df unit tests (`Pass.apply(hand_built_df)`) bypass `_combine_regs` +
+`_quantize_freq_to_cents` and shipped a **false green** while SkeletonPass was a no-op on real
+data (it read the cent-indexed `val`, not 16-bit `freq_unq`). See memory `test-through-real-parse`.
+
+**New file `tests/test_parse_pipeline_smoke.py`:**
+1. **`_synthetic_dump()` helper** — build a raw dump DataFrame with columns
+   `clock, irq, chipno, reg, val` that goes through the FULL parser (emit **separate lo+hi byte
+   writes** so `_combine_regs` runs; emit **per-frame** freq writes). Include, on voice 0 (reg
+   0/1 freq, reg 4 ctrl, reg 5/6 ADSR): several held notes (a melody), one **octave arp**
+   (alternate note / note+12 each frame), one **vibrato** (±a few-cent wobble around a semitone),
+   one **slide** (monotone freq ramp), plus a couple raw PW writes. ~a few hundred rows, a few
+   seconds of `clock`. Keep it deterministic.
+2. **Per-config parse assertions** — for each, build `args` (a `SimpleNamespace` with
+   `cents=50, exclude_list=None` + the flags), `RegLogParser(args).parse(path, reparse=True)`:
+   - `skeleton_pass=True, freq_trajectory_pass=False, freq_onset_pass=False, trajectory_anchor_pass=True`
+     → assert `op54 (SKEL) > 0` **and** `op55 (ORN) > 0` and `op45==0 and op48==0`.
+   - defaults (`freq_trajectory_pass=True`) → assert `op45 > 0`.
+   - `freq_onset_pass=True` (no skeleton) → assert `op48 > 0`.
+   (This config matrix is what would have caught the cent-index no-op.)
+3. **Round-trip** — assert `audio_bit_exact`: `register_state(parsed)` (or
+   `preframr_audio.assert_dfs_render_equivalent`) matches the parsed input's settled per-frame
+   state within tolerance, for the skeleton config.
+4. **Encoding-balance assertion** — in skeleton mode assert `op55_count / max(op54_count,1) <=
+   BALANCE_MAX` (start `BALANCE_MAX=6`). This flags channel-drowning (the op55:op54 13:1 bug) at
+   CI. Port the op-count logic from the xpt probes `audit/probes/op48_probe.py` /
+   `op48_context.py` (torch-free) — move them into `tests/` helpers.
+5. **Offline real-fixture round-trip** — commit ONE tiny real dump at
+   `tests/fixtures/<slug>.dump.parquet` (a few hundred rows sliced from a real driver tune) and
+   run `test_full_pipeline_fidelity`'s oracle on it **without HVSC/network** (the current fixture
+   path in `tests/sid_fixtures.py` downloads from HVSC and skips in docker). Add a non-skipping
+   CI fidelity test against the committed fixture.
+
+**Gate:** shared gate. These tests must FAIL if reverted onto tokens 0.31.0 (the cent-index bug)
+— verify that to prove they bite.
+
+---
+
+## #11 — Driver-truth fixtures: RESID≈0 as the completeness metric
+
+**Principle:** we know what each driver does; the transforms claim to model it. A known-driver
+fixture that **leaks to RESID** means the encoding is **missing a driver mechanism** — a coverage
+gap to close, not a tune to tolerate. RESID share per driver is the completeness metric.
+
+**New `tests/test_driver_coverage.py` + fixtures:**
+1. **Synthetic driver-output streams** (most controlled — known expected primitive). A generator
+   per mechanism emits the exact register stream the driver produces, then asserts the parse
+   classifies it correctly AND RESID==0:
+   - **octave arp** (Hubbard fx bit2: note / note+12 @50Hz) → must classify `ORN_TYPE_OCTAVE`.
+   - **table arp** (note-relative offset cycle, e.g. `[0,+4,+7]` major) → `ORN_TYPE_ARP` with the
+     correct period.
+   - **vibrato** (sub-semitone depth/rate wobble) → `ORN_TYPE_VIB` with the right depth bucket.
+   - **slide/portamento** (freq ramp toward target) → `ORN_TYPE_SLIDE` with target≈next note.
+   - **plain held note** → `ORN_TYPE_PLAIN`.
+   Each: assert `0` RESID notes. (Build the streams from `sid_driver_ornament_reference.md`.)
+2. **Curated real per-driver fixtures** — commit a short slice per driver under
+   `tests/fixtures/driver/{hubbard,galway,sidwizard,defmon}.dump.parquet` (identify the engine via
+   `engine_fingerprint` / composer dir). Assert the **dominant ornament type matches the driver's
+   known mechanism** and `RESID_share <= RESID_MAX` (start `0.10`).
+3. **RESID-as-signal:** a fixture exceeding `RESID_MAX` is a **failing completeness test** — the
+   fix is to model the missing mechanism (extend `fit_descriptor`), NOT to raise the threshold.
+   Document each known-acceptable RESID source (genuinely-aperiodic noise sweeps) inline so the
+   threshold is principled.
+
+**Gate:** shared gate. Keep fixtures tiny (no large SID data tracked — slice + commit only the
+needed rows; see `tests/sid_fixtures.py` `_REDUCE_MASKS` for the canonical reduction).
+
+---
+
+## Sequencing
+Do **#9 first** (op-code space clean) → then **#10** (the structural harness) → then **#11**
+(driver fixtures build on the #10 parse-assertion helpers). All three are tokens-only, torch-free,
+and CI-gateable.

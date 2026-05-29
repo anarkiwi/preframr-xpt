@@ -16,6 +16,10 @@ they describe lives in the sibling repos under `/scratch/anarkiwi/`):
   + fidelity oracle.
 - [`framework_architecture.md`](framework_architecture.md) — preframr train/predict/
   model + data path + generation gotchas.
+- [`backlog_tokens_hardening.md`](backlog_tokens_hardening.md) — **precise file-level
+  implementation instructions** for the queued tokens hardening: dead-wood removal,
+  real-pipeline structural/balance tests (catch the synthetic-df false-green class), and
+  driver-truth fixtures with RESID≈0 as the completeness metric.
 
 Organized by **research axis** (the project's priority order), not by lifecycle:
 status is a per-row column so refuted/landed work sits next to the live work in
