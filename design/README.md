@@ -6,6 +6,17 @@ dependency layering, and how to **derive the release process** (PyPI-tag vs
 image-VERSION; the public-PyPI-propagation gotcha). Read it before any cross-repo
 change or release.
 
+**Per-repo architecture references** (all docs live here in preframr-xpt; the code
+they describe lives in the sibling repos under `/scratch/anarkiwi/`):
+- [`tokens_architecture.md`](tokens_architecture.md) — **the parsing reference**:
+  preframr-tokens parse→pass→tokenize→decode pipeline, register/atom/op model,
+  `combine_reg` settled-freq, the 3-layer pass-framework registration, fidelity,
+  Corpus/blocks/df-map, and the invariants/gotchas. Consult before touching parsing.
+- [`audio_architecture.md`](audio_architecture.md) — preframr-audio render pipeline
+  + fidelity oracle.
+- [`framework_architecture.md`](framework_architecture.md) — preframr train/predict/
+  model + data path + generation gotchas.
+
 Organized by **research axis** (the project's priority order), not by lifecycle:
 status is a per-row column so refuted/landed work sits next to the live work in
 the same thread. Refuted hypotheses also have one-paragraph stubs at
