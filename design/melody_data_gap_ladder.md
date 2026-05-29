@@ -117,3 +117,27 @@ corpus. The implicated (untested) data lever is a **homogeneous, harmonically-co
 melodic SID corpus** (single composer/style) — i.e. the right *kind* of data, not more of it.
 For the current heterogeneous corpus, exact-note melody is genuinely low-predictability and the
 yardstick should be distributional/audition.
+
+### Correction + DRAX homogeneity (2026-05-29, intervals)
+
+The absolute-MIDI metric above is **key-confounded** — cross-tune absolute pitch doesn't
+transfer when tunes are in different keys, and it does NOT match the encoding (which uses
+key-invariant interval-V0). Re-measured on **intervals** (consecutive pitch diffs):
+
+| (interval-based, lead voice) | 2-gram | model held-out | train tunes |
+|---|---|---|---|
+| Bach soprano | 0.349 | 0.394 | 480 |
+| mini heterogeneous | 0.214 | 0.225 | 118 |
+| **DRAX (single composer)** | 0.100 | **0.247** | **20** |
+
+Findings: (1) intervals lift SID melody (DRAX 0.146→0.247 vs absolute) — absolute pitch was an
+unfair, encoding-mismatched metric. (2) **DRAX edges the heterogeneous corpus (0.247 > 0.225)
+on 6× less data**, and the model beats its oracle bigram ceiling 2.5× (0.247 vs 0.100) — so
+single-composer melody has real, model-extractable structure and is **data-starved**, not
+structureless. (3) Still below Bach (0.394), but the gap narrowed substantially.
+
+Revised conclusion: the gap is **smaller than the absolute-MIDI ladder implied, and partly
+data-volume**. The right melody representation is **interval** (key-invariant, as the encoding
+already does); single-composer homogeneity helps modestly even data-starved. The next data lever
+is a **larger single-composer / single-style melodic corpus**, measured on intervals — most
+likely to approach Bach-like melodic generalization. Encoding remains proven-sufficient.
