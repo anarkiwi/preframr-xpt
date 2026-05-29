@@ -28,11 +28,33 @@ PW+filter-ablated substrate, read by an op×subreg content-tier split:
   moved op48 only 0.000→0.013 despite entropy dropping 6.5→5.3b. A single byte fuses
   sign+magnitude (40 eff) in an op the model barely emits — the wrong factoring.
 
-**New frontier = the pitch MAGNITUDE (V0_LO ≈ 0.35), not channel coverage.** Candidate levers:
-HI/LO-split op48 like op45 (sign byte → easy target) or fold isolated onsets into op45;
-**semitone-quantize the magnitude** (collapse sub-semitone cent jitter to a pitch-class
-alphabet); or pivot the melody yardstick to distributional/audition. Open question under test:
-is FREQ_TRAJ's multi-attribute bundling itself what makes V0_LO unlearnable?
+**New frontier = the pitch MAGNITUDE (V0_LO ≈ 0.35), not channel coverage.**
+
+**"FREQ_TRAJ too complicated?" — mostly refuted (2026-05-29 V0_LO predictability probe).**
+Per-voice V0_LO is **255 distinct values, 5.64 bits**; in-sample n-gram ceilings: mode 0.254,
+1-gram 0.301, 2-gram 0.511 (optimistic/memorized). Model eval acc 0.35 sits *between* 1- and
+2-gram, i.e. it already captures the available low-order structure — and it predicts the
+*structural* op45 sub-tokens fine (FLAGS 0.72, sign 0.66, COUNT 0.63), failing only on the two
+high-entropy fields (V0_LO 0.35, DELTA 0.15). So the bundling isn't strangling prediction; V0_LO
+is hard because it is **intrinsically high-entropy cent-resolution pitch**. (A residual 0.35→0.51
+gap may include a long-range-context/bundling cost — V0_LO history is buried among FLAGS/COUNT/
+DELTA + other voices — but the 0.51 ceiling itself is the binding limit.)
+
+**Semitone-quantization REFUTED as a lever (2026-05-29 pre-flight probe).** Snapping the
+onset value (cents=50, so a semitone = 2 bins) shrinks the alphabet but leaves the 2-gram
+predictability ceiling FLAT: raw 5.70b/362→2gram 0.514; semitone-snap 4.96b/194→0.492;
+whole-tone 4.04b/104→0.506. The magnitude's difficulty is **not** removable sub-semitone
+cent-jitter — it is genuine pitch-range/leap *sequence* entropy that survives quantization
+(reducing the alphabet can't help when which-note-follows-which is the hard part). So
+`melody_onset_semitone_mini` was NOT built (lossy for zero predictability gain).
+
+**Strategic inflection: exact magnitude is the wrong yardstick; pivot melody success to
+distributional/audition.** Even an in-sample, memorizing 2-gram caps at ~0.51 on the
+magnitude — so a *generalizing* model can only emit a plausible-not-exact next pitch, and
+exact-token acc structurally undersells it. The de-merge win (0→0.66 on the learnable SIGN)
+is the real, bankable representation result; the residual magnitude is multi-modal. Next:
+score melody by interval/n-gram distribution + the 12-SID WAV audition cohort
+(`music_llm_landscape_and_fail_fast_plan.md` territory), not exact V0_LO acc.
 
 ## Converged diagnosis (2026-05-27 → 2026-05-28) — SUPERSEDED, see above
 Melody onset prediction is **NOT aleatoric, NOT rare, NOT (only) a representation defect** —
