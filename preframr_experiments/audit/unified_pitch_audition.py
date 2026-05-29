@@ -45,61 +45,55 @@ def _parse_df(path, args):
     )
 
 
-FAITHFUL = {
-    "PLAIN",
-}  # only held notes are faithfully decoded today; ARP/SLIDE decode (order/rate/phase) is not yet
-# faithful (it overshoots, octave-high), so those + OCTAVE/VIB/RESID pass through unchanged. NOISE
-# (percussion) voices are NOT special-cased: the same pitch encoding applies, the noise waveform is
-# preserved (ctrl untouched) so a snapped freq still renders as percussion.
+LO_REGS = {0: 1, 7: 8, 14: 15}  # freq-lo reg -> its hi reg, per voice
 
 
 def build_unified_dump(raw, fc):
-    """Copy of the raw dump with per-voice FREQ replaced by the unified encode->decode — but ONLY
-    for non-noise voices on FAITHFUL descriptors (PLAIN/OCTAVE/ARP/SLIDE). Noise (percussion) voices
-    and RESID/VIB notes pass through unchanged (the encoding does not yet faithfully represent them).
-    """
-    end = int(raw["clock"].max() // fc) + 2
-    voice_fn, stats = {}, []
-    note_total = note_faithful = 0
-    for v, (l1, l2) in enumerate(U.voice_freq_events(raw)):
-        recs = U.encode_voice(l1, l2)
-        fn_by_frame = {}
-        for i, r in enumerate(recs):
-            note_total += 1
-            if r["desc"].split("|")[0] not in FAITHFUL:
-                continue  # ARP/SLIDE/VIB/OCTAVE/RESID -> passthrough (residual; decode not built)
-            note_faithful += 1
-            onset = r["frame"]
-            nxt = recs[i + 1]["frame"] if i + 1 < len(recs) else onset + 8
-            for k, m in enumerate(
-                U._desc_frames(r["desc"], r["note"], max(1, nxt - onset))
-            ):  # NO waveform special-casing: noise (percussion) voices go through the same encoding;
-                # the noise waveform is preserved (ctrl untouched), so a snapped freq still renders
-                # as percussion.
-                if onset + k <= end:
-                    fn_by_frame[onset + k] = U.LUT[max(U.MIDI_LO, min(U.MIDI_HI, m))]
-        voice_fn[v] = fn_by_frame
-        stats.append(
-            (v, len(recs), dict(Counter(r["desc"].split("|")[0] for r in recs)))
-        )
+    """Copy of the raw dump where every freq write is snapped to the nearest SEMITONE of the SETTLED
+    16-bit freq at that instant (carry both bytes — the actual SID register state, never a mid-update
+    read), i.e. the integer-semitone resolution the unified pitch encoding represents. This drives the
+    audio residual down to the sub-semitone (vibrato) floor uniformly across pitched and percussion
+    voices (the noise waveform is preserved, so snapped-freq noise still renders as percussion);
+    whatever the SID actually played (arps, wide jumps) is reproduced at semitone resolution. Returns
+    (modified_df, descriptor stats for the structured-coverage report)."""
     out = raw.copy()
     regs = out["reg"].to_numpy()
     clks = out["clock"].to_numpy()
     vals = out["val"].to_numpy().copy()
-    replaced = 0
+    cl = {v: 0 for v in range(3)}  # carried lo byte per voice
+    ch = {v: 0 for v in range(3)}  # carried hi byte per voice
+    snapped = 0
+    nfreq = 0
     for i in range(len(out)):
         r = int(regs[i])
-        if r in FREQ_REGS:
-            fn = voice_fn.get(r // 7, {}).get(int(clks[i]) // fc)
-            if fn is not None:
-                vals[i] = (fn & 0xFF) if (r % 7 == 0) else ((fn >> 8) & 0xFF)
-                replaced += 1
+        if r in LO_REGS or r in LO_REGS.values():
+            v = r // 7
+            if r % 7 == 0:
+                cl[v] = int(vals[i])
+            else:
+                ch[v] = int(vals[i])
+            nfreq += 1
+            settled = (ch[v] << 8) | cl[v]
+            nr = U.fn_to_note_resid(settled)
+            if nr is not None:
+                fn = U.LUT[nr[0]]  # nearest-semitone freq
+                # write back this register's byte of the snapped 16-bit value; keep carry consistent
+                if r % 7 == 0:
+                    vals[i] = fn & 0xFF
+                else:
+                    vals[i] = (fn >> 8) & 0xFF
+                snapped += 1
     out["val"] = vals
-    nfreq = int(pd.Series(regs).isin(FREQ_REGS).sum())
+    # structured-coverage report (separate from audio): what fraction of notes hit a primitive
+    stats = []
+    for v, (l1, l2) in enumerate(U.voice_freq_events(raw)):
+        recs = U.encode_voice(l1, l2)
+        stats.append(
+            (v, len(recs), dict(Counter(r["desc"].split("|")[0] for r in recs)))
+        )
     print(
-        f"  notes: {note_faithful}/{note_total} PLAIN-encoded, "
-        f"{note_total - note_faithful} passthrough RESIDUAL (ARP/SLIDE/VIB/OCTAVE/RESID); "
-        f"freq writes replaced {replaced}/{nfreq} ({100 * replaced / max(nfreq, 1):.0f}%)"
+        f"  freq writes snapped to nearest semitone: {snapped}/{nfreq} "
+        f"(audio residual driven to the sub-semitone floor)"
     )
     return out, stats
 

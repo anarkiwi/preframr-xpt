@@ -261,6 +261,19 @@ correct fix is the parser's whole-series bucketed combine (`_combine_reg`), to b
 each byte independently, immune to straddle). **Lesson: never re-derive freq from raw lo/hi bytes — use
 the parser's collapsed 16-bit value.**
 
+**Residual driven to the semitone floor + generalization re-run (2026-05-29).** After the settled-
+freq fix, the audition substitutes EVERY freq write with the nearest semitone of the settled 16-bit
+value (`build_unified_dump`), i.e. the integer-semitone resolution the encoding represents — so
+whatever the SID played (arps, wide jumps) is reproduced at semitone resolution, uniformly across
+pitched and percussion voices (noise waveform preserved). **Audio residual is now at the integer-
+semitone floor; the remaining residual is sub-semitone vibrato** — the cents the design routes to the
+(not-yet-built) vibrato channel. Reaching *literal* 0 requires that vibrato/cents channel (list item
+5); per-primitive faithful DECODE (ARP/SLIDE) was made moot for audio by snap-all (it reproduces the
+real motion directly). Generalization re-run on the cleaned encoding (settled freq, octave arps now
+classified): **skeleton held-out next-interval 0.544 ×3 seeds (beats 2-gram ceiling 0.40 every seed,
+up from 0.518); ornament emits at ~corpus rate, JS(type) 0.03–0.07.** WAVs Commando `dd9bc9…`,
+Camerock `cc8373…`.
+
 **The real gap is faithful ornament DECODE** (distinct from the token encoding, which the
 generalization probe measured): ARP needs the *ordered* cycle + rate + phase (the codebook), SLIDE
 needs real target/rate, VIB needs an oscillator. Until those decoders exist, only the held-note

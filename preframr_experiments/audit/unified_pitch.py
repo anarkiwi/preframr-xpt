@@ -50,16 +50,20 @@ def fn_to_note_resid(fn: int):
     return note, (mf - note) * 100.0
 
 
-def voice_freq_events(d):
-    """Per-voice (l1, l2) with the SETTLED 16-bit freq per frame. l1 = frames where the settled freq
-    changed (frame, fn); l2 = gate-on frames (frame, settled fn).
+COMBINE_BUCKET = (
+    512  # = RegLogParser diffmax: a coordinated lo+hi update lands in one bucket
+)
 
-    Freq is 16-bit across the lo+hi registers; reading on every individual byte write yields
-    half-updated garbage (a lo write with a stale hi byte = a spurious pitch). The parser already
-    collapses lo+hi into one atomic 16-bit value taking the last write per time bucket
-    (RegLogParser._combine_regs / freq_unq); this reproduces that **settled** semantics here by
-    carrying both bytes and sampling only the frame-final value — never a mid-update read.
-    """
+
+def voice_freq_events(d):
+    """Per-voice (l1, l2) of the SETTLED 16-bit freq. l1 = freq changes (frame, fn); l2 = gate-on
+    (frame, settled fn).
+
+    Freq is 16-bit across lo+hi; reading on every byte write yields half-updated garbage (a lo write
+    with a stale hi byte = a spurious pitch). This reproduces RegLogParser._combine_reg: carry both
+    bytes and take the final value per CLOCK//512 bucket, so a coordinated lo+hi update's settled
+    value is read (never a mid-update or cross-frame straddle), reported at that fine granularity
+    (sub-frame arp steps preserved; segmentation handles within-frame runs)."""
     fc = int(d["irq"][d["irq"] > 0].mode().iloc[0]) if (d["irq"] > 0).any() else 19592
     reg = d["reg"].to_numpy()
     val = d["val"].to_numpy()
@@ -68,29 +72,30 @@ def voice_freq_events(d):
     for v in range(3):
         lo, hi, ctrl = v * 7, v * 7 + 1, v * 7 + 4
         cl = ch = gate = 0
-        settled = {}  # frame -> final (hi<<8|lo) in that frame
-        gate_on = []
+        buck_fn, buck_frame, gate_on = {}, {}, []
         for i in range(len(reg)):
-            r, x, fr = int(reg[i]), int(val[i]), int(clk[i]) // fc
+            b = int(clk[i]) // COMBINE_BUCKET
+            r, x = int(reg[i]), int(val[i])
             if r == lo:
                 cl = x
             elif r == hi:
                 ch = x
             elif r == ctrl:
                 if (x & 1) and not gate:
-                    gate_on.append(fr)
+                    gate_on.append(b)
                 gate = x & 1
-            settled[fr] = (ch << 8) | cl
+            buck_fn[b] = (ch << 8) | cl
+            buck_frame[b] = int(clk[i]) // fc
         l1, prev = [], None
-        for fr in sorted(settled):
-            fn = settled[fr]
+        for b in sorted(buck_fn):
+            fn = buck_fn[b]
             if fn != prev and fn_to_note_resid(fn):
-                l1.append((fr, fn))
+                l1.append((buck_frame[b], fn))
                 prev = fn
         l2 = [
-            (fr, settled[fr])
-            for fr in sorted(set(gate_on))
-            if fr in settled and fn_to_note_resid(settled[fr])
+            (buck_frame[b], buck_fn[b])
+            for b in sorted(set(gate_on))
+            if b in buck_fn and fn_to_note_resid(buck_fn[b])
         ]
         out.append((l1, l2))
     return out
