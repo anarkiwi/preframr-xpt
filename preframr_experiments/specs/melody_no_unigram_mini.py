@@ -30,7 +30,7 @@ from pathlib import Path
 from preframr_experiments.audit.ablate_pwfilter import ablate_staged_dumps
 from preframr_experiments.base import Arm, ExperimentSpec, mini_train_args
 
-_IMAGE = "anarkiwi/preframr:0.2.11"
+_IMAGE = "anarkiwi/preframr:0.2.12"
 
 _BASE_TRANSFORMS = [
     {"name": "freq_trajectory"},

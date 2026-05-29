@@ -64,22 +64,25 @@ def build_unified_dump(raw, fc):
     chip = int(raw["chipno"].iloc[0])
     freqregs = set(LO_REGS) | set(LO_REGS.values())
     # Pass 1: per (voice, 512-bucket) settled freq -> ONE reconstructed 16-bit value, plus the
-    # bucket's last freq-write clock/irq (where to place the re-emitted pair).
-    cl = {v: 0 for v in range(3)}
-    ch = {v: 0 for v in range(3)}
+    # bucket's freq-write clock/irq (where to place the re-emitted pair). The settled-freq read (lo+hi
+    # byte coalescing) is the parser's own ``combine_reg``: after combining, each reg==7v row IS a
+    # freq-write bucket's settled value at its last freq-write clock.
+    from preframr_tokens import combine_reg
+
+    combined = raw.loc[:, ["clock", "irq", "reg", "val"]].copy()
+    combined["val"] = combined["val"].astype("int64")
+    for v in range(3):
+        combined = combine_reg(combined, reg=v * 7, diffmax=U.COMBINE_BUCKET)
     recon, place = {}, {}
-    for i in range(len(raw)):
-        r = int(regs[i])
-        if r in freqregs:
-            v = r // 7
-            if r % 7 == 0:
-                cl[v] = int(vals[i])
-            else:
-                ch[v] = int(vals[i])
-            key = (v, int(clks[i]) // U.COMBINE_BUCKET)
-            nr = U.fn_to_note_resid((ch[v] << 8) | cl[v])
+    for v in range(3):
+        vr = combined[combined["reg"] == v * 7]
+        for clk_b, irq_b, fv in zip(
+            vr["clock"].to_numpy(), vr["irq"].to_numpy(), vr["val"].to_numpy()
+        ):
+            key = (v, int(clk_b) // U.COMBINE_BUCKET)
+            nr = U.fn_to_note_resid(int(fv))
             recon[key] = U.fn_from_note_cents(nr[0], nr[1]) if nr else None
-            place[key] = (int(clks[i]), int(irqs[i]))
+            place[key] = (int(clk_b), int(irq_b))
     # Re-emit: keep all non-freq rows + freq rows of buckets we couldn't reconstruct (recon None);
     # for each reconstructed bucket emit a COHERENT lo+hi pair (both bytes of one value) at the
     # bucket's clock. This avoids the in-place single-byte incoherence (a lo-only update whose recon

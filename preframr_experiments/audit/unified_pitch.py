@@ -73,45 +73,35 @@ def voice_freq_events(d):
     """Per-voice (l1, l2) of the SETTLED 16-bit freq. l1 = freq changes (frame, fn); l2 = gate-on
     (frame, settled fn).
 
-    Freq is 16-bit across lo+hi; reading on every byte write yields half-updated garbage (a lo write
-    with a stale hi byte = a spurious pitch). This reproduces RegLogParser._combine_reg: carry both
-    bytes and take the final value per CLOCK//512 bucket, so a coordinated lo+hi update's settled
-    value is read (never a mid-update or cross-frame straddle), reported at that fine granularity
-    (sub-frame arp steps preserved; segmentation handles within-frame runs)."""
+    The settled-freq read (lo+hi byte coalescing per CLOCK//512 bucket, so a half-updated lo/hi pair
+    is never read as a spurious pitch) is parsing: it uses the parser's own ``combine_reg``
+    (preframr_tokens). This walks the settled per-voice freq + raw gate writes to derive the note
+    events (freq changes + gate-on rising edges)."""
+    from preframr_tokens import combine_reg
+
     fc = int(d["irq"][d["irq"] > 0].mode().iloc[0]) if (d["irq"] > 0).any() else 19592
-    reg = d["reg"].to_numpy()
-    val = d["val"].to_numpy()
-    clk = d["clock"].to_numpy()
-    out = []
+    df = d.loc[:, ["clock", "reg", "val"]].copy()
+    df["val"] = df["val"].astype("int64")
     for v in range(3):
-        lo, hi, ctrl = v * 7, v * 7 + 1, v * 7 + 4
-        cl = ch = gate = 0
-        buck_fn, buck_frame, gate_on = {}, {}, []
-        for i in range(len(reg)):
-            b = int(clk[i]) // COMBINE_BUCKET
-            r, x = int(reg[i]), int(val[i])
-            if r == lo:
-                cl = x
-            elif r == hi:
-                ch = x
-            elif r == ctrl:
-                if (x & 1) and not gate:
-                    gate_on.append(b)
-                gate = x & 1
-            buck_fn[b] = (ch << 8) | cl
-            buck_frame[b] = int(clk[i]) // fc
-        l1, prev = [], None
-        for b in sorted(buck_fn):
-            fn = buck_fn[b]
-            if fn != prev and fn_to_note_resid(fn):
-                l1.append((buck_frame[b], fn))
-                prev = fn
-        l2 = [
-            (buck_frame[b], buck_fn[b])
-            for b in sorted(set(gate_on))
-            if b in buck_fn and fn_to_note_resid(buck_fn[b])
-        ]
-        out.append((l1, l2))
+        df = combine_reg(df, reg=v * 7, diffmax=COMBINE_BUCKET)
+    df = df.sort_values("clock", kind="stable").reset_index(drop=True)
+    freq, gate, prev_fn = [0, 0, 0], [0, 0, 0], [None, None, None]
+    out = [([], []) for _ in range(3)]
+    for clock, reg, val in zip(
+        df["clock"].to_numpy(), df["reg"].to_numpy(), df["val"].to_numpy()
+    ):
+        reg, frame = int(reg), int(clock) // fc
+        if reg in (0, 7, 14):  # settled 16-bit freq (one per CLOCK//512 bucket)
+            v, fn = reg // 7, int(val)
+            freq[v] = fn
+            if fn_to_note_resid(fn) and fn != prev_fn[v]:
+                out[v][0].append((frame, fn))
+                prev_fn[v] = fn
+        elif reg in (4, 11, 18):  # ctrl reg: gate is bit 0
+            v, g = (reg - 4) // 7, int(val) & 1
+            if g and not gate[v] and fn_to_note_resid(freq[v]):
+                out[v][1].append((frame, freq[v]))
+            gate[v] = g
     return out
 
 
