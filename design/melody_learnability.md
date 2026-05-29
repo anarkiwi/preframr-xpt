@@ -56,6 +56,17 @@ cross-song adjacent-2-gram ceiling — so the in-sample 0.51 was pure memorizati
 bringing onsets adjacent (pairing / voice-lanes) gives the model no information it isn't
 already extracting. Locality is not the missing lever for the magnitude.
 
+**INDEPENDENT CONFIRMATION — synthetic rule in the real encoding generalizes (2026-05-29,
+`audit.encoding_generalization_test`).** The same deterministic successor-motif rule as
+`framework_arch_test`, expressed in the REAL FREQ_TRAJ atom encoding (FRAME + VOICE + op45
+FLAGS/V0_HI/V0_LO/COUNT/DELTA; pitch in V0_LO; ~7 structural tokens between onsets, 512-token
+seqs) vs a FLAT single-token encoding of the same rule: **HELDOUT inside-motif onset acc
+real 0.876 ≈ flat 0.862** (both train 1.000). The real encoding's byte-split + trajectory
+bundling + onset separation do NOT block rule generalization → **encoding SUFFICIENT**; the
+real-data V0_LO=0.35 is the DATA (multi-modal melody), not the encoding. Doubly refutes the
+locality hypothesis (synthetic separation didn't hurt). (Single-voice; multiplexing covered
+by the separate voice nulls.)
+
 **Strategic inflection: exact magnitude is the wrong yardstick; pivot melody success to
 distributional/audition.** Even an in-sample, memorizing 2-gram caps at ~0.51 on the
 magnitude — so a *generalizing* model can only emit a plausible-not-exact next pitch, and
