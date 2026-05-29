@@ -1,9 +1,9 @@
 # Melody data-gap ladder — why Bach generalizes but real-SID melody doesn't
 
-**Status:** Draft / proposed experiment program. Localises, by progressive
-simplification of the EXISTING mini data (no new corpus), which data property makes
-real-SID melody onsets unpredictable where Bach's are not. Follows from the settled
-encoding result below.
+**Status:** EXECUTED 2026-05-29 (see RESULTS). Gate-anchor hypothesis REFUTED; the gap is
+the data's intrinsic melodic predictability (heterogeneous, less-constrained game melody vs
+homogeneous Bach chorales), not the encoding. Localised by progressive simplification of the
+EXISTING mini data (no new corpus).
 
 ## Settled conclusions (the arc that led here)
 
@@ -76,3 +76,44 @@ The first rung that lifts held-out onset acc to Bach-like (≳0.45) is the data 
 makes SID melody hard. If **no** rung closes the gap, real-SID melody is genuinely more
 aleatoric than chorales (composer/engine-specific), and the melody yardstick must go
 distributional/audition. Either outcome is decisive and uses no new data.
+
+## RESULTS (2026-05-29, `audit.melody_ladder`) — gate-anchor REFUTED; SID melody is intrinsically harder
+
+Held-out next-onset-pitch acc (single-voice onset sequences, MIDI; same metric for all):
+
+| level | 2-gram (oracle) | model held-out |
+|---|---|---|
+| **Bach soprano (target)** | 0.350 | **0.375** |
+| L1 all-freq onsets | 0.541 | 0.559 |
+| L2 gate-anchor (pooled 3 voices) | 0.196 | 0.247 |
+| L3 de-arp (pooled) | 0.236 | 0.269 |
+| L2 gate-anchor, **lead voice only** | 0.154 | 0.179 |
+| L3 de-arp, **lead voice only** | 0.167 | 0.192 |
+
+**The hypothesis was wrong, and the ornament was a trap.** L1's high 0.559 is an *artifact*:
+consecutive freq writes during vibrato/sustain repeat, so "next freq" is trivially
+predictable *ornament*, not melody. Extracting the actual note-ons (L2) **drops**
+predictability to 0.247, and isolating the *lead* melodic voice drops it further to **0.179** —
+the more melodic the line, the *less* predictable. No rung approaches Bach (0.375).
+
+**Crucially the 2-gram ORACLE ceiling is also far below Bach at every note-level rung
+(0.15–0.24 vs 0.35).** So this is not a model or encoding limit — the model beats its data
+ceiling at every rung (0.179 > 0.154, 0.247 > 0.196, …, as it does for Bach 0.375 > 0.350).
+**The SID note-melody simply has less conditional structure than Bach chorales.**
+
+### Conclusion
+The gap is the DATA's intrinsic melodic predictability, confirmed three ways (encoding proven
+sufficient via Bach; oracle n-gram ceiling low; model at-ceiling everywhere). The likely
+drivers, now evidenced rather than assumed:
+1. **Heterogeneity** — mini is many composers/games; Bach chorales are one composer, one
+   highly-constrained form. Comparing them assumes equal intrinsic predictability; they are not.
+2. **Less harmonic constraint** — game melodies (riffs, arps, effects) are freer than chorale
+   voice-leading.
+3. The "melody buried in ornament" framing was half-right: the ornament *inflated* apparent
+   predictability; the underlying note melody is genuinely harder.
+
+So "strong melody prediction from SID" is NOT reachable by re-encoding or de-ornamenting this
+corpus. The implicated (untested) data lever is a **homogeneous, harmonically-constrained
+melodic SID corpus** (single composer/style) — i.e. the right *kind* of data, not more of it.
+For the current heterogeneous corpus, exact-note melody is genuinely low-predictability and the
+yardstick should be distributional/audition.
