@@ -22,6 +22,8 @@ PREFLIGHT_DIR = PACKAGE_DIR / "preflight"
 _PREFRAMR_SRC_ENV = "PREFRAMR_SRC_DIR"
 _PREFRAMR_SRC_DEFAULT = Path("/scratch/anarkiwi/preframr/preframr")
 _PREFRAMR_BIND_SRC_ENV = "PREFRAMR_BIND_SRC"
+_PREFRAMR_TOKENS_SRC = Path("/scratch/anarkiwi/preframr-tokens/preframr_tokens")
+_PREFRAMR_TOKENS_DST = "/root/.local/lib/python3.12/site-packages/preframr_tokens"
 
 
 def _preframr_src_dir() -> Path:
@@ -525,6 +527,9 @@ def _docker_run(
             cmd += ["-v", f"{repo_preframr_pkg / 'inference'}:/preframr/inference"]
         else:
             cmd += ["-v", f"{repo_preframr_pkg / 'train'}:/preframr/train"]
+        cmd += ["-v", f"{repo_preframr_pkg / 'args.py'}:/preframr/args.py"]
+        if _PREFRAMR_TOKENS_SRC.exists():
+            cmd += ["-v", f"{_PREFRAMR_TOKENS_SRC}:{_PREFRAMR_TOKENS_DST}"]
     for host_path, container_path in extra_volumes or []:
         cmd += ["-v", f"{host_path}:{container_path}"]
     if gpus:
