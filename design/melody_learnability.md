@@ -48,6 +48,14 @@ cent-jitter — it is genuine pitch-range/leap *sequence* entropy that survives 
 (reducing the alphabet can't help when which-note-follows-which is the hard part). So
 `melody_onset_semitone_mini` was NOT built (lossy for zero predictability gain).
 
+**Locality / freq_traj-pairing REFUTED for the magnitude (2026-05-29 cross-song probe).**
+Hypothesis: V0_LO is unpredictable because consecutive same-voice onsets are separated by
+too many tokens. Test: cross-song n-gram (fit 104 songs → 53 held-out): 1-gram 0.304,
+2-gram 0.269 (bigram contexts don't transfer). The model's 0.35 **already exceeds** the
+cross-song adjacent-2-gram ceiling — so the in-sample 0.51 was pure memorization, and
+bringing onsets adjacent (pairing / voice-lanes) gives the model no information it isn't
+already extracting. Locality is not the missing lever for the magnitude.
+
 **Strategic inflection: exact magnitude is the wrong yardstick; pivot melody success to
 distributional/audition.** Even an in-sample, memorizing 2-gram caps at ~0.51 on the
 magnitude — so a *generalizing* model can only emit a plausible-not-exact next pitch, and

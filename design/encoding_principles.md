@@ -30,12 +30,15 @@ fidelity-neutral is *not* learnability-neutral.
   not fused with unrelated content into a compound. *Evidence:* disabling Unigram (`--tkvocab
   0`) lifted op45 V0_HI 0.009→0.658 — merging had welded the pitch onset into ~9489 compound
   tokens bundling pitch + shape. A 2-value atom is learnable; a 9489-way compound is not.
-- **P2 — Locality.** The tokens needed to predict a decision should be *near* it. *Evidence
-  (partial / under test):* consecutive same-voice pitch onsets are separated by FLAGS/COUNT/
-  DELTA + other voices' tokens + frame markers; the model hits 0.35 on the magnitude while an
-  *adjacent* 2-gram ceiling is 0.51. The locality cost is the open question
-  ([`superframe_voice_lane_design.md`](superframe_voice_lane_design.md); the freq_traj-pairing
-  idea).
+- **P2 — Locality.** The tokens needed to predict a decision should be *near* it — but only
+  when the decision is predictable at all. *Evidence (refined):* the de-merge win is partly a
+  locality/separability fix. BUT locality has a ceiling: for the V0_LO *magnitude*, a
+  cross-song adjacent 2-gram tops out at ~0.30 and the model already hits 0.35 — so forcing
+  onset adjacency (pairing / voice-lanes) adds nothing the model isn't already extracting.
+  Locality helps only where there is cross-song-predictable structure being separated; it can't
+  manufacture predictability for a multi-modal target (→ P5/P6). Voice-lanes
+  ([`superframe_voice_lane_design.md`](superframe_voice_lane_design.md)) remain justified for
+  de-multiplexing + PW re-admission, *not* for the magnitude.
 - **P3 — Don't multiplex the target.** Interleaving independent streams (voices) into the
   next-token position dilutes any one stream's signal. *Evidence:* melody is three voices
   multiplexed by the frame header; the per-voice line is the actual prediction target.
