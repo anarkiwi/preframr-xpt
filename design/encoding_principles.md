@@ -1,0 +1,82 @@
+# Encoding principles — fidelity × context-efficiency × learnability
+
+**Status:** Reference. The single rubric for how to encode the SID register stream as
+model tokens. Other encoding designs should be checked against this; when they trade one
+axis for another, say which and why. Distilled from the 2026-05 melody-onset arc (de-merge
+win + voice / op48 / semitone results).
+
+## The three axes
+
+A token encoding is judged on three axes, in priority order when they conflict:
+
+1. **Fidelity (the floor).** `decode(encode(x))` must reproduce the SID register writes
+   that matter for audio. Byte-exact is the default; the *content tier* is allowed to be
+   *deliberately* lossy (cent-binned slope/preset/transpose), but only behind the 12-SID
+   WAV audition gate. A change that is not byte-exact and not audition-gated is invalid.
+2. **Context efficiency.** Tokens per song, bounded by the deploy envelope (Jetson Orin:
+   PROMPT=2048 / MAX=8192, KV ~16 KiB/token). Fewer tokens = more musical context per
+   window. Unigram merging is the main lever here.
+3. **Learnability.** How well a model can *predict* the next token. This is the axis the
+   melody arc showed we were silently sacrificing, and it has structure (below).
+
+The axes conflict. The central finding of the arc: **the Unigram merge that buys context
+efficiency (axis 2) destroyed melody learnability (axis 3) at zero fidelity cost (axis 1)** —
+the pitch onset went from 0.66 to 0.009 purely from merging. Efficiency that is
+fidelity-neutral is *not* learnability-neutral.
+
+## Learnability sub-principles (each earned by a result)
+
+- **P1 — Separability.** Each content decision should be its own low-cardinality token,
+  not fused with unrelated content into a compound. *Evidence:* disabling Unigram (`--tkvocab
+  0`) lifted op45 V0_HI 0.009→0.658 — merging had welded the pitch onset into ~9489 compound
+  tokens bundling pitch + shape. A 2-value atom is learnable; a 9489-way compound is not.
+- **P2 — Locality.** The tokens needed to predict a decision should be *near* it. *Evidence
+  (partial / under test):* consecutive same-voice pitch onsets are separated by FLAGS/COUNT/
+  DELTA + other voices' tokens + frame markers; the model hits 0.35 on the magnitude while an
+  *adjacent* 2-gram ceiling is 0.51. The locality cost is the open question
+  ([`superframe_voice_lane_design.md`](superframe_voice_lane_design.md); the freq_traj-pairing
+  idea).
+- **P3 — Don't multiplex the target.** Interleaving independent streams (voices) into the
+  next-token position dilutes any one stream's signal. *Evidence:* melody is three voices
+  multiplexed by the frame header; the per-voice line is the actual prediction target.
+- **P4 — Voice/identity is structural, not content.** Surface a needed structural variable
+  explicitly and locally if it's cheap, but it is not itself the lever. *Evidence:* moving
+  voice id onto the VOICE reg (local) was content-neutral (V0_HI 0.668 ≈ 0.658) — voice
+  attribution wasn't the blocker. ([`voice_encoding_reference.md`](voice_encoding_reference.md))
+- **P5 — Alphabet size ≠ learnability.** Shrinking a field's cardinality does not help if the
+  *sequence* structure is the hard part. *Evidence:* semitone-quantizing the onset shrank the
+  alphabet 5.70→4.04 bits but left the 2-gram predictability ceiling flat (~0.51) — the
+  magnitude is genuine pitch-range/leap entropy, not removable cent-jitter. Fix entropy at the
+  representational source; don't just bin.
+- **P6 — Use the right yardstick.** Where a target is genuinely multi-modal, exact-token
+  accuracy structurally undersells the model. *Evidence:* exact pitch magnitude caps at ~0.51
+  even for an in-sample memorizing n-gram → a generalizing model emits a *plausible*, not the
+  *exact*, next pitch. Score such targets distributionally + by audition.
+
+## The checklist (apply to any encoding change)
+
+1. **Fidelity:** byte-exact round-trip? If lossy, is it content-tier and audition-gated?
+2. **Separability:** does any single token fuse multiple independent content decisions
+   (esp. via Unigram merges crossing content boundaries)? If so, split them
+   ([`melody_merge_split.md`](landed/melody_merge_split.md)).
+3. **Locality:** for the decision you care about, how many tokens separate it from the context
+   that predicts it? Can that distance be reduced without breaking fidelity?
+4. **Multiplexing:** is the prediction target one coherent stream, or several interleaved?
+5. **Cardinality vs sequence:** is the difficulty the alphabet size (binnable) or the sequence
+   structure (not binnable — don't quantize)?
+6. **Yardstick:** is exact-token acc meaningful for this target, or is it multi-modal (use
+   distribution + audition)?
+7. **Context budget:** net token delta vs the Jetson envelope; if it grows, justify against the
+   learnability gain.
+
+## How the existing designs map
+
+- `freq_v0_interval` — P1/P5: makes the onset *sign* a separable ~2-value atom (the bankable
+  melody win); the magnitude residual is P6 territory.
+- `melody_merge_split` — P1/P2: un-welds cross-boundary Unigram merges.
+- `superframe_voice_lane_design` — P2/P3: voice-major lanes maximise per-voice onset locality
+  and de-multiplex; the home for the freq_traj-pairing/locality work.
+- `voice_encoding_reference` — P4: voice is a structural variable, now single-sourced.
+- Refuted by these principles: op48 single-byte interval (wrong factoring, P1), semitone-quantize
+  (P5), voice-feature injection (`voice_trajectory`, P4), write-order normalization
+  (`sequence_order_normalization`).
