@@ -5,7 +5,36 @@ the first confirmed content win (`full_macros`) turned out to be **SET scaffoldi
 (FREQ_TRAJ ~0.026 acc; the model rarely emits FREQ_TRAJ at all), four landed encoding/loss
 features attack the melody question and converged probes localise the blocker.
 
-## Converged diagnosis (2026-05-27 → 2026-05-28)
+## OVERTURNED 2026-05-28/29 — it was tokenization, not scale (the section below is superseded)
+
+The "scale-bound" diagnosis was wrong. A focused tokenization sweep on the clean
+PW+filter-ablated substrate, read by an op×subreg content-tier split:
+
+- **`--tkvocab 0` (disable Unigram) lifts op45 V0_HI 0.009 → 0.658 at mini.** V0-onset≈0
+  was a **Unigram-merge artifact**: the merger welds the interval-coded onset forward into
+  ~9489 compound tokens (merge-len 7.37) bundling pitch + V0_LO + DELTA shape; the model
+  nails the compound *shape* but can't isolate the *pitch*. Control: op48 (a single, never-
+  merged token) stays 0.000→0.000, ruling out a vocab-size artifact. → melody IS learnable at
+  mini once the onset is a separable low-cardinality atom; the lever is tokenization STRUCTURE,
+  not model scale. (`melody_no_unigram_mini`, `/scratch/tmp/preframr_no_unigram`.)
+- **Re-read of "V0_HI 0.66":** that is the model predicting the near-constant HIGH byte of
+  the signed interval (≈the SIGN, ~2 values), NOT pitch. The real pitch **MAGNITUDE = V0_LO
+  0.35**. So de-merged melody = sign easy (0.66), magnitude hard (0.35), absolute unlearned.
+- **Voice attribution is NOT the lever.** `--voice-id-on-marker` (minimal) null-to-negative;
+  `--voice-order-on-marker` (clean: FRAME→0 tick, voice id solely on the VOICE reg per run,
+  decode auto-detects FRAME.val==0) content-neutral (V0_HI 0.668 ≈ 0.658) — but makes the
+  structural tier trivially predictable (0.79). See [`voice_encoding_reference.md`](voice_encoding_reference.md).
+- **op48 interval-coding REFUTED.** `--freq-onset-interval` (per-reg mod-256 byte interval)
+  moved op48 only 0.000→0.013 despite entropy dropping 6.5→5.3b. A single byte fuses
+  sign+magnitude (40 eff) in an op the model barely emits — the wrong factoring.
+
+**New frontier = the pitch MAGNITUDE (V0_LO ≈ 0.35), not channel coverage.** Candidate levers:
+HI/LO-split op48 like op45 (sign byte → easy target) or fold isolated onsets into op45;
+**semitone-quantize the magnitude** (collapse sub-semitone cent jitter to a pitch-class
+alphabet); or pivot the melody yardstick to distributional/audition. Open question under test:
+is FREQ_TRAJ's multi-attribute bundling itself what makes V0_LO unlearnable?
+
+## Converged diagnosis (2026-05-27 → 2026-05-28) — SUPERSEDED, see above
 Melody onset prediction is **NOT aleatoric, NOT rare, NOT (only) a representation defect** —
 it is the genuinely **hard cross-song prediction** that mini lacks scale to learn, while the
 model freely learns easier (regular) content.
