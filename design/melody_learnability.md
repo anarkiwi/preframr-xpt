@@ -72,6 +72,17 @@ seqs → HELDOUT onset acc **0.888** (train 1.000); a held-out prompt greedily c
 Multiplexing + multiple waveforms do not break rule generalization → encoding SUFFICIENT,
 confirmed.
 
+**STRONGEST PROOF — real Bach generalizes through this encoding (2026-05-29,
+`audit.bach_encoding_generalization`).** 200 public-domain Bach chorales (music21, SATB→3
+SID voices) transcoded into the current encoding (op45 onsets, MIDI→freq→freq-mapper bin,
+pulse/tri, clean voice), 160 train / 40 held-out: **HELDOUT next-onset pitch acc 0.513,
+ABOVE the cross-chorale 2-gram ceiling 0.456 and 20× chance (0.026)** (train 0.936). The
+model generalizes real musical structure to unseen chorales through the exact encoding that
+gives 0.35 on real SID melody. Clean contrast, same encoding+model: **Bach model 0.513 >
+its 0.456 data ceiling (carries real music); real-SID 0.35 ≈ its 0.30 data ceiling
+(multi-modal data).** Encoding is musically sufficient; the SID-melody difficulty is the
+DATA. Audible: `bach_prediction.wav` vs `bach_ground_truth.wav`.
+
 **Strategic inflection: exact magnitude is the wrong yardstick; pivot melody success to
 distributional/audition.** Even an in-sample, memorizing 2-gram caps at ~0.51 on the
 magnitude — so a *generalizing* model can only emit a plausible-not-exact next pitch, and
