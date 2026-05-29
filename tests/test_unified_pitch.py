@@ -48,6 +48,32 @@ def test_fit_descriptor_primitives():
     ].startswith("SLIDE|+")
 
 
+def test_vib_bucket_detects_sub_semitone_oscillation():
+    # >=3 writes wobbling sub-semitone around one semitone -> non-zero vibrato bucket.
+    seg = [
+        (f, U.midi_to_fn_f(60 + c / 100.0))
+        for f, c in [(1, -20), (2, 0), (3, 20), (4, 0)]
+    ]
+    assert U._vib_bucket(seg) >= 1
+    # all on the exact semitone -> no vibrato.
+    assert U._vib_bucket([(f, U.LUT[60]) for f in range(4)]) == 0
+    # too few writes -> 0.
+    assert U._vib_bucket([(1, U.LUT[60])]) == 0
+
+
+def test_fn_from_note_cents_round_trips_within_quantum():
+    # reconstructing note+cents stays within the cents quantum of the source freq.
+    src = U.midi_to_fn_f(60 + 0.23)  # 23 cents sharp
+    note, cents = U.fn_to_note_resid(src)
+    recon = U.fn_from_note_cents(note, cents)
+    rc = U.fn_to_note_resid(recon)
+    assert (
+        note == 60
+        and abs((rc[0] + rc[1] / 100.0) - (note + cents / 100.0))
+        <= U.CENTS_RES / 100.0 + 1e-6
+    )
+
+
 def test_encode_decode_plain_is_lut_exact():
     # two clean held notes (gate-on, no intra-note writes) -> PLAIN; decode returns LUT freqs.
     l1 = [(0, U.LUT[60]), (20, U.LUT[67])]

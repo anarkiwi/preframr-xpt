@@ -174,9 +174,32 @@ def encode_voice(l1, l2, min_hold=MIN_HOLD):
         skel = 0 if prev is None else max(-24, min(24, note - prev))
         prev = note
         out.append(
-            {"frame": fr, "note": note, "skel": skel, "desc": desc, "offs": offs}
+            {
+                "frame": fr,
+                "note": note,
+                "skel": skel,
+                "desc": desc,
+                "offs": offs,
+                "vib": _vib_bucket(seg),
+            }
         )
     return out
+
+
+def _vib_bucket(seg_writes):
+    """Per-note sub-semitone VIBRATO depth bucket from the cents amplitude of the note's settled
+    freqs that sit on ONE semitone (the held-note wobble): 0 none / 1 light (<=30c) / 2 heavy.
+    Integer-semitone motion (arps) has ~0 cents on each pitch -> bucket 0 (vibrato is the
+    sub-semitone channel, orthogonal to the arp/slide integer-offset descriptor)."""
+    cents = [
+        fn_to_note_resid(fn)[1]
+        for _, fn in seg_writes
+        if fn_to_note_resid(fn) and abs(fn_to_note_resid(fn)[1]) < 50
+    ]
+    if len(cents) < 3:
+        return 0
+    amp = (max(cents) - min(cents)) / 2.0
+    return 0 if amp < VIB_MIN_CENTS else (1 if amp <= 30 else 2)
 
 
 # ---- decode (notes -> per-frame freq) for round-trip + audition --------------------------------
@@ -254,7 +277,10 @@ def main():
         seqs.append(
             {
                 "dump": di,
-                "notes": [{"skel": r["skel"], "desc": r["desc"]} for r in recs],
+                "notes": [
+                    {"skel": r["skel"], "desc": r["desc"], "vib": r["vib"]}
+                    for r in recs
+                ],
             }
         )
     json.dump({"seqs": seqs}, open(cli.out, "w"))

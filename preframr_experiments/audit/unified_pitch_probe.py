@@ -27,8 +27,9 @@ import torch
 from preframr_experiments.audit.melody_channel_render import generate as mc_generate
 from preframr_experiments.audit.melody_channel_render import train as mc_train
 
-SKEL_BASE, DESC_BASE = 1000, 5000
+SKEL_BASE, DESC_BASE, VIB_BASE = 1000, 5000, 8000
 TYPES = ["PLAIN", "OCTAVE", "ARP", "SLIDE", "VIB", "RESID"]
+VIB_LEVELS = [0, 1, 2]  # sub-semitone vibrato depth buckets (per-note VIB token)
 
 
 def split(seqs, seed):
@@ -54,6 +55,7 @@ def stream(notes, vocab, resid):
     for n in notes:
         out.append(SKEL_BASE + n["skel"])
         out.append(DESC_BASE + vocab.get(n["desc"], resid))
+        out.append(VIB_BASE + int(n.get("vib", 0)))  # sub-semitone vibrato-depth token
     return out
 
 
@@ -102,7 +104,7 @@ def run(seqs, epochs, dev, seed, maxlen=512):
 
     # SKELETON held-out next-interval accuracy (score positions whose target is a SKEL token).
     sh = st_ = 0
-    gen_types, actual_types = [], []
+    gen_types, actual_types, gen_vib, actual_vib = [], [], [], []
     for s in test:
         full = stream(s["notes"], vocab, resid)[:maxlen]
         if len(full) < 6:
@@ -123,20 +125,36 @@ def run(seqs, epochs, dev, seed, maxlen=512):
             if SKEL_BASE <= raw < DESC_BASE:  # target is a skeleton token
                 st_ += 1
                 sh += int(inv_alpha[int(p)] == raw)
-        # ornament emission/JS via free-run from a 1/3 prompt
+        # ornament + vibrato emission/JS via free-run from a 1/3 prompt
         prompt = ids[: max(2, len(ids) // 3)]
         g = mc_generate(model, prompt, len(ids), len(alpha), dev, temp=1.0, seed=seed)
         for tid in (inv_alpha[i] for i in g):
-            if tid >= DESC_BASE:
+            if DESC_BASE <= tid < VIB_BASE:
                 gen_types.append(desc_type(inv.get(tid - DESC_BASE, "RESID")))
-        actual_types += [desc_type(n["desc"]) for n in s["notes"][: maxlen // 2]]
+            elif tid >= VIB_BASE:
+                gen_vib.append(tid - VIB_BASE)
+        actual_types += [desc_type(n["desc"]) for n in s["notes"][: maxlen // 3]]
+        actual_vib += [int(n.get("vib", 0)) for n in s["notes"][: maxlen // 3]]
 
     base = skel_2gram(train, test)
     skel_acc = sh / max(st_, 1)
     emit = 1 - Counter(gen_types).get("PLAIN", 0) / max(len(gen_types), 1)
     corpus_emit = 1 - Counter(actual_types).get("PLAIN", 0) / max(len(actual_types), 1)
     th = lambda ts: [Counter(ts).get(t, 0) for t in TYPES]
-    return base, skel_acc, emit, corpus_emit, js_bits(th(gen_types), th(actual_types))
+    vh = lambda vs: [Counter(vs).get(x, 0) for x in VIB_LEVELS]
+    vib_emit = 1 - Counter(gen_vib).get(0, 0) / max(len(gen_vib), 1)
+    vib_corpus = 1 - Counter(actual_vib).get(0, 0) / max(len(actual_vib), 1)
+    vib_js = js_bits(vh(gen_vib), vh(actual_vib))
+    return (
+        base,
+        skel_acc,
+        emit,
+        corpus_emit,
+        js_bits(th(gen_types), th(actual_types)),
+        vib_emit,
+        vib_corpus,
+        vib_js,
+    )
 
 
 def render_demo(seqs, out_dir, epochs, dev, seed=0, maxlen=512):
@@ -168,7 +186,7 @@ def render_demo(seqs, out_dir, epochs, dev, seed=0, maxlen=512):
     )
     tune = max(test, key=lambda s: len(s["notes"]))
     recs_gt = [{"skel": n["skel"], "desc": n["desc"]} for n in tune["notes"][:80]]
-    ids = [alpha[t] for t in stream(tune["notes"], vocab, resid)[: 2 * 80]]
+    ids = [alpha[t] for t in stream(tune["notes"], vocab, resid)[: 3 * 80]]
     g = mc_generate(
         model,
         ids[: max(2, len(ids) // 3)],
@@ -184,8 +202,9 @@ def render_demo(seqs, out_dir, epochs, dev, seed=0, maxlen=512):
             if cur is not None:
                 recs_pred.append(cur)
             cur = {"skel": tid - SKEL_BASE, "desc": "PLAIN"}
-        elif tid >= DESC_BASE and cur is not None:
+        elif DESC_BASE <= tid < VIB_BASE and cur is not None:
             cur["desc"] = inv.get(tid - DESC_BASE, "RESID")
+        # VIB tokens (>= VIB_BASE) carry sub-semitone depth; not used in this LUT render
     if cur:
         recs_pred.append(cur)
 
@@ -231,11 +250,14 @@ def main():
     print(f"{cli.data.name}: {len(seqs)} seqs")
     accs = []
     for seed in range(cli.seeds):
-        base, skel, emit, cemit, js = run(seqs, cli.epochs, dev, seed)
+        base, skel, emit, cemit, js, vemit, vcorpus, vjs = run(
+            seqs, cli.epochs, dev, seed
+        )
         accs.append(skel)
         print(
             f"  [seed {seed}] SKELETON held-out next-interval acc={skel:.3f} (2-gram ceiling={base:.3f}) "
-            f"| ORNAMENT emission={emit:.3f} (corpus {cemit:.3f}) JS(type)={js:.3f}"
+            f"| ORNAMENT emission={emit:.3f} (corpus {cemit:.3f}) JS(type)={js:.3f} "
+            f"| VIBRATO emission={vemit:.3f} (corpus {vcorpus:.3f}) JS(depth)={vjs:.3f}"
         )
     if len(accs) > 1:
         a = np.array(accs)

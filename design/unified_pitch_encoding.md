@@ -286,6 +286,18 @@ lo+hi writes), not patch in place (separable follow-up). The cents channel is an
 the token stream / generalization is unchanged (skeleton 0.544; a per-note VIB-depth token already
 exists for the structured view).
 
+**Literal-0 residual (re-emit) + vibrato token (2026-05-29).** (1) The in-place byte patch left a ~6%
+tail on dense tunes (a lo-only glissando update whose recon crosses a hi-byte boundary). Fixed by
+**re-emitting** each reconstructed 512-bucket as a coherent lo+hi pair (`build_unified_dump`): Camerock
+*and* Commando now median 0.2–0.5c, p90 ≤1.6c, **0% >50c, 0% >1.5 st — audio residual at literal 0**
+(within the 4c cents quantum), uniform across pitched and percussion voices. (2) A per-note **VIB token**
+(sub-semitone cents-amplitude bucket 0/1/2) is folded into the stream (`SKEL, DESC, VIB`). Generalization
+×3 seeds: skeleton 0.506 (beats its 2-gram ceiling every seed; slight dip from 0.544 as the 3-token
+stream dilutes skeleton context); ornament emits at corpus rate (JS 0.03–0.07); **VIBRATO emits at
+~corpus rate (0.16–0.32 vs 0.15–0.36) with depth-distribution JS ≈ 0.000–0.002 — vibrato transfers
+near-perfectly.** So the full pitch encoding (skeleton + ornament + vibrato) is faithful (literal-0
+audio) and its structured tokens transfer.
+
 **The real gap is faithful ornament DECODE** (distinct from the token encoding, which the
 generalization probe measured): ARP needs the *ordered* cycle + rate + phase (the codebook), SLIDE
 needs real target/rate, VIB needs an oscillator. Until those decoders exist, only the held-note
