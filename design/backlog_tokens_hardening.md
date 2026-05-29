@@ -23,6 +23,24 @@ fails if a pass reads a boolean arg with no declaration — relevant when removi
 
 ---
 
+## ## Fixture policy (HARD CONSTRAINTS — read before #10/#11)
+- **No tunes in the repo.** Never `git add` a `.sid` or a real SID `.dump.parquet` — copyrighted
+  HVSC data must NOT be tracked (AGENTS: "SID songs must NOT be tracked here"). Real-tune fixtures
+  are **cached locally, untracked**, regenerated on demand from HVSC via the
+  `tests/sid_fixtures.py` helper (`ensure_dumps` → downloads the `.sid`, renders a dump in the
+  `anarkiwi/headlessvice` image, caches under `$PREFRAMR_SID_FIXTURE_CACHE`; reduce/slice it small).
+- **No skipping on missing fixtures.** A test must NEVER `self.skipTest(...)` because a fixture is
+  absent — a silent skip is the same false-green this whole effort is fighting. Instead: the test
+  **regenerates** the fixture via the helper, and **FAILS loudly** if regeneration is impossible
+  (no network / no docker). The current `FixtureUnavailable → skip` path in `sid_fixtures.py` must
+  be changed so real-tune tests **fail rather than skip** (or the cache is pre-populated for CI).
+- **Therefore split the suite:** the **always-runnable core is SYNTHETIC** — generated register
+  streams (no copyright, deterministic, never skip) carry the structural/balance/driver-mechanism
+  assertions and run in the plain `python:3.12` docker gate. **Real-tune** fidelity/RESID tests are
+  a second layer that runs where the fixture cache is available (host, or the gate with the cache
+  mounted `-v $PREFRAMR_SID_FIXTURE_CACHE:...`); they regenerate-or-fail, never skip. Run the gate
+  with the cache mounted so the real-tune layer executes there too.
+
 ## The pass-framework 3-layer model (you touch all three per op)
 An op exists only when **Pass + Decoder + Transform** line up (see `tokens_architecture.md`):
 1. **Pass** — `MacroPass` subclass in `preframr_tokens/macros/<name>_pass.py` (or `passes.py`),
@@ -110,11 +128,12 @@ data (it read the cent-indexed `val`, not 16-bit `freq_unq`). See memory `test-t
    BALANCE_MAX` (start `BALANCE_MAX=6`). This flags channel-drowning (the op55:op54 13:1 bug) at
    CI. Port the op-count logic from the xpt probes `audit/probes/op48_probe.py` /
    `op48_context.py` (torch-free) — move them into `tests/` helpers.
-5. **Offline real-fixture round-trip** — commit ONE tiny real dump at
-   `tests/fixtures/<slug>.dump.parquet` (a few hundred rows sliced from a real driver tune) and
-   run `test_full_pipeline_fidelity`'s oracle on it **without HVSC/network** (the current fixture
-   path in `tests/sid_fixtures.py` downloads from HVSC and skips in docker). Add a non-skipping
-   CI fidelity test against the committed fixture.
+5. **Real-tune round-trip (cached, not committed, no-skip)** — run the fidelity oracle on a real
+   driver dump obtained via `sid_fixtures.ensure_dumps` (locally cached, untracked — see the
+   Fixture policy above). Do NOT commit the dump. The test must **regenerate-or-fail**, never
+   skip; mount `$PREFRAMR_SID_FIXTURE_CACHE` into the gate so it runs there. The **synthetic**
+   round-trip in item 3 is the copyright-free, always-runs core; this real-tune layer is the
+   cross-check against actual driver output.
 
 **Gate:** shared gate. These tests must FAIL if reverted onto tokens 0.31.0 (the cent-index bug)
 — verify that to prove they bite.
@@ -138,17 +157,20 @@ gap to close, not a tune to tolerate. RESID share per driver is the completeness
    - **slide/portamento** (freq ramp toward target) → `ORN_TYPE_SLIDE` with target≈next note.
    - **plain held note** → `ORN_TYPE_PLAIN`.
    Each: assert `0` RESID notes. (Build the streams from `sid_driver_ornament_reference.md`.)
-2. **Curated real per-driver fixtures** — commit a short slice per driver under
-   `tests/fixtures/driver/{hubbard,galway,sidwizard,defmon}.dump.parquet` (identify the engine via
-   `engine_fingerprint` / composer dir). Assert the **dominant ornament type matches the driver's
-   known mechanism** and `RESID_share <= RESID_MAX` (start `0.10`).
+2. **Curated real per-driver fixtures (cached, not committed, no-skip)** — one known tune per
+   driver (`{hubbard,galway,sidwizard,defmon}`), obtained via `sid_fixtures.ensure_dumps`
+   (locally cached, untracked — never `git add`), identified via `engine_fingerprint` / composer
+   dir. Assert the **dominant ornament type matches the driver's known mechanism** and
+   `RESID_share <= RESID_MAX` (start `0.10`). Regenerate-or-fail, never skip.
 3. **RESID-as-signal:** a fixture exceeding `RESID_MAX` is a **failing completeness test** — the
    fix is to model the missing mechanism (extend `fit_descriptor`), NOT to raise the threshold.
    Document each known-acceptable RESID source (genuinely-aperiodic noise sweeps) inline so the
    threshold is principled.
 
-**Gate:** shared gate. Keep fixtures tiny (no large SID data tracked — slice + commit only the
-needed rows; see `tests/sid_fixtures.py` `_REDUCE_MASKS` for the canonical reduction).
+**Gate:** shared gate, with `$PREFRAMR_SID_FIXTURE_CACHE` mounted so the real-tune fixtures
+regenerate/run (never skip). Keep fixtures tiny **in the local cache, never committed** — slice to
+the needed rows (see `tests/sid_fixtures.py` `_REDUCE_MASKS` for the canonical reduction). The
+synthetic generators (#11.1) are the copyright-free, always-runs core.
 
 ---
 
