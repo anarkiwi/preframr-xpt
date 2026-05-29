@@ -7,16 +7,23 @@ Reference: [`tokens_architecture.md`](tokens_architecture.md) (the pass framewor
 pipeline) and [`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md) (driver
 mechanics). All paths below are under `/scratch/anarkiwi/preframr-tokens/`.
 
-Shared docker gate (run for every item before commit; host bridge reaches public PyPI, not
-the proxpi mirror):
+Shared docker gate — use the **baked cache image** `anarkiwi/preframr-tokens-test` (deps
+pre-installed; editable `--no-deps` is instant and picks up working-tree edits → ~6s/run vs
+~90s reinstalling). ~the gate:
 ```
-docker run --rm -v "$PWD":/src -v /scratch:/scratch -w /src python:3.12 bash -c "
+docker run --rm -v "$PWD":/src -v /scratch:/scratch -w /src anarkiwi/preframr-tokens-test bash -c "
   git config --global --add safe.directory /src
-  pip install -q -e '.[dev]'
+  pip install -e . --no-deps -q
   black --check preframr_tokens tests && pylint preframr_tokens tests && pyright preframr_tokens \
     && pytest -q --cov=preframr_tokens --cov-report=term-missing --cov-fail-under=85
 "
 ```
+Rebuild the cache image only when **deps** change, and do it **through the proxpi mirror** (see
+memory `docker-build-cache`): on host `defroster` docker can't reach the mirror on the bridge —
+use `--network host` + `PIP_OPTS` from `preframr/.env`:
+`docker build --network host --build-arg PIP_OPTS="--index-url http://192.168.5.1:5001/index/ --trusted-host 192.168.5.1" -f Dockerfile.tokenstest -t anarkiwi/preframr-tokens-test .`
+(Same `--network host` + `PIP_OPTS` applies to the `anarkiwi/preframr` image builds — I bypassed
+the cache with empty `PIP_OPTS` this session; don't.)
 Tokens lint (`tests/test_lint.py`): ≤5-line one-paragraph docstrings; **no non-directive `#`
 comments** (only `pylint:`/`noqa`/`type: ignore`/`fmt:`/shebang). `tests/test_flag_registry.py`
 fails if a pass reads a boolean arg with no declaration — relevant when removing passes.
