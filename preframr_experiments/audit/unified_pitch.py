@@ -51,8 +51,14 @@ def fn_to_note_resid(fn: int):
 
 
 def voice_freq_events(d):
-    """Per-voice (l1, l2) with RAW 16-bit freq: l1 = every freq change (frame, fn), l2 = gate-on
-    (frame, fn). Mirrors extract_sid_melody._voice_l1_l2 but keeps the raw frequency word.
+    """Per-voice (l1, l2) with the SETTLED 16-bit freq per frame. l1 = frames where the settled freq
+    changed (frame, fn); l2 = gate-on frames (frame, settled fn).
+
+    Freq is 16-bit across the lo+hi registers; reading on every individual byte write yields
+    half-updated garbage (a lo write with a stale hi byte = a spurious pitch). The parser already
+    collapses lo+hi into one atomic 16-bit value taking the last write per time bucket
+    (RegLogParser._combine_regs / freq_unq); this reproduces that **settled** semantics here by
+    carrying both bytes and sampling only the frame-final value — never a mid-update read.
     """
     fc = int(d["irq"][d["irq"] > 0].mode().iloc[0]) if (d["irq"] > 0).any() else 19592
     reg = d["reg"].to_numpy()
@@ -62,22 +68,30 @@ def voice_freq_events(d):
     for v in range(3):
         lo, hi, ctrl = v * 7, v * 7 + 1, v * 7 + 4
         cl = ch = gate = 0
-        l1, l2 = [], []
+        settled = {}  # frame -> final (hi<<8|lo) in that frame
+        gate_on = []
         for i in range(len(reg)):
-            r, x, fr = reg[i], int(val[i]), clk[i] // fc
-            if r == lo and x != cl:
+            r, x, fr = int(reg[i]), int(val[i]), int(clk[i]) // fc
+            if r == lo:
                 cl = x
-                if fn_to_note_resid((ch << 8) | cl):
-                    l1.append((fr, (ch << 8) | cl))
-            elif r == hi and x != ch:
+            elif r == hi:
                 ch = x
-                if fn_to_note_resid((ch << 8) | cl):
-                    l1.append((fr, (ch << 8) | cl))
             elif r == ctrl:
-                ng = x & 1
-                if ng and not gate and fn_to_note_resid((ch << 8) | cl):
-                    l2.append((fr, (ch << 8) | cl))
-                gate = ng
+                if (x & 1) and not gate:
+                    gate_on.append(fr)
+                gate = x & 1
+            settled[fr] = (ch << 8) | cl
+        l1, prev = [], None
+        for fr in sorted(settled):
+            fn = settled[fr]
+            if fn != prev and fn_to_note_resid(fn):
+                l1.append((fr, fn))
+                prev = fn
+        l2 = [
+            (fr, settled[fr])
+            for fr in sorted(set(gate_on))
+            if fr in settled and fn_to_note_resid(settled[fr])
+        ]
         out.append((l1, l2))
     return out
 

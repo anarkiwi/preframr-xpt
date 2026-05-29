@@ -248,6 +248,19 @@ every voice** — confirming the note representation/LUT/noise-passthrough are c
 clean held notes (≈ original) and passes ALL ornament + percussion through — a **passthrough crutch**,
 not a real encoding.
 
+**Root cause of the out-of-tune / octave-high notes (2026-05-29): the encoder read RAW freq bytes.**
+`voice_freq_events` originally emitted a freq event on every lo *or* hi register write, so a lo write
+with a stale hi byte produced a half-updated garbage pitch (offsets like +57..+71 semitones) that
+contaminated the ornament descriptors → octave overshoot on decode. This bypassed the parser's
+existing 16-bit freq collapse (`RegLogParser._combine_regs` / `freq_unq`, which ffills each byte and
+keeps the settled value per time bucket). **Fix:** sample the **settled per-frame 16-bit freq** (carry
+both bytes, never read mid-update). Result: Commando garbage offsets → 0 and its octave arps now
+classify as OCTAVE (233) instead of being flattened to RESID. Multi-speed/dense tunes (Camerock) still
+show some cross-frame *straddle* garbage (a freq update whose lo/hi land in different frames); the fully
+correct fix is the parser's whole-series bucketed combine (`_combine_reg`), to be wired in (it ffills
+each byte independently, immune to straddle). **Lesson: never re-derive freq from raw lo/hi bytes — use
+the parser's collapsed 16-bit value.**
+
 **The real gap is faithful ornament DECODE** (distinct from the token encoding, which the
 generalization probe measured): ARP needs the *ordered* cycle + rate + phase (the codebook), SLIDE
 needs real target/rate, VIB needs an oscillator. Until those decoders exist, only the held-note
