@@ -64,8 +64,13 @@ seqs) vs a FLAT single-token encoding of the same rule: **HELDOUT inside-motif o
 real 0.876 ≈ flat 0.862** (both train 1.000). The real encoding's byte-split + trajectory
 bundling + onset separation do NOT block rule generalization → **encoding SUFFICIENT**; the
 real-data V0_LO=0.35 is the DATA (multi-modal melody), not the encoding. Doubly refutes the
-locality hypothesis (synthetic separation didn't hurt). (Single-voice; multiplexing covered
-by the separate voice nulls.)
+locality hypothesis (synthetic separation didn't hurt). **Airtight multi-voice follow-up
+(`audit.multivoice_audition_test`):** 3 multiplexed voices (pulse lead / triangle bass /
+noise percussion, palette mined from mini), op45 onsets, clean-voice encoding, 2208-token
+seqs → HELDOUT onset acc **0.888** (train 1.000); a held-out prompt greedily continued is
+88.7% token-identical to ground truth and renders to an audible WAV matching ground truth.
+Multiplexing + multiple waveforms do not break rule generalization → encoding SUFFICIENT,
+confirmed.
 
 **Strategic inflection: exact magnitude is the wrong yardstick; pivot melody success to
 distributional/audition.** Even an in-sample, memorizing 2-gram caps at ~0.51 on the
