@@ -49,40 +49,45 @@ LO_REGS = {0: 1, 7: 8, 14: 15}  # freq-lo reg -> its hi reg, per voice
 
 
 def build_unified_dump(raw, fc):
-    """Copy of the raw dump where every freq write is snapped to the nearest SEMITONE of the SETTLED
-    16-bit freq at that instant (carry both bytes — the actual SID register state, never a mid-update
-    read), i.e. the integer-semitone resolution the unified pitch encoding represents. This drives the
-    audio residual down to the sub-semitone (vibrato) floor uniformly across pitched and percussion
-    voices (the noise waveform is preserved, so snapped-freq noise still renders as percussion);
-    whatever the SID actually played (arps, wide jumps) is reproduced at semitone resolution. Returns
-    (modified_df, descriptor stats for the structured-coverage report)."""
+    """Copy of the raw dump where every freq write is reconstructed through the unified pitch encoding
+    at SETTLED 16-bit resolution: nearest semitone (the skeleton/ornament integer-semitone domain) +
+    the sub-semitone CENTS (the vibrato channel, quantised to CENTS_RES). Carries both bytes (the
+    actual SID register state, never a mid-update read). With the cents channel the audio residual is
+    driven to ~0 (<=CENTS_RES/2 cents, inaudible) — vibrato is preserved, not flattened. Uniform across
+    pitched and percussion voices (noise waveform untouched). Returns (modified_df, descriptor stats).
+    """
     out = raw.copy()
     regs = out["reg"].to_numpy()
     clks = out["clock"].to_numpy()
     vals = out["val"].to_numpy().copy()
-    cl = {v: 0 for v in range(3)}  # carried lo byte per voice
-    ch = {v: 0 for v in range(3)}  # carried hi byte per voice
-    snapped = 0
-    nfreq = 0
+    freqregs = set(LO_REGS) | set(LO_REGS.values())
+    # Pass 1: per (voice, 512-bucket) settled freq -> ONE reconstructed 16-bit value (so the lo and
+    # hi bytes written back form a coherent freq -- never two bytes from different reconstructions).
+    cl = {v: 0 for v in range(3)}
+    ch = {v: 0 for v in range(3)}
+    recon = {}
     for i in range(len(out)):
         r = int(regs[i])
-        if r in LO_REGS or r in LO_REGS.values():
+        if r in freqregs:
             v = r // 7
             if r % 7 == 0:
                 cl[v] = int(vals[i])
             else:
                 ch[v] = int(vals[i])
+            nr = U.fn_to_note_resid((ch[v] << 8) | cl[v])
+            recon[(v, int(clks[i]) // U.COMBINE_BUCKET)] = (
+                U.fn_from_note_cents(nr[0], nr[1]) if nr else None
+            )
+    # Pass 2: write each freq byte from its bucket's single reconstructed value.
+    done = nfreq = 0
+    for i in range(len(out)):
+        r = int(regs[i])
+        if r in freqregs:
             nfreq += 1
-            settled = (ch[v] << 8) | cl[v]
-            nr = U.fn_to_note_resid(settled)
-            if nr is not None:
-                fn = U.LUT[nr[0]]  # nearest-semitone freq
-                # write back this register's byte of the snapped 16-bit value; keep carry consistent
-                if r % 7 == 0:
-                    vals[i] = fn & 0xFF
-                else:
-                    vals[i] = (fn >> 8) & 0xFF
-                snapped += 1
+            fn = recon.get((r // 7, int(clks[i]) // U.COMBINE_BUCKET))
+            if fn is not None:
+                vals[i] = (fn & 0xFF) if (r % 7 == 0) else ((fn >> 8) & 0xFF)
+                done += 1
     out["val"] = vals
     # structured-coverage report (separate from audio): what fraction of notes hit a primitive
     stats = []
@@ -92,8 +97,8 @@ def build_unified_dump(raw, fc):
             (v, len(recs), dict(Counter(r["desc"].split("|")[0] for r in recs)))
         )
     print(
-        f"  freq writes snapped to nearest semitone: {snapped}/{nfreq} "
-        f"(audio residual driven to the sub-semitone floor)"
+        f"  freq writes reconstructed (semitone + cents vibrato channel, {U.CENTS_RES}c quantum): "
+        f"{done}/{nfreq} (audio residual ~0)"
     )
     return out, stats
 

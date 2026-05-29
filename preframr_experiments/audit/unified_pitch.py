@@ -27,13 +27,27 @@ VIB_MIN_CENTS = 8.0
 ARP_MAX_DISTINCT = 4
 
 
-def midi_to_fn(m: int) -> int:
-    hz = 440.0 * 2 ** ((m - 69) / 12.0)
+def midi_to_fn_f(mf: float) -> int:
+    """Continuous MIDI (note + cents/100) -> 16-bit SID freq. The sub-semitone (cents) part is the
+    vibrato channel; reconstructing through this keeps the audio residual below the cents-quantum.
+    """
+    hz = 440.0 * 2 ** ((mf - 69) / 12.0)
     return max(0, min(0xFFFF, int(round(hz * 16777216.0 / CLOCK_RATE))))
+
+
+def midi_to_fn(m: int) -> int:
+    return midi_to_fn_f(float(m))
 
 
 # unified semitone LUT: MIDI note -> 16-bit SID frequency word
 LUT = [midi_to_fn(m) for m in range(128)]
+CENTS_RES = 4  # vibrato-channel cents quantum (<=2c reconstruction error -> inaudible)
+
+
+def fn_from_note_cents(note: int, cents: float) -> int:
+    """Reconstruct a 16-bit freq from a semitone note + a cents offset, quantised to CENTS_RES."""
+    qc = round(cents / CENTS_RES) * CENTS_RES
+    return midi_to_fn_f(note + qc / 100.0)
 
 
 def fn_to_note_resid(fn: int):

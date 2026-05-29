@@ -274,6 +274,18 @@ classified): **skeleton held-out next-interval 0.544 ×3 seeds (beats 2-gram cei
 up from 0.518); ornament emits at ~corpus rate, JS(type) 0.03–0.07.** WAVs Commando `dd9bc9…`,
 Camerock `cc8373…`.
 
+**Sub-semitone VIBRATO/CENTS channel built (2026-05-29) → residual ~0.** The decode now reconstructs
+each freq as `semitone + cents` (`fn_from_note_cents`, cents quantised to CENTS_RES=4c) instead of
+snapping to the integer semitone — so vibrato is preserved, not flattened. Reconstruction is per
+512-bucket (one coherent 16-bit value per bucket) to avoid writing lo/hi bytes from different
+reconstructions. **Result: Commando audio residual ~0 (median 0.2c, p90 1.6c, 0% >1.5 st);** Camerock
+median 0.5c / p90 2.8c (94% transparent) with a **6% tail** of single-byte (lo-only) glissando updates
+whose reconstructed value crosses a hi-byte boundary — in-place byte patching can't make those
+coherent; the clean fix is to **re-emit** the freq stream from the combined value (add the needed
+lo+hi writes), not patch in place (separable follow-up). The cents channel is an audio-decode addition;
+the token stream / generalization is unchanged (skeleton 0.544; a per-note VIB-depth token already
+exists for the structured view).
+
 **The real gap is faithful ornament DECODE** (distinct from the token encoding, which the
 generalization probe measured): ARP needs the *ordered* cycle + rate + phase (the codebook), SLIDE
 needs real target/rate, VIB needs an oscillator. Until those decoders exist, only the held-note
