@@ -56,17 +56,19 @@ def build_unified_dump(raw, fc):
     driven to ~0 (<=CENTS_RES/2 cents, inaudible) — vibrato is preserved, not flattened. Uniform across
     pitched and percussion voices (noise waveform untouched). Returns (modified_df, descriptor stats).
     """
-    out = raw.copy()
-    regs = out["reg"].to_numpy()
-    clks = out["clock"].to_numpy()
-    vals = out["val"].to_numpy().copy()
+    raw = raw.sort_values("clock", kind="stable").reset_index(drop=True)
+    regs = raw["reg"].to_numpy()
+    clks = raw["clock"].to_numpy()
+    vals = raw["val"].to_numpy()
+    irqs = raw["irq"].to_numpy()
+    chip = int(raw["chipno"].iloc[0])
     freqregs = set(LO_REGS) | set(LO_REGS.values())
-    # Pass 1: per (voice, 512-bucket) settled freq -> ONE reconstructed 16-bit value (so the lo and
-    # hi bytes written back form a coherent freq -- never two bytes from different reconstructions).
+    # Pass 1: per (voice, 512-bucket) settled freq -> ONE reconstructed 16-bit value, plus the
+    # bucket's last freq-write clock/irq (where to place the re-emitted pair).
     cl = {v: 0 for v in range(3)}
     ch = {v: 0 for v in range(3)}
-    recon = {}
-    for i in range(len(out)):
+    recon, place = {}, {}
+    for i in range(len(raw)):
         r = int(regs[i])
         if r in freqregs:
             v = r // 7
@@ -74,21 +76,39 @@ def build_unified_dump(raw, fc):
                 cl[v] = int(vals[i])
             else:
                 ch[v] = int(vals[i])
+            key = (v, int(clks[i]) // U.COMBINE_BUCKET)
             nr = U.fn_to_note_resid((ch[v] << 8) | cl[v])
-            recon[(v, int(clks[i]) // U.COMBINE_BUCKET)] = (
-                U.fn_from_note_cents(nr[0], nr[1]) if nr else None
-            )
-    # Pass 2: write each freq byte from its bucket's single reconstructed value.
+            recon[key] = U.fn_from_note_cents(nr[0], nr[1]) if nr else None
+            place[key] = (int(clks[i]), int(irqs[i]))
+    # Re-emit: keep all non-freq rows + freq rows of buckets we couldn't reconstruct (recon None);
+    # for each reconstructed bucket emit a COHERENT lo+hi pair (both bytes of one value) at the
+    # bucket's clock. This avoids the in-place single-byte incoherence (a lo-only update whose recon
+    # crosses a hi-byte boundary): the SID always holds a coherent reconstructed freq.
+    rows = []
     done = nfreq = 0
-    for i in range(len(out)):
+    for i in range(len(raw)):
         r = int(regs[i])
-        if r in freqregs:
-            nfreq += 1
-            fn = recon.get((r // 7, int(clks[i]) // U.COMBINE_BUCKET))
-            if fn is not None:
-                vals[i] = (fn & 0xFF) if (r % 7 == 0) else ((fn >> 8) & 0xFF)
-                done += 1
-    out["val"] = vals
+        if r not in freqregs:
+            rows.append((int(clks[i]), int(irqs[i]), r, int(vals[i])))
+            continue
+        nfreq += 1
+        if recon.get((r // 7, int(clks[i]) // U.COMBINE_BUCKET)) is None:
+            rows.append(
+                (int(clks[i]), int(irqs[i]), r, int(vals[i]))
+            )  # keep unreconstructable
+    for (v, _b), fn in recon.items():
+        if fn is None:
+            continue
+        clk_b, irq_b = place[(v, _b)]
+        rows.append((clk_b, irq_b, v * 7, fn & 0xFF))
+        rows.append((clk_b, irq_b, v * 7 + 1, (fn >> 8) & 0xFF))
+        done += 1
+    out = pd.DataFrame(
+        [
+            {"clock": c, "irq": q, "chipno": chip, "reg": rg, "val": vv}
+            for c, q, rg, vv in sorted(rows, key=lambda x: x[0])
+        ]
+    ).astype(raw.dtypes.to_dict())
     # structured-coverage report (separate from audio): what fraction of notes hit a primitive
     stats = []
     for v, (l1, l2) in enumerate(U.voice_freq_events(raw)):
@@ -97,8 +117,8 @@ def build_unified_dump(raw, fc):
             (v, len(recs), dict(Counter(r["desc"].split("|")[0] for r in recs)))
         )
     print(
-        f"  freq writes reconstructed (semitone + cents vibrato channel, {U.CENTS_RES}c quantum): "
-        f"{done}/{nfreq} (audio residual ~0)"
+        f"  re-emitted {done} reconstructed freq buckets (semitone + cents vibrato channel, "
+        f"{U.CENTS_RES}c quantum) as coherent lo+hi pairs over {nfreq} original freq writes"
     )
     return out, stats
 
