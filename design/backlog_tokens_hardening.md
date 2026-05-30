@@ -181,7 +181,79 @@ synthetic generators (#11.1) are the copyright-free, always-runs core.
 
 ---
 
+---
+
+## #13 — Close the fast-melodic-run under-segmentation gap (shared; dominant RESID source)
+
+**Measured (deterministic test suite #11, 2026-05-30, skeleton-on, post-#12-resegmentation):** the
+remaining RESID across *every* driver is dominated by **fast-melodic-run under-segmentation**, NOT
+genuine glissando — Trap.1 RESID 98.8% fast-melodic-run, Baggis.1 75.6%. And by RESID note-share
+**Commando (0.34) / Camerock (0.37) leak ≥ Trap (0.14) / Baggis (0.06)** — so this is a **shared
+mechanism**, not a per-driver JCH thing. (The old "Camerock clean / Baggis gap" framing was a
+pre-resegmentation artefact; do not assert it.) These gaps are the **two xfail'd tests**
+`test_trap_resid_gap` / `test_baggis_resid_gap` (xfail `strict=True`) — fixing this flips them to
+XPASS, which is the done-signal.
+
+1. **Wave-table absolute-note runs / fast melodic runs (`80–DF` and equivalents)** → a fast
+   per-frame melodic line under one held gate, steps below `MIN_HOLD` → currently RESID → must
+   **segment into notes** (extends the #12 held-gate re-segmentation: detect periodic/stepwise fast
+   runs and cut them into notes rather than dropping to RESID). **This is the dominant fix.**
+2. **Portamento across tied notes (JCH cmd 7)** → one long glissando spanning many would-be notes
+   under a single gate → **SLIDE chain across re-segmented notes**; the re-segmentation must also cut
+   at portamento target transitions. **Minor secondary**, material only on Baggis (~12% of its RESID).
+
+**Done when:** `test_trap_resid_gap` and `test_baggis_resid_gap` flip from xfail→XPASS (RESID
+note-share ≤ 0.10) via the segmentation fix — and Commando/Camerock RESID note-share drops too,
+since the mechanism is shared. Do NOT raise `RESID_MAX` to pass; fix the segmentation.
+
+---
+
+## #14 — Reverse-engineer + document Antony Crowther V3 driver (Trap RESID)
+
+Trap is **Antony Crowther (Ratt) V3** — a *different* driver from JCH NewPlayer, not yet
+documented. Reverse-engineer its ornament mechanics (sidid/disasm + any extant notes), add a
+section to `sid_driver_ornament_reference.md` mirroring the JCH one (tables, commands, tie/gate
+behaviour), then feed it into #11 as a driver-truth fixture. Until documented, Trap RESID is an
+*unknown* gap, not a tolerated one.
+
+---
+
+## #15 — Collapse the per-driver abstractions to a common ornament abstraction
+
+**Precondition (HARD GATE):** do this ONLY after #13 and #14 — i.e. once every driver's mechanics
+are individually modelled and RESID≈0 per driver (#11 green for all drivers). Collapsing before the
+per-driver abstractions are *right* would just bake in today's gaps.
+
+**Hypothesis:** all these drivers (Rob Hubbard / Commando, JCH NewPlayer, Antony Crowther V3, …)
+are ultimately manipulating the **same SID registers** with the same small set of primitives —
+arp/chord tables, slide, portamento, vibrato (detune), octave doubling, pulse/filter sweeps. The
+per-driver sections likely differ only in *surface encoding* (table formats, command numbers, tie
+semantics), not in the underlying musical primitive. The current ORN vocab
+(PLAIN/OCTAVE/ARP/SLIDE/VIB/RESID) is already a partial unification.
+
+**Task:** once #13/#14 are in, lay the per-driver mechanism tables side by side and look for the
+common abstraction:
+- Build a mechanism × driver matrix (rows = primitive: octave-arp, table-arp, slide, portamento,
+  vibrato/detune, pulse-sweep, filter-sweep, tie/gate-hold; cols = driver) and confirm each cell
+  is the **same primitive in different clothing**.
+- Where it is, fold the driver-specific decoder logic into **one parametric ornament model** the
+  ORN descriptor already targets (driver only selects parameter ranges / table layout, not new
+  ops). Per-driver code shrinks to a thin **front-end adapter** (parse that driver's table/command
+  bytes → common primitive params); the **decoder/replay is shared**.
+- The acid test stays RESID≈0: the *unified* model must hold every driver's #11 fixture under
+  `RESID_MAX` with no per-driver special-casing in the decoder. Any irreducible per-driver
+  remainder is a real distinct primitive — document why it can't collapse.
+
+**Done when:** decoders/replay are driver-agnostic (driver = front-end adapter only), the #11
+suite is green for all drivers through the unified model, and `sid_driver_ornament_reference.md`
+has a "common abstraction" section with the mechanism×driver matrix and the documented
+irreducibles.
+
+---
+
 ## Sequencing
 Do **#9 first** (op-code space clean) → then **#10** (the structural harness) → then **#11**
 (driver fixtures build on the #10 parse-assertion helpers). All three are tokens-only, torch-free,
-and CI-gateable.
+and CI-gateable. Then the per-driver coverage work — **#13** (JCH/Baggis) and **#14** (Antony
+Crowther V3/Trap) — closes the known RESID gaps. **#15** (collapse to a common abstraction) is
+**last**, gated on #13/#14 being right: only unify once every driver is individually correct.

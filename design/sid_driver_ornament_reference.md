@@ -166,23 +166,36 @@ wave-table drives BOTH waveform and pitch).
 - **Commands (per sequence step):** `2` delta vibrato (A=speed, B=depth); `5` low-fi vibrato
   (speed,depth); `3` detune (16-bit freq offset → sub-semitone); `0`/`1` slide up/down; `7` portamento.
 
-**Note segmentation — the held-gate twist that caused our RESID gap.** Tie-notes (`AA=$90` / `BB` tie;
-no gate retrigger) hold the gate across many sequence steps. **Frequency-altering commands (slide,
-vibrato) do NOT run on tied notes — but portamento (`7`) DOES**: a portamento armed before a run of
-tied notes slides *across* them → one long continuous glissando under a single held gate. And the
-**wave-table can drive absolute-note (`80–DF`) melodic runs** under one gate. Both are the
-"gate-on ≠ note boundary" case — exactly the under-segmented, long-RESID content we measured on
-*Baggis* (JCH NewPlayer) that *Camerock* (same driver) doesn't exercise.
+**Note segmentation — the held-gate twist that causes the RESID gap.** Tie-notes (`AA=$90` / `BB` tie;
+no gate retrigger) hold the gate across many sequence steps. Two mechanisms then drive pitch *without*
+a gate retrigger, so "gate-on ≠ note boundary":
+- **Wave-table absolute-note runs (`80–DF`)** = a fast per-frame melodic line under one held gate,
+  steps below `MIN_HOLD` → currently falls to RESID → should **segment into notes** (each an absolute
+  wavetable note). **This is the dominant gap, and it is NOT JCH-specific** — see below.
+- **Portamento (`7`) across tied notes** (slide/vibrato do NOT run on tied notes, but portamento does):
+  a portamento armed before a run of tied notes slides *across* them → one long continuous glissando
+  under a single held gate → encode as a **SLIDE chain across the re-segmented constituent notes** (the
+  held-gate re-segmentation must also cut at portamento transitions, + allow a longer SLIDE span).
+
+**Measured reality (2026-05-30, deterministic test suite #11, skeleton-on, post-resegmentation —
+supersedes the earlier "Camerock clean / Baggis gap" framing, which was a pre-resegmentation
+artefact):** the remaining RESID across *every* driver is overwhelmingly **fast-melodic-run
+under-segmentation** (the absolute-note-run mechanism), **not** genuine glissando:
+- **Trap.1** (Daglish, Antony Crowther V3): RESID = **98.8% fast-melodic-run**, 0.5% glissando.
+- **Baggis.1** (Goto80, JCH NewPlayer): RESID = **75.6% fast-melodic-run**, 12% glissando, 6% periodic
+  long-arp, 6% aperiodic-noise.
+- By RESID note-share, **Commando (0.34) and Camerock (0.37) leak as much or *more* than Trap (0.14) /
+  Baggis (0.06)** — so there is **no per-driver clean-vs-gap split**; the dominant gap is a single
+  **shared segmentation mechanism** common to all four drivers. (This is itself early evidence for the
+  collapse hypothesis — see backlog #15.) Portamento-across-tied-notes is a real but *minor* secondary
+  component, material only on Baggis.
 
 **Reconciliation to our encoding (what's modelled vs the open gap):** arps (wavetable relative
 transpose / chord-table) → **ARP**; vibrato (`2`/`5`) → **VIB** (depth+rate); detune (`3`) →
 sub-semitone **cents/VIB**; slide/portamento (`0`/`1`/`7`) → **SLIDE** (target+rate); pulse/filter
-tables → PW/filter trajectories (out of pitch scope; ablated). **The Baggis RESID gap is two
-NewPlayer mechanisms we under-model:** (1) **portamento across tied notes** = a long glissando over
-many would-be notes under one gate → encode as a **SLIDE chain across the re-segmented constituent
-notes** (the held-gate re-segmentation must also cut at portamento transitions, + allow a longer SLIDE
-span); (2) **wave-table absolute-note runs** = a fast per-frame melodic line under one gate, steps
-below `MIN_HOLD` → currently RESID → should segment into notes (each an absolute wavetable note).
+tables → PW/filter trajectories (out of pitch scope; ablated). **The open gap is dominated by
+fast-melodic-run / absolute-note-run under-segmentation (shared across drivers, extends the held-gate
+re-segmentation of #12), with portamento-across-tied-notes as a minor JCH-specific secondary.**
 
 > **Antony Crowther V3** (Trap, Daglish) is a *separate* driver, **not yet documented here** — its
 > RESID gap needs its own reverse-engineering (no readable source pulled yet). Tracked as a follow-up.
