@@ -362,8 +362,96 @@ triangle vibratos and 16-bit-accumulator portamentos. **Strategy note:** re-vali
 against the full 52k RESID audit when it lands — only items that actually leak to RESID at scale earn
 a new primitive; the rest are confirmations.
 
+## SoundMonitor (Chris Hülsbeck "Musicmaster", 1986) — a FREQ-DOMAIN sweep engine
+
+Engine of a large RESID share (Danko_Tomas, Gilmore_Adam; `sidid` "Soundmonitor"). One of the earliest
+C64 editors (64'er magazine 10/1986, type-in listing) — **pre-tracker, so its ornament is raw
+frequency-register manipulation, not note-relative semitone tables.** Web sources give the editor
+structure; the per-frame mechanism is reverse-engineered from the register output (`audit/probes/
+resid_trace.py` on `Danko_Tomas/Howard_Jones`):
+
+- **Editor structure (web, medium confidence):** bars linked in a track/step table (per step:
+  tempo/length/volume/fade-out); per cell: bar + transpose + instrument; **per note: instrument index
+  + a 4-bit flag nibble = {portamento, transpose-disable, arpeggio, soundtranspose}.** Effects:
+  transpose, detune, portamento, vibrato, PWM, filter modulation, **arpeggio (the first editor to have
+  it)**.
+- **The core ornament = a LOOPING freq-domain sweep (empirical, high confidence).** The "arpeggio" and
+  drum effects are produced by **decrementing the 16-bit freq register by a CONSTANT step each frame**,
+  cycling. Measured: a pitched "arp" runs `fn = 9378,8754,8130,7506,…642` (**−624/frame, exact**) then
+  RESETS to 9378 and repeats (period 15) — a freq-domain SAWTOOTH. In semitone space this reads as an
+  accelerating descent `[-1,-2,-4,-8,…-48]` that jumps back, which is why every SEMITONE-domain
+  primitive (ARP/SLIDE) misses it. Drums = the same constant-Δfreq decrement **on the NOISE waveform**
+  (`fn = 25405,24893,23871,…` swept noise) — a snare/tom.
+- **Universal-primitive mapping:** a **freq-domain SWEEP primitive `(start, Δfreq/frame, length,
+  loop_period)`** captures both the pitched looping arp (loop_period set) and the one-shot noise drum
+  (no loop, noise waveform). This is the §6/`IMPLEMENTATION_resid_zero_tokens.md` freq-domain SLIDE/
+  SWEEP, EXTENDED with a loop period (the SoundMonitor arp) — and it must run on noise frames too
+  (waveform-agnostic). NOT a new family; the freq-domain sweep already on the frontier, with looping.
+
+## System6581 — note-relative arp tables + periodic noise-tik accent
+
+Engine of Moppe's RESID (`sidid` "System6581"); **no surviving web documentation** — reverse-engineered
+entirely from register output (`resid_trace.py` on `Moppe/Wow_Man_Dig_That_Funky_Bassline`). Unlike
+SoundMonitor, this IS a note-relative (tracker-style) engine:
+
+- **Core ornament = a note-relative ARP offset-cycle (chord), period ~3** — measured `[+5,+2,0]`
+  (`fn` cycles `10207,8583,7647` exactly) and `[-5,-8,-10]` (transposed), i.e. chord voicings stepped
+  one entry/frame, as in every tracker (mechanism A).
+- **The twist (why it leaks to RESID): a periodic gate-retrigger + NOISE-TIK accent interleaved INTO
+  the arp cycle.** Each cycle inserts a `gate-off (waveform=none)` frame then a `noise-tik (0:N)` frame
+  — measured `5:P 2:P 0:P 5:P 5:- 0:N` repeating: the `5:-` (idle) + `0:N` (noise accent) are the
+  engine's per-cycle re-attack/percussion layer (the MoN/SF2 "noise-tik" mechanism). These non-pitched
+  frames break the PITCHED-ONLY period detection → the clean period-3 arp is mis-read as
+  "wide-irregular". Drum hits (noise + wide freq, e.g. `-26,-41` with `fn` 3034/1275) are also
+  interleaved on the same voice.
+- **Universal-primitive mapping:** ordinary **ARP** (offset-cycle codebook) — the fix is **control-aware
+  arp detection that treats the periodic gate-off/noise-tik frames as part of the cycle's accent layer**
+  (carry them, detect the period over the full cycle incl. accents), NOT a new primitive. Confirms the
+  noise-inclusive + control-aware ARP fix (§3/§7 of the impl spec) and the noise-tik primitive.
+
+## Auto-profiled engines (residue trace targets) — reverse-engineered from register output
+
+Profiled with `audit/probes/resid_engine_profile.py` (fits each RESID note to the parametric model
+library, aggregates per `sidid` engine). No/thin published docs for these — the technique is read from
+the register output; confidence medium (per-note shapes, corroborated by recurrence). **Every one
+reduces to the existing universal primitives — no new family.**
+
+| engine | composer(s) | recognised technique(s) | universal primitive |
+|---|---|---|---|
+| **SoedeSoft** | Danko, Moppe | 2-step arp `p=2` + freq-sweep `d≈-1024` + noise drums | ARP / SWEEP / PERC |
+| **Music_Assembler** | Bakker | arp `p=1/2` + up-sweep `d≈+4096` + drums | ARP / SWEEP / PERC |
+| **AMP** | Bakker | drum-dominated (noise stamps), small arp-accent | PERC (stamp) / ARP |
+| **DMC** (Demo Music Creator) | Bakker | **slow** freq-sweep `d≈-136` + arp `p=2` + arp-accent | SWEEP / ARP |
+| **GMC/Superiors** (Game Music Creator) | Dalton | octave/2-step arp `p=2` + drums | OCTAVE-ARP / PERC |
+| **Adam_Gilmore** (custom) | Gilmore | **octave-arp `[0,12,-12]` with a DRIFTING wide element** (`-51→-48→-44…` a slid 4th entry) + perc-sweep | ARP + per-element SLIDE / PERC |
+| **RoMuzak, Electrosound, SidTracker64, Groovy_Bits** | various | small samples in the rung; arp/perc dominant (profile to confirm) | ARP / PERC |
+
+Notable: **Adam_Gilmore's wide-arp-with-drift** is the clearest "new-looking" case but is just an
+octave-arp whose one wide wavetable entry is portamento-slid across triggers — encode as an ARP whose
+element carries a SLIDE, or a wildcarded stamp (the gesture recurs, the wide element varies). **MoN /
+FutureComposer** (Dalton, Moppe, Tron) is already in the frontier: **target+duration glide** (asymptotic
+freq approach — the `[46,-12,-14,-17,-21,…]` ramps), noise-tik, sine vibrato. The auto-profiler is the
+standing instrument: run after each primitive, drive per-engine `UNRESOLVED`→0; a persistently-high
+engine = an un-RE'd technique to add a fitter (and a primitive) for.
+
+**All confirm the collapse hypothesis: no new primitive families.** SoundMonitor →
+freq-domain SWEEP with a loop period; System6581 → control-aware ARP that includes the noise-tik/
+retrigger accent. Both were "genuinely-irregular/wide" only because the detectors gated on
+semitone-domain + pitched-only frames; the engines' own abstractions are a looping freq-sweep and a
+chord-arp-with-accent. (Sourcing: SoundMonitor editor structure from c64-wiki / vgmpf / namelessalgorithm;
+per-frame mechanism for both from register-output reverse-engineering — System6581 has no other source.)
+
 ## References
 
+- **SoundMonitor** (Chris Hülsbeck "Musicmaster", 1986; 64'er magazine 10/1986 type-in listing):
+  editor structure from C64-Wiki <https://www.c64-wiki.de/wiki/Soundmonitor>, VGMPF
+  <https://www.vgmpf.com/Wiki/index.php?title=Soundmonitor>, namelessalgorithm
+  <https://www.namelessalgorithm.com/computer_music/blog/soundmonitor/>, CSDb release
+  <https://csdb.dk/release/?id=59929> (no byte-level format published). Per-frame mechanism
+  (looping freq-domain sweep) reverse-engineered from register output: `Danko_Tomas/Howard_Jones.sid`.
+- **System6581**: no surviving documentation found (web search empty); format reverse-engineered
+  entirely from register output: `Moppe/Wow_Man_Dig_That_Funky_Bassline.sid` (note-relative arp + per-cycle
+  noise-tik). `sidid` config `/scratch/anarkiwi/sidid/sidid.cfg`.
 - **C=Hacking Issue 5** (1993), *"Rob Hubbard's Music: Disassembled, Commented and Explained"* by
   Anthony McSweeney — a commented disassembly of Hubbard's first routine (used in ~30 tunes incl.
   *Commando*, *Monty on the Run*, *Crazy Comets*). Authoritative primary source for the Hubbard family:

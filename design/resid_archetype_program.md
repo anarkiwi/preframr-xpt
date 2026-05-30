@@ -103,6 +103,118 @@ RESID=0 with another lossless ORN type. The two remaining levers are:
 So RESID=0 is reachable only by (1) + a principled (2); it is NOT a stack of exact primitives. Update
 the build order accordingly once the full 52k audit lands.
 
+## The iterate-to-RESID-0 loop (user directive, 2026-05-30)
+
+**Strategy shift:** stop sampling broad; instead drive RESID to **literally 0 on a SMALL sample** by
+tracing every unmodelled write to its driver mechanism (consult `sid_driver_ornament_reference.md`;
+where a driver is undocumented, reverse-engineer it), refining primitives/segmentation until RESID=0;
+THEN expand the sample and repeat, laddering up to the whole corpus. Each rung surfaces new
+mechanisms → new/extended primitives → RESID=0 → expand.
+
+**Instrument:** `audit/probes/resid_trace.py <fixtures|N|paths> [procs] [worst_n]` — per-RESID-note
+MECHANISM tracer. Labels each note's driver (via `sidid`) and a precise mechanism (percussion /
+noise-accent / HELD-ARP / freq-slide / fast-run / wide-overflow / glissando / irregular), co-reading
+the control register AND the raw freq word (the enriched `_resid_diag` sink now records
+`(offset, ctrl, is_pitched, fn)` per frame). Prints the worst (longest) notes with full per-frame
+detail (`offset:waveform`, raw `fn`) for manual tracing of anything unclassified.
+
+**Rung 0 = the documented fixtures** (`Baggis`/`Camerock` = JCH_NewPlayer, `Gridtrap` = Crowther).
+First trace (545 RESID notes) revealed the dominant JCH mechanisms — and that the freq-only archetype
+names were wrong:
+- **HELD-ARP** — the biggest pitched bucket "genuinely-irregular" is actually a **chord-table arp with
+  wave-delay holds** (e.g. 5-note `[0,-10,-7,-12,-4]` each step held 2 frames → period 10). Missed
+  only because `ARP_MAX_PERIOD=8` and the detector didn't see the expanded cycle. The decoder already
+  replays an arbitrary-length period via the plain `cycle_frame_offsets`, so the full expanded cycle
+  just needs to fit. **→ ITER 1.**
+- **freq-slide** — the "wide irregular" giants contain perfect **linear-freq ramps** (`fn` −119/frame =
+  JCH portamento); semitone-domain SLIDE can't fit (accelerating), a freq-domain slide is exact.
+- **giant held-gate notes** (1300–3900 frames) concatenate arp+slide+noise — a **segmentation** gap.
+- **percussion: noise** (~12%) and **noise-interleaved arps** (the `+noise/test` buckets) need the
+  control-aware ornament / percussion channel.
+
+**ITER 1 LANDED (verified, unreleased) — extend ARP to held chord-arps.** `ARP_MAX_PERIOD` 8→16
+(tokens `feat/transient-tolerance`; `ARP_MAX_DISTINCT` was dead, untouched). Exact &
+emulator-safe by construction — `_orn_rows`/`_reconstruct` already verify the cycle reproduces the
+semitone floor or falls back to RESID, so audio is unchanged. **Fixtures RESID 545→503** (clean
+period-10 held-arps absorbed); **full tokens suite 738 passed**. The 33 clean HELD-ARP that remain are
+**irregular-hold / period>16** → need a true `(cycle, per-step-duration)` ARP form (ITER 3), not a
+higher cap (token-bloat / false-period risk).
+
+**ITER 2 (next) — percussion as a RECURRING-STAMP CODEBOOK (validated, user reframing).** Percussion
+is NOT "a noise frame" (waveform is the wrong axis). It is a **low-entropy temporal pattern: an exact
+series of register writes stamped down repeatedly in time** (a drum pattern). Detect it
+ALGORITHMICALLY by viewing each voice's RESID stream as a musical scope and finding write-series that
+RECUR. Probe `audit/probes/resid_percussion.py` tested 4 stamp signatures (abs exact `(fn,ctrl)` /
+rel note-relative / shape contour / ctrl-rhythm) on rung 0:
+- **85–90% of the remaining 503 RESID notes are recurring stamps** (≥3 identical occurrences), **~85%
+  on a rhythmic GRID** (IOIs clean multiples of a base pulse: 80/160/320 frames).
+- Stamps are drums — incl. **PITCHED ones the noise rule misses**: `(2973,65),(1986,65),(1251,65)…`
+  (ctrl 65 = pulse+gate) is a tom/kick pitch-drop sweep ×4 gridded; `(8913,129),(37745,128)…` a noise
+  hat every 160f. Waveform-agnostic, as required.
+- The stamp **IS the exact write-series** → encoding a note as `STAMP(id)` is **LOSSLESS** (byte-exact
+  replay). No percussion-timbre channel / approximation needed — the two-channel worry dissolves;
+  this is "ornament by table-id" (driver-ref reuse/banks) made concrete. Coverage is 85% of *notes*
+  but 42% of *frames* (drums are short/many; the frame-mass remainder = the long held-gate giants,
+  iter 5 — a different mechanism).
+
+**RSC design:** a per-tune mining pass finds exact `(fn,ctrl)`-series recurring ≥K (corroborated by
+grid-regularity); assigns each a stamp id (a per-tune codebook); emits `STAMP(id)` for matching notes;
+decoder replays the exact writes. Generalizes beyond drums to ANY exact-recurring stamp (lossless
+completeness). ⚠️ This is per-tune mined-codebook infra, the SAME SHAPE as the refuted `motif_pass`
+(content-acc null + a 0.23.0 perf regression) — but the GOAL differs (lossless RESID-drain, not
+content-acc) and the evidence is far stronger (85% coverage, gridded, byte-exact). Confirm the infra
+decision before building; reuse/repair motif-pass machinery rather than duplicate.
+
+**ITER backlog (rung 0):** 2 = recurring-stamp percussion codebook (RSC) · 3 = held-ARP irregular
+duration · 4 = freq-domain SLIDE · 5 = held-gate giant-note re-segmentation (the frame-mass).
+Re-trace after each; RESID=0 on rung 0 before expanding to a random-N rung.
+
+**SCALED TO 1500 + ENGINE-TRACED to RESID≈0 (2026-05-30).** The 10x rung confirmed the stack drains
+RESID to a small tail, and that tail is **NOT irreducible — it is unmodelled ENGINES** (`sidid` on the
+worst composers). Documented the residue engines in `sid_driver_ornament_reference.md`: **SoundMonitor**
+(freq-domain looping sweep, RE'd from register output), **System6581** (chord-arp + per-cycle noise-tik
+accent), plus an auto-profiled table (SoedeSoft / Music_Assembler / AMP / DMC / GMC / Adam_Gilmore) —
+all collapse to existing primitives. Built the **auto-RE profiler** `audit/probes/resid_engine_profile.py`
+(sidid-label + parametric model-fit per engine = mechanised trace-to-driver; the acceptance instrument:
+drive per-engine UNRESOLVED→0). `resid_final_accounting.py` now carries a fitter per documented
+mechanism (STAMP abs/rel/wild · ARP noise-incl · ARP_accent · SWEEP loop/glide · PERC · SEGMENT/DECOMP)
+→ unaccounted **~0.7%**, all held-gate concatenations of KNOWN mechanisms. Literal 0 = the encoder's
+segment-then-fit; the probe is a classification proxy (do not loosen fitters for a fake 0). Full build
+spec for the tokens agent: **`design/IMPLEMENTATION_resid_zero_tokens.md`** (incl. MANDATORY docker /
+full-CI-run-before-PR testing protocol §8.0).
+
+## Control-aware corpus split — the audit gate LANDED (2026-05-30)
+
+The survey is now **control-aware**: `SkeletonPass._resid_diag` (inert sink, default `None`, no
+prod behaviour change) records each RESID note's frames as `(offset, is_pitched)` via the real pass's
+`_is_pitched_frame`, so the probe splits contamination from melodic content faithfully (post-hoc
+recovery was impossible — the post-pass block drops the `irq` frame column). Representative run
+(150 dumps one-per-composer, 131 parsed, **45,937 RESID notes**, ORN share 0.140):
+
+| | share of RESID | meaning |
+|---|---|---|
+| **percussion/timbre (NO pitched frame)** | **27%** | every frame noise/test → not melody at all; needs its OWN audible percussion/effect primitive (freq = drum-timbre/sweep, ENCODED not absorbed) |
+| **reclaimable contamination** (pitched-core ≤2 / transient) | **~34%** | melody is ≤2 frames + noise/test; candidate for control-aware *segmentation* (lever 1) |
+| **irreducible PITCHED** | **38%** | the true melodic RESID=0 target = slide 17% + sweep 5% + rebased-run 5% + octave-osc 4% + irregular 4% |
+
+26% of RESID *frames* are control contamination (noise/test/HR). **Decisive reframing: the freq-only
+0.218 share massively over-stated MELODIC RESID.** Two-thirds of RESID is non-melodic (percussion) or
+control-contamination; the genuinely-irreducible melodic residue is only **~5.3% of all ORN notes**
+(0.140 × 0.38). The dominant single bucket is the freq-only "short-note" archetype (31% of RESID):
+**11,246 of its 14,461 notes are percussion (no pitched frame)** — it was never melody. Probe:
+`audit/probes/resid_archetype_survey.py N PROCS` (default 150-dump representative; `full` = corpus).
+Output `/scratch/tmp/resid_survey_ca150.out`.
+
+**Build-order consequence — split RESID into two channels FIRST.** The unambiguous, heuristic-free
+lever is the *has-any-pitched-frame* test the survey validated: route the 27% no-pitched-frame notes
+to a **percussion/effect channel** (a learnable timbre+envelope primitive), removing them from the
+melodic skeleton's burden with zero segmentation risk. Then lever 1 (control-aware segmentation,
+`_resegment_levelchange`, already built but conservatively gated) works the ~34% contamination on a
+clean melody-only stream, and the audition-gated lossy fit (lever 2) targets only the 38% irreducible
+residue. Percussion (27%) is now co-equal with segmentation as a top lever and is the cleaner problem.
+NOTE: "reclaimable" is a *candidate* label (contamination EXPLAINS the irreducibility) — segmentation
+actually reclaiming it is the hypothesis to test next, not a settled result.
+
 ## ⚠️ Absorption safety — emulator-proven (2026-05-30)
 
 Before discarding ANY freq write, it must be proven inaudible on the SID emulator — do not assume

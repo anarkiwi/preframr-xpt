@@ -1,17 +1,29 @@
 """Corpus survey of skeleton-encoding RESID-trajectory archetypes. Goal: RESID=0.
 Every RESID note is a freq trajectory the current primitives miss -> classify the
 archetype (in semitone AND freq-shape domains) so we can find the missing primitive,
-and surface the composers/drivers that produce each so they can be traced."""
-import os, sys, glob, random, statistics, traceback
-from collections import Counter, defaultdict
+and surface the composers/drivers that produce each so they can be traced.
+
+CONTROL-AWARE (2026-05-30): co-read the control register via SkeletonPass._resid_diag,
+which records each RESID note's frames as (offset, is_pitched). Splits RESID into
+contamination (noise/test/HR frames -> reclaimable by control-aware segmentation; only
+test-bit freq is safely discardable, the rest is a separate audible percussion/effect
+channel) vs genuinely-irreducible PITCHED content (the real RESID=0 target). The freq-only
+archetype is kept side-by-side so the reclassification is visible."""
+import os
+
+# Pin BLAS/parquet to 1 thread PER worker BEFORE numpy/pandas import -- else each of the N
+# multiprocessing workers spawns its own thread pool and oversubscribes the cores (load >5x,
+# the survey crawls). Must precede the heavy imports below.
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+    os.environ.setdefault(_v, "1")
+import sys, glob, random, statistics, traceback  # noqa: E401,E402
+from collections import Counter, defaultdict  # noqa: E402
 
 sys.path.insert(0, "/scratch/anarkiwi/preframr-tokens/tests")
 sys.path.insert(0, "/scratch/anarkiwi/preframr-tokens")
 from preframr_tokens.reglogparser import RegLogParser  # noqa: E402
-from preframr_tokens.macros import iter_self_contained_row_blocks  # noqa: E402
-from preframr_tokens.stfconstants import (  # noqa: E402
-    SKEL_OP, ORN_OP, ORN_SUBREG_TYPE, ORN_TYPE_RESID,
-)
+from preframr_tokens.macros.skeleton_pass import SkeletonPass  # noqa: E402
 from parse_probes import parse_args  # noqa: E402
 
 
@@ -25,7 +37,6 @@ def archetype(offs):
         return "empty"
     if n <= 2:
         return "short-note(<=2 frame ornament)"
-    distinct = len(set(offs))
     diffs = [b - a for a, b in zip(offs, offs[1:])]
     med = statistics.median(offs)
     reb = [o - med for o in offs]
@@ -52,67 +63,104 @@ def archetype(offs):
     return "genuinely-irregular"
 
 
-def survey(paths):
-    arche = Counter()
+# Freq-only archetypes that BECOME clean once noise/test frames are stripped count as
+# contamination reclaimable by control-aware segmentation, not irreducible content.
+_CLEAN_AFTER_STRIP = {
+    "short-note(<=2 frame ornament)",
+    "transient/attack(tight core + <=2 spikes)",
+}
+
+
+def classify_ca(rec):
+    """rec = [(offset, ctrl, is_pitched, fn), ...]. Returns (bucket, n_frames, n_nonpitched)."""
+    n = len(rec)
+    pitched = [o for o, _c, m, _fn in rec if m]
+    nonp = n - len(pitched)
+    if not pitched:
+        return "percussion/timbre(no pitched frame)", n, nonp
+    if len(pitched) <= 2:
+        return "reclaimed: pitched core <=2 (contamination)", n, nonp
+    base = archetype(pitched)
+    if base in _CLEAN_AFTER_STRIP:
+        return "reclaimed: " + base, n, nonp
+    return "irreducible: " + base, n, nonp
+
+
+def survey(paths, wid=0):
+    arche = Counter()              # freq-only archetype (full offsets) -- baseline
+    arche_ca = Counter()           # control-aware bucket (pitched core)
+    flow = Counter()               # (freq_only -> control_aware) reclassification flow
     by_comp = defaultdict(lambda: [0, 0])  # composer -> [orn, resid]
     examples = defaultdict(list)
+    frames_tot = 0
+    frames_nonp = 0
     parsed_ok = 0
     a = _args()
-    for p in paths:
+    n_paths = len(paths)
+    step = max(1, n_paths // 10)
+    for pi, p in enumerate(paths):
         comp = p.split("/MUSICIANS/", 1)[-1].split("/")[1] if "/MUSICIANS/" in p else "?"
+        SkeletonPass._resid_diag = []
         try:
             parsed = next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
         except Exception:
+            SkeletonPass._resid_diag = None
             continue
+        recs = SkeletonPass._resid_diag or []
+        SkeletonPass._resid_diag = None
         if parsed is None or "op" not in getattr(parsed, "columns", []):
             continue
         parsed_ok += 1
-        for block in iter_self_contained_row_blocks(parsed, 999999, args=a):
-            ops = block["op"].to_numpy(); subs = block["subreg"].to_numpy(); vals = block["val"].to_numpy()
-            nn = len(block); i = 0
-            while i < nn:
-                if int(ops[i]) == ORN_OP and int(subs[i]) == ORN_SUBREG_TYPE:
-                    t = int(vals[i]); offs = []; j = i + 1
-                    while j < nn and int(ops[j]) == ORN_OP and int(subs[j]) != ORN_SUBREG_TYPE:
-                        if int(subs[j]) == 1:
-                            v = int(vals[j]); offs.append(v - 256 if v > 127 else v)
-                        j += 1
-                    by_comp[comp][0] += 1
-                    if t == ORN_TYPE_RESID and offs:
-                        by_comp[comp][1] += 1
-                        k = archetype(offs)
-                        arche[k] += 1
-                        if len(examples[k]) < 4:
-                            examples[k].append(offs[:16])
-                    i = j; continue
-                i += 1
-    return arche, by_comp, examples, parsed_ok
+        by_comp[comp][0] += len(recs)  # diag fires once per claimed note (= total ORN denominator)
+        for _reg, is_resid, _note, _onset, rec in recs:
+            if not is_resid or not rec:
+                continue
+            by_comp[comp][1] += 1
+            offs = [o for o, _c, _m, _fn in rec]
+            fa = archetype(offs)
+            ca, nf, nnp = classify_ca(rec)
+            arche[fa] += 1
+            arche_ca[ca] += 1
+            flow[(fa, ca)] += 1
+            frames_tot += nf
+            frames_nonp += nnp
+            if len(examples[ca]) < 4:
+                examples[ca].append(offs[:16])
+        if (pi + 1) % step == 0 or pi + 1 == n_paths:
+            print(f"  [w{wid}] {pi+1}/{n_paths} dumps  resid={sum(arche.values())}",
+                  file=sys.stderr, flush=True)
+    return (arche, arche_ca, flow, dict(by_comp), dict(examples),
+            frames_tot, frames_nonp, parsed_ok)
 
 
-def _worker(paths):
-    return survey(paths)
+def _worker(args):
+    wid, paths = args
+    try:
+        return survey(paths, wid)
+    except Exception:
+        traceback.print_exc()
+        return (Counter(), Counter(), Counter(), {}, {}, 0, 0, 0)
 
 
 def _merge(results):
-    arche = Counter()
+    arche, arche_ca, flow = Counter(), Counter(), Counter()
     by_comp = defaultdict(lambda: [0, 0])
     examples = defaultdict(list)
-    ok = 0
-    for a, bc, ex, o in results:
-        arche.update(a)
-        ok += o
+    frames_tot = frames_nonp = ok = 0
+    for a, aca, fl, bc, ex, ft, fnp, o in results:
+        arche.update(a); arche_ca.update(aca); flow.update(fl)
+        frames_tot += ft; frames_nonp += fnp; ok += o
         for name, c in bc.items():
-            by_comp[name][0] += c[0]
-            by_comp[name][1] += c[1]
+            by_comp[name][0] += c[0]; by_comp[name][1] += c[1]
         for k, v in ex.items():
             examples[k].extend(v[: max(0, 4 - len(examples[k]))])
-    return arche, by_comp, examples, ok
+    return arche, arche_ca, flow, by_comp, examples, frames_tot, frames_nonp, ok
 
 
 if __name__ == "__main__":
     import multiprocessing as mp
 
-    arg = sys.argv[1] if len(sys.argv) > 1 else "120"
+    arg = sys.argv[1] if len(sys.argv) > 1 else "150"
     procs = int(sys.argv[2]) if len(sys.argv) > 2 else 24
     per_comp = int(sys.argv[3]) if len(sys.argv) > 3 else 0  # 0 = one per composer
     random.seed(13)
@@ -133,20 +181,43 @@ if __name__ == "__main__":
             sample = [random.choice(v) for v in by_dir.values()]
         random.shuffle(sample)
         sample = sample[:n]
+    print(f"sampling {len(sample)} dumps across {procs} workers (one-per-composer stratified)",
+          file=sys.stderr, flush=True)
     shards = [sample[i::procs] for i in range(procs)]
-    shards = [s for s in shards if s]
+    shards = [(i, s) for i, s in enumerate(shards) if s]
     with mp.Pool(len(shards)) as pool:
         results = pool.map(_worker, shards)
-    arche, by_comp, examples, ok = _merge(results)
+    (arche, arche_ca, flow, by_comp, examples,
+     frames_tot, frames_nonp, ok) = _merge(results)
     tot_orn = sum(c[0] for c in by_comp.values())
     tot_resid = sum(c[1] for c in by_comp.values())
-    print(f"parsed {ok}/{len(sample)} dumps | total ORN notes={tot_orn} RESID={tot_resid} share={tot_resid/max(tot_orn,1):.3f}")
-    print("\n=== RESID archetypes (corpus-wide) ===")
+    print(f"\nparsed {ok}/{len(sample)} dumps | ORN notes={tot_orn} RESID={tot_resid} "
+          f"share={tot_resid/max(tot_orn,1):.3f}")
+    print(f"RESID frames: {frames_tot} | non-pitched (noise/test/HR) frames: {frames_nonp} "
+          f"({100*frames_nonp//max(frames_tot,1)}% of RESID frames are control contamination)")
+
+    print("\n=== RESID archetypes -- FREQ-ONLY (baseline, full offsets) ===")
     for k, v in arche.most_common():
-        print(f"  {v:5d} ({100*v//max(tot_resid,1):2d}%)  {k}")
+        print(f"  {v:6d} ({100*v//max(tot_resid,1):2d}%)  {k}")
+
+    print("\n=== RESID archetypes -- CONTROL-AWARE (pitched core) ===")
+    for k, v in arche_ca.most_common():
+        print(f"  {v:6d} ({100*v//max(tot_resid,1):2d}%)  {k}")
         for ex in examples[k][:2]:
-            print(f"            e.g. {ex}")
+            print(f"               e.g. {ex}")
+    reclaimed = sum(v for k, v in arche_ca.items()
+                    if k.startswith("reclaimed") or k.startswith("percussion"))
+    irr = sum(v for k, v in arche_ca.items() if k.startswith("irreducible"))
+    print(f"\n  RECLAIMABLE (contamination/percussion): {reclaimed} "
+          f"({100*reclaimed//max(tot_resid,1)}%)  |  IRREDUCIBLE pitched: {irr} "
+          f"({100*irr//max(tot_resid,1)}%)")
+
+    print("\n=== reclassification flow (freq-only -> control-aware), top 12 ===")
+    for (fa, ca), v in flow.most_common(12):
+        print(f"  {v:6d}  {fa:46s} -> {ca}")
+
     print("\n=== worst composers by RESID share (>=20 notes) ===")
-    worst = sorted(((c[1]/max(c[0],1), name, c[0], c[1]) for name, c in by_comp.items() if c[0] >= 20), reverse=True)
+    worst = sorted(((c[1]/max(c[0],1), name, c[0], c[1])
+                    for name, c in by_comp.items() if c[0] >= 20), reverse=True)
     for share, name, o, r in worst[:15]:
         print(f"  {share:.2f}  {name:24s} (orn={o} resid={r})")
