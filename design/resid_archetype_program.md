@@ -45,3 +45,29 @@ Tron_Olsson_Mikael 0.42, Mixer 0.37, Sharp 0.36 — identify each driver via `si
    universal driver. The provenance-invariance test (#11.4) is the guarantee it stays uniform.
 
 Output of survey runs → `/scratch/tmp` (never `/scratch/preframr`, the corpus/data dir).
+
+## Strategic update (2026-05-30, from reading driver source — confirm vs the full 52k audit)
+
+The freq-only archetype survey is **working blind to the control register**, and that mis-attributes
+structured frames as RESID. The driver source (SID Wizard, defMON, GoatTracker, Maniacs of Noise,
+SID Factory II, Hubbard — see `sid_driver_ornament_reference.md`) says the fix is **control-aware
+role assignment**, not freq heuristics:
+- **Hard-restart onset window** (test-bit + pre-HR gate-clear, ~3 frames) = the **transient/attack**
+  archetype (~34%). Detect via the control register; the HR frames' freq is don't-care → absorb.
+- **Noise-waveform frame = timbre, not pitch** (Wiklund *Facemorph*: a noise-tik accent on a *pitched*
+  lead; also drums). A note's melodic pitch comes from its **pitched (non-noise) frames**; a note with
+  no pitched frames is **percussion** (freq = drum-timbre/sweep). This addresses the wide/noise RESID
+  (65% Commando / 76% Baggis of wide jumps are noise).
+- The freq-MSB **SWEEP** is a named first-class effect in 3 independent drivers (Hubbard skydive / MoN
+  "Tonesweep up" / SF2-d13 "Dive") — keep it core.
+
+So the build pivots from freq-only `_rebased_note`/`_is_transient_blip` (#16 V1) to a **control-aware
+pass**: co-read gate/test/waveform with freq and assign each frame's role (HR-transient / noise-timbre
+/ melody / percussion) — likely collapsing transient + much of the wide/irregular archetypes at once.
+
+**Novel-mechanism frontier** (cross-driver audit; new primitives ONLY if they actually leak to RESID
+at 52k scale): target+duration SLIDE (lands exact), sine/curved VIB with delay+length, auto-triggered
+"Dive" SWEEP, wavetable-index scrub (timbral). Pulse-arp + noise-tik are control/PW-channel, not pitch.
+
+**Gate:** finalize the build order against the full 52k audit (the corpus-wide proportions + the
+RESID=0 validation set) when it lands — only model what actually leaks at scale.

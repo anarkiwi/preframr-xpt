@@ -159,6 +159,20 @@ archetypes at once. Drums in these editors are **wavetable/sidcall instruments**
 manipulation), not a separate driver primitive — so a parametric "percussion/sweep" primitive plus
 control-context covers them, no per-driver drum code.
 
+**The precise noise rule — noise is NOT always a drum (concrete: Wiklund *Facemorph*).** A
+note-onset noise burst commonly **accents a *pitched* lead** (the "noise-tik": MoN `fx3 $80`,
+SF2 driver-13 "add noise in the beginning of note", Hubbard "noise on first vblank"). Facemorph's
+voice 0 is, per note: `tri (1f, HR setup) → NOISE @ freq≈note107 (1f accent) → pulse @ note 31/43…
+(sustained melody)`. The noise frame's "freq" (107) is **timbre, not pitch** — tracking it as melody
+gives a bogus +76-semitone jump; excluding the note as "drum" drops a real melodic note. **Rule: a
+noise-waveform frame contributes timbre (already carried by the ctrl/waveform tokens), NOT melodic
+pitch.** A note's melodic pitch is taken from its **pitched (non-noise) frames**; the noise frame is
+absorbed from the *melody* skeleton (its accent survives in the waveform channel). A note with **no
+pitched frames at all** is percussion (its freq = drum-timbre / sweep — its own primitive). So a
+noise-accented lead (has pulse frames → a real note) and a pure kick (no pitched frames → percussion)
+are separated by **whether the note has any pitched-waveform frame**, decided by the control register,
+not the freq.
+
 ## Reuse / banks
 
 Ornament definitions are a **small bank referenced by id**, reused across notes/patterns:
@@ -293,14 +307,60 @@ the *same* code with no per-driver special-casing. **Trap reaching 0.01 with zer
 logic is the proof that Crowther V3 uses the common primitive set** (so #14 — "document Crowther V3
 to model its RESID" — is satisfied empirically; there is no Crowther-specific RESID left to model).
 
-**The one irreducible remainder** is the **wide/aperiodic primitive** (Baggis 0.26 / Commando 0.24):
-truly-aperiodic wide content on the lead voice (span 51–71 semitones, ≤8 distinct, **non-periodic** —
-not wide arps, not melodic runs). It does not collapse to a melodic primitive (splitting forges
-spurious giant-interval notes), so it stays `RESID`. Likely octave-jump wavetable effects (JCH
-absolute-note `80–DF`) / sound-effects — the genuinely-aperiodic floor, or a distinct "wide-effect"
-primitive (open: confirm noise-vs-pitched by waveform). **Remaining #15 work is therefore not a
-refactor but a guarantee + a doc:** the provenance-invariance test (#11.4 — two register renderings
-of one gesture must emit identical tokens) and this matrix.
+**The "wide/aperiodic remainder" (Baggis 0.26 / Commando 0.24) is largely NOISE-timbre, not an
+irreducible pitch primitive** — superseded by the control-register finding. Measured: **65% (Commando)
+/ 76% (Baggis) of the wide (|≥12 st|) jumps land on the NOISE waveform** — drum hits / noise-accents
+whose "freq" is timbre, not pitch (see "The control register disambiguates the freq trajectory"). The
+control-aware rule (noise frame = timbre; pitch from pitched frames; no-pitched-frame note =
+percussion) absorbs these from the melody; the genuinely-pitched residue is the small true floor (some
+wide effects / octave-jump wavetable runs). **#15 itself stays a guarantee + a doc** (the
+provenance-invariance test #11.4 + this matrix); the wide-RESID reduction is the RESID→0 program's
+control-aware work.
+
+## Cross-driver audit (2026-05-30): the primitive set holds, + the novel-mechanism frontier
+
+A source-grounded sweep of seven more drivers (player code / official docs; see References). **The
+universal primitive set survives** — and the freq-MSB-decrement **SWEEP** is a *named, first-class*
+effect in three independent drivers (Hubbard "skydive", Maniacs-of-Noise "Tonesweep up", SID Factory
+II driver-13 "Dive"), strongly validating it as core. Drums everywhere are **wavetable/table-driven**
+(noise waveform + a freq-hi table, absolute or relative, often with a per-step gate-mask) — not a
+separate engine — so a percussion primitive (noise + freq-table/sweep) + control-context covers them.
+
+| mechanism | GoatTracker2 | Future Composer / Hippel (Amiga) | SID Factory II (d11/d13) | Maniacs of Noise | Hubbard |
+|---|---|---|---|---|---|
+| arp | wavetable rel/abs notes | sndseq transpose stream | arp table `T3` | tonearp offset table | octave-only (bit2) |
+| vibrato | speedtable, triangle | triangle, **octave-scaled**, delay | `T1` triangle | **sine-LUT, delay+length** | triangle (depth byte) |
+| portamento | `1/2/3` 16-bit accum; `3` toward-target; `3 00` tie | own 16-bit accum + timed pitch-bend | `T0` raw / `T2` target / `T4` fret-slide | **target+duration** (lands exact) | neg-instr-byte |
+| pulse | pulsetable signed steps | n/a (Amiga) | pulse table add-to-pw | auto-sweep + **pulse-arp** | speed+dir |
+| filter | filtertable, global+bitmask | n/a | filter table, global+bitmask | filter-program engine | — |
+| drum | wavetable **absolute notes** | **PCM sample** | wavetable abs-notes; d13 noise-at-start | **wf-table + freqhi-table + gate-mask**, noise-tik | **noise + freqhi-decrement** |
+| SWEEP/skydive | (pitch via speedtable) | timed pitch-bend (period) | d13 **"Dive"** instr flag | **"Tonesweep up"** (freqhi −1/f) | **"skydive"** (freqhi→0) |
+| tie/gate | HR-timer `$40` legato, `3 00` tie | nonzero-note retrig; `E8` sustain | tie/gate markers, HR table | typed note bytes; gate-mask | **append note** = no retrig |
+
+**★ NOVEL frontier — mechanisms that do NOT reduce to {PLAIN, OCTAVE, ARP, SLIDE, VIB, SWEEP, seg}**
+(these are where encoding RESID stays non-zero; each is a candidate primitive for the RESID=0 program):
+1. **Note-onset noise transient ("noise-tik")** — MoN `fx3 $80` / SF2-d13 / Hubbard / *Facemorph*. A
+   brief noise burst at a *pitched* note's attack. → handled by the control-aware noise rule above
+   (noise frame = timbre, pitch from pitched frames), NOT a new pitch primitive.
+2. **Target+duration glide** — MoN computes (target − current)/duration and lands *exactly* on the
+   target note after N frames. The rate-only SLIDE can't reproduce this precisely → **SLIDE needs a
+   target+duration form**.
+3. **Sine / curved vibrato with onset-delay + finite length** — MoN (sine LUT; Cybernoid2 interpolates
+   between adjacent note freqs). → **VIB needs delay+length(+shape)**, not just depth+rate.
+4. **Pulse-width arpeggio** — MoN `fx3 $08` cycles PW per frame (timbre, not pitch). → the **PW
+   channel**, out of pitch scope.
+5. **Sample-table-position scrub** — FC/Hippel `E5/E6`: a moving window walks the waveform/sample at a
+   signed per-step increment (a timbral wavetable-index sweep). Amiga-side, but the *concept* (a
+   per-frame wavetable-index ramp) can appear in SID wavetable runs → a **wavetable-index** descriptor.
+6. **Engine-baked "Dive" / auto-triggered sweep** — SF2-d13 `$40`: a SWEEP applied automatically per
+   note as an instrument property (no command). → SWEEP with an auto-trigger-at-onset flag.
+7. **Cymbal / "dual" FX** — DMC FX high-nibble (UNVERIFIED — primary doc unreachable; flag, don't model).
+
+Reassuringly **inside** the set: Hubbard octave-arp=OCTAVE, skydive=SWEEP, noise+freq-drop drum =
+noise + SWEEP; GoatTracker/SF2 wavetable-absolute-note drums = absolute-note waveform runs; all the
+triangle vibratos and 16-bit-accumulator portamentos. **Strategy note:** re-validate the novel list
+against the full 52k RESID audit when it lands — only items that actually leak to RESID at scale earn
+a new primitive; the rest are confirmations.
 
 ## References
 
@@ -337,3 +397,11 @@ of one gesture must emit identical tokens) and this matrix.
   CSDb <https://csdb.dk/release/?id=14037> (`v-c64ed.zip`). Table-format corroboration also in
   Chordian's SID Factory II (JCH/Laxity drivers). Engine of *Baggis* (Goto80) and *Camerock* (DRAX) —
   confirmed via `sidid` (config `/scratch/anarkiwi/sidid/sidid.cfg`; `SIDIDCFG=… sidid <dir>`).
+- **GoatTracker 2** (official format docs): <https://github.com/leafo/goattracker2/blob/master/morphos/goattracker.guide> · GT2 doc mirror <https://github.com/jpage8580/GTUltra> — wavetable rel/abs notes, speedtable vibrato, `1/2/3` portamento, pulse/filter tables, wavetable-absolute-note drums, HR-timer `$40` legato / `3 00` tie.
+- **Future Composer / Jochen Hippel** (Amiga sample engine — NOT SID; period-domain): <https://github.com/mschwendt/libtfmxaudiodecoder> (`src/Jochen/FC.cpp`, `Instrument.cpp`, `Vibrato.cpp`, `Portamento.cpp`). Novel: `E5/E6` sample-table-position scrub; octave-scaled triangle vibrato. (NB "TFMX" here = Hippel's, distinct from Hülsbeck's TFMX.)
+- **SID Factory II** (Laxity/JCH lineage; official driver notes): <https://github.com/Chordian/sidfactory2> (`dist/documentation/notes_driver11.txt`, `notes_driver13.txt`, `notes_driver14.txt`) — d11 `T0–T4` slide/porta/arp/vib/fret-slide; d13 "The Hubbard Experience" adds the **"Dive"** sweep flag + **noise-at-start** flag; wavetable `80–df` absolute notes "for e.g. drums".
+- **Maniacs of Noise** (Jeroen Tel / Charles Deenen; commented disassemblies): <https://github.com/realdmx/c64_6581_sid_players> (`Tel_Jeroen_MON/...Cybernoid2.asm`, `Deenen_Charles_MON/...SFX_Player.asm`). Novel: **target+duration glide** (lands exact), **sine-LUT vibrato** (delay+length), **pulse-arpeggio** (`fx3 $08`), **noise-tik** onset transient (`fx3 $80`), **"Tonesweep up"** (freqhi −1/frame). Same repo: Hubbard *Monty* (`instrfx` bit0 drum / bit1 skydive / bit2 octave-arp) and many more disassemblies (Galway, Fred/Matt Gray, Whittaker, Ouwehand, …) for future expansion.
+- **SID wavetable drum technique** (general): <http://www.ucapps.de/howto_sid_wavetables_1.html>.
+- **DMC (Demo Music Creator)** — secondary only; primary docs (tnd64) blocked from this environment. FX high-nibble reportedly has "cymbal"/"dual" effect flags (UNVERIFIED — needs a DMC4 player disasm).
+- **Local reimplementations** (read for the hard-restart / control-register insights): `/scratch/anarkiwi/pysidwizard/src/pysidwizard/player.py` (`HR_FRAMES`, `PRE_HR_LEAD_FRAMES`, gateoff wf/pw/filt, chord `$7E/$7F`), `/scratch/anarkiwi/pydefmon/pydefmon/defmon_player.py` (gate/waveform flicker mid-note, PS sweep, TR transpose).
+- **Concrete noise-accent example**: Wiklund *Facemorph* (`/scratch/preframr/hvsc/MUSICIANS/W/Wiklund/Facemorph.sid`) — per-note `tri-setup → noise-tik accent → pulse melody`.
