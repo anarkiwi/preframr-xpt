@@ -10,7 +10,7 @@ preframr-tokens/design/freq_trajectory_anchoring.md (impl).
 
 Target arm `anchored`: full_macros + --trajectory-anchor-pass (the pass is opt-in,
 default OFF in the framework; toggled per-arm via extra_cargs like the absorber macros
-and --motif-pass, so apply_pipeline_spec_to_args does not clobber it). Baseline arm
+and --lonely-catch-all, so apply_pipeline_spec_to_args does not clobber it). Baseline arm
 `unanchored`: the confirmed full_macros encoding, anchor off. The ONLY arm difference is
 the anchor pass; both ride the shared base pipeline + full_macros absorbers. 3 seeds,
 mini body=large, 60 epochs.
