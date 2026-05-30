@@ -23,6 +23,8 @@ def archetype(offs):
     n = len(offs)
     if n == 0:
         return "empty"
+    if n <= 2:
+        return "short-note(<=2 frame ornament)"
     distinct = len(set(offs))
     diffs = [b - a for a, b in zip(offs, offs[1:])]
     med = statistics.median(offs)
@@ -87,18 +89,55 @@ def survey(paths):
     return arche, by_comp, examples, parsed_ok
 
 
+def _worker(paths):
+    return survey(paths)
+
+
+def _merge(results):
+    arche = Counter()
+    by_comp = defaultdict(lambda: [0, 0])
+    examples = defaultdict(list)
+    ok = 0
+    for a, bc, ex, o in results:
+        arche.update(a)
+        ok += o
+        for name, c in bc.items():
+            by_comp[name][0] += c[0]
+            by_comp[name][1] += c[1]
+        for k, v in ex.items():
+            examples[k].extend(v[: max(0, 4 - len(examples[k]))])
+    return arche, by_comp, examples, ok
+
+
 if __name__ == "__main__":
-    n = int(sys.argv[1]) if len(sys.argv) > 1 else 120
+    import multiprocessing as mp
+
+    arg = sys.argv[1] if len(sys.argv) > 1 else "120"
+    procs = int(sys.argv[2]) if len(sys.argv) > 2 else 24
+    per_comp = int(sys.argv[3]) if len(sys.argv) > 3 else 0  # 0 = one per composer
     random.seed(13)
     all_dumps = glob.glob("/scratch/preframr/hvsc/MUSICIANS/*/*/*.1.dump.parquet")
-    # one random dump per composer dir for driver diversity
     by_dir = defaultdict(list)
     for d in all_dumps:
         by_dir[os.path.dirname(d)].append(d)
-    sample = [random.choice(v) for v in by_dir.values()]
-    random.shuffle(sample)
-    sample = sample[:n]
-    arche, by_comp, examples, ok = survey(sample)
+    if arg == "full":
+        sample = all_dumps
+    else:
+        n = int(arg)
+        if per_comp:  # several dumps per composer for a deeper stratified sample
+            sample = []
+            for v in by_dir.values():
+                random.shuffle(v)
+                sample.extend(v[:per_comp])
+        else:
+            sample = [random.choice(v) for v in by_dir.values()]
+        random.shuffle(sample)
+        sample = sample[:n]
+    shards = [sample[i::procs] for i in range(procs)]
+    shards = [s for s in shards if s]
+    with mp.Pool(len(shards)) as pool:
+        results = pool.map(_worker, shards)
+    arche, by_comp, examples, ok = _merge(results)
     tot_orn = sum(c[0] for c in by_comp.values())
     tot_resid = sum(c[1] for c in by_comp.values())
     print(f"parsed {ok}/{len(sample)} dumps | total ORN notes={tot_orn} RESID={tot_resid} share={tot_resid/max(tot_orn,1):.3f}")
