@@ -125,6 +125,40 @@ melody-ladder finding: the inflating "ornament" was partly held-gate melody.) No
 filter sweeps are **not** note-aligned (they persist across notes), so they should not be segmented on
 note boundaries at all.
 
+## The control register disambiguates the freq trajectory (modeling insight, 2026-05-30)
+
+Read from the local reimplementations (`pysidwizard/src/pysidwizard/player.py`,
+`pydefmon/pydefmon/defmon_player.py`) — **the freq trajectory cannot be interpreted in isolation; the
+control register (gate / test-bit / waveform) is the context that says *why* a freq frame is what it
+is.** A freq-only view (as the RESID-archetype survey does) is working blind and mis-reads structured
+control-driven frames as RESID. Three concrete mechanisms:
+
+- **Hard-restart (HR) onset window = the "transient" archetype.** SID Wizard primes each note with a
+  hard restart: `PRE_HR_LEAD_FRAMES = 2` frames before the row it **clears the gate** and writes
+  HR-AD/HR-SR, then `HR_FRAMES = 1` frame with the **TEST bit set** (`CTRL=$09`), before the WF table
+  walks. So every note onset has a ~3-frame window where the gate is briefly low, the test bit is on,
+  and **the freq is don't-care** (the oscillator is being reset). This is almost certainly the
+  freq-survey "transient/attack" archetype (~34%) — and it is **detectable from the control register
+  (test bit / gate-off-then-on), not the freq**. Encode HR as a note-onset marker; the HR frames'
+  freq is absorbed, not RESID. (Also `gateoff_wf/pw/filt`: the release phase swaps waveform/PW/filter
+  — more non-note-pitch per-frame variation, again control-flagged.)
+- **One-shot chord "pluck" (SID Wizard `$7E` vs looping `$7F`):** a one-shot chord at attack is a
+  brief arp transient at note start (vs a continuous arp), another onset ornament — `OCTAVE`/`ARP` but
+  short and attack-localised.
+- **Gate / waveform flicker mid-note (defMON):** tunes deliberately **flicker the gate and waveform
+  mid-note** for character — a short noise phase ⊕ a long pulse tone is one *instrument*, not a drum
+  (the user's caution), and rapid gate flicker is an effect. So a noise-waveform frame is
+  percussion-*timbre*, not a melodic pitch; the freq there sets drum timbre / skydive.
+
+**Encoding implication (drives the RESID=0 program):** co-read the control register with the freq and
+let the control state assign each frame's *role* — `test`/`gate-low` → HR transient (absorb);
+`noise waveform` → percussion-timbre (its own primitive, not melodic SKEL); gated pitched frame →
+melody. This is the driver-grounded replacement for the freq-only median/heuristic transient detection
+in the first-cut `_rebased_note`/`_is_transient_blip` (#16), and likely collapses several freq-survey
+archetypes at once. Drums in these editors are **wavetable/sidcall instruments** (noise + freq/PW
+manipulation), not a separate driver primitive — so a parametric "percussion/sweep" primitive plus
+control-context covers them, no per-driver drum code.
+
 ## Reuse / banks
 
 Ornament definitions are a **small bank referenced by id**, reused across notes/patterns:
