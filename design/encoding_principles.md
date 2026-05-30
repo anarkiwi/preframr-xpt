@@ -70,6 +70,19 @@ fidelity-neutral is *not* learnability-neutral.
   primitive, regardless of provenance** — a recognizer gap to close, not a tune to tolerate. The
   acid test is a **provenance-invariance** assertion: an explicit-write stream and a driver-table
   stream of the *same* gesture must produce *identical* ORN/SKEL tokens. (Drives backlog #13/#15.)
+- **P8 — Read the control register, not freq alone; and the long tail is lossy, not a new exact
+  primitive.** *Evidence (2026-05-30 RESID-archetype program, `resid_archetype_program.md`):* the
+  per-frame freq cannot be interpreted in isolation — the control register (gate / **test bit** /
+  **waveform**) assigns each frame's role: a test/HR onset frame's freq is don't-care, a **noise**
+  frame's freq is *timbre not pitch* (a note-onset noise-tik accents a *pitched* lead — Facemorph —
+  it is NOT a drum), and a note with no pitched frame is percussion. So base the note on its *pitched*
+  frames (landed, control-aware `_rebased_note`). AND: once the control-explained and segmentation-
+  explained RESID is removed, the **residue is genuinely-noisy content that no EXACT parametric
+  primitive reproduces** — widening SLIDE and a uniform-freq SWEEP both reproduce 0/9 of the real wide
+  ramps. Driving that residue toward RESID=0 is therefore a **deliberate, audition-gated content-tier
+  fidelity relaxation** (a lossy parametric fit is more learnable than raw per-frame RESID), NOT
+  another lossless ORN type. Don't ship a lossy primitive on an exact round-trip; gate it on the WAV
+  audition (axis 1's "deliberately lossy, audition-gated" clause).
 
 ## The checklist (apply to any encoding change)
 

@@ -71,3 +71,34 @@ at 52k scale): target+duration SLIDE (lands exact), sine/curved VIB with delay+l
 
 **Gate:** finalize the build order against the full 52k audit (the corpus-wide proportions + the
 RESID=0 validation set) when it lands — only model what actually leaks at scale.
+
+## Build log + the exact-primitive wall (2026-05-30)
+
+**DONE — control-aware foundation** (tokens branch `feat/transient-tolerance`, commit `0278693`,
+green, NOT released): `_context` co-reads per-voice ctrl writes; `_ctrl_at`/`_is_pitched_frame`
+expose each freq frame's role; `_rebased_note` bases the SKEL pitch on **pitched frames only** (noise
+bit7 = timbre, test bit3 = HR/transient). Verified on Facemorph (no SKEL note mis-based on the
+noise-tik freq≈107); baggis 0.240→0.223. **Deferred:** the ornament-side noise-snap (neutralise noise
+frames to offset 0) — it regressed the #13 fast-run guard (snapped noise frames create new fast-run
+patterns); needs the segmentation itself to be control-aware, sized vs the audit.
+
+**THE EXACT-PRIMITIVE WALL (key negative result).** Two cheap exact extensions were tried and are
+**no-ops on the fixtures**: (1) widening SLIDE past the ±24 offset clamp (RESID unchanged), and (2) a
+uniform freq-delta **SWEEP** — best-fit over a range of deltas reproduces the real wide ramps
+**EXACTLY 0/9**, ≤1-frame-off 1/9, worse 8/9 (even on Commando, where Hubbard "skydive" should be a
+clean MSB decrement). So the "slide-overflow"/"accelerating-sweep" survey buckets are **mislabelled** —
+the real wide ramps are NOT clean parametric sweeps; they're **contaminated / concatenated / noisy**
+descents (base-outlier first frames, several mechanisms merged, settling+semitone-quantisation noise).
+**Implication:** exact-reproducing parametric primitives are exhausted; you cannot drive these to
+RESID=0 with another lossless ORN type. The two remaining levers are:
+1. **Control-aware *segmentation*** (make `_segment_notes`/`_resegment_*` ignore noise/test frames and
+   cut on pitched level-changes) — cleans the base/transient/concatenation contamination so the
+   *residue* is genuinely-irregular content only.
+2. **Audition-gated content-tier fidelity relaxation** — for the genuinely-noisy residue, a *lossy*
+   parametric fit (sweep/ramp within a small semitone tolerance) is MORE learnable than raw RESID, but
+   it is a deliberate fidelity decision: gate it on the 12-SID WAV audition (does the approximation
+   sound right?), not on exact round-trip. This is the point where "learnable" trades against
+   "byte-exact", and it must be decided with the audit (how much leaks) + an audition (does it sound).
+
+So RESID=0 is reachable only by (1) + a principled (2); it is NOT a stack of exact primitives. Update
+the build order accordingly once the full 52k audit lands.

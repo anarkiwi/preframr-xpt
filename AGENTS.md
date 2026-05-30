@@ -44,7 +44,29 @@ across engines (stretch) — inside:
 - **Predict:** Jetson Orin NX (15.6 GB) at PROMPT=2048 / MAX=8192. KV cache
   at prodlike dims ~16 KiB/token → 128 MiB at MAX; bounded by seq_len.
 
-## Current arc — substrate is the lever; V0 pitch is the open problem
+## Current arc — RESID→0 control-aware skeleton encoding (2026-05-30)
+
+The lever is **re-encoding** (the skeleton+ornament tokenizer in preframr-tokens), and training
+is **gated** behind a deterministically-sound encoding (user: no training/audition until the
+pre-training tests are green). Foundation #9–#15 LANDED + published (tokens 0.34.0/0.35.0): dead-wood
+removed, deterministic test suite + driver-truth RESID completeness, fast-melodic-run de-merge (#13),
+universal-driver collapse verified (zero per-driver branching), provenance-invariance test (#11.4).
+Now in the **RESID→0 program** (`design/resid_archetype_program.md`): every non-zero RESID is an
+unmodelled mechanism; trace it to the driver. Key live findings —
+- **Control register disambiguates the freq trajectory** (principle **P8**, `encoding_principles.md`;
+  `sid_driver_ornament_reference.md`): noise = timbre not pitch (Facemorph noise-tik accents a pitched
+  lead — noise ≠ drum), test/HR onset = transient. Control-aware note basing LANDED (tokens branch
+  `feat/transient-tolerance`, **unreleased** — holding for more data).
+- **The exact-primitive wall:** widening SLIDE and a uniform SWEEP are no-ops (real wide ramps aren't
+  clean parametric sweeps — 0/9 reproduce). RESID→0 is **control-aware segmentation + an
+  audition-gated content-tier fidelity relaxation**, NOT a stack of exact ORN types.
+- Cross-driver audit (GoatTracker/FC/SF2/MoN/Hubbard) in `sid_driver_ornament_reference.md`; the
+  freq-MSB SWEEP is a named effect in 3 drivers. Full 52k RESID audit running (detached) for
+  corpus-wide proportions + the RESID=0 validation set.
+- Memories: `control-aware-encoding`, `universal-driver-already-exists`, `skeleton-ornament-build`,
+  `collapse-driver-abstractions`, `cross-repo-release-ordering`.
+
+### Prior arc — substrate is the lever; V0 pitch (2026-05-28, superseded by the skeleton re-encoding)
 
 **Decisive 2026-05-28: `melody_substrate_iter_mini` (×3 seeds).** PW+filter
 substrate ablation lifts content acc 0.056 → 0.089 (Δ +0.033) and op45
