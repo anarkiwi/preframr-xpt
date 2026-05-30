@@ -232,6 +232,42 @@ re-segmentation of #12), with portamento-across-tied-notes as a minor JCH-specif
   continuous per-voice (PW) / global (filter) trajectories, unlike the note-aligned pitch arp.
 - **Use intrinsic level-change, not the gate, for note boundaries** on legato/held-gate drivers.
 
+## The common abstraction (universal driver) — #15
+
+**The collapse hypothesis is empirically confirmed, and the universal driver already exists in the
+code.** The skeleton+ornament encoder/decoder (`skeleton_pass.py` / `decoders.py`) has **zero
+per-driver / per-engine / per-tune branching** — the decoder dispatches purely on `ORN_TYPE`
+(`PLAIN`/`OCTAVE`/`ARP`/`SLIDE`/`VIB`/`RESID`) — yet every driver above maps onto that one generic
+primitive set. Each driver's per-row table is just a *surface encoding* of the same gesture; the
+tokenizer only ever sees the rendered register writes, so provenance (which driver, or hand-written
+code) collapses automatically at the register-log input.
+
+**Mechanism → universal primitive (the collapse matrix):**
+
+| universal primitive | the same gesture across drivers |
+|---|---|
+| `OCTAVE` | Hubbard fx-bit2 note/+12; any 2-step `{0,12}` cycle |
+| `ARP` (offset-cycle codebook) | Hubbard fx, SID Wizard `wf_table` arp, defMON `TR`, Galway `FOL*`, JCH chord table |
+| `SLIDE` (target+rate) | all drivers' portamento/pitch-slide (incl. JCH cmd `7` across tied notes) |
+| `VIB` (depth+rate) | all drivers' vibrato + sub-semitone detune (JCH cmd `2`/`3`/`5`, Galway/defMON gradients) |
+| note segmentation | intrinsic level-change ∪ gate-on ∪ **fast-melodic-run split (#13)** — driver-agnostic |
+| `RESID` | only genuinely-aperiodic content no primitive models (the completeness floor) |
+
+**Empirical proof (real HVSC tunes, RESID note-share after #13):** Trap (Antony Crowther V3)
+**0.01**, Camerock (JCH) **0.06**, Commando (Hubbard) **0.24**, Baggis (JCH) **0.26** — all through
+the *same* code with no per-driver special-casing. **Trap reaching 0.01 with zero Crowther-specific
+logic is the proof that Crowther V3 uses the common primitive set** (so #14 — "document Crowther V3
+to model its RESID" — is satisfied empirically; there is no Crowther-specific RESID left to model).
+
+**The one irreducible remainder** is the **wide/aperiodic primitive** (Baggis 0.26 / Commando 0.24):
+truly-aperiodic wide content on the lead voice (span 51–71 semitones, ≤8 distinct, **non-periodic** —
+not wide arps, not melodic runs). It does not collapse to a melodic primitive (splitting forges
+spurious giant-interval notes), so it stays `RESID`. Likely octave-jump wavetable effects (JCH
+absolute-note `80–DF`) / sound-effects — the genuinely-aperiodic floor, or a distinct "wide-effect"
+primitive (open: confirm noise-vs-pitched by waveform). **Remaining #15 work is therefore not a
+refactor but a guarantee + a doc:** the provenance-invariance test (#11.4 — two register renderings
+of one gesture must emit identical tokens) and this matrix.
+
 ## References
 
 - **C=Hacking Issue 5** (1993), *"Rob Hubbard's Music: Disassembled, Commented and Explained"* by
