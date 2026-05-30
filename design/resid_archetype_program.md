@@ -102,3 +102,17 @@ RESID=0 with another lossless ORN type. The two remaining levers are:
 
 So RESID=0 is reachable only by (1) + a principled (2); it is NOT a stack of exact primitives. Update
 the build order accordingly once the full 52k audit lands.
+
+## ⚠️ Absorption safety — emulator-proven (2026-05-30)
+
+Before discarding ANY freq write, it must be proven inaudible on the SID emulator — do not assume
+from a mental model of the envelope. Reference: `preframr-audio/tests/test_freq_write_audibility.py`
+(pyresidfp, 9 tests). Proven: **only a freq write on a TEST-bit frame** (oscillator held in reset)
+does not reach the output. NOISE-frame freq = noise pitch/colour (audible); freq during RELEASE is
+audible (release-0 is NOT instant; freq takes effect in every envelope phase); COMBINED-waveform
+freqs audible; noise+pulse LFSR-locks. So the control-aware `_rebased_note` correctly picks the
+melody PITCH from pitched frames, but the noise/release/transient freqs are **audible content** that
+must be ENCODED (a percussion/effect channel), not absorbed to 0 — measure melodic RESID=0 on the
+PITCHED content, with percussion as a separate audible channel. The "settle/prefix-strip" lever
+(~28% measured) is only *safe* for its test-bit frames; the rest of a prefix is audible and must be
+represented. See principle P8.

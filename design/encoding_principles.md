@@ -75,14 +75,22 @@ fidelity-neutral is *not* learnability-neutral.
   per-frame freq cannot be interpreted in isolation — the control register (gate / **test bit** /
   **waveform**) assigns each frame's role: a test/HR onset frame's freq is don't-care, a **noise**
   frame's freq is *timbre not pitch* (a note-onset noise-tik accents a *pitched* lead — Facemorph —
-  it is NOT a drum), and a note with no pitched frame is percussion. So base the note on its *pitched*
-  frames (landed, control-aware `_rebased_note`). AND: once the control-explained and segmentation-
-  explained RESID is removed, the **residue is genuinely-noisy content that no EXACT parametric
-  primitive reproduces** — widening SLIDE and a uniform-freq SWEEP both reproduce 0/9 of the real wide
-  ramps. Driving that residue toward RESID=0 is therefore a **deliberate, audition-gated content-tier
-  fidelity relaxation** (a lossy parametric fit is more learnable than raw per-frame RESID), NOT
-  another lossless ORN type. Don't ship a lossy primitive on an exact round-trip; gate it on the WAV
-  audition (axis 1's "deliberately lossy, audition-gated" clause).
+  it is NOT a drum), and a note with no pitched frame is percussion. So you may base the melodic note
+  on its *pitched* frames (landed, control-aware `_rebased_note`). **BUT "not melodic pitch" ≠
+  "discardable".** Emulator-proven (`preframr-audio/tests/test_freq_write_audibility.py`, pyresidfp):
+  the ONLY freq write that does not reach the output is one on a **TEST-bit frame** (oscillator held
+  in reset). A **noise**-frame freq is the noise pitch/colour (fully audible), a freq change during
+  **release** is audible (release-0 is NOT instant), and **combined-waveform** freqs are audible — so
+  those freqs must still be ENCODED (a percussion/effect channel), never absorbed to 0. Discarding any
+  non-test write is provably wrong; *prove* a write is inaudible with the emulator before dropping it.
+  Measure melodic RESID=0 on the **pitched** content; the noise/percussion is a separate audible
+  channel. AND: once the control-explained and segmentation-explained RESID is removed, the **residue
+  is genuinely-noisy content that no EXACT parametric primitive reproduces** — widening SLIDE and a
+  uniform-freq SWEEP both reproduce 0/9 of the real wide ramps. Driving that residue toward RESID=0 is
+  therefore a **deliberate, audition-gated content-tier fidelity relaxation** (a lossy parametric fit
+  is more learnable than raw per-frame RESID), NOT another lossless ORN type. Don't ship a lossy
+  primitive on an exact round-trip; gate it on the WAV audition (axis 1's "deliberately lossy,
+  audition-gated" clause).
 
 ## The checklist (apply to any encoding change)
 
