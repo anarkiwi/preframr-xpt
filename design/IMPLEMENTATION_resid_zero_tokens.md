@@ -28,22 +28,33 @@ The residue is held-gate concatenations of KNOWN mechanisms; **literal 0 = the e
 §7b) decomposing them losslessly** — the probe is a classification proxy, do NOT push it to 0 by
 loosening fitters (that would be false coverage).
 
-## 1. Current state in `preframr-tokens` (what exists)
+## 1. Start from a clean `main` — merge the foundation branches FIRST
 
+**Begin from a clean `main` in every repo. Do NOT build on session working branches.** The
+prerequisite foundation has been pushed as PRs; merge them into `main`, then branch from `main` for all
+your work:
+- **`preframr-tokens` branch `feat/transient-tolerance`** (pushed; open a PR → merge to `main`):
+  control-aware note basing (`_rebased_note`/`_is_pitched_frame`/`_ctrl_at`/`_context`), held-gate/
+  level-change/fast-run re-segmentation, **iter-1 `ARP_MAX_PERIOD` 8→16** (held chord-arps), and the
+  **inert probe sinks** (below). Gate it through the §8.0 full-docker CI run before merging.
+- **`preframr-xpt` branch `feat/resid-zero-design`** (pushed; reference only — the design docs + RE
+  probes): merge or leave as a branch; you READ these, you don't ship them.
+
+After merging, `main` of `preframr-tokens` contains:
 - `preframr_tokens/macros/skeleton_pass.py` — `SkeletonPass` (gate `--skeleton-pass`): segments freq
   regs into notes, emits `SKEL` (pitch) + `ORN` (PLAIN/OCTAVE/ARP/SLIDE/VIB/RESID). Operates on RAW
   per-voice regs (freq 0/7/14, ctrl 4/11/18, pw 2/9/16, adsr 5,6/…, filter 21–24). Voice-canonicalisation
-  to regs 0–6 happens AFTER this pass.
-- **Landed (unreleased, branch `feat/transient-tolerance`):** control-aware note basing
-  (`_rebased_note`/`_is_pitched_frame`/`_ctrl_at`/`_context`), held-gate/level-change/fast-run
-  re-segmentation, and **iter-1 `ARP_MAX_PERIOD` 8→16** (held chord-arps; `_minimal_period`/
-  `cycle_frame_offsets` replay any-length period; `_reconstruct` verifies exact-or-RESID).
+  to regs 0–6 happens AFTER this pass. `_orn_rows` emits the constant-size ORN descriptor;
+  `drop_idx`/`new_rows` is the existing **destructive, first-come claim** — the seed of §2.
+- the control-aware foundation + iter-1 ARP cap above.
 - **Inert probe sinks (default `None`, no prod effect):** `SkeletonPass._resid_diag` records every
   claimed note `(reg, is_resid, note, onset_fr, rec)` where `rec=[(offset, ctrl, is_pitched, fn)]`;
-  `SkeletonPass._df_sink` captures the raw apply-df (`+_fr` frame index). These exist ONLY for probes
-  and the §2 migration; the §2 pipeline removes the need for `_df_sink`.
-- `_orn_rows` emits the constant-size ORN descriptor; `drop_idx`/`new_rows` is the existing
-  **destructive, first-come claim** — the seed of §2.
+  `SkeletonPass._df_sink` captures the raw apply-df (`+_fr` frame index). These are the interface for
+  the `preframr-xpt` probes; keep them. The §2 pipeline removes the need for `_df_sink`.
+
+If for any reason the foundation PR is NOT merged, re-derive iter-1 (`ARP_MAX_PERIOD=16`) and the inert
+sinks from `feat/transient-tolerance` as your first commits — but the intended path is merge-then-branch
+from a clean `main`.
 
 ## 2. Build the speculative pipeline FIRST (the framework)
 
@@ -241,6 +252,8 @@ behind a gate flag, default OFF. Local gate loop: baked `anarkiwi/preframr-token
 
 ## 10. Suggested build order
 
+0. **Start clean (§1):** merge the foundation PR (`feat/transient-tolerance`) into `main` via the
+   §8.0 full-docker CI gate, then branch from `main`. Every step below is its own branch → §8.0 gate → PR.
 1. Speculative pipeline framework (§2 a–b) — byte-identical refactor, delete `_df_sink`.
 2. STAMP codebook (§4) — biggest RESID win; ABS then REL; footprint consistency-attribution; inline
    redefinable + char. Re-run `resid_final_accounting.py`, expect STAMP ≈98%.
