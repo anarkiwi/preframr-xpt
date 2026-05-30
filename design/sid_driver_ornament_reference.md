@@ -139,6 +139,54 @@ Ornament definitions are a **small bank referenced by id**, reused across notes/
 This is the structural basis for encoding ornament by table-id with per-instrument / per-composer bank
 conditioning.
 
+## JCH NewPlayer (20.G4) — table-driven, the JCH/Vibrants lineage
+
+Engine behind a large slice of HVSC (JCH, Vibrants) and modern chiptune — **Goto80's *Baggis*** and
+**DRAX's *Camerock*** both run it (identified via `sidid`). Format: JCH editor v3.04 "20.G4" /
+NewPlayer (codebase.c64.org "jch_20.g4_player_file_format"); **CheeseCutter** (theyamo) is the modern
+reference editor for this exact format, so its in-editor reference is the readable spec. Fully
+**table-driven** — same two value-domain mechanisms as the others, with a JCH-specific twist (the
+wave-table drives BOTH waveform and pitch).
+
+- **Instrument (8 bytes):** ADSR (A,B); hard-restart-type hi-nibble + wave-program-delay lo-nibble (C);
+  HR waveform (D); **filter-table ptr (E)**; **pulse-table ptr (F)**; **wave-table ptr (H)**. HR types:
+  `0x` soft gate-off, `4x`, `8x` hard restart, `Ax` Laxity (restart waveform only, keep AD).
+- **Wave table (per frame, 2 cols/row) — drives waveform AND pitch.** note/transpose col:
+  `00–5F` note-relative transpose (**the arp offsets**, semitone domain); `80–DF` **absolute note**
+  (ignores chord/transpose — a melodic note driven straight from the wavetable); `7E` hold (keep prev);
+  `7F` jump (next byte = loop index). waveform col: `00` no change; `01–0F` wave-delay override (chord
+  timing); `10–DF` SID waveform; `E0–EF` remapped waveforms. One row/frame.
+- **Chord/arp table** (the 20.G4 "Arpeggio Table" col1/col2): note-relative offset cycle — `00–3F`
+  positive semitone offsets (e.g. `0,4,7` major), `40–7F` negative (`7F`=−1, `7E`=−2), `80–FF`
+  loop/wrap index. Row 0 = swing-tempo program (when song speed = 0/1).
+- **Pulse table (4 bytes/row):** duration (A; sign = sweep dir), add (B; per-frame, two's-comp), init
+  (C; `FF`=keep), jump (D; `00` next, `7F` stop) → PWM sweep. **Filter table:** init rows (A≥`80`:
+  type, resonance+voice-mask, cutoff) + sweep rows (duration, add (`FF`=−1), init, jump); 10-bit
+  cutoff (4× finer than old JCH players); **global**.
+- **Commands (per sequence step):** `2` delta vibrato (A=speed, B=depth); `5` low-fi vibrato
+  (speed,depth); `3` detune (16-bit freq offset → sub-semitone); `0`/`1` slide up/down; `7` portamento.
+
+**Note segmentation — the held-gate twist that caused our RESID gap.** Tie-notes (`AA=$90` / `BB` tie;
+no gate retrigger) hold the gate across many sequence steps. **Frequency-altering commands (slide,
+vibrato) do NOT run on tied notes — but portamento (`7`) DOES**: a portamento armed before a run of
+tied notes slides *across* them → one long continuous glissando under a single held gate. And the
+**wave-table can drive absolute-note (`80–DF`) melodic runs** under one gate. Both are the
+"gate-on ≠ note boundary" case — exactly the under-segmented, long-RESID content we measured on
+*Baggis* (JCH NewPlayer) that *Camerock* (same driver) doesn't exercise.
+
+**Reconciliation to our encoding (what's modelled vs the open gap):** arps (wavetable relative
+transpose / chord-table) → **ARP**; vibrato (`2`/`5`) → **VIB** (depth+rate); detune (`3`) →
+sub-semitone **cents/VIB**; slide/portamento (`0`/`1`/`7`) → **SLIDE** (target+rate); pulse/filter
+tables → PW/filter trajectories (out of pitch scope; ablated). **The Baggis RESID gap is two
+NewPlayer mechanisms we under-model:** (1) **portamento across tied notes** = a long glissando over
+many would-be notes under one gate → encode as a **SLIDE chain across the re-segmented constituent
+notes** (the held-gate re-segmentation must also cut at portamento transitions, + allow a longer SLIDE
+span); (2) **wave-table absolute-note runs** = a fast per-frame melodic line under one gate, steps
+below `MIN_HOLD` → currently RESID → should segment into notes (each an absolute wavetable note).
+
+> **Antony Crowther V3** (Trap, Daglish) is a *separate* driver, **not yet documented here** — its
+> RESID gap needs its own reverse-engineering (no readable source pulled yet). Tracked as a follow-up.
+
 ## Per-driver summary
 
 | | pitch arp | vibrato | portamento | pulse width | filter |
@@ -147,6 +195,7 @@ conditioning.
 | **SID Wizard** | `wf_table` arp_byte (general offset cycle) | amp/freq-nibble triangle | 16-bit accumulator → target | `pw_table` set/sweep rows | `filter_table` set/sweep + controller voice |
 | **defMON** | `TR` steps in reused sidTAB rows | freq-word LUT | LUT accumulator / 1-frame step | `PS` bounded auto-reverse sweep | `ACID` cutoff accumulator + `RE` routing |
 | **Galway** | `FOL*` offset list | `FMG/FMD` gradient | `PMG/PMD` gradient | gradient stages | gradient stages + `FilterChannel` |
+| **JCH NewPlayer** | wave-table `00–5F` rel-transpose + chord table; `80–DF` absolute note | cmd `2`/`5` speed+depth; cmd `3` 16-bit detune | cmd `7`, slides **across tied notes** | pulse table dur+add (`FF`=keep), jump | filter table dur+add, 10-bit, global |
 
 ## Encoding takeaways
 
@@ -189,3 +238,11 @@ conditioning.
   mechanism (`*G0..G3` values + `*D0..D3` durations + delay) reused for vibrato / PW / filter, and the
   `FilterChannel` global-filter controller. (Label-level detail via summary; treat as corroborating
   the structural patterns, not exact byte layouts.)
+- **JCH NewPlayer (20.G4)**: file-format/memory-layout + sequence `AA/BB` commands at
+  <https://codebase.c64.org/doku.php?id=base:jch_20.g4_player_file_format> (incomplete on table
+  mechanics). Authoritative readable spec is **CheeseCutter** (the modern editor for this exact format):
+  <https://github.com/theyamo/CheeseCutter> + guide <https://carol6502.neocities.org/c6_ccutter_guide>
+  (wave/chord/pulse/filter table byte ranges, command numbers). Original JCH editor v3.04 + source:
+  CSDb <https://csdb.dk/release/?id=14037> (`v-c64ed.zip`). Table-format corroboration also in
+  Chordian's SID Factory II (JCH/Laxity drivers). Engine of *Baggis* (Goto80) and *Camerock* (DRAX) —
+  confirmed via `sidid` (config `/scratch/anarkiwi/sidid/sidid.cfg`; `SIDIDCFG=… sidid <dir>`).
