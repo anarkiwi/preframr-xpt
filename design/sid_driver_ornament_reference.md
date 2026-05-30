@@ -190,6 +190,14 @@ under-segmentation** (the absolute-note-run mechanism), **not** genuine glissand
   collapse hypothesis — see backlog #15.) Portamento-across-tied-notes is a real but *minor* secondary
   component, material only on Baggis.
 
+**✅ CLOSED 2026-05-30 (tokens 0.35.0, #13):** `SkeletonPass._resegment_fast_run` folds fast-melodic-runs
+into per-step SKEL notes. New RESID note-share: Trap **0.44→0.01**, Camerock **0.17→0.06**, Baggis
+**0.66→0.26**, Commando 0.25→0.24; fast-melodic-run frame-fraction → ~0 (Trap) / 0.009 (Baggis). The
+shared fast-run gap is gone. **Baggis's remaining 0.26 is a DISTINCT primitive** — wide/aperiodic
+content (span 51–71 semitones, ≤8 distinct: octave-jump wavetable effects / noise), NOT a melodic run
+(no melody leaps 4–6 octaves between frames); splitting it would forge spurious giant-interval notes,
+so it stays RESID. That wide-aperiodic primitive is the next real-tune gap to characterize.
+
 **Reconciliation to our encoding (what's modelled vs the open gap):** arps (wavetable relative
 transpose / chord-table) → **ARP**; vibrato (`2`/`5`) → **VIB** (depth+rate); detune (`3`) →
 sub-semitone **cents/VIB**; slide/portamento (`0`/`1`/`7`) → **SLIDE** (target+rate); pulse/filter

@@ -190,9 +190,22 @@ synthetic generators (#11.1) are the copyright-free, always-runs core.
 
 ---
 
-## #13 — Close the fast-melodic-run under-segmentation gap (shared; dominant RESID source)
+## #13 — Close the fast-melodic-run under-segmentation gap (shared; dominant RESID source) — ✅ DONE (tokens 0.35.0, PR #33)
 
-**Measured (deterministic test suite #11, 2026-05-30, skeleton-on, post-#12-resegmentation):** the
+**LANDED 2026-05-30:** `SkeletonPass._resegment_fast_run` (gated on `fit_descriptor` returning
+RESID so genuine ARP/SLIDE/VIB/OCTAVE are untouched) splits a fast-melodic-run note into one SKEL
+note per semitone step; `is_fast_melodic_run` is the discriminator (short, non-periodic,
+non-monotone, distinct<6, span<12). **Measured RESID note-share:** Trap 0.44→**0.01**, Camerock
+0.17→**0.06** (both now pass <0.10), Baggis 0.66→**0.26**, Commando 0.25→0.24; fast-melodic-run
+frame-fraction → ~0 (Trap) / 0.009 (Baggis). `test_trap_resid_gap` is now a passing test;
+`test_fast_run_gap_closed` is the regression guard. **Baggis's remainder is a DISTINCT primitive**
+— wide/aperiodic content (span 51–71 semitones, ≤8 distinct: octave-jump wavetable effects /
+noise), NOT the fast-run mechanism — so its xfail stays (re-reasoned; splitting it would forge
+spurious giant-interval notes). That wide-aperiodic primitive is the next real-tune gap (feeds #15
+as a candidate distinct primitive, or its own item if it proves recoverable).
+
+**Original analysis (kept for context):** Measured (deterministic test suite #11, skeleton-on,
+post-#12-resegmentation): the
 remaining RESID across *every* driver is dominated by **fast-melodic-run under-segmentation**, NOT
 genuine glissando — Trap.1 RESID 98.8% fast-melodic-run, Baggis.1 75.6%. And by RESID note-share
 **Commando (0.34) / Camerock (0.37) leak ≥ Trap (0.14) / Baggis (0.06)** — so this is a **shared
