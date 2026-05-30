@@ -173,13 +173,20 @@ gap to close, not a tune to tolerate. RESID share per driver is the completeness
    fix is to model the missing mechanism (extend `fit_descriptor`), NOT to raise the threshold.
    Document each known-acceptable RESID source (genuinely-aperiodic noise sweeps) inline so the
    threshold is principled.
+4. **Provenance-invariance test (principle P7) — the universal-driver assertion.** For each
+   primitive, build *two* synthetic register streams that produce the **identical audible gesture**
+   by **different provenance**: (a) **explicit** raw per-frame freq/ctrl writes (no driver
+   abstraction), and (b) a **driver-table** version (e.g. JCH chord-table `[0,+4,+7]`). Assert the
+   parser emits the **same ORN/SKEL tokens** for both (same `ORN_TYPE`, same params within
+   tolerance) — i.e. the encoder recognizes the gesture regardless of how it was produced and folds
+   both into the universal primitive, neither into RESID. Cover at least arp, octave, slide,
+   fast-melodic-run. A divergence = a recognizer that only sees one provenance (close the gap;
+   don't tolerate the explicit one as RESID).
 
 **Gate:** shared gate, with `$PREFRAMR_SID_FIXTURE_CACHE` mounted so the real-tune fixtures
 regenerate/run (never skip). Keep fixtures tiny **in the local cache, never committed** — slice to
 the needed rows (see `tests/sid_fixtures.py` `_REDUCE_MASKS` for the canonical reduction). The
 synthetic generators (#11.1) are the copyright-free, always-runs core.
-
----
 
 ---
 
@@ -231,6 +238,16 @@ per-driver sections likely differ only in *surface encoding* (table formats, com
 semantics), not in the underlying musical primitive. The current ORN vocab
 (PLAIN/OCTAVE/ARP/SLIDE/VIB/RESID) is already a partial unification.
 
+**Provenance invariance is the *point* (principle P7).** The unified model is a **universal
+driver**: it must also absorb melodies/ornaments written **explicitly as raw per-frame register
+writes** (no driver invoked), not just driver-table output. A hand-written arp and a chord-table
+arp must encode to the **same** `ORN_TYPE_ARP` tokens so the model learns the gesture *once* and
+can leverage + generate it universally. So the encoder grows a **direct-register recognizer**
+front-end (explicit writes → universal primitive params) alongside the per-driver byte-format
+adapters — all provenances normalize into the one shared decoder/replay. Tunes are encoded with
+the universal driver **wherever the gesture is recognizable**; only genuinely-irreducible content
+stays RESID.
+
 **Task:** once #13/#14 are in, lay the per-driver mechanism tables side by side and look for the
 common abstraction:
 - Build a mechanism × driver matrix (rows = primitive: octave-arp, table-arp, slide, portamento,
@@ -244,10 +261,11 @@ common abstraction:
   `RESID_MAX` with no per-driver special-casing in the decoder. Any irreducible per-driver
   remainder is a real distinct primitive — document why it can't collapse.
 
-**Done when:** decoders/replay are driver-agnostic (driver = front-end adapter only), the #11
-suite is green for all drivers through the unified model, and `sid_driver_ornament_reference.md`
-has a "common abstraction" section with the mechanism×driver matrix and the documented
-irreducibles.
+**Done when:** decoders/replay are driver-agnostic (driver/provenance = front-end recognizer
+only), the #11 suite is green for all drivers **and for explicit-write provenance** through the
+unified model, the **provenance-invariance test (#11.4) passes**, and
+`sid_driver_ornament_reference.md` has a "common abstraction" section with the mechanism×driver
+matrix and the documented irreducibles.
 
 ---
 
