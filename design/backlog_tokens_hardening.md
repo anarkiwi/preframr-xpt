@@ -76,7 +76,7 @@ Ops + subregs are in `stfconstants.py`. The default-on pipeline is
 | `voice_trajectory` | `macros/transforms_voice_trajectory.py` | `TRACK_REF_OP=46`, `VOICE_TRAJ_REG=-123` (verify decoder `TrackRefDecoder`) |
 | `voice_trajectory_distributed` | `macros/transforms_voice_trajectory_distributed.py` | — |
 | `super_frame` | `macros/transforms_superframe.py` | `SUPER_FRAME_REG=-124` |
-| `ctrl_update` | `macros/ctrl_update_pass.py` | `CTRL_UPDATE_OP=51` |
+| ~~`ctrl_update`~~ **KEPT — NOT dead** (2026-05-30) | `macros/ctrl_update_pass.py` | — live via `--lonely-catch-all` in active xpt specs |
 | `flip2` | `macros/passes.py` (`Flip2Pass`) + its transform | `FLIP2_OP=7` (verify `FlipDecoder`/`Flip2Decoder`) |
 | `motif` | `macros/motif_pass.py` + `motif_mine.py` | `MOTIF_OP=52`, `MOTIF_ARG=53` |
 
