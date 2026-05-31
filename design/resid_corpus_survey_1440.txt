@@ -1,0 +1,236 @@
+
+=== FULL-CORPUS RESID=0 SURVEY (1520 tunes, wavetable_pass ON) ===
+engine                          tunes   resid drained drain%   vrf  bad   RECUR STRUCT PERIOD  SWEEP   ZERO  SHORT   FLAT
+DMC                               265    2052    4188    67%     4    0     828      0      0      2    265     90    867
+GoatTracker_V2.x                  195    1576    7461    82%     8    0     262      0      1     16     36      7   1254
+Music_Assembler                   165    1408    1404    49%     2    0    1044      1      0      1     65    122    175
+Ubik's_Musik                        6     749    1568    67%     0    0     740      0      0      1      4      1      3
+MoN/FutureComposer                 97     624     892    58%     6    0     309      1      6      1     92     43    172
+Hermit/SidWizard_V1.x              24     521    1262    70%     0    0     331      0      0      0     18     12    160
+SoedeSoft                          28     428     732    63%     1    0     313      0      0      0     11      8     96
+Digitalizer_V2.x                   10     416     255    38%     1    0     388      0      0      1      0      2     25
+Soundmonitor                       88     408     110    21%     2    0     354      3      0      1     19      0     31
+JCH_NewPlayer                      83     393     908    69%     1    0      76      4      0      6     42      0    265
+?                                  33     317     669    67%     0    0     164      0      0      0     26     17    110
+Geir_Tjelta/SIDDuzz'It             18     218     252    53%     0    0     107      0      0      2      3     12     94
+Drumtex                             1     196      14     6%     0    0     193      0      0      0      2      0      1
+Digitalizer_V3.0                    4     124      59    32%     0    0      96      0      0      0      3     10     15
+Ariston                             1     124       2     1%     0    0     118      0      0      0      3      0      3
+GoatTracker_V1.x                   33     123    1040    89%     0    0      43      0      0      5      2      0     73
+X-Ample                            10     111     262    70%     0    0      49      0      0      1      7     27     27
+CheeseCutter_2.x                   14     110     169    60%     0    0      46      0      0      1      9      1     53
+Ed/Wrath                            3     106     129    54%     0    0      37      0      0      0     35      0     34
+John_Player                         4      92      98    51%     0    0      62      0      0      0      0      2     28
+SidFactory_II/Laxity               11      84     151    64%     0    0       2      0      0      0      8      0     74
+*Unidentified*                     37      78     254    76%     0    0      11      0      0      1     13      2     51
+LordsOfSonics/MS                    6      78     115    59%     0    0       0      0      0      0      4      0     74
+Guy_Shavitt                         4      77     230    74%     0    0      44      0      0      0      1      7     25
+Jeff                                7      74      96    56%     0    0      16      0      0      0     13      0     45
+20CC                                6      63      20    24%     0    0      54      0      0      0      0      4      5
+Cyberlogic_SoundStudio              3      61     176    74%     0    0      18      0      0      0      9      0     34
+Basic_Program                      16      58      30    34%     0    0       3      0      0      0     37      1     17
+HardTrack_Composer                 22      55     503    90%     0    0       2      0      0      3      9      0     41
+Roland_Hermans                      2      52       0     0%     0    0      49      0      0      0      0      0      3
+SidTracker64                        7      50      93    65%     0    0      33      0      1      0      6      4      6
+Arne/AFL                            2      49      34    40%     0    0      44      0      0      0      0      5      0
+The_Music_System                    1      46       0     0%     0    0      31      0      0      1      8      0      6
+RoMuzak_V6.x                       19      42     150    78%     0    0       4      0      0      0     20      0     18
+CyberTracker_exe                    4      40     141    77%     0    0      28      0      0      0      3      1      8
+Trident/Active                      2      37       6    13%     0    0      34      0      0      0      0      3      0
+SynC                                8      35     212    85%     0    0       6      1      0      0      3      0     25
+Martijn_Schutten                    1      35      12    25%     0    0      35      0      0      0      0      0      0
+Chubrocker_V3.x                     5      33      31    48%     0    0      16      0      0      0      8      1      8
+GMC/Superiors                      13      33     108    76%     0    0       0      0      0      0      6      0     27
+EMS/Odie                            5      33      35    51%     0    0      11      0      0      1      3      2     16
+LFT                                 4      32     113    77%     0    0      20      0      0      2      1      0      9
+Roel_Bosch                          2      32     122    79%     0    0       2      0      0      4      1      1     24
+Groovy_Bits                         4      31       9    22%     0    0      24      0      0      1      4      0      2
+Vibrants/Laxity                     3      27     183    87%     1    0       6      0      0      0     12      0      9
+Laxity_NewPlayer_V21                6      22      22    50%     0    0       6      0      0      0      3      0     13
+TFX                                 7      18      63    77%     0    0       0      0      0      0      8      0     10
+GalBard/ATOO                        1      18     415    95%     0    0       0      0      0      0      5      0     13
+Kosa_Protracker                     2      18      60    76%     0    0       2      0      0      1      3      1     11
+Martin_Galway                       4      18       6    25%     0    0       0      0      2      0      9      0      7
+Vibrants/JO                         4      16      19    54%     0    0       8      0      0      0      1      0      7
+Heathcliff/DigitalArts              1      16      55    77%     0    0       9      0      0      0      1      0      6
+NinjaTracker_V2.x                   3      16      43    72%     0    0       3      0      0      2      0      0     11
+256bytes/ALiH                       1      16       4    20%     0    0       7      0      0      0      2      0      7
+Geir_Tjelta/SIDSys18.6              3      15      22    59%     0    0       6      0      0      0      0      5      4
+DMC_V6.x                            1      14     204    93%     0    0       5      0      0      0      0      0      9
+Anvil                               1      14      64    82%     0    0      10      0      0      0      0      0      4
+Acid_Player                         3      13       6    31%     0    0       0      0      0      0      4      1      8
+GRG_tiny_2                          1      13       2    13%     0    0       6      0      0      0      0      3      4
+JCH_Protracker                      2      12      60    83%     0    0       8      0      0      0      4      0      0
+Hermit/1RasterTracker               1      12      27    69%     0    0       0      0      0      0     10      0      2
+Stephen_Ruddy                       3      11      53    82%     0    0       0      0      0      1      4      1      5
+Rob_Hubbard                         7      10      16    61%     0    0       4      0      0      0      4      1      1
+TFMX                                1      10     107    91%     0    0       0      0      0      0      3      0      7
+Twynn                               2      10     335    97%     0    0       8      0      0      0      1      0      1
+Electrosound                        5       9       3    25%     0    0       0      0      0      0      0      0      9
+Soundbooster                        1       9      14    60%     0    0       0      0      0      0      6      0      3
+Micropearl/Fitzpatrick              1       8       8    50%     0    0       0      0      0      0      6      0      2
+TBB/SideB                           2       7      18    72%     0    0       0      0      0      1      1      0      5
+AMP                                 4       6       4    40%     0    0       2      0      0      0      4      0      0
+Frank_Hammer/Sharon                 2       6       4    40%     0    0       6      0      0      0      0      0      0
+Jeroen_Koops                        1       6      13    68%     0    0       0      0      0      0      0      0      6
+OdinTracker                         6       5      13    72%     0    0       0      0      0      2      1      0      2
+Yip_MegaSound                       3       5     292    98%     1    0       0      0      0      0      2      0      3
+FAME                                2       5       0     0%     0    0       0      0      0      0      0      0      5
+System6581                          1       5      62    92%     0    0       0      0      0      0      0      0      5
+Michael_Winterberg                  3       4       2    33%     0    0       2      0      0      0      0      0      2
+SoundMaker                          3       4      27    87%     0    0       0      0      0      0      0      2      2
+Bjerregaard                         1       4       2    33%     0    0       0      0      0      0      0      0      4
+Equalizer                           1       4      10    71%     0    0       0      0      0      0      0      0      4
+Audial_Arts                         1       4       0     0%     0    0       0      0      0      0      0      0      4
+Antony_Crowther_V3                  2       3       1    25%     0    0       0      0      0      0      3      0      0
+Chris_Cox                           1       3       0     0%     0    0       3      0      0      0      0      0      0
+NordicBeat_Editor                   1       3      62    95%     0    0       2      0      0      0      1      0      0
+Asterion_V1.x                       2       3       6    66%     0    0       0      0      0      0      2      0      1
+Zardax/SoundKiller                  2       3      91    96%     0    0       0      0      0      0      1      0      2
+Antony_Crowther_V2                  1       3       2    40%     0    0       0      0      0      0      3      0      0
+TFMX/TimeComposer                   1       2      52    96%     0    0       0      0      0      0      0      0      2
+Jeroen_Kimmel                       2       2       0     0%     0    0       0      0      0      0      0      0      2
+Audial_Arts/Cody                    1       2       5    71%     0    0       0      0      0      0      1      0      1
+PM/Niwa                             1       2       9    81%     0    0       0      0      0      0      1      0      1
+Power_Music                         1       2       1    33%     0    0       0      0      0      0      0      0      2
+Paul_Norman/Cosmi                   1       2       9    81%     0    0       0      0      0      0      0      0      2
+Magic_Man/Crazy                     1       2      17    89%     0    0       0      0      0      0      0      0      2
+MoN/Deenen                          2       1      44    97%     0    0       0      0      0      0      0      1      0
+Cope/Omicron                        1       1       0     0%     0    0       0      0      0      0      1      0      0
+GRG_tiny_1                          1       1       0     0%     0    0       0      0      0      0      0      0      1
+SadoTracker                         1       1       0     0%     0    0       0      0      0      0      0      0      1
+Sonic_Graffiti                      1       1       0     0%     0    0       0      0      0      0      0      1      0
+Hansford/Interceptor                1       1       0     0%     0    0       0      0      0      0      1      0      0
+GeniusComposer                      2       1      40    97%     0    0       0      0      0      0      0      0      1
+Robert_Westgate_v2                  1       1       0     0%     0    0       0      0      0      1      0      0      0
+5_Dimension                         1       1      12    92%     0    0       0      0      0      0      0      0      1
+Artlace                             1       1       0     0%     0    0       0      0      0      0      0      0      1
+Paradroid/Lameplayer                1       1       0     0%     0    0       0      0      0      0      0      0      1
+Jeff/XLarge                         1       1       0     0%     0    0       0      0      0      0      1      0      0
+Ed_Bogas/Accolade                   1       1       0     0%     0    0       0      0      0      0      1      0      0
+Maduplec                            1       0       2   100%     0    0       0      0      0      0      0      0      0
+Loadstar_SongSmith_v2               1       0       0     0%     0    0       0      0      0      0      0      0      0
+Loadstar_SongSmith                  8       0       0     0%     0    0       0      0      0      0      0      0      0
+Nutt67_Digi                         1       0       0     0%     0    0       0      0      0      0      0      0      0
+D.A.I.S.Y.                          1       0       0     0%     0    0       0      0      0      0      0      0      0
+GKGM                                2       0       1   100%     0    0       0      0      0      0      0      0      0
+Comer/Sample_Studio                 3       0       0     0%     0    0       0      0      0      0      0      0      0
+Master_Composer                    35       0       0     0%     1    0       0      0      0      0      0      0      0
+Zod_Digi                            2       0       0     0%     0    0       0      0      0      0      0      0      0
+Matt_Gray                           2       0      12   100%     1    0       0      0      0      0      0      0      0
+Basically_Music                     1       0       0     0%     0    0       0      0      0      0      0      0      0
+JammicroV1                          1       0       0     0%     0    0       0      0      0      0      0      0      0
+Georg_Brandt                        1       0      16   100%     0    0       0      0      0      0      0      0      0
+Reflextracker                       1       0       0     0%     0    0       0      0      0      0      0      0      0
+C64_Speech_System                   2       0       0     0%     0    0       0      0      0      0      0      0      0
+Frank_Tout                          1       0       0     0%     0    0       0      0      0      0      0      0      0
+Companion/Jay_Derrett               2       0       0     0%     0    0       0      0      0      0      0      0      0
+?Unknown_1                          1       0       2   100%     0    0       0      0      0      0      0      0      0
+?MSB                                1       0       0     0%     0    0       0      0      0      0      0      0      0
+Llamasoft/James_Lisney              1       0       0     0%     0    0       0      0      0      0      0      0      0
+Colleen                             2       0       0     0%     0    0       0      0      0      0      0      0      0
+PollyTracker                        2       0       0     0%     0    0       0      0      0      0      0      0      0
+JCH_OldPlayer                       1       0       0     0%     0    0       0      0      0      0      0      0      0
+Jeff/Airwalk                        1       0       1   100%     0    0       0      0      0      0      0      0      0
+Sidbang64_2/Warp8                   1       0       0     0%     0    0       0      0      0      0      0      0      0
+Kawasaki_Synthesizer                3       0       0     0%     0    0       0      0      0      0      0      0      0
+Toaster_Digi                        2       0       0     0%     0    0       0      0      0      0      0      0      0
+David_Whittaker                     1       0       0     0%     0    0       0      0      0      0      0      0      0
+SkyLine_Editor                      1       0      26   100%     0    0       0      0      0      0      0      0      0
+Fred_Gray                           1       0       0     0%     0    0       0      0      0      0      0      0      0
+Neil_Bate                           1       0       0     0%     0    0       0      0      0      0      0      0      0
+Basic/Jim_Butterfield               3       0       0     0%     0    0       0      0      0      0      0      0      0
+Music_Producer_II                   1       0       1   100%     0    0       0      0      0      0      0      0      0
+Games_Creator                       1       0       0     0%     0    0       0      0      0      0      0      0      0
+Censor_Digi_2                       1       0       0     0%     0    0       0      0      0      0      0      0      0
+Dave_Spicer_V15                     1       0       0     0%     0    0       0      0      0      0      0      0      0
+Digi-Organizer                      2       0       0     0%     0    0       0      0      0      0      0      0      0
+Comer/NMI_Sample_5                  2       0       0     0%     0    0       0      0      0      0      0      0      0
+Background_MusicEditor              1       0       0     0%     0    0       0      0      0      0      0      0      0
+?TheSpy_Digi                        1       0       0     0%     0    0       0      0      0      0      0      0      0
+Henning_Andersen                    1       0       0     0%     0    0       0      0      0      0      0      0      0
+?Jim_Simmons/Capcom                 1       0       0     0%     0    0       0      0      0      0      0      0      0
+PASS                                1       0       0     0%     0    0       0      0      0      0      0      0      0
+Music_Construction_Set              3       0       0     0%     0    0       0      0      0      0      0      0      0
+Crunched:Exomizer                   1       0       0     0%     0    0       0      0      0      0      0      0      0
+256bytes/AEB                        1       0       0     0%     0    0       0      0      0      0      0      0      0
+Krill_tiny                          1       0      43   100%     0    0       0      0      0      0      0      0      0
+Steve_Turner                        1       0       0     0%     1    1       0      0      0      0      0      0      0
+Harald_Rosenfeldt                   1       0       0     0%     0    0       0      0      0      0      0      0      0
+Shaun_Southern                      1       0       0     0%     0    0       0      0      0      0      0      0      0
+Ben_Daglish/Gremlin                 1       0       0     0%     0    0       0      0      0      0      0      0      0
+Ghost/SampleMon                     2       0       0     0%     0    0       0      0      0      0      0      0      0
+AlgoVQTracker_V1                    1       0       0     0%     0    0       0      0      0      0      0      0      0
+Loadstar_SongSmith_v3               1       0       0     0%     0    0       0      0      0      0      0      0      0
+Neil_Brennan                        1       0       0     0%     0    0       0      0      0      0      0      0      0
+Barry_Leitch                        1       0       0     0%     0    0       0      0      0      0      0      0      0
+?CBS                                1       0       2   100%     0    0       0      0      0      0      0      0      0
+Sosperec                            1       0       0     0%     0    0       0      0      0      0      0      0      0
+Christoph_Bergmann                  1       0       0     0%     0    0       0      0      0      0      0      0      0
+Sidbang64_1/Warp8                   1       0       0     0%     0    0       0      0      0      0      0      0      0
+DefleMask_v1                        1       0       4   100%     0    0       0      0      0      0      0      0      0
+
+TOTAL residual_resid=11759 drained=26814 drain=69% verified=30 corruptions=1
+TAIL classes (all engines): {'RECUR': 6150, 'FLAT': 4220, 'ZERO': 909, 'SHORT': 401, 'SWEEP': 59, 'PERIOD': 10, 'STRUCT': 10}
+
+=== tail examples (engine|class -> offset seqs) ===
+  DMC                          RECUR   n=828   [[60], [60], [63]]
+  DMC                          SWEEP   n=2     [[2, 4, 6, 7, 8]]
+  DMC                          ZERO    n=265   [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  DMC                          SHORT   n=90    [[65], [-48]]
+  DMC                          FLAT    n=867   [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 12, 12, 0, 0], [0, -12]]
+  GoatTracker_V2.x             RECUR   n=262   [[42, 0], [42, 0], [42, 0]]
+  GoatTracker_V2.x             PERIOD  n=1     [[45, 45, 53, 0, -4, -4, 53, 0, -4, -4, 53, 0, -4]]
+  GoatTracker_V2.x             SWEEP   n=16    [[-50, -56, -64], [-2, -3, -3, -5, -6, -8, -10, -10]]
+  GoatTracker_V2.x             ZERO    n=36    [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+  GoatTracker_V2.x             SHORT   n=7     [[47]]
+  GoatTracker_V2.x             FLAT    n=1254  [[0, 0, -7, -7, -4, -4, -19, -12], [-4, -12, -18, -22, -24, -24], [0, 0, 19]]
+  Music_Assembler              RECUR   n=1044  [[13, 0], [13, 0], [15, 0]]
+  Music_Assembler              STRUCT  n=1     [[-2, 2, -2, 3, -2, 5, -2, 6, -2, 7, -2, 8, -2, 9, -2, 10]]
+  Music_Assembler              SWEEP   n=1     [[0, 4, 7, 12]]
+  Music_Assembler              ZERO    n=65    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  Music_Assembler              SHORT   n=122   [[49], [51], [46]]
+  Music_Assembler              FLAT    n=175   [[17, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  Ubik's_Musik                 RECUR   n=740   [[39], [51], [51]]
+  Ubik's_Musik                 SWEEP   n=1     [[0, 4, 7]]
+  Ubik's_Musik                 ZERO    n=4     [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  Ubik's_Musik                 SHORT   n=1     [[57]]
+  Ubik's_Musik                 FLAT    n=3     [[45, -2, 45, -5, 45], [0, -1, -1, -2, -2, -3, -3, -4, -4, -5, -5, -6, -7, -8, -8, -9]]
+  MoN/FutureComposer           RECUR   n=309   [[26], [26]]
+  MoN/FutureComposer           STRUCT  n=1     [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  MoN/FutureComposer           PERIOD  n=6     [[12, 24, 12, 0, 24, 12, 0, 24, 12, 0, 24, 12, 0, 24, 12, 0], [48, 24, 12, 0, 24, 12, 0, 24, 12, 0, 24, 12, 0, 24, 12, 0], [47, 24, 12, 0, 24, 12, 0, 24, 12, 0, 24, 12, 0, 24, 12, 0]]
+  MoN/FutureComposer           SWEEP   n=1     [[-28, -31, -36, -40]]
+  MoN/FutureComposer           ZERO    n=92    [[0, 0, 0, 0]]
+  MoN/FutureComposer           SHORT   n=43    [[51]]
+  MoN/FutureComposer           FLAT    n=172   [[37, 8, 3, 40], [0, -5, 33, 15, 26, 15], [49, 19, 14, 52, 52]]
+  Hermit/SidWizard_V1.x        RECUR   n=331   [[69], [69]]
+  Hermit/SidWizard_V1.x        ZERO    n=18    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  Hermit/SidWizard_V1.x        SHORT   n=12    [[54], [40], [62]]
+  Hermit/SidWizard_V1.x        FLAT    n=160   [[64, 34, 30, 26, 24, 16], [61, 31, 27, 23, 21, 13], [65, 35, 31, 27, 25]]
+  SoedeSoft                    RECUR   n=313   [[-39], [-39]]
+  SoedeSoft                    ZERO    n=11    [[0, 0, 0, 0, 0, 0, 0, 0]]
+  SoedeSoft                    SHORT   n=8     [[44], [47], [51]]
+  SoedeSoft                    FLAT    n=96    [[0, -1, -2, -1, 0, 0, 1, 2, 1, 0, 0, -1, -2, -1, 0, 0], [12, 3, -1, 12, 9, 12, 5, 5, -2, -2, -9, -9, -16, -16, -23, -23], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  Digitalizer_V2.x             RECUR   n=388   [[63], [68], [63]]
+  Digitalizer_V2.x             SWEEP   n=1     [[2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18]]
+  Digitalizer_V2.x             SHORT   n=2     [[70], [67]]
+  Digitalizer_V2.x             FLAT    n=25    [[0, 0, 4, 4, 7, 7], [0, 0, 3, 3, 7, 7]]
+  Soundmonitor                 RECUR   n=354   [[0, 0, -12], [0, 0, -12], [0, 0, -12]]
+  Soundmonitor                 STRUCT  n=3     [[66, 78, 46, 66, 78, 46, 66, 78, 46, 66, 78, 47, 66, 78, 46, 66]]
+  Soundmonitor                 SWEEP   n=1     [[-1, -3, -4, -6, -8]]
+  Soundmonitor                 ZERO    n=19    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  Soundmonitor                 FLAT    n=31    [[0, -25, -26, -27, -28, -29]]
+  JCH_NewPlayer                RECUR   n=76    [[0, 38], [0, 38]]
+  JCH_NewPlayer                STRUCT  n=4     [[-1, 0, -1, 0, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 2], [11, 0, 11, 1, 11, 1, 11, 2, 11, 2, 11, 2, 11, 3, 11, 3], [-1, 0, -1, 0, -1, 0, -1, 0, -1, 1, -1, 1, -1, 1, -1, 1]]
+  JCH_NewPlayer                SWEEP   n=6     [[-22, -24, -25, -27, -28, -29, -30, -31]]
+  JCH_NewPlayer                ZERO    n=42    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0]]
+  JCH_NewPlayer                FLAT    n=265   [[0, 0, -1, -2, -3, -1, -2, -1, 0, 1, 0, -1, -2, -3, -2, -1], [0, 0, 71], [-35, -43, -45, -49, -47, -43, -49, -53, -31, 1, 15, -27, -43, 0, 0, -49]]
+  ?                            RECUR   n=164   [[29, 0], [29, 0], [29, 0]]
+  ?                            ZERO    n=26    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0]]
+  ?                            SHORT   n=17    [[69], [54], [70]]
+  ?                            FLAT    n=110   [[0, 0, -9, -9, -6, -6], [0, 0, -1, -5, -6, -6, -7, -2, -2, -3, -3], [0, 0, -1, -7]]
+  Geir_Tjelta/SIDDuzz'It       RECUR   n=107   [[48], [48], [48]]
+  Geir_Tjelta/SIDDuzz'It       SWEEP   n=2     [[0, -2, -3, -5, -7, -7], [0, -1, -3, -5, -7, -7]]
+  Geir_Tjelta/SIDDuzz'It       ZERO    n=3     [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+  Geir_Tjelta/SIDDuzz'It       SHORT   n=12    [[25]]
+  Geir_Tjelta/SIDDuzz'It       FLAT    n=94    [[63, 24, 18, 0], [51, 13, 10, 7, 3, -1, -3], [41, 3, 0, 0, -3]]

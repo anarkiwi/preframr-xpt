@@ -50,7 +50,7 @@ where each is created in code:**
 | **SWEEP** | <1% | constant note-relative delta ramp | SweepPass is raw-freq domain; note-relative ramps slip through |
 | **STRUCT/PERIOD** | <1% | loop-body-but-unique / period≤8 | `_make_record` reject (no pitched core) / onset-strip mismatch vs `classify` |
 
-¹ Share of the post-wavetable tail, 1440-tune corpus survey (`/tmp/survey_1440.txt`; classes total 11,083
+¹ Share of the post-wavetable tail, 1440-tune corpus survey (`design/resid_corpus_survey_1440.txt`; classes total 11,083
 residual RESID). Structurally stable from 200 tunes. **The dominant lever is RECUR+SHORT (≈55%)**: the
 codebook's factorise/onset-strip/pitched-core key is *more restrictive than exact-tuple recurrence* — this
 is precisely the gap between the 89% exact-recurrence measured pre-build (SidWizard) and the 67% actual
