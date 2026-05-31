@@ -1,5 +1,11 @@
 # RESID-archetype program — model them all (RESID→0), then unify
 
+> **Superseded framing (2026-05-31):** this build-log's "audition-gated lossy fit targets the irreducible
+> residue" lever is **retired**. The post-stack residue is documented **wavetable engines**, proven
+> **codebook-able** (note-relative offset sequences recur 80–89%); the path to RESID=0 is the **WAVETABLE
+> codebook** + tracing each engine, per `IMPLEMENTATION_resid_zero_phase3_tokens.md`. Treat any
+> "irreducible / lossy floor" language below as historical.
+
 **Goal (user, 2026-05-30):** the skeleton encoding's job is *learnable per-frame pitch/freq
 prediction for every patch* — melody, drum, effect, anything. `RESID` is the un-learnable escape
 hatch: a per-frame trajectory the current primitives can't parameterise, dumped as raw offsets the

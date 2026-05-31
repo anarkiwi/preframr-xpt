@@ -70,8 +70,9 @@ fidelity-neutral is *not* learnability-neutral.
   primitive, regardless of provenance** — a recognizer gap to close, not a tune to tolerate. The
   acid test is a **provenance-invariance** assertion: an explicit-write stream and a driver-table
   stream of the *same* gesture must produce *identical* ORN/SKEL tokens. (Drives backlog #13/#15.)
-- **P8 — Read the control register, not freq alone; and the long tail is lossy, not a new exact
-  primitive.** *Evidence (2026-05-30 RESID-archetype program, `resid_archetype_program.md`):* the
+- **P8 — Read the control register, not freq alone; the long tail is a recurring engine mechanism (a
+  codebook), not a stack of new exact primitives — and not a lossy floor (lossy is a last resort, only
+  after tracing every engine).** *Evidence (2026-05-30 RESID-archetype program, `resid_archetype_program.md`):* the
   per-frame freq cannot be interpreted in isolation — the control register (gate / **test bit** /
   **waveform**) assigns each frame's role: a test/HR onset frame's freq is don't-care, a **noise**
   frame's freq is *timbre not pitch* (a note-onset noise-tik accents a *pitched* lead — Facemorph —

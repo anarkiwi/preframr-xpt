@@ -1,5 +1,11 @@
 # Implementation spec — RESID→0 encoding stack (for the preframr-tokens agent)
 
+> **Superseded by `IMPLEMENTATION_resid_zero_phase3_tokens.md` (2026-05-31).** Phase 1–2 (this spec)
+> shipped (tokens v0.36.0/v0.37.0: arbiter, STAMP, PATCH, SWEEP, held-ARP). The data-driven next step —
+> residue = documented **wavetable engines**, proven **codebook-able**; the WAVETABLE codebook primitive;
+> the constrained-decode registry refactor + materialization — is in the Phase-3 spec. This doc is
+> accurate on the shipped stack (and correctly says "not an irreducible floor"); read Phase 3 for next.
+
 **Status:** Build spec. Audience: an agent working **solely in `preframr-tokens`**. Goal: implement the
 full mechanism stack that drives skeleton `RESID` toward 0, under a speculative encoding pipeline.
 Everything here is validated by probes in `preframr-experiments/audit/probes/` (paths given per

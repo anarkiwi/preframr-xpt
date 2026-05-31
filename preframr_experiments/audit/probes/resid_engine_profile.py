@@ -35,7 +35,8 @@ SIDID_CFG = "/scratch/anarkiwi/sidid/sidid.cfg"
 
 
 def _args():
-    return parse_args(skeleton_pass=True, trajectory_anchor_pass=True)
+    return parse_args(skeleton_pass=True, trajectory_anchor_pass=True,
+                      stamp_pass=True, sweep_pass=True, patch_pass=True, held_arp=True)
 
 
 def _const_delta(xs, tol=1):
@@ -110,20 +111,11 @@ def fit(rec):
 
 
 def driver_map(dirs):
-    out = {}
-    for d in sorted(set(dirs)):
-        m = {}
-        try:
-            r = subprocess.run(["sidid", d], capture_output=True, text=True, timeout=120,
-                               env={**os.environ, "SIDIDCFG": SIDID_CFG})
-            for ln in r.stdout.splitlines():
-                parts = ln.split()
-                if len(parts) >= 2 and parts[0].lower().endswith(".sid"):
-                    m[parts[0][:-4].lower()] = parts[-1]
-        except Exception:
-            pass
-        out[d] = m
-    return out
+    """Engine label per (dir, tune) from the prebuilt sidid cache (sidid_cache.py).
+    No per-run sidid subprocess -- the cache is one recursive pass, built once."""
+    import sidid_cache
+    full = sidid_cache.by_dir()
+    return {d: full.get(d, {}) for d in set(dirs)}
 
 
 def analyze(paths, dmap):

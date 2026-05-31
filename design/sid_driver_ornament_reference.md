@@ -299,7 +299,7 @@ code) collapses automatically at the register-log input.
 | `SLIDE` (target+rate) | all drivers' portamento/pitch-slide (incl. JCH cmd `7` across tied notes) |
 | `VIB` (depth+rate) | all drivers' vibrato + sub-semitone detune (JCH cmd `2`/`3`/`5`, Galway/defMON gradients) |
 | note segmentation | intrinsic level-change ∪ gate-on ∪ **fast-melodic-run split (#13)** — driver-agnostic |
-| `RESID` | only genuinely-aperiodic content no primitive models (the completeness floor) |
+| `RESID` | the lossless escape for content no primitive models YET — every non-zero RESID is an un-modelled engine to trace (the WAVETABLE codebook closes the bulk), not a floor |
 
 **Empirical proof (real HVSC tunes, RESID note-share after #13):** Trap (Antony Crowther V3)
 **0.01**, Camerock (JCH) **0.06**, Commando (Hubbard) **0.24**, Baggis (JCH) **0.26** — all through
@@ -312,7 +312,7 @@ irreducible pitch primitive** — superseded by the control-register finding. Me
 / 76% (Baggis) of the wide (|≥12 st|) jumps land on the NOISE waveform** — drum hits / noise-accents
 whose "freq" is timbre, not pitch (see "The control register disambiguates the freq trajectory"). The
 control-aware rule (noise frame = timbre; pitch from pitched frames; no-pitched-frame note =
-percussion) absorbs these from the melody; the genuinely-pitched residue is the small true floor (some
+percussion) absorbs these from the melody; the genuinely-pitched residue is small — codebook-able wavetable ornament (Phase 3), not a floor (some
 wide effects / octave-jump wavetable runs). **#15 itself stays a guarantee + a doc** (the
 provenance-invariance test #11.4 + this matrix); the wide-RESID reduction is the RESID→0 program's
 control-aware work.
