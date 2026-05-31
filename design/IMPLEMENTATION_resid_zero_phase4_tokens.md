@@ -23,12 +23,11 @@
 
 ## 0. State on handback (what is already true)
 
-- **0.38.1 (released, PyPI):** `WavetablePass` (ops 65–68) is wired into `RegLogParser.parse` after
-  `SkeletonPass` and is functional but **default-OFF**. With `wavetable_pass=True` it drains the
-  *recurring* and *structured-looping* RESID into a `WAVETABLE_DEF`/`REF` codebook + inline one-shots.
-  In-repo fixture tests are byte-exact, BUT the full-corpus survey found it is **NOT byte-exact on ~3% of
-  tunes** (isolation oracle `register_state` OFF≠ON) — a latent correctness bug that is harmless only
-  because the pass is default-OFF. **W0 fixes this first.**
+- **0.38.1–0.38.2 (released, PyPI):** `WavetablePass` (ops 65–68) is wired into `RegLogParser.parse` after
+  `SkeletonPass`, **default-OFF**. With `wavetable_pass=True` it drains the *recurring* and
+  *structured-looping* RESID into a `WAVETABLE_DEF`/`REF` codebook + inline one-shots. 0.38.1 fixed the
+  parse-path wiring (the pass was dead in 0.38.0); **0.38.2 fixed the same-frame codebook byte-exactness
+  bug (W0 below) — the pass is now byte-exact corpus-wide.**
 - **Constrained-decode `OpContract` registry** (`preframr_tokens/macros/op_contracts.py`,
   `OP_CONTRACTS`): one contract per emittable op with a `MaskRole`
   (`ATOM`/`CODEBOOK_DEF`/`CODEBOOK_STEP`/`CODEBOOK_END`/`CODEBOOK_REF`); a **completeness test fails at
@@ -65,28 +64,21 @@ create most of it (`_MIN_CORE=2`, `has_body`-only inline, no-pitched-core reject
 *other* primitives (ZERO→PLAIN, SWEEP→SLIDE) and must be routed there, not absorbed, to preserve
 **provenance-invariance** (same gesture → same tokens, principle P7).
 
-### W0 — fix WAVETABLE byte-exactness (P0 BLOCKER — do FIRST)
+### W0 — fix WAVETABLE byte-exactness — ✅ DONE (tokens 0.38.2, author-side)
 
-The full-corpus survey's 1-in-50 verify found **~3% of verified tunes fail the isolation oracle**
-(`register_state` OFF != ON) with `wavetable_pass` ON. Today those tunes are merely *not drained* safely;
-after W3 the pass is **total over residue**, so every such divergence becomes a **shipped render
-corruption**. This MUST be root-caused and driven to zero before W1–W3 land.
-
-- **Reproduce:** `resid_byte_exact_hunt.py all` (xpt probes) full-verifies every tune and logs each failing
-  path + a first-divergence diagnostic (frame/reg/off-vs-on value). Start from the logged failing tunes.
-- **Likely suspects (verify, don't assume):** (a) `factorise`/`unroll` not reproducing offsets for some
-  length/loop/RLE-hold interaction (the `verify` guard should prevent this — check it actually runs on
-  every emitted record and that a non-verifying record is left as RESID, `wavetable_pass.py:193-211`);
-  (b) the arbiter splice (`Claim(writes=drop_idx, tokens=new_rows)`) mis-ordering DEF/REF rows relative to
-  the surviving SKEL atom or the frame markers; (c) a LATER pass in `RegLogParser.parse` (PatchPass,
-  ReleaseUpdatePass, consolidate_frames) mutating the spliced WAVETABLE rows; (d) onset-strip `lead`
-  offsets dropped or double-counted on replay (`WT_REF_SUBREG_LEAD`/`LEADOFF`).
-- **Gate:** add the first failing tune as a parse-level regression fixture (dump it via `DumpBuilder` or
-  pin the corpus path behind the fixture-cache guard), asserting `register_state` OFF==ON. The DoD
-  byte-exact gate (§5) must pass `resid_byte_exact_hunt.py all` with **0** corruptions.
-
-> Root cause (fill on handback): _____________  (the specific mechanism + the failing tunes are in
-> `/tmp/byte_hunt.log`; I attach the reduced repro and confirmed cause.)
+A full-corpus byte-exact survey found **~2.5% of tunes failed the isolation oracle** (`register_state`
+OFF≠ON) with `wavetable_pass` ON. **Root cause (confirmed):** the within-frame row sort `_norm_pr_order`
+(`reglogparser.py`, key `["f","v","reg","op","n"]`) ordered by op-code, so when two variable-length
+codebook blocks (`DEF→STEP*→END`) landed in the **same frame** it grouped all DEFs, then all STEPs, then
+all ENDs — shattering both blocks; the decoder then mis-parsed them and replayed garbage freqs (often
+clamping to 0xFFFF and desyncing every later frame). Concentrated in dense-codebook engines (GoatTracker,
+DMC, JCH); latent for STAMP/PATCH too (rarer per-frame). **Fix:** each family's STEP/END collapse to its
+DEF op for the sort (`_BLOCK_SOP`) so a block stays contiguous in emit order (`n`); a no-op when no
+codebook ops are present, so non-codebook streams and the golden masters are unchanged. Guard:
+`tests/test_wavetable_multidef_frame.py` (2-voice dump → two WAVETABLE_DEFs in one frame → byte-exact
+through `parse`; fails pre-fix). Hunt tool: `resid_byte_exact_hunt.py` (full-verify every tune, logs
+divergences). **This is why the DoD §5 byte-exact gate is now a FULL-verify pass, not 1-in-50** — keep it
+green as W1–W5 land (each new op family is a new chance for a same-frame block collision).
 
 ### W1 — ZERO → PLAIN/noise-hold (skeleton, drains the ZERO class)
 
