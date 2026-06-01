@@ -72,15 +72,22 @@ fidelity-neutral is *not* learnability-neutral.
   stream of the *same* gesture must produce *identical* ORN/SKEL tokens. (Drives backlog #13/#15.)
 - **P8 — Read the control register, not freq alone; the long tail is a recurring engine mechanism (a
   codebook), not a stack of new exact primitives — and not a lossy floor (lossy is a last resort, only
-  after tracing every engine).** *Evidence (2026-05-30 RESID-archetype program, `resid_archetype_program.md`):* the
+  after tracing every engine).** *Evidence (2026-05-30 RESID-archetype program):* the
   per-frame freq cannot be interpreted in isolation — the control register (gate / **test bit** /
-  **waveform**) assigns each frame's role: a test/HR onset frame's freq is don't-care, a **noise**
+  **waveform**) assigns each frame's role: a **TEST-bit** frame's freq is don't-care (oscillator held)
+  — but NOT a classic gate-based hard-restart frame, which is in release where freq IS audible (don't
+  conflate the two HR mechanisms); a **noise**
   frame's freq is *timbre not pitch* (a note-onset noise-tik accents a *pitched* lead — Facemorph —
   it is NOT a drum), and a note with no pitched frame is percussion. So you may base the melodic note
   on its *pitched* frames (landed, control-aware `_rebased_note`). **BUT "not melodic pitch" ≠
-  "discardable".** Emulator-proven (`preframr-audio/tests/test_freq_write_audibility.py`, pyresidfp):
-  the ONLY freq write that does not reach the output is one on a **TEST-bit frame** (oscillator held
-  in reset). A **noise**-frame freq is the noise pitch/colour (fully audible), a freq change during
+  "discardable".** Emulator-proven (single source of truth: `preframr-audio` 0.5.5
+  `test_freq_write_audibility.py` + `test_register_canonicalization.py`, under the renderer's REAL
+  per-write timing — see [`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md)): a
+  **TEST-bit frame's freq** is the one freq write that does not reach the output, but only absorbable to
+  a NEARBY value (a wild multi-octave triangle jump leaks through the pre-TEST inter-write window, so
+  absorb to the adjacent note's freq, not an arbitrary constant). **PW and waveform bits on a test-bit
+  frame ARE audible** (the pulse threshold / held DC level take effect in that window) — NOT discardable.
+  A **noise**-frame freq is the noise pitch/colour (fully audible), a freq change during
   **release** is audible (release-0 is NOT instant), and **combined-waveform** freqs are audible — so
   those freqs must still be ENCODED (a percussion/effect channel), never absorbed to 0. Discarding any
   non-test write is provably wrong; *prove* a write is inaudible with the emulator before dropping it.

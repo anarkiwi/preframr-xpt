@@ -136,11 +136,17 @@ control-driven frames as RESID. Three concrete mechanisms:
 - **Hard-restart (HR) onset window = the "transient" archetype.** SID Wizard primes each note with a
   hard restart: `PRE_HR_LEAD_FRAMES = 2` frames before the row it **clears the gate** and writes
   HR-AD/HR-SR, then `HR_FRAMES = 1` frame with the **TEST bit set** (`CTRL=$09`), before the WF table
-  walks. So every note onset has a ~3-frame window where the gate is briefly low, the test bit is on,
-  and **the freq is don't-care** (the oscillator is being reset). This is almost certainly the
-  freq-survey "transient/attack" archetype (~34%) — and it is **detectable from the control register
-  (test bit / gate-off-then-on), not the freq**. Encode HR as a note-onset marker; the HR frames'
-  freq is absorbed, not RESID. (Also `gateoff_wf/pw/filt`: the release phase swaps waveform/PW/filter
+  walks. NB SID Wizard combines TWO distinct mechanisms — do not conflate them: (1) the **classic ADSR
+  hard-restart** = the gate-based ADSR-bug workaround (gate off + reload AD/SR ~2 frames early so the
+  1.7-frame ADSR-bug window elapses and the note attacks from a known state; no TEST bit). Its onset
+  frames are gate-off/**release**, where **freq IS audible**. (2) the **TEST bit** = an oscillator-phase
+  reset (`CTRL` bit 3); **only on a TEST-bit frame is freq (near-)don't-care**. So every note onset has a
+  ~3-frame transient window, **detectable from the control register (test bit / gate-off-then-on), not
+  the freq** — but freq is only absorbable on the TEST-bit frame, not the gate-low release frames. Encode HR as a note-onset marker; the HR frames'
+  freq is absorbed **to the adjacent note's pitch, not an arbitrary constant** — under the renderer's
+  real per-write timing a wild triangle freq leaks through the pre-TEST window, and the HR frame's **PW
+  is audible** (see [`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md), proven in
+  preframr-audio 0.5.5). (Also `gateoff_wf/pw/filt`: the release phase swaps waveform/PW/filter
   — more non-note-pitch per-frame variation, again control-flagged.)
 - **One-shot chord "pluck" (SID Wizard `$7E` vs looping `$7F`):** a one-shot chord at attack is a
   brief arp transient at note start (vs a continuous arp), another onset ornament — `OCTAVE`/`ARP` but
@@ -384,7 +390,7 @@ resid_trace.py` on `Danko_Tomas/Howard_Jones`):
   (`fn = 25405,24893,23871,…` swept noise) — a snare/tom.
 - **Universal-primitive mapping:** a **freq-domain SWEEP primitive `(start, Δfreq/frame, length,
   loop_period)`** captures both the pitched looping arp (loop_period set) and the one-shot noise drum
-  (no loop, noise waveform). This is the §6/`IMPLEMENTATION_resid_zero_tokens.md` freq-domain SLIDE/
+  (no loop, noise waveform). This is the §6 freq-domain SLIDE/
   SWEEP, EXTENDED with a loop period (the SoundMonitor arp) — and it must run on noise frames too
   (waveform-agnostic). NOT a new family; the freq-domain sweep already on the frontier, with looping.
 

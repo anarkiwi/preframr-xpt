@@ -48,25 +48,14 @@ across engines (stretch) — inside:
 
 The lever is **re-encoding** (the skeleton+ornament tokenizer in preframr-tokens); training is **gated**
 behind a deterministically-sound encoding (no training/audition until the pre-training tests are green).
-**Shipped (tokens v0.36.0/v0.37.0, all gated default-OFF):** control-aware foundation, claim/arbiter
-framework, STAMP (drum codebook), PATCH (instrument codebook), SWEEP, held-ARP. Universal-driver collapse
-verified (zero per-driver branching); provenance-invariance test #11.4.
-
-**RESID→0 program** (`design/resid_archetype_program.md`): every non-zero RESID is an unmodelled **engine**
-mechanism — name the engine (sidid), trace its driver. **NOT an "irreducible floor."** Measured this
-session (post-stack residue, per-engine via the cached sidid labels `/scratch/preframr/hvsc/
-sidid_labels.parquet`): the residue is **documented wavetable engines** — GoatTracker, DMC,
-Music_Assembler, SidWizard, JCH — and their note-relative offset sequences **recur 80–89%** (codebook-able).
-Artifacts: `design/resid_per_engine_profile_500.txt`, `design/resid_wavetable_recurrence.txt`; probes
-`audit/probes/{sidid_cache,resid_engine_profile,resid_wavetable_recurrence}.py`.
-
-**Handed off:** Phase-3 work order to a preframr-tokens agent (`design/IMPLEMENTATION_resid_zero_phase3_tokens.md`;
-untracked agent copy `preframr-tokens/RESID_ZERO_PHASE3.md`): (1) **WAVETABLE codebook** (pitched twin of
-STAMP); (2) **constrained-decode registry refactor** — one op-contract drives decode+mask+validate, a
-completeness test fails at unit-test time if an op is unwired, + out-of-window-DEF materialization; (3)
-frontier tail only if it still leaks. I run corpus validation on handback. Memories: `resid-phase3-handback`,
-`control-aware-encoding`, `universal-driver-already-exists`, `speculative-encoding-pipeline`,
-`cross-repo-release-ordering`.
+**Shipped (preframr-tokens up to v0.40.0, macro passes gated default-OFF):** control-aware foundation,
+claim/arbiter framework, STAMP (drum codebook), PATCH (instrument codebook), SWEEP, held-ARP, WAVETABLE
+codebook. Universal-driver collapse verified (zero per-driver branching; provenance-invariance test #11.4).
+**v0.40.0 makes the tokenizer byte-exact** on the lossless path (PerRegBurst DIFF bases on the decoder's
+carried value; transposed loops only when lossless; STAMP barrier; lossless `_cap_delay`) plus a toggleable
+parse-consistency audit (`PREFRAMR_PARSE_AUDIT=raise|warn`). The byte-exact / RESID→0 work orders are
+retired (shipped); the residue is documented wavetable engines (note-relative offset cycles recur ~80–89%,
+codebook-able), NOT an irreducible floor. Release flow: memory `cross-repo-release-ordering`.
 
 ### Prior arc — substrate is the lever; V0 pitch (2026-05-28, superseded by the skeleton re-encoding)
 
