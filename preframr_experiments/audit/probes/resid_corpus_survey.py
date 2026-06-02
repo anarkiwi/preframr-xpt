@@ -44,6 +44,11 @@ import numpy as np  # noqa: E402
 CORPUS = "/scratch/preframr/hvsc"
 BASE = dict(skeleton_pass=True, trajectory_anchor_pass=True,
             stamp_pass=True, sweep_pass=True, patch_pass=True, held_arp=True)
+# Full Phase-4 deployed stack (W1-W5, the intended W7 default-ON set): wavetable codebook + ZERO->PLAIN
+# (W1) + short literal codebook (W2) + inline one-shot RESID=0 backstop (W3) + wide-ramp SLIDE (W4) +
+# exact-landing SLIDE2 (W5.1) + looping SWEEP (W5.3). The OFF baseline is BASE alone (no drain gates).
+STACK = dict(wavetable_pass=True, zero_plain=True, wt_short=True, wt_oneshot=True,
+             slide_wide=True, slide_landing=True, sweep_loop=True)
 _FREQ = {int(r) for r in FREQ_TRAJ_REGS}
 PROGRESS_EVERY = 200
 VERIFY_EVERY = 50
@@ -134,7 +139,7 @@ def analyze(args):
         tune = os.path.basename(p).split(".")[0].lower()
         eng = dmap.get(os.path.dirname(p), {}).get(tune, "?")
         try:
-            d_on = parse_df(p, wavetable_pass=True)
+            d_on = parse_df(p, **STACK)
         except Exception:
             continue
         on, refs = resid_offsets(d_on)
@@ -149,7 +154,7 @@ def analyze(args):
                 examples[(eng, c)].append(list(seq)[:16])
         if (hash(p) % VERIFY_EVERY) == 0:
             try:
-                d_off = parse_df(p, wavetable_pass=False)
+                d_off = parse_df(p)
                 drain[eng]["verified"] += 1
                 if not np.array_equal(register_state(d_off), register_state(d_on)):
                     drain[eng]["bad"] += 1
@@ -176,7 +181,7 @@ def merge(results):
 
 def render(drain, tail, examples, sample_n):
     lines = []
-    lines.append(f"\n=== FULL-CORPUS RESID=0 SURVEY ({sample_n} tunes, wavetable_pass ON) ===")
+    lines.append(f"\n=== FULL-CORPUS RESID=0 SURVEY ({sample_n} tunes, full Phase-4 stack ON) ===")
     hdr = (f"{'engine':30s} {'tunes':>6} {'resid':>7} {'drained':>7} {'drain%':>6} "
            f"{'vrf':>5} {'bad':>4}  " + " ".join(f"{c:>6}" for c in CLASSES))
     lines.append(hdr)

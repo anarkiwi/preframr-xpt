@@ -27,6 +27,9 @@ import numpy as np  # noqa: E402
 CORPUS = "/scratch/preframr/hvsc"
 BASE = dict(skeleton_pass=True, trajectory_anchor_pass=True,
             stamp_pass=True, sweep_pass=True, patch_pass=True, held_arp=True)
+# Full Phase-4 deployed stack (the intended W7 default-ON set); OFF baseline is BASE alone.
+STACK = dict(wavetable_pass=True, zero_plain=True, wt_short=True, wt_oneshot=True,
+             slide_wide=True, slide_landing=True, sweep_loop=True)
 _DMAP = {}
 
 
@@ -58,8 +61,8 @@ def analyze(args):
         tune = os.path.basename(p).split(".")[0].lower()
         eng = _DMAP.get(os.path.dirname(p), {}).get(tune, "?")
         try:
-            d_off = parse_df(p, wavetable_pass=False)
-            d_on = parse_df(p, wavetable_pass=True)
+            d_off = parse_df(p)
+            d_on = parse_df(p, **STACK)
             if d_off is None and d_on is None:
                 continue
             if d_off is None or d_on is None:
