@@ -77,16 +77,22 @@ is **learnability**: does each pattern-compressing token's PAYLOAD actually lear
 4. **Go/no-go**: re-confirm full_macros vs atomic (×seeds, byte-exact rebake) on content_acc + tier/op
    accuracy — the decision on whether the compressing vocab is the right substrate.
 
-### Byte-exact corpus verification (10% HVSC sweep — in flight at handoff)
+### Byte-exact corpus verification (10% HVSC sweep — running DETACHED at handoff)
 
 v0.40.0's byte-exact path is verified by a 10% HVSC audit sweep (every 10th dump, skeleton path,
-`PREFRAMR_PARSE_AUDIT=raise`): script `preframr_experiments/audit/probes/hvsc_audit_sweep.py`, run in the
-xpt image — `python3 -u .../hvsc_audit_sweep.py 10 20` (STEP WORKERS). At handoff it was clean through
-~54% (0 divergences, 0 errors), INCLUDING every tune the pre-fix sweep flagged (Aria, Day_Tripper,
-Sleigh_Ride, Pocket_Rockets, Uninvited, Mini_Melodies, 1394). **To finish the all-clear, re-run it**
-(clean = a final `DONE ... DIRTY=0 ERR=0`); a `DIRTY [i/N] <tune>: <pass> ... reg R V->V'` line names the
-tune+pass+reg for a targeted trace, and a NEW divergence class is a tokens bug to root-fix (NOT a
-fallback — model training must never see wrong tokens).
+`PREFRAMR_PARSE_AUDIT=raise`); script `preframr_experiments/audit/probes/hvsc_audit_sweep.py`. A run is
+LIVE in a **detached container that survives a context-clear** — container `preframr_hvsc_sweep_v040`,
+durable log **`/scratch/preframr/sweep_v040.log`**.
+
+- **Fresh agent: `tail /scratch/preframr/sweep_v040.log`.** All-clear = a final `DONE sample=8705 ...
+  DIRTY=0 ERR=0`. A `DIRTY [i/N] <tune>: <pass> ... reg R V->V'` line (streamed live) names the
+  tune+pass+reg. The prior session was clean through ~55%, INCLUDING every tune the pre-fix sweep
+  flagged (Aria/Day_Tripper/Sleigh_Ride/Pocket_Rockets/Uninvited/Mini_Melodies/1394).
+- If the container is gone (`docker ps`) and the log lacks `DONE`, re-run: `docker run --rm --network host
+  -v /scratch:/scratch -e PYTHONPATH=/scratch/anarkiwi/preframr-tokens:/scratch/anarkiwi/preframr-audio
+  -e PREFRAMR_SID_FIXTURE_CACHE=/scratch/preframr/sid_fixture_cache anarkiwi/preframr-xpt:0.2.13
+  python3 -u preframr_experiments/audit/probes/hvsc_audit_sweep.py 10 20`.
+- A NEW divergence class is a tokens bug to ROOT-FIX (never a fallback — training must not see wrong tokens).
 
 ### Prior arc — substrate is the lever; V0 pitch (2026-05-28, superseded by the skeleton re-encoding)
 
