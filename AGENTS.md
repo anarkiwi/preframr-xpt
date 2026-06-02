@@ -6,11 +6,16 @@ corpus live elsewhere.
 
 ## Packages
 
-- **`preframr` 0.2.16** — framework only (train / inference / model / args /
-  parse / stftokenize / utils + `mine_motifs.py`). Image `anarkiwi/preframr`.
-  No PyPI; ships as the docker image. Carries the per-op-accuracy gate. Floors
-  `preframr-tokens>=0.42.0`; `tier_map.build_op_map` reads op→name from tokens'
-  `op_name_by_id()` (no local `stfconstants` dir-scan).
+- **`preframr` 0.2.17** — framework only (train / inference / model / args /
+  parse / stftokenize / utils). Image `anarkiwi/preframr`. No PyPI; ships as the
+  docker image (`0.2.17` + `:latest` published on main-push). Carries the
+  per-op-accuracy gate. Floors `preframr-tokens>=0.42.0` (in **all** req files:
+  `requirements.txt`, `predict-requirements.txt`, `jetson/predict-requirements.txt`
+  — `op_name_by_id` is on the predict import path). `tier_map.build_op_map` reads
+  op→name from tokens' `op_name_by_id()`. **Macro passes are supplied as ONE
+  validated list** — `apply_macro_flags_to_args` resolves `--macro-flags` /
+  `--macro-config` off the tokens registry (default all-OFF); the old per-flag
+  `--foo-pass` args + `_PIPELINE_NAME_TO_FLAG` + `--pipeline-spec` are gone.
 - **`preframr-tokens` 0.42.0** (PyPI) — torch-free parser/tokenizer + macros
   + `render_play`. **Byte-exact** (corpus dirty ~8%→0); STAMP/PATCH/SWEEP/held-ARP/
   WAVETABLE codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`). 0.42 added
@@ -48,7 +53,7 @@ across engines (stretch) — inside:
 - **Predict:** Jetson Orin NX (15.6 GB) at PROMPT=2048 / MAX=8192. KV cache
   at prodlike dims ~16 KiB/token → 128 MiB at MAX; bounded by seq_len.
 
-## Current arc — byte-exact tokenizer COMPLETE + released; learnability is scale-bound at mini (2026-06-02)
+## Current arc — byte-exact + PW/filter sweep + unified macro-flags ALL SHIPPED; codebook distribution read is the next experiment (2026-06-02)
 
 The lever is **re-encoding**; training is **gated** behind a byte-exact encoding. **Byte-exactness is DONE
 and released — preframr-tokens v0.41.1, image 0.2.16 — corpus dirty rate ~8% → 0.** Root-fixes this arc (all
@@ -78,29 +83,45 @@ substrates. Swapping to the codebook pipeline drops FREQ_TRAJ (49%→0) for SKEL
 PATCH takes recurring envelopes from RELEASE_UPDATE — **but PW/filter lose trajectory compression and revert
 to SET/PWM_PRESET/FC_PRESET (+16/+19/+6pp)**. That blowup motivates the handoff below.
 
-### SHIPPED — PW/filter SWEEP + op-name API (tokens 0.42.0; framework cleanup done 2026-06-02)
-The handoff brief (`preframr-tokens/IMPLEMENT_pw_filter_sweep_and_op_api.md`, untracked) is fully landed:
-- **Part A:** `SweepPass` now mines PW (regs 2/9/16, `pw_sweep`) + filter cutoff (reg 21, `filter_sweep`),
-  both default-OFF sub-flags gated under `sweep_pass`, `note_aligned=False`, no freq/skeleton RESID gate;
-  register-exact (one `Claim`/run, `validate=True`). A constant-delta ramp that was one
-  `PWM_PRESET`/`FC_PRESET`/`SET` per frame now collapses to one byte-exact `SWEEP`.
-- **Part B:** tokens owns `op_name_by_id() -> {op:NAME}` + `op_name_tiers()` (re-exported from `preframr_tokens`).
-- **Owner follow-up DONE:** `preframr/train/model/tier_map.py::build_op_map` now imports `op_name_by_id`
-  (local `_op_name_by_id` dir-scan deleted); `requirements.txt` floored to `0.42.0`. tier_map + onset-loss
-  + learnable-class-loss tests green in the `0.2.16` image. A tokens op rename now ripples with zero name-path
-  edits. (`structural_loss.py`/`predict.py` still import specific `*_OP` constants — legit tight coupling, kept.)
+### SHIPPED + RELEASED — tokens 0.42.0, framework 0.2.17, unified macro-flags (2026-06-02)
+- **tokens 0.42.0** (PyPI): `SweepPass` mines PW (regs 2/9/16, `pw_sweep`) + filter cutoff (reg 21,
+  `filter_sweep`), default-OFF sub-flags under `sweep_pass`, `note_aligned=False`, register-exact (one
+  `Claim`/run, `validate=True`) — a constant-delta ramp that was one `PWM_PRESET`/`FC_PRESET`/`SET` per frame
+  now collapses to one `SWEEP`. Plus `op_name_by_id()`/`op_name_tiers()`.
+- **framework 0.2.17** (image `anarkiwi/preframr:0.2.17` + `:latest`, published cuda/predict/xpu/jetson via
+  `release.yml`; `docker-test` + `docker-release` both green): `tier_map.build_op_map` reads tokens
+  `op_name_by_id` (local dir-scan deleted). **Unified macro-flag surface (breaking):** the three
+  hand-maintained surfaces (per-flag `--foo-pass` args, `_PIPELINE_NAME_TO_FLAG`, `--pipeline-spec`) collapsed
+  to one — `apply_macro_flags_to_args` resolves `--macro-flags`/`--macro-config` via the tokens registry
+  (validate → `resolve_flags` deps/conflicts → per-flag attrs; default all-OFF, so a bare/`baseline=True` arm
+  is truly atomic; `full_macros` = `REGISTERED_MACROS`). predict recovers `args.macro_flags` from the ckpt.
+  All req files floored `>=0.42.0` (jetson's was missed first → release failed → fixed). No tokens release
+  needed (reused 0.42.0 primitives).
+- **xpt:** all 31 specs migrated to `Arm(macro_flags=..., macro_config=...)`; runner renders the CLI; dataset
+  cache key hashes them. Merged to main (origin's dead-wood PR #5 removed the refuted motif specs — folded in).
+  Image `anarkiwi/preframr-xpt:0.2.17` baked on the 0.2.17 base.
+- Codebook+PW/filter pipeline verified reachable + runs end-to-end (`PARSE_AUDIT=raise` on the truncated
+  `sid_fixture_cache/*_20s` dumps trips, but so does `full_macros` — a fixture property; the real byte-exact
+  gate is the corpus sweep `cb_div_audit.py`).
 
-### NEXT (owner)
-1. **Canonical-tier learnability run** — the real go/no-go (mini collapses regardless of vocab). Unchanged by
-   0.42 (the new sweep sub-flags are default-OFF; the byte-exact substrate is identical).
-2. (optional) mini codebook-pipeline arm for the distribution read (training collapses; distribution is the payoff).
-3. **Re-measure the codebook pipeline now that PW/filter sweep landed** — the SET/PWM_PRESET/FC_PRESET blowup
-   (+16/+19/+6pp) should become SWEEP. **Now launchable** (the plumbing prereq landed 2026-06-02, below): a
-   spec arm enables it with e.g.
-   `Arm(label="codebook", macro_flags=("skeleton_pass","sweep_pass","pw_sweep","filter_sweep","stamp_pass","wavetable_pass", <base>))`.
-   Verified end-to-end: parse runs the full codebook+PW/filter pipeline to completion (truncated
-   `sid_fixture_cache/*_20s` dumps trip `PARSE_AUDIT=raise`, but so does `full_macros` — that's a fixture
-   property, not a regression; the real byte-exact gate is the corpus sweep `cb_div_audit.py`).
+### NEXT — proposed immediate experiment, then the strategic go/no-go
+1. **`codebook_distribution_mini` (write + run this next)** — the payoff read for the whole 0.42 + plumbing
+   arc, now finally launchable. Mini, `--tkvocab 0`, 2 arms:
+   - `codebook`: `macro_flags=(<base> + "skeleton_pass","held_arp","zero_plain","slide_wide","slide_landing",
+     "stamp_pass","sweep_pass","sweep_loop","pw_sweep","filter_sweep","wavetable_pass","wt_short","wt_oneshot","patch_pass")`
+     (NOT `freq_trajectory_pass` — `resolve_flags` rejects skeleton+freq_trajectory). `<base>` = preset/
+     hard_restart/legato c2/c4/voice_block/ctrl_bigram/loop/loop_transposed.
+   - `full_macros` baseline: `macro_config="full_macros"`.
+   **Read = the op DISTRIBUTION, not val_acc** (mini training mode-collapses regardless — established). Run
+   `audit_checkpoint_per_class` → `content_tier_report`; confirm (a) the PW/filter SET/PWM_PRESET/FC_PRESET
+   blowup (+16/+19/+6pp) becomes SWEEP, and (b) STAMP/WAVETABLE codebooks now register (were ~0% because they
+   weren't in REGISTERED_MACROS). This proves the encoding payoff before spending the canonical budget.
+   (NOTE: the `codebook_coupling.py` triage tool + `macro_learnability_triage.md` were removed by PR #5 —
+   read the distribution from `content_tier_report` directly.)
+2. **Canonical-tier learnability run** — the real go/no-go. Mini collapses regardless of vocab
+   (`loop_collapse_rate` ~1.0); only canonical/prodlike (where collapse drops) settles whether the compressing
+   vocab's PAYLOAD learns. `learnability_full_macros_mini` (now `macro_config="full_macros"` vs atomic
+   baseline) generalises to a canonical spec; gate on per-tier `content_over_structural` + per-op `op_acc`.
 
 ### Prior arc (compacted; details in `design/landed/` + git log)
 Substrate ablation (2026-05-28, `melody_substrate_iter_mini`) lifted FREQ_TRAJ 0.085→0.206 (2.4×); absorber
@@ -244,8 +265,12 @@ lifted by tokenizer-side `full_macros`):
   reachable by none) collapsed to ONE — `preframr.args.apply_macro_flags_to_args` resolving `--macro-flags`/
   `--macro-config` off the tokens registry (default all-OFF; deps/conflicts via `resolve_flags`). Specs now use
   `Arm(macro_flags=..., macro_config=...)`; predict recovers `args.macro_flags` from the ckpt. All 31 specs
-  migrated (60 arms resolve clean), framework 239 + xpt 164 tests green in the image, codebook+PW/filter pipeline
-  reachable + runs end-to-end. Unblocks NEXT #3. (No tokens release: reuses 0.42.0 primitives.)
+  migrated (60 arms resolve clean), framework 239 + xpt 164 tests green. **Merged + released**: framework main
+  `bf07d9e`, image **0.2.17** published (cuda/predict/xpu/jetson; `docker-release` + `docker-test` green —
+  first release attempt failed on jetson because `predict-requirements.txt` + `jetson/predict-requirements.txt`
+  still floored tokens 0.35.0, fixed to 0.42.0). xpt main `343a741`, image 0.2.17 baked (origin PR #5 removed
+  the refuted motif specs — folded into the merge). No tokens release (reused 0.42.0 primitives). Codebook+PW/
+  filter pipeline now reachable from a spec → unblocks the `codebook_distribution_mini` experiment (NEXT #1).
 - **2026-05-28** — `melody_substrate_iter_mini` PASSED ×3 seeds:
   substrate ablation lifts op45 0.085 → 0.206; macros add zero on the
   clean substrate. `framework_arch_test` PASSED — torchtune llama3_2
