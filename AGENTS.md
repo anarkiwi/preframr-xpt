@@ -6,13 +6,13 @@ corpus live elsewhere.
 
 ## Packages
 
-- **`preframr` 0.2.11** — framework only (train / inference / model / args /
+- **`preframr` 0.2.15** — framework only (train / inference / model / args /
   parse / stftokenize / utils + `mine_motifs.py`). Image `anarkiwi/preframr`.
-  No PyPI; ships as the docker image.
-- **`preframr-tokens` 0.29.x** (PyPI) — torch-free parser/tokenizer + macros
-  + `render_play`. Carries FREQ_TRAJ, anchoring, interval V0, FREQ_ONSET,
-  motif pass (refuted; opt-in), absorber macros.
-- **`preframr-audio` 0.5.1** (PyPI) — SID audio rendering primitives.
+  No PyPI; ships as the docker image. 0.2.15 carries the per-op-accuracy gate.
+- **`preframr-tokens` 0.40.0** (PyPI) — torch-free parser/tokenizer + macros
+  + `render_play`. **Byte-exact** on the lossless path; STAMP/PATCH/SWEEP/held-ARP/
+  WAVETABLE codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`).
+- **`preframr-audio` 0.5.6** (PyPI) — SID audio rendering primitives.
 - **`preframr-experiments`** (this repo; editable / PYTHONPATH, no PyPI) —
   runner + specs + `audit/` + tests. Pure orchestration on the host; audits
   import preframr/torch and run inside the **xpt image**.
@@ -44,7 +44,7 @@ across engines (stretch) — inside:
 - **Predict:** Jetson Orin NX (15.6 GB) at PROMPT=2048 / MAX=8192. KV cache
   at prodlike dims ~16 KiB/token → 128 MiB at MAX; bounded by seq_len.
 
-## Current arc — RESID→0 wavetable codebook (2026-05-31)
+## Current arc — byte-exact tokenizer SHIPPED; next = learnability audit (2026-06-02)
 
 The lever is **re-encoding** (the skeleton+ornament tokenizer in preframr-tokens); training is **gated**
 behind a deterministically-sound encoding (no training/audition until the pre-training tests are green).
@@ -56,6 +56,37 @@ carried value; transposed loops only when lossless; STAMP barrier; lossless `_ca
 parse-consistency audit (`PREFRAMR_PARSE_AUDIT=raise|warn`). The byte-exact / RESID→0 work orders are
 retired (shipped); the residue is documented wavetable engines (note-relative offset cycles recur ~80–89%,
 codebook-able), NOT an irreducible floor. Release flow: memory `cross-repo-release-ordering`.
+
+### NEXT STEP — learnability audit on the rebake (the gate is no longer correctness)
+
+Correctness is done (v0.40.0 byte-exact; constrained decode guarantees ref VALIDITY). The open question
+is **learnability**: does each pattern-compressing token's PAYLOAD actually learn. Plan:
+
+1. **Rebake** the corpus with preframr-tokens 0.40.0 — corrected tokens. NEVER measure on pre-0.40.0
+   tokens (the prior "full_macros = only content win ×3 seeds" was on partly-wrong tokens).
+2. **Train `full_macros` @ `--tkvocab=0` (Unigram OFF)** + an **atomic baseline**, with
+   `--generalization-gate`. Keep Unigram OFF: (a) the rebake changed token freqs → stale vocab; (b) it
+   obscures the per-op signal; (c) it would desync the constrained-decode mask, which operates on the
+   atomic op-grammar — reintroduce only later, mask-aware, if sequence length actually hurts.
+3. **Read the learnability readout** (preframr ≥0.2.15): per-tier `gate/content_over_structural` + the
+   per-op `gate/op_acc/{op}` (build_op_map / GeneralizationGate, this session). Structural (which-op)
+   should be high; watch the CONTENT payloads — DIFF delta vs BACK_REF distance vs STAMP_REF / WAVETABLE
+   **codebook-id**. A high-cardinality / per-tune-unique payload (esp. codebook ids) is the unlearnable
+   risk; verify id reuse/transferability — if low, the fix is encoding-side (lower-card / codebook-
+   relative), NOT model-side. Don't mistake mask-guaranteed validity for learned selection.
+4. **Go/no-go**: re-confirm full_macros vs atomic (×seeds, byte-exact rebake) on content_acc + tier/op
+   accuracy — the decision on whether the compressing vocab is the right substrate.
+
+### Byte-exact corpus verification (10% HVSC sweep — in flight at handoff)
+
+v0.40.0's byte-exact path is verified by a 10% HVSC audit sweep (every 10th dump, skeleton path,
+`PREFRAMR_PARSE_AUDIT=raise`): script `preframr_experiments/audit/probes/hvsc_audit_sweep.py`, run in the
+xpt image — `python3 -u .../hvsc_audit_sweep.py 10 20` (STEP WORKERS). At handoff it was clean through
+~54% (0 divergences, 0 errors), INCLUDING every tune the pre-fix sweep flagged (Aria, Day_Tripper,
+Sleigh_Ride, Pocket_Rockets, Uninvited, Mini_Melodies, 1394). **To finish the all-clear, re-run it**
+(clean = a final `DONE ... DIRTY=0 ERR=0`); a `DIRTY [i/N] <tune>: <pass> ... reg R V->V'` line names the
+tune+pass+reg for a targeted trace, and a NEW divergence class is a tokens bug to root-fix (NOT a
+fallback — model training must never see wrong tokens).
 
 ### Prior arc — substrate is the lever; V0 pitch (2026-05-28, superseded by the skeleton re-encoding)
 
