@@ -8,15 +8,17 @@ from preframr_experiments.base import (
     mini_train_args,
 )
 
-_BASE_TRANSFORMS = [
-    {"name": "freq_trajectory"},
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
+_BASE_MACROS = (
+    "freq_trajectory_pass",
+    "preset_pass",
+    "hard_restart_pass",
+    "legato_pass_c2",
+    "legato_pass_c4",
+    "voice_canonical_block_order",
+    "ctrl_bigram_pass",
+    "loop_pass",
+    "loop_transposed",
+)
 
 _TRAIN_ARGS = mini_train_args(body="large").replace(
     "--max-epochs 160", "--max-epochs 60"
@@ -38,12 +40,13 @@ spec = ExperimentSpec(
     arms=[
         Arm(
             label="per_tier_heads_mos4",
+            macro_flags=_BASE_MACROS,
             extra_cargs=(
                 "--per-tier-heads --per-tier-content-mos-k 4 "
                 "--per-tier-mos-entropy-lambda 0.0"
             ),
         ),
-        Arm(label="baseline", baseline=True),
+        Arm(label="baseline", macro_flags=_BASE_MACROS, baseline=True),
     ],
     metrics=[
         "alphabet_size",
@@ -57,5 +60,4 @@ spec = ExperimentSpec(
     tkvocab=32768,
     max_perm=1,
     train_args=_TRAIN_ARGS,
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
 )

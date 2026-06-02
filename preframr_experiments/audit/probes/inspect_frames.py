@@ -6,7 +6,7 @@ import argparse
 from collections import Counter
 from types import SimpleNamespace
 
-from preframr.args import add_args, apply_pipeline_spec_to_args
+from preframr.args import add_args, apply_macro_flags_to_args
 from preframr.utils import get_logger
 import preframr_tokens.motif_mine as MM
 import preframr_tokens.vocab_signature as VS
@@ -29,11 +29,9 @@ def _capture(streams, composers, **kw):
 MM.mine_motifs = _capture
 
 base = add_args(argparse.ArgumentParser()).parse_args(
-    ["--no-require-pq", "--pipeline-spec", "@/work/pipeline_spec.json",
-     "--ctrl-triple-pass", "--freq-nudge-pass", "--release-update-pass",
-     "--lonely-catch-all", "--max-files", "999999"]
+    ["--no-require-pq", "--macro-config", "full_macros", "--max-files", "999999"]
 )
-apply_pipeline_spec_to_args(base)
+apply_macro_flags_to_args(base)
 OT = VS._op_tier_map()
 CAP["s"] = []
 MM.mine_dict_from_dumps(base, "/work/eval_b_marquis/*/*.dump.parquet",

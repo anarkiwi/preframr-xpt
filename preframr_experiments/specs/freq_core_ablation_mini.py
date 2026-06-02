@@ -28,23 +28,30 @@ from pathlib import Path
 from preframr_experiments.audit.ablate_pwfilter import ablate_staged_dumps
 from preframr_experiments.base import Arm, ExperimentSpec, mini_train_args
 
-_BASE_TRANSFORMS = [
-    {"name": "freq_trajectory"},
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
+_BASE_MACROS = (
+    "freq_trajectory_pass",
+    "preset_pass",
+    "hard_restart_pass",
+    "legato_pass_c2",
+    "legato_pass_c4",
+    "voice_canonical_block_order",
+    "ctrl_bigram_pass",
+    "loop_pass",
+    "loop_transposed",
+)
 
-_FULL_MACRO_CARGS = (
-    "--ctrl-triple-pass --freq-nudge-pass --release-update-pass --lonely-catch-all"
+_FULL_MACROS = _BASE_MACROS + (
+    "ctrl_triple_pass",
+    "freq_nudge_pass",
+    "release_update_pass",
+    "lonely_catch_all",
 )
 
 _ABLATE_ARM = "freq_core"
 
-_TRAIN_ARGS = mini_train_args(body="large").replace("--max-epochs 160", "--max-epochs 60")
+_TRAIN_ARGS = mini_train_args(body="large").replace(
+    "--max-epochs 160", "--max-epochs 60"
+)
 
 
 def _ablate_hook(arm: Arm, work_dir: Path) -> None:
@@ -73,8 +80,8 @@ spec = ExperimentSpec(
     ),
     tier="mini",
     arms=[
-        Arm(label=_ABLATE_ARM, extra_cargs=_FULL_MACRO_CARGS),
-        Arm(label="full", extra_cargs=_FULL_MACRO_CARGS, baseline=True),
+        Arm(label=_ABLATE_ARM, macro_flags=_FULL_MACROS),
+        Arm(label="full", macro_flags=_FULL_MACROS, baseline=True),
     ],
     metrics=[
         "alphabet_size",
@@ -91,6 +98,5 @@ spec = ExperimentSpec(
     tkvocab=32768,
     max_perm=1,
     train_args=_TRAIN_ARGS,
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
     pre_run_hook=_ablate_hook,
 )

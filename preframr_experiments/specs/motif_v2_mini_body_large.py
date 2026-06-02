@@ -17,7 +17,6 @@ the MOTIF_ARG->content tier fix)."""
 
 from __future__ import annotations
 
-import shlex
 import subprocess
 from pathlib import Path
 
@@ -27,23 +26,7 @@ from preframr_experiments.base import (
     mini_train_args,
 )
 
-_BASE_TRANSFORMS = [
-    {"name": "freq_trajectory"},
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
-
-_FULL_MACRO_CARGS = (
-    "--ctrl-triple-pass "
-    "--freq-nudge-pass "
-    "--release-update-pass "
-    "--lonely-catch-all"
-)
-
+# All arms ride the registered full_macros encoding (base + absorbers).
 _MOTIF_DICT_CONTAINER_PATH = "/scratch/preframr/motif_dict.json"
 _IMAGE = "anarkiwi/preframr:0.2.4"
 _MOTIF_K = 256
@@ -55,9 +38,7 @@ _TRAIN_ARGS = mini_train_args(body="large").replace(
     "--max-epochs 160", "--max-epochs 60"
 )
 
-_MOTIF_CARGS = (
-    f"{_FULL_MACRO_CARGS} --motif-pass --motif-dict {_MOTIF_DICT_CONTAINER_PATH}"
-)
+_MOTIF_CARGS = f"--motif-pass --motif-dict {_MOTIF_DICT_CONTAINER_PATH}"
 
 
 def _mine_motif_dict(arm: Arm, work_dir: Path) -> None:
@@ -83,9 +64,8 @@ def _mine_motif_dict(arm: Arm, work_dir: Path) -> None:
         "python3",
         "/preframr/mine_motifs.py",
         "--no-require-pq",
-        "--pipeline-spec",
-        "@/scratch/preframr/pipeline_spec.json",
-        *shlex.split(_FULL_MACRO_CARGS),
+        "--macro-config",
+        "full_macros",
         "--reglogs",
         "/scratch/preframr/train/*/*.dump.parquet",
         "--max-files",
@@ -115,9 +95,17 @@ spec = ExperimentSpec(
     ),
     tier="mini",
     arms=[
-        Arm(label="full_macros_motif_v2", extra_cargs=_MOTIF_CARGS),
-        Arm(label="full_macros_motif_v1", extra_cargs=_MOTIF_CARGS),
-        Arm(label="full_macros", extra_cargs=_FULL_MACRO_CARGS, baseline=True),
+        Arm(
+            label="full_macros_motif_v2",
+            macro_config="full_macros",
+            extra_cargs=_MOTIF_CARGS,
+        ),
+        Arm(
+            label="full_macros_motif_v1",
+            macro_config="full_macros",
+            extra_cargs=_MOTIF_CARGS,
+        ),
+        Arm(label="full_macros", macro_config="full_macros", baseline=True),
     ],
     metrics=[
         "alphabet_size",
@@ -135,6 +123,5 @@ spec = ExperimentSpec(
     max_perm=1,
     image=_IMAGE,
     train_args=_TRAIN_ARGS,
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
     pre_run_hook=_mine_motif_dict,
 )

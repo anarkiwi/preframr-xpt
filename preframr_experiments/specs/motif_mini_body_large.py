@@ -23,7 +23,6 @@ image, not --bind-src."""
 
 from __future__ import annotations
 
-import shlex
 import subprocess
 from pathlib import Path
 
@@ -33,23 +32,7 @@ from preframr_experiments.base import (
     mini_train_args,
 )
 
-_BASE_TRANSFORMS = [
-    {"name": "freq_trajectory"},
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
-
-_FULL_MACRO_CARGS = (
-    "--ctrl-triple-pass "
-    "--freq-nudge-pass "
-    "--release-update-pass "
-    "--lonely-catch-all"
-)
-
+# Both arms ride the registered full_macros encoding (base + absorbers).
 _MOTIF_DICT_CONTAINER_PATH = "/scratch/preframr/motif_dict.json"
 _MOTIF_ARM = "full_macros_motif"
 _IMAGE = "anarkiwi/preframr:0.2.2"
@@ -86,9 +69,8 @@ def _mine_motif_dict(arm: Arm, work_dir: Path) -> None:
         "python3",
         "/preframr/mine_motifs.py",
         "--no-require-pq",
-        "--pipeline-spec",
-        "@/scratch/preframr/pipeline_spec.json",
-        *shlex.split(_FULL_MACRO_CARGS),
+        "--macro-config",
+        "full_macros",
         "--reglogs",
         "/scratch/preframr/train/*/*.dump.parquet",
         "--max-files",
@@ -121,14 +103,12 @@ spec = ExperimentSpec(
     arms=[
         Arm(
             label=_MOTIF_ARM,
-            extra_cargs=(
-                f"{_FULL_MACRO_CARGS} "
-                f"--motif-pass --motif-dict {_MOTIF_DICT_CONTAINER_PATH}"
-            ),
+            macro_config="full_macros",
+            extra_cargs=f"--motif-pass --motif-dict {_MOTIF_DICT_CONTAINER_PATH}",
         ),
         Arm(
             label="full_macros",
-            extra_cargs=_FULL_MACRO_CARGS,
+            macro_config="full_macros",
             baseline=True,
         ),
     ],
@@ -150,6 +130,5 @@ spec = ExperimentSpec(
     max_perm=1,
     image=_IMAGE,
     train_args=_TRAIN_ARGS,
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
     pre_run_hook=_mine_motif_dict,
 )

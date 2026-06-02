@@ -97,6 +97,8 @@ class Arm:
 
     label: str
     extra_cargs: str = ""
+    macro_flags: tuple[str, ...] = ()
+    macro_config: str = ""
     training_overrides: Optional[dict] = None
     baseline: bool = False
 
@@ -123,7 +125,6 @@ class ExperimentSpec:
     max_perm: int = 1
     image: str = "anarkiwi/preframr"
     hvsc_root: str = "/scratch/preframr/hvsc"
-    pipeline_spec: Optional[dict] = None
 
     _VALID_TIERS = (
         "smoke",
@@ -384,6 +385,18 @@ def _dataset_affecting_cargs(extra_cargs: str) -> list[str]:
     return out
 
 
+def _macro_cli(arm: "Arm") -> str:
+    """Render an arm's ``macro_flags`` / ``macro_config`` into the ``--macro-flags`` /
+    ``--macro-config`` CLI passed to parse + tokenize + train. Empty for an arm with no
+    macro passes (the atomic baseline)."""
+    parts = []
+    if arm.macro_flags:
+        parts.append(f"--macro-flags {','.join(arm.macro_flags)}")
+    if arm.macro_config:
+        parts.append(f"--macro-config {arm.macro_config}")
+    return " ".join(parts)
+
+
 @functools.lru_cache(maxsize=None)
 def _image_tokens_version(image: str) -> str:
     """preframr-tokens version baked into ``image`` (queried once per image). Folded into the dataset cache key so a tokenizer upgrade invalidates stale parse/tokenize artefacts instead of silently reusing them. The key is otherwise version-blind: pre-this-fix, a 0.17->0.18 bump kept the same key and served stale tokenization."""
@@ -409,10 +422,13 @@ def _dataset_cache_key(
     spec: "ExperimentSpec",
     data_layout: dict[str, list[str]],
     extra_cargs: str = "",
+    macro_flags: tuple[str, ...] = (),
+    macro_config: str = "",
 ) -> str:
-    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the spec's pipeline_spec + tier-pinned data + corpus-shape args + the parse/tokenize-affecting slice of the arm's extra_cargs + the image's preframr-tokens version don't change."""
+    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the arm's macro_flags/macro_config + tier-pinned data + corpus-shape args + the parse/tokenize-affecting slice of the arm's extra_cargs + the image's preframr-tokens version don't change."""
     payload = {
-        "pipeline_spec": spec.pipeline_spec,
+        "macro_flags": sorted(macro_flags),
+        "macro_config": macro_config,
         "seq_len": spec.seq_len,
         "tkvocab": spec.tkvocab,
         "min_song_tokens": spec.min_song_tokens,
@@ -814,7 +830,9 @@ def run_arm(
     log_dir.mkdir()
 
     cache_disabled = _dataset_cache_disabled()
-    cache_key = _dataset_cache_key(spec, data_layout, arm.extra_cargs)
+    cache_key = _dataset_cache_key(
+        spec, data_layout, arm.extra_cargs, arm.macro_flags, arm.macro_config
+    )
     cache_dir = _dataset_cache_dir(src_root, cache_key)
     parse_log = log_dir / "parse.log"
     tokenize_log = log_dir / "tokenize.log"
@@ -822,12 +840,7 @@ def run_arm(
     if not cache_disabled:
         cache_hit = _try_dataset_cache_hit(cache_dir, work_dir, data_layout, logger)
 
-    pipeline_arg = ""
-    if spec.pipeline_spec is not None:
-        spec_path = work_dir / "pipeline_spec.json"
-        with open(spec_path, "w") as f:
-            json.dump(spec.pipeline_spec, f, indent=2)
-        pipeline_arg = f"--pipeline-spec @/scratch/preframr/pipeline_spec.json "
+    macro_cli = _macro_cli(arm)
 
     link_root = "/dumps" if spec.pre_run_hook is None else None
     dump_volumes = (
@@ -853,7 +866,7 @@ def run_arm(
         f"--min-song-tokens {spec.min_song_tokens} "
         f"--block-stride {spec.block_stride} "
         f"--max-perm {spec.max_perm} "
-        f"{pipeline_arg}"
+        f"{macro_cli} "
         f"{arm.extra_cargs}".strip()
     )
 
@@ -876,8 +889,8 @@ def run_arm(
             "--max-files",
             "999999",
         ]
-        if pipeline_arg:
-            parse_args_list += shlex.split(pipeline_arg.strip())
+        if macro_cli:
+            parse_args_list += shlex.split(macro_cli)
         parse_args_list += shlex.split(arm.extra_cargs)
         parse_args_list += ["--reglogs", parse_globs]
         rc = _docker_run(

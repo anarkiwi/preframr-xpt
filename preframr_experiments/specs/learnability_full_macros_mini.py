@@ -9,13 +9,12 @@ on the base-atom alphabet (``--tkvocab 0``) so the per-op signal is not obscured
 by Unigram merges and the constrained-decode mask stays aligned to the atomic
 op-grammar.
 
-Arms (pipeline_spec=None so per-arm CLI flags fully drive the passes; the
-``apply_pipeline_spec_to_args`` override path only fires when a pipeline_spec is
-present):
+Arms:
 
-- full_macros: every flag in ``tokenizer_config.REGISTERED_MACROS`` ON. Emits
-  the production compressing tokens (DIFF delta + BACK_REF distance via
-  freq_trajectory + loop, plus the ctrl/freq/release absorbers).
+- full_macros: ``macro_config="full_macros"`` (every flag in
+  ``tokenizer_config.REGISTERED_MACROS`` ON). Emits the production compressing
+  tokens (DIFF delta + BACK_REF distance via freq_trajectory + loop, plus the
+  ctrl/freq/release absorbers).
 - baseline: no macro passes -- the raw atomic op stream. ``baseline=True``.
 
 Decisive reads (preframr 0.2.15, gate ON): per-tier ``gate/content_over_structural``
@@ -31,24 +30,7 @@ from __future__ import annotations
 
 from preframr_experiments.base import Arm, ExperimentSpec, mini_train_args
 
-_IMAGE = "anarkiwi/preframr:0.2.15"
-
-# tokenizer_config.REGISTERED_MACROS, as CLI flags (underscore -> hyphen).
-_REGISTERED_MACRO_FLAGS = (
-    "--freq-trajectory-pass "
-    "--preset-pass "
-    "--hard-restart-pass "
-    "--legato-pass-c2 "
-    "--legato-pass-c4 "
-    "--voice-canonical-block-order "
-    "--ctrl-bigram-pass "
-    "--loop-pass "
-    "--loop-transposed "
-    "--freq-nudge-pass "
-    "--release-update-pass "
-    "--ctrl-triple-pass "
-    "--lonely-catch-all"
-)
+_IMAGE = "anarkiwi/preframr:0.2.16"
 
 # Gate ON for the learnability readout (content_over_structural + per-op acc).
 _TRAIN_ARGS = (
@@ -70,7 +52,7 @@ spec = ExperimentSpec(
     tier="mini",
     image=_IMAGE,
     arms=[
-        Arm(label="full_macros", extra_cargs=_REGISTERED_MACRO_FLAGS),
+        Arm(label="full_macros", macro_config="full_macros"),
         Arm(label="baseline", baseline=True),
     ],
     metrics=[
@@ -86,5 +68,4 @@ spec = ExperimentSpec(
     tkvocab=0,
     max_perm=1,
     train_args=_TRAIN_ARGS,
-    pipeline_spec=None,
 )

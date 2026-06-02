@@ -37,21 +37,8 @@ from preframr_experiments.base import Arm, ExperimentSpec, mini_train_args
 
 _IMAGE = "anarkiwi/preframr:0.2.6"
 
-_BASE_TRANSFORMS = [
-    {"name": "freq_trajectory"},
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
-
-_FULL_MACRO_CARGS = (
-    "--ctrl-triple-pass --freq-nudge-pass --release-update-pass --lonely-catch-all"
-)
-
-_ANCHOR_CARGS = f"{_FULL_MACRO_CARGS} --trajectory-anchor-pass"
+# Both arms ride the registered full_macros encoding; the only difference is the
+# opt-in trajectory_anchor_pass on the target arm.
 
 _TRAIN_ARGS = mini_train_args(body="large").replace(
     "--max-epochs 160", "--max-epochs 60"
@@ -71,8 +58,12 @@ spec = ExperimentSpec(
     tier="mini",
     image=_IMAGE,
     arms=[
-        Arm(label="anchored", extra_cargs=_ANCHOR_CARGS),
-        Arm(label="unanchored", extra_cargs=_FULL_MACRO_CARGS, baseline=True),
+        Arm(
+            label="anchored",
+            macro_config="full_macros",
+            macro_flags=("trajectory_anchor_pass",),
+        ),
+        Arm(label="unanchored", macro_config="full_macros", baseline=True),
     ],
     metrics=[
         "alphabet_size",
@@ -89,5 +80,4 @@ spec = ExperimentSpec(
     tkvocab=32768,
     max_perm=1,
     train_args=_TRAIN_ARGS,
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
 )

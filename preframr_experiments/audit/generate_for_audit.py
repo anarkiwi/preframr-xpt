@@ -10,7 +10,7 @@ from pathlib import Path
 
 import torch
 
-from preframr.args import add_args, apply_pipeline_spec_to_args
+from preframr.args import add_args, apply_macro_flags_to_args
 from preframr.inference.predict import Predictor, load_model
 from preframr.train.regdataset import get_prompt
 from preframr.utils import get_logger
@@ -38,8 +38,8 @@ def _build_args(cli):
     args.temperature = cli.temperature
     args.top_k = cli.top_k if cli.top_k > 0 else None
     args.predictions = 1
-    args.pipeline_spec = ""
-    apply_pipeline_spec_to_args(args)
+    args.macro_flags = ""
+    apply_macro_flags_to_args(args)
     return args
 
 

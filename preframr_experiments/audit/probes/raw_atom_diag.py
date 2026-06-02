@@ -5,7 +5,7 @@ from collections import Counter
 from preframr_tokens.blocks import glob_dumps, iter_voiced_blocks
 from preframr_tokens.macros.motif_pass import _atoms_of
 from preframr_tokens.reglogparser import RegLogParser
-from preframr.args import add_args, apply_pipeline_spec_to_args
+from preframr.args import add_args, apply_macro_flags_to_args
 
 ap = add_args(argparse.ArgumentParser())
 ap.add_argument("--motif-out"); ap.add_argument("--motif-k", type=int, default=0)
@@ -13,7 +13,7 @@ ap.add_argument("--motif-min-count", type=int, default=0)
 ap.add_argument("--motif-min-composers", type=int, default=0)
 ap.add_argument("--motif-mine-version", type=int, default=1)
 args = ap.parse_args(sys.argv[1:])
-apply_pipeline_spec_to_args(args)
+apply_macro_flags_to_args(args)
 args.motif_pass = False
 parser = RegLogParser(args, __import__("logging"))
 bp = RegLogParser(args, __import__("logging"))

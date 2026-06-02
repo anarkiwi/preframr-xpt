@@ -11,7 +11,7 @@ from preframr_tokens import RegLogParser, prepare_df_for_audio, read_initial_irq
 DUMP = sys.argv[1]
 BASE = dict(cents=50, exclude_list=None, min_irq=int(1.5e4), max_irq=int(2.5e4),
             min_song_tokens=256, diffq=4, loop_lookahead=3, coarsen_min_len=16,
-            voice_trajectory_window=8, pipeline_spec="", meta_exclude_digi=False,
+            voice_trajectory_window=8, macro_flags="", meta_exclude_digi=False,
             meta_irq_lo=0, meta_irq_hi=0, meta_require=False)
 MACROS = ("freq_trajectory_pass", "preset_pass", "hard_restart_pass",
           "legato_pass_c2", "legato_pass_c3", "legato_pass_c4", "legato_pass_c7",

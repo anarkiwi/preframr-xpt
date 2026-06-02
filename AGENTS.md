@@ -8,10 +8,14 @@ corpus live elsewhere.
 
 - **`preframr` 0.2.16** — framework only (train / inference / model / args /
   parse / stftokenize / utils + `mine_motifs.py`). Image `anarkiwi/preframr`.
-  No PyPI; ships as the docker image. Carries the per-op-accuracy gate.
-- **`preframr-tokens` 0.41.1** (PyPI) — torch-free parser/tokenizer + macros
+  No PyPI; ships as the docker image. Carries the per-op-accuracy gate. Floors
+  `preframr-tokens>=0.42.0`; `tier_map.build_op_map` reads op→name from tokens'
+  `op_name_by_id()` (no local `stfconstants` dir-scan).
+- **`preframr-tokens` 0.42.0** (PyPI) — torch-free parser/tokenizer + macros
   + `render_play`. **Byte-exact** (corpus dirty ~8%→0); STAMP/PATCH/SWEEP/held-ARP/
-  WAVETABLE codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`).
+  WAVETABLE codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`). 0.42 added
+  PW/filter-cutoff sweep mining (`pw_sweep`/`filter_sweep` sub-flags, default OFF) +
+  the canonical `op_name_by_id()`/`op_name_tiers()` op→name API.
 - **`preframr-audio` 0.5.6** (PyPI) — SID audio rendering primitives.
 - **`preframr-experiments`** (this repo; editable / PYTHONPATH, no PyPI) —
   runner + specs + `audit/` + tests. Pure orchestration on the host; audits
@@ -74,20 +78,29 @@ substrates. Swapping to the codebook pipeline drops FREQ_TRAJ (49%→0) for SKEL
 PATCH takes recurring envelopes from RELEASE_UPDATE — **but PW/filter lose trajectory compression and revert
 to SET/PWM_PRESET/FC_PRESET (+16/+19/+6pp)**. That blowup motivates the handoff below.
 
-### HANDOFF — PW/filter SWEEP + op-name API (untracked brief, fully self-contained)
-**`preframr-tokens/IMPLEMENT_pw_filter_sweep_and_op_api.md`** — an implementing agent needs nothing outside
-preframr-tokens (driver facts + the byte-exactness model are inlined).
-- **Part A:** generalize `SweepPass` to PW (regs 2/9/16) + filter cutoff (reg 21). Driver primitive for both
-  IS the freq sweep (parametric bounded sweep). Adaptations: target regs, `note_aligned=False` (PW/filter
-  persist across notes), drop the freq-only `_skeleton_resids` gate; A1 linear ramps then A2 bounce; reuse
-  `SWEEP_OP`. Hard gate: register-exact via `PREFRAMR_PARSE_AUDIT=raise`.
-- **Part B (tokens side only):** add `op_name_by_id()` (op→tier already exists via `collect_op_loss_tiers`).
-- **Owner follow-up (NOT the agent):** swap preframr `tier_map._op_name_by_id` to the tokens API.
+### SHIPPED — PW/filter SWEEP + op-name API (tokens 0.42.0; framework cleanup done 2026-06-02)
+The handoff brief (`preframr-tokens/IMPLEMENT_pw_filter_sweep_and_op_api.md`, untracked) is fully landed:
+- **Part A:** `SweepPass` now mines PW (regs 2/9/16, `pw_sweep`) + filter cutoff (reg 21, `filter_sweep`),
+  both default-OFF sub-flags gated under `sweep_pass`, `note_aligned=False`, no freq/skeleton RESID gate;
+  register-exact (one `Claim`/run, `validate=True`). A constant-delta ramp that was one
+  `PWM_PRESET`/`FC_PRESET`/`SET` per frame now collapses to one byte-exact `SWEEP`.
+- **Part B:** tokens owns `op_name_by_id() -> {op:NAME}` + `op_name_tiers()` (re-exported from `preframr_tokens`).
+- **Owner follow-up DONE:** `preframr/train/model/tier_map.py::build_op_map` now imports `op_name_by_id`
+  (local `_op_name_by_id` dir-scan deleted); `requirements.txt` floored to `0.42.0`. tier_map + onset-loss
+  + learnable-class-loss tests green in the `0.2.16` image. A tokens op rename now ripples with zero name-path
+  edits. (`structural_loss.py`/`predict.py` still import specific `*_OP` constants — legit tight coupling, kept.)
 
 ### NEXT (owner)
-1. **Canonical-tier learnability run** — the real go/no-go (mini collapses regardless of vocab).
+1. **Canonical-tier learnability run** — the real go/no-go (mini collapses regardless of vocab). Unchanged by
+   0.42 (the new sweep sub-flags are default-OFF; the byte-exact substrate is identical).
 2. (optional) mini codebook-pipeline arm for the distribution read (training collapses; distribution is the payoff).
-3. After PW/filter sweep lands: re-measure the codebook pipeline — the SET/PRESET blowup should become SWEEP.
+3. **Re-measure the codebook pipeline now that PW/filter sweep landed** — the SET/PWM_PRESET/FC_PRESET blowup
+   (+16/+19/+6pp) should become SWEEP. **Now launchable** (the plumbing prereq landed 2026-06-02, below): a
+   spec arm enables it with e.g.
+   `Arm(label="codebook", macro_flags=("skeleton_pass","sweep_pass","pw_sweep","filter_sweep","stamp_pass","wavetable_pass", <base>))`.
+   Verified end-to-end: parse runs the full codebook+PW/filter pipeline to completion (truncated
+   `sid_fixture_cache/*_20s` dumps trip `PARSE_AUDIT=raise`, but so does `full_macros` — that's a fixture
+   property, not a regression; the real byte-exact gate is the corpus sweep `cb_div_audit.py`).
 
 ### Prior arc (compacted; details in `design/landed/` + git log)
 Substrate ablation (2026-05-28, `melody_substrate_iter_mini`) lifted FREQ_TRAJ 0.085→0.206 (2.4×); absorber
@@ -109,6 +122,14 @@ synthetic motifs: the body generalizes, the SID failure is downstream. Write-up
   One spec module per A/B under `preframr_experiments/specs/`; runner stages
   data → parse → tokenize → train per (arm, seed) in a `docker run` of
   `spec.image`. `nohup ... & disown` for long runs.
+- **Macro passes = one list.** An arm declares its tokenizer passes via
+  `Arm(macro_flags=(...), macro_config="full_macros"|"baseline")` — names from
+  `preframr_tokens.tokenizer_config.MACRO_FLAGS` (the `macro_flag_names()` registry).
+  The runner renders these to `--macro-flags`/`--macro-config`; `apply_macro_flags_to_args`
+  validates each name, adds deps + rejects conflicts (`resolve_flags`), and sets the
+  per-flag attrs. **Default = all passes OFF** (a bare/`baseline=True` arm is truly atomic);
+  `full_macros` = `REGISTERED_MACROS`. There is no more `pipeline_spec` / `--foo-pass`
+  surface (the old hand-maintained argparse flags + `_PIPELINE_NAME_TO_FLAG` map are gone).
 - **Spec-dependent tokenization** (motif / cluster_content / voice_permutation /
   any `pre_run_hook` that mutates staged dumps or mines a per-spec artifact):
   launch with `PREFRAMR_DATASET_CACHE_DISABLE=1`.
@@ -213,6 +234,18 @@ lifted by tokenizer-side `full_macros`):
 
 ## Resolved log (compact; details in git log + design/landed/ + data/refuted/)
 
+- **2026-06-02** — tokens **0.42.0** shipped (PW/filter sweep mining + `op_name_by_id()`/`op_name_tiers()`
+  API; PyPI). Framework owner-cleanup landed on `feat/per-op-accuracy`: `tier_map.build_op_map` swapped to
+  tokens `op_name_by_id` (local dir-scan deleted), `requirements.txt` floored `>=0.42.0`; tier_map/onset/
+  learnable-class-loss tests green in the `0.2.16` image, black clean. Same day earlier: byte-exact tokenizer
+  COMPLETE at 0.41.1 (corpus dirty ~8%→0); mini learnability INCONCLUSIVE (scale-bound, all 6 runs collapsed).
+  **Macro-flag surface unified (breaking)**: the three hand-maintained surfaces (22 argparse `--foo-pass` flags
+  + `_PIPELINE_NAME_TO_FLAG` map + `--pipeline-spec` JSON; 11 flags incl `skeleton_pass`/`pw_sweep`/`filter_sweep`
+  reachable by none) collapsed to ONE — `preframr.args.apply_macro_flags_to_args` resolving `--macro-flags`/
+  `--macro-config` off the tokens registry (default all-OFF; deps/conflicts via `resolve_flags`). Specs now use
+  `Arm(macro_flags=..., macro_config=...)`; predict recovers `args.macro_flags` from the ckpt. All 31 specs
+  migrated (60 arms resolve clean), framework 239 + xpt 164 tests green in the image, codebook+PW/filter pipeline
+  reachable + runs end-to-end. Unblocks NEXT #3. (No tokens release: reuses 0.42.0 primitives.)
 - **2026-05-28** — `melody_substrate_iter_mini` PASSED ×3 seeds:
   substrate ablation lifts op45 0.085 → 0.206; macros add zero on the
   clean substrate. `framework_arch_test` PASSED — torchtune llama3_2

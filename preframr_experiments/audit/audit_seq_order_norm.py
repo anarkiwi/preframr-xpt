@@ -140,7 +140,7 @@ def voice_canonical(body, voice_reg, reg_of, sub_of):
 _FID_BASE = dict(
     cents=50, exclude_list=None, min_irq=int(1.5e4), max_irq=int(2.5e4),
     min_song_tokens=256, diffq=4, loop_lookahead=3, coarsen_min_len=16,
-    voice_trajectory_window=8, pipeline_spec="", meta_exclude_digi=False,
+    voice_trajectory_window=8, macro_flags="", meta_exclude_digi=False,
     meta_irq_lo=0, meta_irq_hi=0, meta_require=False,
 )
 _FID_MACROS = (
@@ -314,16 +314,15 @@ def _atom_blocks(stream, frame_reg):
 
 
 def _divergence(work, fams):
-    from preframr.args import add_args, apply_pipeline_spec_to_args
+    from preframr.args import add_args, apply_macro_flags_to_args
     from preframr.utils import get_logger
     import preframr_tokens.motif_mine as MM
     from preframr_tokens.stfconstants import FRAME_REG, VOICE_REG
     MM.mine_motifs = _capture
     base = add_args(argparse.ArgumentParser()).parse_args(
-        ["--no-require-pq", "--pipeline-spec", f"@{work}/pipeline_spec.json",
-         "--ctrl-triple-pass", "--freq-nudge-pass", "--release-update-pass",
-         "--lonely-catch-all", "--max-files", "999999"])
-    apply_pipeline_spec_to_args(base)
+        ["--no-require-pq", "--macro-config", "full_macros",
+         "--max-files", "999999"])
+    apply_macro_flags_to_args(base)
     reg_of = lambda a: a[1]
     sub_of = lambda a: a[2]
 
@@ -384,7 +383,7 @@ def main(argv):
     ap.add_argument("--mode", choices=["divergence", "fidelity"],
                     default="fidelity")
     ap.add_argument("--work", default="/work",
-                    help="divergence: dir with eval_b_<fam>/ + pipeline_spec.json")
+                    help="divergence: dir with eval_b_<fam>/ staged dumps")
     ap.add_argument("--dumps", nargs="*", help="fidelity: dump.parquet paths")
     ap.add_argument("--seed", type=int, default=0)
     cli = ap.parse_args(argv)

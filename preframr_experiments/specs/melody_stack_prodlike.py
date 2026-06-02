@@ -26,25 +26,8 @@ from preframr_experiments.base import Arm, ExperimentSpec, prodlike_train_args
 
 _IMAGE = "anarkiwi/preframr:0.2.9"
 
-_BASE_TRANSFORMS = [
-    {"name": "freq_trajectory"},
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
-
-_FULL_MACRO_CARGS = (
-    "--ctrl-triple-pass --freq-nudge-pass --release-update-pass --lonely-catch-all"
-)
-
-_FULL_STACK_CARGS = (
-    f"{_FULL_MACRO_CARGS} "
-    "--trajectory-anchor-pass --freq-v0-interval --freq-onset-pass "
-    "--onset-loss-weight 10"
-)
+# base pipeline + the four absorbers == REGISTERED_MACROS (the full_macros preset).
+_STACK_MACROS = ("trajectory_anchor_pass", "freq_v0_interval", "freq_onset_pass")
 
 _TRAIN_ARGS = (
     prodlike_train_args()
@@ -65,8 +48,13 @@ spec = ExperimentSpec(
     tier="prodlike",
     image=_IMAGE,
     arms=[
-        Arm(label="full_stack", extra_cargs=_FULL_STACK_CARGS),
-        Arm(label="full_macros", extra_cargs=_FULL_MACRO_CARGS, baseline=True),
+        Arm(
+            label="full_stack",
+            macro_config="full_macros",
+            macro_flags=_STACK_MACROS,
+            extra_cargs="--onset-loss-weight 10",
+        ),
+        Arm(label="full_macros", macro_config="full_macros", baseline=True),
     ],
     metrics=[
         "alphabet_size",
@@ -99,5 +87,4 @@ spec = ExperimentSpec(
     tkvocab=8192,
     max_perm=1,
     train_args=_TRAIN_ARGS,
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
 )

@@ -9,7 +9,7 @@ from collections import Counter
 
 import preframr_tokens.macros.motif_pass as mp
 import preframr_tokens.motif_mine as mm
-from preframr.args import add_args, apply_pipeline_spec_to_args
+from preframr.args import add_args, apply_macro_flags_to_args
 import argparse
 
 ITER_CAP = 256
@@ -83,7 +83,7 @@ ap.add_argument("--motif-min-count", type=int, default=3)
 ap.add_argument("--motif-min-composers", type=int, default=3)
 ap.add_argument("--motif-mine-version", type=int, default=1)
 args = ap.parse_args(sys.argv[1:])
-apply_pipeline_spec_to_args(args)
+apply_macro_flags_to_args(args)
 t = time.time()
 mm.mine_dict_from_dumps(
     args, args.reglogs, max_files=args.max_files, k=args.motif_k,

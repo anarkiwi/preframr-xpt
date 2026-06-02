@@ -8,21 +8,20 @@ from preframr_experiments.base import (
     prodlike_train_args,
 )
 
-_BASE_TRANSFORMS = [
-    {"name": "freq_trajectory"},
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
-
-_NEW_MACRO_CARGS = (
-    "--ctrl-triple-pass "
-    "--freq-nudge-pass "
-    "--release-update-pass "
-    "--lonely-catch-all"
+# The prior-registered baseline pipeline (both arms ride it). loop_transposed is
+# listed explicitly now that macro defaults are all-OFF. The target arm adds the
+# four newer collapse/absorber macros -- base + those four == REGISTERED_MACROS,
+# so the target arm uses the full_macros preset.
+_BASE_MACROS = (
+    "freq_trajectory_pass",
+    "preset_pass",
+    "hard_restart_pass",
+    "legato_pass_c2",
+    "legato_pass_c4",
+    "voice_canonical_block_order",
+    "ctrl_bigram_pass",
+    "loop_pass",
+    "loop_transposed",
 )
 
 
@@ -50,9 +49,9 @@ spec = ExperimentSpec(
     arms=[
         Arm(
             label="full_macros",
-            extra_cargs=_NEW_MACRO_CARGS,
+            macro_config="full_macros",
         ),
-        Arm(label="baseline", baseline=True),
+        Arm(label="baseline", macro_flags=_BASE_MACROS, baseline=True),
     ],
     metrics=[
         "alphabet_size",
@@ -87,5 +86,4 @@ spec = ExperimentSpec(
     tkvocab=32768,
     max_perm=1,
     train_args=prodlike_train_args(),
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
 )

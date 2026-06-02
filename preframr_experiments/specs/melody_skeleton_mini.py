@@ -21,16 +21,20 @@ from preframr_experiments.base import Arm, ExperimentSpec, mini_train_args
 
 _IMAGE = "anarkiwi/preframr:0.2.14"
 
-_BASE_TRANSFORMS = [
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
+_BASE_MACROS = (
+    "preset_pass",
+    "hard_restart_pass",
+    "legato_pass_c2",
+    "legato_pass_c4",
+    "voice_canonical_block_order",
+    "ctrl_bigram_pass",
+    "loop_pass",
+    "loop_transposed",
+)
 
-_SKEL_STACK = "--trajectory-anchor-pass --skeleton-pass --no-freq-trajectory-pass"
+# Skeleton owns the freq channel (anchor for note segmentation + skeleton);
+# freq_trajectory is left off (it conflicts with skeleton_pass).
+_SKEL_MACROS = ("trajectory_anchor_pass", "skeleton_pass")
 
 _TRAIN_ARGS = mini_train_args(body="large").replace(
     "--max-epochs 160", "--max-epochs 60"
@@ -59,7 +63,12 @@ spec = ExperimentSpec(
     tier="mini",
     image=_IMAGE,
     arms=[
-        Arm(label="skeleton", extra_cargs=f"{_SKEL_STACK} --tkvocab 0", baseline=True),
+        Arm(
+            label="skeleton",
+            macro_flags=_BASE_MACROS + _SKEL_MACROS,
+            extra_cargs="--tkvocab 0",
+            baseline=True,
+        ),
     ],
     metrics=[
         "alphabet_size",
@@ -74,6 +83,5 @@ spec = ExperimentSpec(
     tkvocab=32768,
     max_perm=1,
     train_args=_TRAIN_ARGS,
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
     pre_run_hook=_ablate_hook,
 )

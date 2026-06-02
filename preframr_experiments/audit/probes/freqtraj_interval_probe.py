@@ -15,7 +15,7 @@ from preframr_tokens.reglogparser import RegLogParser
 from preframr_tokens.stfconstants import (
     FREQ_TRAJ_OP, FT_SUBREG_FLAGS, FT_SUBREG_V0_HI, FT_SUBREG_V0_LO,
 )
-from preframr.args import add_args, apply_pipeline_spec_to_args
+from preframr.args import add_args, apply_macro_flags_to_args
 
 
 def anchors_per_reg(streams):
@@ -67,7 +67,7 @@ def main():
     ap.add_argument("--motif-min-composers", type=int, default=0)
     ap.add_argument("--motif-mine-version", type=int, default=1)
     args = ap.parse_args(sys.argv[1:])
-    apply_pipeline_spec_to_args(args)
+    apply_macro_flags_to_args(args)
     args.motif_pass = False
     parser = RegLogParser(args, __import__("logging"))
     bp = RegLogParser(args, __import__("logging"))

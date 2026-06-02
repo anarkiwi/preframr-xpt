@@ -22,7 +22,7 @@ from preframr_experiments.base import (
 )
 
 
-def _toy_spec(pipeline_spec=None, seq_len=128):
+def _toy_spec(seq_len=128):
     return ExperimentSpec(
         name="cache_unit",
         doc="",
@@ -30,7 +30,6 @@ def _toy_spec(pipeline_spec=None, seq_len=128):
         arms=[Arm(label="a")],
         metrics=[],
         seq_len=seq_len,
-        pipeline_spec=pipeline_spec or {"transforms": []},
     )
 
 
@@ -67,15 +66,18 @@ class TestDatasetCacheKey(_CacheKeyTestCase):
         b = _dataset_cache_key(spec, {"eval": ["e"], "train": ["y", "x"]})
         self.assertEqual(a, b)
 
-    def test_changes_with_pipeline_spec(self):
-        a = _dataset_cache_key(
-            _toy_spec(pipeline_spec={"transforms": [{"name": "freq_trajectory"}]}),
-            {"train": ["x"]},
-        )
-        b = _dataset_cache_key(
-            _toy_spec(pipeline_spec={"transforms": [{"name": "preset"}]}),
-            {"train": ["x"]},
-        )
+    def test_changes_with_macro_flags(self):
+        spec = _toy_spec()
+        layout = {"train": ["x"]}
+        a = _dataset_cache_key(spec, layout, "", ("freq_trajectory_pass",))
+        b = _dataset_cache_key(spec, layout, "", ("preset_pass",))
+        self.assertNotEqual(a, b)
+
+    def test_changes_with_macro_config(self):
+        spec = _toy_spec()
+        layout = {"train": ["x"]}
+        a = _dataset_cache_key(spec, layout, "", (), "")
+        b = _dataset_cache_key(spec, layout, "", (), "full_macros")
         self.assertNotEqual(a, b)
 
     def test_changes_with_seq_len(self):
@@ -84,15 +86,15 @@ class TestDatasetCacheKey(_CacheKeyTestCase):
         self.assertNotEqual(a, b)
 
     def test_parse_tokenize_cargs_change_key(self):
-        """Macro flags affect parse/tokenize output, so they must bust the key
-        (else two arms collide -- the bug that forced cache-disable)."""
+        """Parse/tokenize-affecting extra_cargs must bust the key (else two arms
+        collide -- the bug that forced cache-disable)."""
         spec = _toy_spec()
         layout = {"train": ["x"]}
         base = _dataset_cache_key(spec, layout, "")
-        macro = _dataset_cache_key(
-            spec, layout, "--freq-nudge-pass --release-update-pass"
+        affecting = _dataset_cache_key(
+            spec, layout, "--voice-id-on-marker --voice-order-on-marker"
         )
-        self.assertNotEqual(base, macro)
+        self.assertNotEqual(base, affecting)
 
     def test_train_only_cargs_do_not_change_key(self):
         """Train/model-only flags don't touch parse/tokenize, so arms that
@@ -111,17 +113,17 @@ class TestDatasetCacheKey(_CacheKeyTestCase):
         self.assertEqual(base, eq_value)
 
     def test_mixed_cargs_key_on_dataset_slice_only(self):
-        """A macro flag + a train-only flag keys the same as the macro flag
-        alone -- the train-only part is stripped, the macro part is kept."""
+        """A dataset-affecting flag + a train-only flag keys the same as the
+        dataset-affecting flag alone -- the train-only part is stripped."""
         spec = _toy_spec()
         layout = {"train": ["x"]}
-        macro_only = _dataset_cache_key(spec, layout, "--freq-nudge-pass")
+        affecting_only = _dataset_cache_key(spec, layout, "--voice-id-on-marker")
         mixed = _dataset_cache_key(
             spec,
             layout,
-            "--per-tier-heads --freq-nudge-pass --per-tier-content-mos-k 4",
+            "--per-tier-heads --voice-id-on-marker --per-tier-content-mos-k 4",
         )
-        self.assertEqual(macro_only, mixed)
+        self.assertEqual(affecting_only, mixed)
 
     def test_unknown_flag_treated_as_dataset_affecting(self):
         """Fail-safe: an unrecognised flag busts the key (never silently

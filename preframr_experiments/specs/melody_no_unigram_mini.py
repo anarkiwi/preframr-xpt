@@ -32,17 +32,23 @@ from preframr_experiments.base import Arm, ExperimentSpec, mini_train_args
 
 _IMAGE = "anarkiwi/preframr:0.2.12"
 
-_BASE_TRANSFORMS = [
-    {"name": "freq_trajectory"},
-    {"name": "preset"},
-    {"name": "hard_restart"},
-    {"name": "legato_per_cluster", "params": {"clusters": [2, 4]}},
-    {"name": "voice_block_order"},
-    {"name": "ctrl_bigram"},
-    {"name": "loop"},
-]
+_BASE_MACROS = (
+    "freq_trajectory_pass",
+    "preset_pass",
+    "hard_restart_pass",
+    "legato_pass_c2",
+    "legato_pass_c4",
+    "voice_canonical_block_order",
+    "ctrl_bigram_pass",
+    "loop_pass",
+    "loop_transposed",
+)
 
-_FREQ_STACK = "--trajectory-anchor-pass --freq-v0-interval --freq-onset-pass"
+_FREQ_STACK_MACROS = _BASE_MACROS + (
+    "trajectory_anchor_pass",
+    "freq_v0_interval",
+    "freq_onset_pass",
+)
 
 _TRAIN_ARGS = mini_train_args(body="large").replace(
     "--max-epochs 160", "--max-epochs 60"
@@ -72,8 +78,12 @@ spec = ExperimentSpec(
     tier="mini",
     image=_IMAGE,
     arms=[
-        Arm(label="no_unigram", extra_cargs=f"{_FREQ_STACK} --tkvocab 0"),
-        Arm(label="merged", extra_cargs=_FREQ_STACK, baseline=True),
+        Arm(
+            label="no_unigram",
+            extra_cargs="--tkvocab 0",
+            macro_flags=_FREQ_STACK_MACROS,
+        ),
+        Arm(label="merged", macro_flags=_FREQ_STACK_MACROS, baseline=True),
     ],
     metrics=[
         "alphabet_size",
@@ -88,6 +98,5 @@ spec = ExperimentSpec(
     tkvocab=32768,
     max_perm=1,
     train_args=_TRAIN_ARGS,
-    pipeline_spec={"transforms": list(_BASE_TRANSFORMS)},
     pre_run_hook=_ablate_hook,
 )
