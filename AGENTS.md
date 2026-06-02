@@ -6,11 +6,11 @@ corpus live elsewhere.
 
 ## Packages
 
-- **`preframr` 0.2.15** — framework only (train / inference / model / args /
+- **`preframr` 0.2.16** — framework only (train / inference / model / args /
   parse / stftokenize / utils + `mine_motifs.py`). Image `anarkiwi/preframr`.
-  No PyPI; ships as the docker image. 0.2.15 carries the per-op-accuracy gate.
-- **`preframr-tokens` 0.40.0** (PyPI) — torch-free parser/tokenizer + macros
-  + `render_play`. **Byte-exact** on the lossless path; STAMP/PATCH/SWEEP/held-ARP/
+  No PyPI; ships as the docker image. Carries the per-op-accuracy gate.
+- **`preframr-tokens` 0.41.1** (PyPI) — torch-free parser/tokenizer + macros
+  + `render_play`. **Byte-exact** (corpus dirty ~8%→0); STAMP/PATCH/SWEEP/held-ARP/
   WAVETABLE codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`).
 - **`preframr-audio` 0.5.6** (PyPI) — SID audio rendering primitives.
 - **`preframr-experiments`** (this repo; editable / PYTHONPATH, no PyPI) —
@@ -44,100 +44,58 @@ across engines (stretch) — inside:
 - **Predict:** Jetson Orin NX (15.6 GB) at PROMPT=2048 / MAX=8192. KV cache
   at prodlike dims ~16 KiB/token → 128 MiB at MAX; bounded by seq_len.
 
-## Current arc — byte-exact tokenizer SHIPPED; next = learnability audit (2026-06-02)
+## Current arc — byte-exact tokenizer COMPLETE + released; learnability is scale-bound at mini (2026-06-02)
 
-The lever is **re-encoding** (the skeleton+ornament tokenizer in preframr-tokens); training is **gated**
-behind a deterministically-sound encoding (no training/audition until the pre-training tests are green).
-**Shipped (preframr-tokens up to v0.40.0, macro passes gated default-OFF):** control-aware foundation,
-claim/arbiter framework, STAMP (drum codebook), PATCH (instrument codebook), SWEEP, held-ARP, WAVETABLE
-codebook. Universal-driver collapse verified (zero per-driver branching; provenance-invariance test #11.4).
-**v0.40.0 makes the tokenizer byte-exact** on the lossless path (PerRegBurst DIFF bases on the decoder's
-carried value; transposed loops only when lossless; STAMP barrier; lossless `_cap_delay`) plus a toggleable
-parse-consistency audit (`PREFRAMR_PARSE_AUDIT=raise|warn`). The byte-exact / RESID→0 work orders are
-retired (shipped); the residue is documented wavetable engines (note-relative offset cycles recur ~80–89%,
-codebook-able), NOT an irreducible floor. Release flow: memory `cross-repo-release-ordering`.
+The lever is **re-encoding**; training is **gated** behind a byte-exact encoding. **Byte-exactness is DONE
+and released — preframr-tokens v0.41.1, image 0.2.16 — corpus dirty rate ~8% → 0.** Root-fixes this arc (all
+register-exact, never a fallback): arbiter `validate=True` (a register-exact pass drops any claim that
+changes the decoded `register_state` — fixes the ctrl/patch tick-drain clobber); a **digi/multispeed pre-load
+gate** (`RegLogParser._admit_dump` rejects 10M+-row dumps before `_read_df`); and the **lead-frame render**
+(`FrameWalker._walk_lead` — content before the first FRAME marker is the tune's note-on, was silently
+dropped; the `register_state` oracle now holds it at `snaps[0]` **replace-not-append** so frame indices stay
+aligned with `frame_reg`). Encoder dedup also landed (`emit_recurring` / `run_collapse` / `make_row` /
+`_SetEquivalentDecoder`, all byte-neutral). Verify byte-exactness with `/scratch/preframr/cb_div_audit.py`
+(corpus `parse_audit='raise'`, currently dirty=0). Cross-repo gotcha: removing a tokens `*_OP` breaks
+preframr's train tests AND the Docker build's `run_tests.sh` (memory `cross-repo-release-ordering`).
 
-### NEXT STEP — learnability audit on the rebake (the gate is no longer correctness)
+### Learnability read (mini, on byte-exact v0.41.1) — INCONCLUSIVE, scale-bound
 
-Correctness is done (v0.40.0 byte-exact; constrained decode guarantees ref VALIDITY). The open question
-is **learnability**: does each pattern-compressing token's PAYLOAD actually learn. Plan:
+`learnability_full_macros_mini` (full_macros vs atomic baseline, gen-gate, 3 seeds) on byte-exact tokens:
+**all 6 runs mode-collapsed** (`loop_collapse_rate` ~1.0, gate abort epoch 15) — same as the pre-byte-exact
+result, so the collapse is a **scale** problem, not a tokenization one. full_macros is directionally better
+(val_acc 0.067 vs 0.052, alphabet −7%, tokens −2.4%) but inside the collapsed regime → not trustworthy. **The
+actual go/no-go needs the canonical/prodlike tier** (where loop_collapse_rate drops). Mini distribution:
+FREQ_TRAJ 49%, loop/reuse PATTERN_* 19%, SET 13% (86% of which is frame markers), ctrl-collapse 2.8%;
+**codebooks ~0% because stamp/patch/wavetable are NOT in REGISTERED_MACROS** (experimental, default-OFF).
 
-1. **Rebake** the corpus with preframr-tokens 0.40.0 — corrected tokens. NEVER measure on pre-0.40.0
-   tokens (the prior "full_macros = only content win ×3 seeds" was on partly-wrong tokens).
-2. **Train `full_macros` @ `--tkvocab=0` (Unigram OFF)** + an **atomic baseline**, with
-   `--generalization-gate`. Keep Unigram OFF: (a) the rebake changed token freqs → stale vocab; (b) it
-   obscures the per-op signal; (c) it would desync the constrained-decode mask, which operates on the
-   atomic op-grammar — reintroduce only later, mask-aware, if sequence length actually hurts.
-3. **Read the learnability readout** (preframr ≥0.2.15): per-tier `gate/content_over_structural` + the
-   per-op `gate/op_acc/{op}` (build_op_map / GeneralizationGate, this session). Structural (which-op)
-   should be high; watch the CONTENT payloads — DIFF delta vs BACK_REF distance vs STAMP_REF / WAVETABLE
-   **codebook-id**. A high-cardinality / per-tune-unique payload (esp. codebook ids) is the unlearnable
-   risk; verify id reuse/transferability — if low, the fix is encoding-side (lower-card / codebook-
-   relative), NOT model-side. Don't mistake mask-guaranteed validity for learned selection.
-4. **Go/no-go**: re-confirm full_macros vs atomic (×seeds, byte-exact rebake) on content_acc + tier/op
-   accuracy — the decision on whether the compressing vocab is the right substrate.
+### The codebook pipeline is a SWAP, not an add-on
+`skeleton_pass` (WavetablePass needs it) **conflicts with `freq_trajectory_pass`** — alternative freq
+substrates. Swapping to the codebook pipeline drops FREQ_TRAJ (49%→0) for SKEL+ORN+STAMP/SWEEP/WAVETABLE, and
+PATCH takes recurring envelopes from RELEASE_UPDATE — **but PW/filter lose trajectory compression and revert
+to SET/PWM_PRESET/FC_PRESET (+16/+19/+6pp)**. That blowup motivates the handoff below.
 
-### Byte-exact corpus verification (10% HVSC sweep — running DETACHED at handoff)
+### HANDOFF — PW/filter SWEEP + op-name API (untracked brief, fully self-contained)
+**`preframr-tokens/IMPLEMENT_pw_filter_sweep_and_op_api.md`** — an implementing agent needs nothing outside
+preframr-tokens (driver facts + the byte-exactness model are inlined).
+- **Part A:** generalize `SweepPass` to PW (regs 2/9/16) + filter cutoff (reg 21). Driver primitive for both
+  IS the freq sweep (parametric bounded sweep). Adaptations: target regs, `note_aligned=False` (PW/filter
+  persist across notes), drop the freq-only `_skeleton_resids` gate; A1 linear ramps then A2 bounce; reuse
+  `SWEEP_OP`. Hard gate: register-exact via `PREFRAMR_PARSE_AUDIT=raise`.
+- **Part B (tokens side only):** add `op_name_by_id()` (op→tier already exists via `collect_op_loss_tiers`).
+- **Owner follow-up (NOT the agent):** swap preframr `tier_map._op_name_by_id` to the tokens API.
 
-v0.40.0's byte-exact path is verified by a 10% HVSC audit sweep (every 10th dump, skeleton path,
-`PREFRAMR_PARSE_AUDIT=raise`); script `preframr_experiments/audit/probes/hvsc_audit_sweep.py`. A run is
-LIVE in a **detached container that survives a context-clear** — container `preframr_hvsc_sweep_v040`,
-durable log **`/scratch/preframr/sweep_v040.log`**.
+### NEXT (owner)
+1. **Canonical-tier learnability run** — the real go/no-go (mini collapses regardless of vocab).
+2. (optional) mini codebook-pipeline arm for the distribution read (training collapses; distribution is the payoff).
+3. After PW/filter sweep lands: re-measure the codebook pipeline — the SET/PRESET blowup should become SWEEP.
 
-- **Fresh agent: `tail /scratch/preframr/sweep_v040.log`.** All-clear = a final `DONE sample=8705 ...
-  DIRTY=0 ERR=0`. A `DIRTY [i/N] <tune>: <pass> ... reg R V->V'` line (streamed live) names the
-  tune+pass+reg. The prior session was clean through ~55%, INCLUDING every tune the pre-fix sweep
-  flagged (Aria/Day_Tripper/Sleigh_Ride/Pocket_Rockets/Uninvited/Mini_Melodies/1394).
-- If the container is gone (`docker ps`) and the log lacks `DONE`, re-run: `docker run --rm --network host
-  -v /scratch:/scratch -e PYTHONPATH=/scratch/anarkiwi/preframr-tokens:/scratch/anarkiwi/preframr-audio
-  -e PREFRAMR_SID_FIXTURE_CACHE=/scratch/preframr/sid_fixture_cache anarkiwi/preframr-xpt:0.2.13
-  python3 -u preframr_experiments/audit/probes/hvsc_audit_sweep.py 10 20`.
-- A NEW divergence class is a tokens bug to ROOT-FIX (never a fallback — training must not see wrong tokens).
-
-### Prior arc — substrate is the lever; V0 pitch (2026-05-28, superseded by the skeleton re-encoding)
-
-**Decisive 2026-05-28: `melody_substrate_iter_mini` (×3 seeds).** PW+filter
-substrate ablation lifts content acc 0.056 → 0.089 (Δ +0.033) and op45
-(FREQ_TRAJ) 0.085 → 0.206 — **2.4× on the melody primitive**, seed-stable.
-Absorber macros add **zero** on the clean substrate (`substrate_no_macros`
-≡ `substrate_full_macros` at 0.089 on every content metric, slightly better
-on the audition headline). V0 onset (the pitch atom) stays near zero in
-all three arms — model learns trajectory STRUCTURE not melody PITCH. Full
-write-up: `design/landed/substrate_ablation_v1.md`.
-
-**Architecture exonerated.** `framework_arch_test` (torchtune llama3_2 at
-mini body=large, 5.5M params) trained on a synthetic deterministic-motif
-task gets train acc 1.000, val acc 0.903 on UNSEEN held-out motifs, gap
-0.097. The core body can generalize; SID failure is downstream.
-
-**Next experiment (high-confidence): `melody_substrate_prodlike`.** Take
-`substrate_no_macros` to prodlike. Deployment config (`--tkvocab 8192
---batch-size 4 --accumulate-grad-batches 8`). Macros explicitly OFF (they
-add nothing on substrate). Reserved budget ~30–66h on the 4090.
-
-**Open: V0 absolute pitch.** Interval-V0 (`--freq-v0-interval`) was on in
-all substrate arms — V0 onset still 0. Either V0 interval is bugged (e.g.
-resets per-block), or pitch is genuinely scale-bound at mini and needs
-prodlike. Two cheap probes before prodlike:
-1. Grep `pipeline_spec.json` per arm-seed to confirm interval flag landed.
-2. Run `audit.melody_predictability` on the ablated corpus. If V0 trigram
-   ceiling rises from the noisy-corpus 0.79 baseline, scale is the issue;
-   if flat, V0 encoding is.
-
-**Automation landed.** `audit.melody_features` + `melody_baseline_corpus`
-+ `melody_score_generation` + `melody_compare_arms` give an end-to-end
-audio-side musicality score on any prediction dump (muspy-backed:
-pitch_class_entropy, scale_consistency, pitch_in_scale_rate, plus
-SID-specific gate density / note duration / interval distribution).
-Framework patch: `predict.py --predict-dump <path>` captures the
-prediction-window audio_df as parquet. Replaces per-WAV ear audits.
-
-**Closed audit bugs (history, design-history pre-this-date is suspect):**
-- `content_tier_report.id_to_op` row-index proxy — fixed via `vocab_atom`
-  emission in `audit_checkpoint_per_class`. Per-op deltas pre-2026-05-28
-  are ~58% mis-assigned; ignore them.
-- `iter_self_contained_row_blocks` stripped freq passes — fixed by
-  `freq_passes_re_fire_on_blocks` (commit `a71f676`).
+### Prior arc (compacted; details in `design/landed/` + git log)
+Substrate ablation (2026-05-28, `melody_substrate_iter_mini`) lifted FREQ_TRAJ 0.085→0.206 (2.4×); absorber
+macros add zero on the clean substrate; V0 onset stays ~0 (model learns trajectory STRUCTURE, not pitch).
+**Architecture exonerated** — `framework_arch_test` (torchtune llama3_2, mini) gets val 0.903 on UNSEEN
+synthetic motifs: the body generalizes, the SID failure is downstream. Write-up
+`design/landed/substrate_ablation_v1.md`. (Per-op deltas before 2026-05-28 are ~58% mis-assigned —
+`content_tier_report.id_to_op` bug, since fixed; ignore them.)
 
 ## Tests + runner
 
