@@ -102,15 +102,26 @@ Implemented + measured before committing to the core change. Two findings reshap
    deep copy of `DecodeState` per frame (or per accept), whose overhead is **unproven** and may eat the
    gain on the big `nsel` calls. High complexity + risk in the byte-exact core.
 
-## Recommendation (revised)
-Suffix-resume/diff-attribution inside the arbiter are **not** the clean win the scoping implied — the
-accept-heavy, big-`nsel` structure breaks both. Two better levers, in order:
-- **Reduce `nsel`: find why one pass emits hundreds of mutually-conflicting claims** (label TBD — being
-  measured). If the proposing pass batched non-conflicting claims (or pre-resolved drain conflicts at
-  proposal time), the big `O(nsel)` greedy episodes disappear at the source. Likely the highest ROI and
-  lowest core-risk.
-- **(2) Kill per-block codebook re-encoding** so these episodes run once (parse stage) instead of per
-  overlapping block. Sidesteps the arbiter-localization problem entirely.
+## Culprit pinned: `ctrl_bigram` + `ctrl_triple` (`collapse_runs`)
+Per-pass-label breakdown of the 8315 greedy decodes (30 tunes): **`ctrl_triple` 4038 + `ctrl_bigram`
+4234 = 99.5%**; `sweep` = 8; everything else 0. `nsel` distribution: 610, 593, 586, 571, 557, 545, …
 
-Keep `resume_decode.py` as committed infra (useful for audits / future incremental validation). Retire
-or scope the register_state memo (#5) to the parse.py path — it's pure overhead in block materialization.
+`collapse_runs` (`run_collapse.py`) builds **one Claim per collapsible CTRL run across all three voice
+registers** and hands the whole pile (hundreds) to a single `arbitrate(validate=True)`. The claims
+interact only through the **per-register tick-drain**, which is *local*: a collapse's effect is confined
+to its run's frames + a short drain; runs far apart in frames, or on different voice ctrl registers,
+provably cannot interact (different `pending_set_writes[reg]`; the splice preserves FRAME markers). So
+the one giant `O(nsel)` greedy is unnecessary — the claim set is **separable into independent groups**.
+
+## Recommendation (revised): partition `collapse_runs` into independent groups
+Split the single arbitrate into independent groups (per ctrl register, then by frame-gap > a drain
+margin) and validate each group **against the one `src` decode** — independence means accepting one
+group never invalidates another, so there is no re-snapshot problem (the thing that defeated localized
+validation in the general case). Group validation can use `resume_decode.py` to decode only the group's
+window. Net: `O(nsel)` full decodes → `O(#groups)` small decodes, no arbiter/walker core change.
+This is **corpus-testable for exact equivalence** to the current single-arbitrate accept set (the guard
+that makes it safe). Margin sweep + equivalence being measured now.
+
+`resume_decode.py` is committed infra for the group-window decode. Retire or scope the register_state
+memo (#5) to the parse.py path — it's pure overhead in block materialization. Route 2 (kill per-block
+re-encoding) remains the orthogonal multiplier if more is needed after this.
