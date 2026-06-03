@@ -100,26 +100,34 @@ Both macro arms cut per-frame information ~22–26% vs baseline, and here **code
 songs, and song mode lets a codebook's REFs accumulate over the entire tune — over-crediting its
 compression (see `macro_learnability_risk_review.md`).
 
-**`--mode blocks` (self-contained-block stream the model actually sees; EXPERIMENTAL, 5/9 tunes — the
+**`--mode blocks` at `seq_len=8192` (the real prodlike/predict block scale; EXPERIMENTAL, 5/9 tunes — the
 standalone block re-encode trips on ops needing parser context, faithful version needs the Corpus
 block-builder):**
 
 | config | alphabet | tok/frame | h∞/frame | h∞/token | induction-copy | MI@1 | MI@16 |
 |---|---|---|---|---|---|---|---|
-| baseline | 573 | 3.64 | 3.01 | 0.827 | 0.920 | 3.51 | 1.57 |
-| full_macros | 1052 | 0.99 | **0.40** | **0.403** | 0.834 | 5.88 | 3.95 |
-| codebook | 1354 | 1.04 | 0.55 | 0.526 | **0.683** | 5.20 | 2.91 |
+| baseline | 567 | 3.67 | 3.03 | 0.825 | 0.942 | 3.52 | 1.58 |
+| full_macros | 1073 | 0.96 | **0.38** | **0.400** | 0.852 | 5.88 | 4.05 |
+| codebook | 1365 | 0.95 | 0.51 | 0.535 | **0.718** | 5.34 | 3.03 |
 
-**At block scale the ordering FLIPS: full_macros beats codebook on every metric** (h∞/frame 0.40 < 0.55,
-h∞/token 0.403 < 0.526), and crucially the codebook arm's **in-window induction-copy collapses to 0.683**
-(vs full_macros 0.834) while its alphabet is largest (1354). Reading: the heavy codebook passes
-(stamp/wavetable/patch) must recur *within one ~2048-frame block* to pay off, and many don't — so they add
-vocabulary without buying back reuse. **The codebook compression does not survive to the scale the model
-learns at.** This is decision-relevant — it cautions against the codebook pipeline as a *learnability* bet,
-consistent with the project's confirmed `full_macros` content win (eval_a 0.219→0.324) and the codebooks
-remaining experimental. Caveats: 5/9 tunes (biased toward simpler tunes), absolute pre-voice-reg blocks,
-high-k undersampling — the DIRECTION is the read; **certify on full coverage via the Corpus block-builder
-before acting**. (The earlier "codebook edges full_macros, re-run the residual arm to push below 3.65"
+**At block scale the ordering FLIPS vs song mode: full_macros beats codebook on every metric** (h∞/frame
+0.38 < 0.51, h∞/token 0.400 < 0.535), and the codebook arm's **in-window induction-copy is lower (0.718 vs
+0.852)** with the largest alphabet (1365). Reading: the heavy codebook passes (stamp/wavetable/patch) must
+recur *within one block* to pay off, and many don't — so they add vocabulary without buying back reuse.
+**The codebook compression does not survive to the scale the model learns at.** Decision-relevant — it
+cautions against the codebook pipeline as a *learnability* bet, consistent with the confirmed `full_macros`
+content win (eval_a 0.219→0.324) and the codebooks remaining experimental.
+
+**Scale matters — use the real seq_len.** This was first run at `seq_len=4096` (mini): the smaller window
+*over-penalised* codebooks (copy 0.683, h∞/frame 0.55) because programs had less room to recur in-window.
+At the correct `seq_len=8192` the gap narrows (copy 0.718, h∞/frame 0.51) **but full_macros still wins** —
+the conclusion is robust, only the mini magnitude was an artifact. The triage default is now 8192.
+**Corollary (a finding in itself): mini is not a useful research dimension** — it mode-collapses in
+*training* (loop_collapse_rate ~1.0) AND distorts the *static* read via its window size. The resolution is
+NOT "always train prodlike" (6–11 hr): the triage gives the prodlike-*scale* learnability read at
+mini-*cost* (static analysis, minutes) — reserve training runs for the collapse→learning *threshold* only.
+Caveats on these numbers: 5/9 tunes (biased simpler), absolute pre-voice-reg blocks, high-k undersampling
+— trust the DIRECTION; **certify on full coverage via the Corpus block-builder before acting**. (The earlier "codebook edges full_macros, re-run the residual arm to push below 3.65"
 claim was a song-mode artifact — withdrawn.)
 
 ## Honest limit

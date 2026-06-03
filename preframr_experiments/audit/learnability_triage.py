@@ -370,7 +370,13 @@ def main():
     ap.add_argument(
         "--dumps", nargs="+", required=True, help="*.dump.parquet paths (digi-excluded)"
     )
-    ap.add_argument("--seq-len", type=int, default=4096)
+    ap.add_argument(
+        "--seq-len",
+        type=int,
+        default=8192,
+        help="block token-context = seq_len (frames_per_block = seq_len//2). 8192 = framework "
+        "default / prodlike + predict MAX; 4096 = mini. Sets the block-mode window scale.",
+    )
     ap.add_argument(
         "--mode",
         default="song",

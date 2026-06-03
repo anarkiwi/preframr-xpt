@@ -66,9 +66,13 @@ design north-star): generalisation is won when the *encoding* lets a bounded (~T
 transformer cheaply predict the next token — minimise causal-state + dependency horizon,
 prefer induction-head DEF→REF copy over implicit per-frame counters, order by the driver
 causal DAG. Correctness is the *gate*; compression / parse-perf / deploy are *infra*. A
-training-free triage (`audit/learnability_triage.py`) ranks encodings before a run.
-Model-side content interventions were refuted at the ~0.13 ceiling that tokenizer-side
-`full_macros` then lifted — the lever is tokenizer-side representation.
+training-free triage (`audit/learnability_triage.py`) ranks encodings before a run — run it at
+**prodlike `seq_len=8192`** (the real block/predict scale), not mini. **Mini (4096) is not a
+research dimension**: it mode-collapses in training (`loop_collapse_rate` ~1.0) AND distorts the
+static read via its window size; it's plumbing/cost only. The triage's value is the
+prodlike-*scale* learnability read at mini-*cost* (static, minutes) — reserve training runs for the
+collapse→learning *threshold*. Model-side content interventions were refuted at the ~0.13 ceiling
+that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
 
 ## Current arc — byte-exact + PW/filter sweep + unified macro-flags ALL SHIPPED; codebook distribution read is the next experiment (2026-06-02)
 
