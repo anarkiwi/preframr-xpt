@@ -75,9 +75,42 @@ decode-state snapshot/restore to the walker; suffix-decode each fallback candida
 first frame). Risk is real; gate on `cb_div_audit` byte-exactness + a slow-path equivalence assertion
 under an env flag across the corpus before trusting the fast path.
 
-## Recommendation
-Target **(1)** via walker decode-state snapshot/restore (suffix-decode the fallback) — it attacks the
-measured 318 decodes and preserves exact output. Because it modifies the byte-exact decode core, do it
-as a focused change behind a slow-path equivalence guard, not in passing. **(2)** (kill per-block
-re-encoding) is the orthogonal multiplier and a viable alternative if touching the walker is undesirable.
-The shipped memo (#5) should be **retired or scoped to the parse.py path** — it's pure overhead here.
+## Empirical results (2026-06-03, 30 HVSC tunes on fogbank)
+Implemented + measured before committing to the core change. Two findings reshape the fix:
+
+1. **Resume primitive works, byte-exact.** `preframr_tokens/macros/resume_decode.py` snapshots the full
+   `DecodeState` at a frame boundary and resumes the walk there; validated **240/240** identical to the
+   full walk across 40 real (loop-expanded, 2048-frame) dfs at 6 split points each. Frame mapping is
+   trivial at arbitrate time (no loop ops present; raw frame count == expanded). This is sound infra.
+
+2. **But the fallback is accept-heavy and concentrated in a FEW huge calls — which defeats both the
+   suffix-resume *and* the diff-attribution forms of (1):**
+   - Of the per-claim fallback tests: **317 accept / 10 reject**. Greedy *grows* `accepted` on nearly
+     every test, so `cur_df` changes constantly — pure suffix-resume from a stable snapshot can't reuse a
+     prefix; it would have to re-snapshot after almost every claim.
+   - 35 fallbacks over 30 tunes did **8315 greedy decodes** — dominated by a handful of calls with
+     `nsel` = 322/557/586/610. One pass proposes **hundreds** of claims that conflict catastrophically as
+     a batch (the all-applied decode diverges across ~1800/2048 frames) yet are mostly individually
+     compatible (greedy keeps 75/355/395/445). The cost is `O(nsel)` full decodes per big call.
+   - **Diff-attribution is unsound here, confirmed: 19/35 mismatch.** When the batch diverges almost
+     everywhere, "claims touching a divergence" flags nearly all of them (`nbad`≈`nsel`, fast keeps 0–179
+     where greedy keeps 75–445). Batch attribution cannot predict the large lossless subset greedy finds
+     incrementally. (`fast_decodes` was 103 vs 8315 — 99% cheaper — but **wrong**, so moot.)
+
+   The only *exact* speedup left is localized suffix-resume that maintains per-frame `DecodeState`
+   snapshots and updates only the changed window [claim_frame, reconvergence] per accept. That needs a
+   deep copy of `DecodeState` per frame (or per accept), whose overhead is **unproven** and may eat the
+   gain on the big `nsel` calls. High complexity + risk in the byte-exact core.
+
+## Recommendation (revised)
+Suffix-resume/diff-attribution inside the arbiter are **not** the clean win the scoping implied — the
+accept-heavy, big-`nsel` structure breaks both. Two better levers, in order:
+- **Reduce `nsel`: find why one pass emits hundreds of mutually-conflicting claims** (label TBD — being
+  measured). If the proposing pass batched non-conflicting claims (or pre-resolved drain conflicts at
+  proposal time), the big `O(nsel)` greedy episodes disappear at the source. Likely the highest ROI and
+  lowest core-risk.
+- **(2) Kill per-block codebook re-encoding** so these episodes run once (parse stage) instead of per
+  overlapping block. Sidesteps the arbiter-localization problem entirely.
+
+Keep `resume_decode.py` as committed infra (useful for audits / future incremental validation). Retire
+or scope the register_state memo (#5) to the parse.py path — it's pure overhead in block materialization.
