@@ -6,21 +6,23 @@ corpus live elsewhere.
 
 ## Packages
 
-- **`preframr` 0.2.17** — framework only (train / inference / model / args /
+- **`preframr` 0.2.18** — framework only (train / inference / model / args /
   parse / stftokenize / utils). Image `anarkiwi/preframr`. No PyPI; ships as the
-  docker image (`0.2.17` + `:latest` published on main-push). Carries the
-  per-op-accuracy gate. Floors `preframr-tokens>=0.42.0` (in **all** req files:
+  docker image (`0.2.18` + `:latest` published on main-push). Carries the
+  per-op-accuracy gate. Floors `preframr-tokens>=0.42.1` (in **all** req files:
   `requirements.txt`, `predict-requirements.txt`, `jetson/predict-requirements.txt`
   — `op_name_by_id` is on the predict import path). `tier_map.build_op_map` reads
   op→name from tokens' `op_name_by_id()`. **Macro passes are supplied as ONE
   validated list** — `apply_macro_flags_to_args` resolves `--macro-flags` /
   `--macro-config` off the tokens registry (default all-OFF); the old per-flag
   `--foo-pass` args + `_PIPELINE_NAME_TO_FLAG` + `--pipeline-spec` are gone.
-- **`preframr-tokens` 0.42.0** (PyPI) — torch-free parser/tokenizer + macros
+- **`preframr-tokens` 0.42.1** (PyPI) — torch-free parser/tokenizer + macros
   + `render_play`. **Byte-exact** (corpus dirty ~8%→0); STAMP/PATCH/SWEEP/held-ARP/
   WAVETABLE codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`). 0.42 added
   PW/filter-cutoff sweep mining (`pw_sweep`/`filter_sweep` sub-flags, default OFF) +
-  the canonical `op_name_by_id()`/`op_name_tiers()` op→name API.
+  the canonical `op_name_by_id()`/`op_name_tiers()` op→name API. 0.42.1 fixed the
+  `per_reg_burst` empty-cand+barrier crash (unblocked the codebook pipeline on the
+  real corpus) + a `FrameWalker` parse speedup (~7-12%, byte-exact).
 - **`preframr-audio` 0.5.6** (PyPI) — SID audio rendering primitives.
 - **`preframr-experiments`** (this repo; editable / PYTHONPATH, no PyPI) —
   runner + specs + `audit/` + tests. Pure orchestration on the host; audits
