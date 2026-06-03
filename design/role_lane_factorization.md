@@ -21,10 +21,12 @@ resource-management the composer is doing.
 Invert the rendering — music is generated as role-lines, *orchestrated* onto voices and *wired* together,
 then rendered to register pokes; recover the inverse:
 
-1. **Role lanes** (the learnable channels): `melody`, `bass`, `harmony/arp`, `percussion`, plus a
-   `modulator` sub-role (below) — each collects its role's events with role-internal continuity, so the
-   model predicts *within role* (the structure that generalizes). This is the cross-voice de-mux that
-   `melody_channel_factorization` pointed to (within-voice was refuted; the cost is cross-voice/structural).
+1. **Role lanes** (the learnable channels): `melody`, `bass`, `harmony/arp`, `percussion` — each collects
+   its role's events with role-internal continuity, so the model predicts *within role* (the structure
+   that generalizes). This is the cross-voice de-mux that `melody_channel_factorization` pointed to
+   (within-voice was refuted; the cost is cross-voice/structural). **Modulation is NOT a role here** — it's
+   a wiring *function* (layer 3) orthogonal to a voice's audible role: a voice can play melody/bass *and*
+   simultaneously have its oscillator feed the next voice's sync/ring.
 2. **Orchestration map** (the resource channel, makes it invertible): a low-rate channel recording, over
    time, **which physical voice carries which role** — voice-allocation changes ARE the composer's
    resource juggling, and a single explicit "role→voice (re)assignment" event is musically meaningful and
@@ -42,25 +44,31 @@ then rendered to register pokes; recover the inverse:
 ## Cross-voice dependency: sync & ring (must be accounted for)
 SID hard-**sync** (ctrl bit 1) and **ring**-mod (ctrl bit 2) wire the voices in a **fixed ring tied to
 physical index**: osc1←osc3, osc2←osc1, osc3←osc2 (voice N modulated by voice N−1, wrap-around; the
-SYNC/RING bit sits in the *modulated* voice's ctrl reg). So **voice N's audio depends on voice N−1's
-frequency** — even when N−1 is gated *off* and serves purely as a silent modulation source. This breaks
-the "independent lanes" assumption in two ways and constrains the design:
+SYNC/RING bit sits in the *modulated* voice's ctrl reg). Sync/ring consume the source voice's
+**oscillator frequency**, which is independent of that voice's gate/waveform/envelope — so **voice N's
+audio depends on voice N−1's frequency** whether or not N−1 is also audible. This breaks the
+"independent lanes" assumption and constrains the design:
 
-- **Lanes are coupled.** A sync/ring edge ties two physical voices; the modulator's freq is meaningless in
-  isolation — only the **ratio/interval to the carrier** carries musical intent (a sync-sweep is a relative
-  gesture; a fixed ring ratio is a timbre). Splitting the two voices into independent role-lanes with
-  *absolute* freqs forces the model to recover the relationship by cross-token arithmetic across the lane
-  gap — exactly the non-local dependency Principle 1 says it can't. **Encode the edge as the relationship**
-  (interval/ratio modulator→carrier) so the binding token co-locates the dependency and keeps it local;
-  keep the exact freq recoverable for byte-exactness.
-- **A "silent" modulator is load-bearing.** A gated-off voice driving another's sync/ring has no audible
-  line but cannot be dropped or merged — tag it `modulator-for-voice-N` (a functional sub-role, freq is
-  relative not melodic). The percussion/role detector MUST recognize this case or it will corrupt the sound
-  by discarding a "do-nothing" voice.
-- **Topology is physical, not role.** Because the modulator is always the ring-adjacent physical voice, the
-  sync/ring edges live in the **wiring graph (layer 3) keyed by physical voice index** — one place where
-  physical-voice structure genuinely cannot be abstracted into roles; the role lanes reference it, they
-  don't absorb it.
+- **Modulation is a dual function, not a role.** The common case is **dual**: voice N−1 plays its own
+  line (melody/bass/…) *and* its oscillator simultaneously feeds voice N's sync/ring. The degenerate case
+  is a **silent modulator** (N−1 gated off, its only purpose is to drive N). So "modulator" is an **edge**
+  in the wiring graph, layered on top of whatever audible role the voice has — never a role that displaces
+  it. The role detector must allow a voice to be melody *and* a modulation source at once.
+- **The edge references the source's existing freq — no duplication.** Voice N−1's frequency already lives
+  in its role lane (its own note). The sync/ring edge just *points at it* and expresses voice N's carrier
+  as a **relationship** to it (interval/ratio). So there's nothing extra to model for the source — and for
+  the silent case, the source contributes *only* a freq (its lane has no audible content, just the value
+  the edge consumes).
+- **Lanes are coupled; encode the relationship.** Only the ratio/interval carries intent (a sync-sweep is
+  a relative gesture; a fixed ring ratio is a timbre). Splitting carrier and source into independent
+  *absolute*-freq lanes forces the model to recover the relationship by cross-token arithmetic across the
+  lane gap — the non-local dependency Principle 1 says it can't. Encode the edge as `carrier = source ⊕
+  interval`, co-locating the dependency; keep exact freq recoverable for byte-exactness.
+- **Never drop a source voice.** A silent-but-modulating voice has no audible line but is load-bearing —
+  the percussion/role detector must not discard or merge a "do-nothing" voice whose freq drives an edge.
+- **Topology is physical, not role.** The source is always the ring-adjacent physical voice, so sync/ring
+  edges live in the **wiring graph (layer 3) keyed by physical voice index** — the one place physical-voice
+  structure genuinely cannot be abstracted into roles; the role lanes reference it, they don't absorb it.
 
 ## Tractability ladder (by ambiguity — build low-risk first; role is LATENT)
 Role assignment is a hidden variable, and **mis-segmentation fragments a line worse than physical
@@ -72,12 +80,13 @@ voice-lanes**. So do NOT infer aggressively; climb from hardware-detectable to l
    **dilute the pitched voices' prediction target**. Pulling them to their own lane is the cleanest win.
 2. **Voice-wiring graph — SECOND (hardware-explicit, no latent inference).** Filter routing is in reg 23;
    sync/ring edges are in each voice's ctrl bits 1/2. Regroup both into the wiring channel: filter as a
-   bound bus, sync/ring as modulator↔carrier **relationship** tokens. Surfaces the `modulator` sub-role for
-   free (a voice whose only consumer is another voice's sync/ring).
+   bound bus, sync/ring as source↔carrier **relationship** tokens. Surfaces the modulation **edges** + the
+   silent-only-source case (wiring-only voice) for free — without forcing a role on dual-function voices.
 3. **Melody / bass role inference — LAST, GATED (latent, lossy).** Heuristic seeds: pitch range
    (bass = low, melody = mid/high sustained), ornament signature (vibrato/slide ⇒ lead), gate/rhythm;
-   `audit/extract_sid_melody.py` already extracts per-(dump,voice) melodic lines. **Must run AFTER the
-   wiring graph** so a silent modulator voice is already claimed and not mis-labelled melody/bass. Build
+   `audit/extract_sid_melody.py` already extracts per-(dump,voice) melodic lines. **Runs AFTER the wiring
+   graph**, and assigns an audible role to *every* voice with audible output — **including dual voices that
+   also feed a sync/ring edge** (modulating ≠ no role); only a silent-only source gets no role lane. Build
    the segmenter ONLY if it pays off (below).
 
 ## Measure before building (the gate)
