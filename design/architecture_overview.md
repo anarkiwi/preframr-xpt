@@ -38,43 +38,11 @@ preframr-tokens (PyPI)  preframr-audio (PyPI)
 - Experiment runner, specs, audits, tier-data lists, design docs → **preframr-xpt**.
 - Augmentation → **preframr-aug**.
 
-## Release process (the authoritative copy — derived from the topology)
+## Release process
 
-Two mechanisms — don't conflate them:
-
-- **PyPI libs** (`preframr-tokens`, `preframr-audio`): `release.yml` fires on a
-  **`v*` tag ONLY** → PyPI (trusted-publisher OIDC). Version is **dynamic**
-  (setuptools-scm from the tag); bump `fallback_version` in `pyproject.toml` to
-  match. **Merging to `main` publishes nothing** (CI only) — only a `v*` tag
-  releases, and `release.yml` does PyPI only (make the GitHub Release object
-  separately with `gh release create`).
-- **Images** (`anarkiwi/preframr` + slim `-predict`/`-xpu`/`-jetson`; preframr-xpt
-  *builds* via `docker.yml` `push:false`): `release.yml` fires on **push to `main`
-  AND `v*` tags** → Docker Hub, tagged `:latest` + `:${VERSION}` from the
-  **VERSION file** (NOT the git tag name). Auth `secrets.DOCKER_TOKEN` (renamed
-  from `DOCKER_PASSWORD` — the old name fails login). Merge-to-`main` republishes
-  the versioned image (intended). **Gotcha:** the image tag is the VERSION file,
-  not the tag name — **bump VERSION in the release commit**, or a `vX.Y.Z` tag
-  ships a stale `:VERSION` (the v0.2.1→`:0.2.0` episode; fixed by VERSION→0.2.2).
-  Local build beats waiting on GHA:
-  `docker build -f Dockerfile . -t anarkiwi/preframr:<v>`.
-
-**Merging a PR is always safe** — everything is versioned and new code is opt-in.
-The deliberate *release* is the **tag** (PyPI) or the **VERSION bump + push**
-(images); gate THAT on the experiment verdict, not the merge.
-
-**Public-PyPI propagation (the CI gotcha).** Downstream image CI installs the libs
-from **public PyPI**, which propagates a release with a **few-minutes lag**.
-`preframr_experiments/bust_release.sh <pkg> [version]` busts + polls the **local
-proxpi mirror** (for local builds, where `build.sh` sources `.env` → `PIP_OPTS`)
-— it does NOT prove public PyPI is ready. So after a lib release, **wait for
-public-PyPI propagation before the downstream image PR/CI** (poll
-`pypi.org/pypi/<pkg>/json`), or just re-run the CI once it propagates (this caused
-a real CI race). Manual mirror bust: `curl -X DELETE
-http://192.168.5.1:5001/cache/<pkg>`, confirm at `.../index/<pkg>/`, then rebake.
-
-**Cross-repo order when a tokenizer change ripples up:** preframr-tokens PyPI
-(tag, bump fallback) → *wait for public-PyPI propagation* → preframr (floor
-`preframr-tokens>=X.Y.Z`, bump VERSION, merge/tag → image) → preframr-xpt
-(`ARG BASE` bump + per-spec `image=` pins). Worked example (motif v2): tokens
-0.21.0 (v2) → tokens 0.22.0 (tier fix) → preframr 0.2.3 (flag + floor) → xpt v2 A/B.
+**Authoritative copy: [`release_build_cache.md`](release_build_cache.md)** — the
+per-repo release procedure (PyPI-libs `v*` tag → OIDC vs Docker-app VERSION-bump →
+main-push), the proxpi cache + how to bust it, the local build/test commands, and the
+two standing rules (run non-GPU work on `fogbank`; build a Docker app's image locally
+in parallel with the push). The topology above is *why* the split exists: torch-free
+libs ship as wheels, the torch/GPU framework ships as an image, xpt layers on it.

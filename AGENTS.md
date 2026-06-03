@@ -40,9 +40,13 @@ Sibling source repos: `/scratch/anarkiwi/preframr-{audio,tokens,xpt,aug}` and
   (pinned `ARG BASE`; override at build to track `:latest`). Build runs
   `pytest tests`. Experiment **arms** run in their per-spec `image`.
 
-Release process: authoritative in `design/architecture_overview.md`
-("Release process"). `build.sh` sources gitignored `.env` (template
-`.env.example`) for `PIP_OPTS` (the proxpi mirror) for local builds.
+Release, build, test, cache — one authoritative doc: **`design/release_build_cache.md`**
+(per-repo release procedure, the proxpi cache + how to bust it, local build/test
+commands). Two standing rules from it: **run non-GPU work (builds, parse, audits,
+pytest, lint) on `fogbank`** — `ssh fogbank`, 72 cores, shared `/scratch`, its own
+docker + the preframr images — keep defroster for training; and when releasing a Docker
+app **build the image locally in parallel with the push** so you never wait on CI + a
+slow image pull (a failed local build is discardable).
 
 ## Project goal (OVERRIDING)
 
