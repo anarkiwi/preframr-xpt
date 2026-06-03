@@ -65,11 +65,26 @@ line pays a longer dependency horizon. The structural fix is voice-major lanes
   [[codebook-id-snap-corruption]] copy-collapse is RESOLVED; and per the self-contained-block re-mining,
   ids are effectively *block*-local, so cross-block transfer rides re-mined structure, not a persistent id.
 
+## Is the codebook design itself the problem? (decomposition — wired, run pending)
+The triage's `codebook` arm underperforms `full_macros` at block scale, but the comparison is
+**confounded**: the codebook arm *swaps the freq substrate* (`freq_trajectory_pass` → `skeleton_pass`,
+the proven substrate-ablation win) AND adds the DEF→REF codebooks. To isolate, `audit/learnability_triage.py`
+now resolves three configs (`--configs full_macros,skeleton,codebook`): `skeleton` = `codebook` MINUS the
+DEF→REF codebooks (stamp/wavetable/patch/wt_*), so **full_macros-vs-skeleton isolates the substrate** and
+**skeleton-vs-codebook isolates the codebook effect on a fixed substrate**. If skeleton≈codebook the loss is
+all substrate; if codebook is worse, the codebook design hurts — and the likely reasons are: DEF never
+amortized at block scale (first use = full DEF+REF, only ~3+ in-window repeats net-win); per-tune/block
+ordinal ids carry no transferable meaning (alphabet bloat, copy intra-block only); DEF interior is raw STEP
+content not parametric (low copy — cf. `ornament_transfer.md`'s `(table-id,rate,phase)` proposal);
+recurrence gate calibrated for song scale not the block window. **Run after the residual PRs land.**
+
 ## Priority
-1. **Refine `audit/learnability_triage.py` to tokenize self-contained blocks** (`iter_self_contained_row_blocks`),
-   not the full song — so the per-frame metrics measure the stream the model actually trains/predicts on.
-   (Supersedes the withdrawn "measure DEF→REF distance" item — DEF→REF is block-bounded by construction.)
-2. Schedule `note_off` B→A (duration) migration; keep B only as the residual-drain stopgap. The off
-   determinant is now known to be in-window (block-bounded), so this is a consistency/exposure-bias
-   refinement, not a horizon fix.
-3. Voice-lane de-mux remains the standing ordering lever.
+1. **Run the codebook-vs-substrate decomposition** (above) once the residual PRs merge — settles whether to
+   keep investing in the codebook pipeline or revert to the FREQ_TRAJ substrate.
+2. **Faithful block measurement via the Corpus block-builder** — the current `--mode blocks` is 5/9-tune
+   partial (standalone re-encode trips on ops needing parser context); route through the Corpus API for
+   full coverage before acting on any block-scale finding.
+3. Schedule `note_off` B→A (duration) migration; keep B only as the residual-drain stopgap. The off
+   determinant is in-window (block-bounded), so this is a consistency/exposure-bias refinement, not a
+   horizon fix.
+4. Voice-lane de-mux remains the standing ordering lever.

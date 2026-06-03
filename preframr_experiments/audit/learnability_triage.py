@@ -183,9 +183,34 @@ _CODEBOOK = (
 )
 
 
-def _config_flags(name):
-    """Resolve a preset to the set of flag names available in THIS installed tokens build
-    (drops flags not yet shipped, e.g. an in-flight ctrl_osc when run against a release).
+# The DEF->REF codebook passes (the only difference between the `codebook` and `skeleton`
+# presets) -- toggling exactly these isolates the codebook effect on a fixed skeleton substrate.
+# Sub-flags (wt_*) ride with their parent so dropping the parent leaves no dangling sub-flag.
+_DEF_REF_CODEBOOKS = (
+    "stamp_pass",
+    "wavetable_pass",
+    "wt_short",
+    "wt_oneshot",
+    "patch_pass",
+    "ctrl_wavetable",
+)
+
+
+def _config_label(spec):
+    """Display/key label for a config spec ('label=flagA+flagB' -> 'label')."""
+    return spec.split("=", 1)[0] if "=" in spec else spec
+
+
+def _config_flags(spec):
+    """Resolve a config spec to the available flag set (drops flags not in THIS build).
+
+    `spec` is a preset name or a custom explicit set `label=flagA+flagB+...`:
+      - baseline    : all passes OFF (atomic).
+      - full_macros : REGISTERED_MACROS (the FREQ_TRAJ substrate; no DEF->REF codebooks).
+      - codebook    : the skeleton-substrate + DEF->REF-codebook arm (= _BASE + _CODEBOOK).
+      - skeleton    : `codebook` MINUS the DEF->REF codebooks (stamp/wavetable/patch/ctrl_wt).
+    Decomposition: `full_macros` vs `skeleton` isolates the freq SUBSTRATE (FREQ_TRAJ vs
+    skeleton); `skeleton` vs `codebook` isolates the CODEBOOK effect on a fixed substrate.
     """
     from preframr_tokens.tokenizer_config import REGISTERED_MACROS
 
@@ -195,19 +220,27 @@ def _config_flags(name):
         known = set(macro_flag_names())
     except Exception:
         known = None
-    if name == "baseline":
+    label = _config_label(spec)
+    if "=" in spec:
+        want = {f.strip() for f in spec.split("=", 1)[1].split("+") if f.strip()}
+    elif spec == "baseline":
         want = set()
-    elif name == "full_macros":
+    elif spec == "full_macros":
         want = set(REGISTERED_MACROS)
-    elif name == "codebook":
+    elif spec == "codebook":
         want = set(_BASE + _CODEBOOK)
+    elif spec == "skeleton":
+        want = set(_BASE + _CODEBOOK) - set(_DEF_REF_CODEBOOKS)
     else:
-        raise SystemExit(f"unknown config: {name}")
+        raise SystemExit(
+            f"unknown config {spec!r} (presets: baseline, full_macros, codebook, skeleton; "
+            "or a custom 'label=flagA+flagB+...')"
+        )
     if known is not None:
         dropped = want - known
         if dropped:
             print(
-                f"  [{name}] dropped flags unavailable in this build: {sorted(dropped)}"
+                f"  [{label}] dropped flags unavailable in this build: {sorted(dropped)}"
             )
         want &= known
     return want
@@ -365,7 +398,10 @@ def main():
     ap.add_argument(
         "--configs",
         default="baseline,full_macros,codebook",
-        help="comma list of presets: baseline, full_macros, codebook",
+        help="comma list of presets (baseline, full_macros, codebook, skeleton) and/or custom "
+        "sets 'label=flagA+flagB+...'. Codebook-vs-substrate decomposition: "
+        "'full_macros,skeleton,codebook' -- full_macros vs skeleton = freq substrate "
+        "(FREQ_TRAJ vs skeleton); skeleton vs codebook = the DEF->REF codebook effect.",
     )
     ap.add_argument(
         "--dumps", nargs="+", required=True, help="*.dump.parquet paths (digi-excluded)"
@@ -392,17 +428,18 @@ def main():
     a = ap.parse_args()
     results = {}
     for cfg in [c.strip() for c in a.configs.split(",") if c.strip()]:
+        label = _config_label(cfg)
         print(
-            f"\n##### tokenizing config '{cfg}' ({a.mode} mode) over {len(a.dumps)} dumps #####",
+            f"\n##### tokenizing config '{label}' ({a.mode} mode) over {len(a.dumps)} dumps #####",
             flush=True,
         )
         seqs, frames = tokenize_corpus(cfg, a.dumps, a.seq_len, mode=a.mode)
         if not seqs:
-            print(f"  no usable tunes for {cfg}")
+            print(f"  no usable tunes for {label}")
             continue
         s = summarize(seqs, frames, a.kmax, a.maxlag)
-        results[cfg] = s
-        _print_summary(cfg, s)
+        results[label] = s
+        _print_summary(label, s)
     _print_comparison(results)
 
 

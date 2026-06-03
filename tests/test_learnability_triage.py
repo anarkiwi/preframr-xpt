@@ -49,6 +49,23 @@ def test_entropy_rate_drops_with_memory():
     assert lt.entropy_rate(seqs, 3) <= lt.entropy_rate(seqs, 0) + 1e-9
 
 
+def test_config_label_parsing():
+    assert lt._config_label("codebook") == "codebook"
+    assert lt._config_label("B=skeleton_pass+stamp_pass") == "B"
+
+
+def test_codebook_skeleton_differ_by_exactly_the_codebooks():
+    # skeleton = codebook - DEF_REF_CODEBOOKS, so the codebook arm minus skeleton must be
+    # exactly the DEF->REF codebook passes present in the arm (clean isolation for the A/B/C).
+    codebook = set(lt._BASE + lt._CODEBOOK)
+    skeleton = codebook - set(lt._DEF_REF_CODEBOOKS)
+    removed = codebook - skeleton
+    assert removed == (codebook & set(lt._DEF_REF_CODEBOOKS))
+    assert {"stamp_pass", "wavetable_pass", "patch_pass"} <= removed
+    # the substrate + parametric sweeps stay on both sides
+    assert {"skeleton_pass", "sweep_pass"} <= skeleton
+
+
 def test_summarize_shapes():
     s = lt.summarize([[0, 1, 2, 3] * 50], frames=100, kmax=4, maxlag=8)
     assert len(s["h_k_per_token"]) == 5
