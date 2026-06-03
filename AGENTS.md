@@ -61,6 +61,15 @@ across engines (stretch) — inside:
 - **Predict:** Jetson Orin NX (15.6 GB) at PROMPT=2048 / MAX=8192. KV cache
   at prodlike dims ~16 KiB/token → 128 MiB at MAX; bounded by seq_len.
 
+**Operational lens — LEARNABILITY** (`design/learnability_token_ordering_theory.md`, the
+design north-star): generalisation is won when the *encoding* lets a bounded (~TC⁰)
+transformer cheaply predict the next token — minimise causal-state + dependency horizon,
+prefer induction-head DEF→REF copy over implicit per-frame counters, order by the driver
+causal DAG. Correctness is the *gate*; compression / parse-perf / deploy are *infra*. A
+training-free triage (`audit/learnability_triage.py`) ranks encodings before a run.
+Model-side content interventions were refuted at the ~0.13 ceiling that tokenizer-side
+`full_macros` then lifted — the lever is tokenizer-side representation.
+
 ## Current arc — byte-exact + PW/filter sweep + unified macro-flags ALL SHIPPED; codebook distribution read is the next experiment (2026-06-02)
 
 The lever is **re-encoding**; training is **gated** behind a byte-exact encoding. **Byte-exactness is DONE
