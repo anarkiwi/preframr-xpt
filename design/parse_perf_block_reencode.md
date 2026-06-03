@@ -113,7 +113,53 @@ to its run's frames + a short drain; runs far apart in frames, or on different v
 provably cannot interact (different `pending_set_writes[reg]`; the splice preserves FRAME markers). So
 the one giant `O(nsel)` greedy is unnecessary — the claim set is **separable into independent groups**.
 
-## Recommendation (revised): partition `collapse_runs` into independent groups
+## HANDOFF (2026-06-03)
+Delivered ~18–20% (B + partition), both **byte-exact verified** (full tokens suite 876 pass / 1 fail,
+the 1 being the pre-existing `test_sid_frame_diff` release-gate that fails on clean HEAD too — unrelated,
+it's the unmodelled mechanism-B vibrato residual vs an over-eagerly emptied `_KNOWN_FREQ_LOSSY`). The
+suite ran with `PREFRAMR_VERIFY_PARTITION=1` throughout and never raised. **Changes are UNCOMMITTED** in
+the preframr-tokens working tree: `state.py` (B), `arbiter.py` + `run_collapse.py` (partition),
+`resume_decode.py` (new, currently UNUSED infra). Ready to commit; not committed (no request).
+
+**Honest self-assessment:** this stopped at the two cheaper levers and did NOT tackle the real
+structural cost. The dominant time is the per-row Python decode walk re-run per overlapping block by
+`run_block_refire_passes` (440s / 86%). The high-impact work still open: (1) **windowed per-claim
+validation** via `resume_decode.py` (helps the dense-ctrl tunes the partition can't), (2) **per-block
+refire redesign** — re-localize parse-stage atoms instead of re-encoding from literal per block — and/or
+(3) a **compiled/vectorized walker** for the `_dispatch_row`/`_walk_frame` floor. These are where the
+next real gains are; they were deferred as higher-risk byte-exact-core changes, not because they're
+lower-value. A lot of session time also went to mis-instrumented probes (digi contamination, pipe
+block-buffering, thread oversubscription, `tail -3` truncation) before the numbers were trustworthy —
+see [[sweep-tool-hygiene]].
+
+## IMPLEMENTED + MEASURED (2026-06-03, clean cProfile, 27 digi-excluded tunes)
+Reprofiled from scratch (digis excluded — the earlier "99.5% ctrl / 8315 decodes" was digi-inflated;
+the honest digi-free figure is ~80% arbitrate, 1068 register_state decodes, 666s cumulative).
+
+**B — vectorize `_build_last_diff` (`state.py`):** replaced the per-register full-frame mask scan with
+one groupby. **10.8× on that function, byte-exact (0 mismatches / 60 dfs), ~12% of total, zero risk.**
+It had been ~40% of the per-decode *setup* (89s `_build_last_diff` + 84s `remove_voice_reg`); B removes
+the `_build_last_diff` share. SHIP.
+
+**Partition — `collapse_runs` independent groups (`arbiter.arbitrate_independent_groups`):** split the
+single hundreds-of-claims `arbitrate` into per-register, frame-gap(>8)-separated groups validated
+against one shared `src` decode. **Byte-exact-equivalent to flat greedy (proven: `PREFRAMR_VERIFY_PARTITION`
+guard, no mismatch corpus-wide).** Decode count 1068→900 (**16% fewer**), but UNEVEN: Coop 269→102 (big
+win, clustered ctrl) vs Bass_Guitar 470→499 (slight regression — dense ctrl with no frame gaps → ~3 big
+reg-groups + per-group batch-check overhead). Net end-to-end ~5%.
+
+**Combined B+partition: 666s → 543s (~18% end-to-end).** The remaining floor is intrinsic: the per-row
+Python decode walk (`_walk_frame` 292s + `_dispatch_row` 185s) driven by `run_block_refire_passes`
+(440s — the per-block re-encode wrapper) re-running the pipeline per overlapping block.
+
+**Not yet done (the real remaining levers):**
+- *Windowed per-claim validation* (use `resume_decode.py` to decode only a claim/group's frame window
+  instead of the whole df) — would help the DENSE-ctrl tunes the partition can't (Bass_Guitar), since
+  groups bound the window. Complex byte-exact-core change.
+- *Per-block refire redesign* (C-proper, the 86%/440s wrapper) — re-localize parse-stage atoms instead
+  of re-encoding from literal per overlapping block. Biggest lever, biggest risk.
+
+## Earlier recommendation: partition `collapse_runs` into independent groups
 Split the single arbitrate into independent groups (per ctrl register, then by frame-gap > a drain
 margin) and validate each group **against the one `src` decode** — independence means accepting one
 group never invalidates another, so there is no re-snapshot problem (the thing that defeated localized

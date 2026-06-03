@@ -65,6 +65,39 @@ snaps to start); vibrato/PW-LFO is a **triangle** (ramps then **reverses** at th
   MINREP/variance miss); not a generalization bet on its own — a coverage/fidelity completion of the
   mechanism-B story the SWEEP line already started.
 
+## Reconciliation: why the three existing oscillation paths don't already cover it (2026-06-03)
+Pinned the root cause precisely — three mechanisms touch oscillation, none fits the codebook-arm gap:
+- **`FreqTrajectoryPass` FT_SUBTYPE_OSCILLATE** *is* a lossless value-domain oscillator (v0 + delta
+  steps, with a periodic mode) — but `freq_trajectory_pass` and `skeleton_pass` are **mutually-exclusive
+  freq substrates** (`codebook_distribution_mini`: the codebook arm "drops the FREQ_TRAJ op for
+  SKEL+ORN+codebooks"). So in the arm where the residual appears, OSCILLATE is **off by design.**
+- **Skeleton `ORN_TYPE_VIB`** is **lossy by design**: `vib_frame_offsets` replays offset **0** — "the
+  content-tier floor drops the sub-semitone wobble; depth/rate carry the learnable signal, not bytes."
+  ORN is semitone-offset space and cannot express a fractional value-domain wobble.
+- **Monotonic `SweepPass` freq path** is sawtooth-only AND gated to "skydive pitch sweeps the skeleton's
+  SLIDE can't fit" — it fires only on skeleton-**unfittable** runs. A vibrato'd held note is
+  skeleton-**fittable**, so the gate **suppresses** SWEEP there → wobble falls to raw FREQ_lo SET.
+
+## Integration refinement (the part to get right)
+The triangle decoder is the easy half. The hard half is **where freq-vibrato is mined**, because a
+vibrato'd held note is simultaneously a NOTE (skeleton's learnable identity) and a WOBBLE
+(value-domain). Split by domain:
+- **PW / filter LFO** — not note-attached; the value-domain triangle SWEEP is clean and correct as
+  written (persists across gate, no skeleton coupling). Do this first; lowest risk.
+- **Freq vibrato on a held note** — the existing freq-SWEEP gate is the WRONG gate (it excludes
+  skeleton-fittable notes). Two options:
+  - **(A) value-domain triangle SWEEP with a NEW gate** firing on the *sub-semitone residual* of a
+    skeleton-fitted note (opposite of the skydive gate), partitioning sustain freq writes from
+    skeleton's onset. Risk: double-representation / losing the SKEL note identity if writes aren't
+    cleanly partitioned.
+  - **(B) make the note's vibrato descriptor byte-exact** — keep SKEL for identity, reconstruct the
+    wobble in the value domain *relative to the note base* (center = note freq word; depth/period =
+    triangle). Preserves note identity + learnability, no write-partition conflict; freq-only, couples
+    to skeleton/ORN.
+  Recommendation: ship PW/filter (value-domain SWEEP) first; for freq, prefer (B) over pre-empting the
+  SKEL note. Decide via a forensic on whether the residual sustain writes partition cleanly from
+  skeleton's onset write.
+
 ## References
 `sid_driver_ornament_reference.md` (mechanism B; defMON `ps_depth` auto-reverse, Galway gradient,
 Hubbard depth/pulsework), `landed/` SWEEP (PW/filter sweep mining, tokens 0.42.0).
