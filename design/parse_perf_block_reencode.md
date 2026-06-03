@@ -59,8 +59,25 @@ runner reuses parse.py's `.[0-9]*.parquet` sidecars (verified), so the parse dec
    windows add no new atoms but re-encode ~2×. Verify the alphabet still matches training atoms.
 4. **Compile the walker** (numba/Cython SET/DIFF fast-path). The floor cost; biggest effort.
 
+## Feasibility (checked against the walker, 2026-06-03)
+Both halves of (1) are **core-walker changes, not self-contained arbiter edits**:
+- *Suffix-decode* needs the walker to snapshot/restore its **full** decode state at an arbitrary frame.
+  `register_state` only keeps the 25-reg per-frame `snaps`; the resumable state also holds codebook
+  tables, loop counters, and the **per-frame tick-drain queue**. Preserves exact output, but touches the
+  byte-exact decode core.
+- *Diff-attribution* (decode the batch once, re-test only claims near a divergence) is **unsound here**:
+  the tick-drain spills an **unbounded** number of frames, so "near a divergence" has no small bound —
+  which is the very reason the arbiter validates cumulatively. A clever neighborhood shortcut is exactly
+  the silent-corruption class to avoid in this core.
+
+So (1) is the right target but is a deliberate, gated change to the decode core (add resumable
+decode-state snapshot/restore to the walker; suffix-decode each fallback candidate from the claim's
+first frame). Risk is real; gate on `cb_div_audit` byte-exactness + a slow-path equivalence assertion
+under an env flag across the corpus before trusting the fast path.
+
 ## Recommendation
-Implement **(1)** — it targets the measured 318 fallback decodes directly, is the smallest change with
-the largest measured payoff, and is corpus-gatable. Start with the suffix-decode half (lower risk than
-window-comparison, already a large win), measure on `cb_div_audit`, then add window comparison.
+Target **(1)** via walker decode-state snapshot/restore (suffix-decode the fallback) — it attacks the
+measured 318 decodes and preserves exact output. Because it modifies the byte-exact decode core, do it
+as a focused change behind a slow-path equivalence guard, not in passing. **(2)** (kill per-block
+re-encoding) is the orthogonal multiplier and a viable alternative if touching the walker is undesirable.
 The shipped memo (#5) should be **retired or scoped to the parse.py path** — it's pure overhead here.
