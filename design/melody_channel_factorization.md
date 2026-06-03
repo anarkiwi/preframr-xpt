@@ -14,6 +14,8 @@ Cross-ref: [`melody_data_gap_ladder.md`](melody_data_gap_ladder.md),
 [`landed/freq_onset_channel.md`](landed/freq_onset_channel.md),
 [`superframe_voice_lane_design.md`](superframe_voice_lane_design.md).
 
+**Learnability framing.** De-multiplexing the prediction target = reducing next-token causal-state ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principle 1); the parametric-ornament reopen is correctly demoted to a budget play (not a counter-elimination or induction-copy win).
+
 ## The gap in the prior verdict
 
 The melody arc concluded "encoding is sufficient; the limit is the data." That was proven for

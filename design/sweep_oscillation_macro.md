@@ -5,6 +5,8 @@ residual raw-freq tail measured in `codebook_distribution_mini` (codebook arm: ~
 raw `FREQ_lo` SET). Grounded in [`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md)
 (mechanism B) and a forensic on DRAX `Billig_Oel`.
 
+**Learnability framing.** Collapsing a per-frame value-domain oscillation into one parametric atom removes an implicit counter ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principles 1/3).
+
 ## The gap (forensic, not a hypothesis)
 Decoding `Billig_Oel` voice 0, frames 1403–1407, gate held (`ctrl=0x41`), triangle wave:
 

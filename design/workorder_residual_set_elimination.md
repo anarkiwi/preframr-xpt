@@ -6,6 +6,8 @@ fatal parse error.** Target = **0 residual SETs**, every corner case mapped to a
 consistent macro. "Unique tail" / "irreducible" are banned — uniqueness only means the generator is
 unidentified.
 
+**Learnability framing.** Zeroing residual SETs is a LEARNABILITY program ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principle 3), not just compression/coverage: each leaked mechanism is an implicit per-frame counter or hidden state the model would otherwise infer. Note-duration kills a counter; codebook DEF→REF is induction-copy. The census/volume ranking happens to coincide with the learnability ranking.
+
 ## Method
 `register_state(df)` (decoded per-frame ground truth) used to classify every residual SET by the shape
 of its generator + the existing-pass precondition it failed (`scratch/tmp/residual_mechanism.py`).

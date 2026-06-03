@@ -3,6 +3,8 @@
 **Status:** Work order, scoped 2026-06-03. Ready to schedule; not started. Source: forensic on the
 codebook-arm raw-SET residual (Camerock, Baggis), tracing every residual AD/SR write to its cause.
 
+**Learnability framing.** Bundling the envelope trigger fragments into one event removes hidden trigger-timing state ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principles 1/3) — a learnability win, not only fidelity.
+
 ## Problem
 In the skeleton+codebook arm, note-trigger **envelope** writes (AD reg+5 / SR reg+6) leak to raw SET.
 Small by volume (Camerock 4 AD + 28 SR; Baggis 7 AD + 8 SR) but structurally significant: the

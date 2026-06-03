@@ -2,6 +2,8 @@
 
 **Status:** Draft, design review pending. Strategic pivot from per-token content-head architectures (mos / entropy / mask / cluster, all refuted) to a multi-attribute-per-token reorganization. Adapts the CompoundWord (Hsiao et al. 2021) and OctupleMIDI (Anticipation, 2023) approaches from MIDI music LLM literature.
 
+**Learnability framing (gate before building).** Sequence-length compression is a learnability win *only if* it lowers per-FRAME h_k or shortens the dependency horizon — packing more per token can instead raise the next-token entropy and add an implicit counter (the `delta` cumulative-timing field is exactly the maintained-counter structure [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principle 1 warns against; gzip-style compression rewards redundancy the transformer can't exploit). **Before the multi-week build, run `audit/learnability_triage.py` on the compound stream** and gate on per-frame h_k + induction-copy deltas, not token count.
+
 ## Problem (re-anchored after four content-head refutations)
 
 Four per-token content-head architectures have been refuted at mini or prodlike:

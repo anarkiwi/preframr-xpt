@@ -5,9 +5,20 @@ model tokens. Other encoding designs should be checked against this; when they t
 axis for another, say which and why. Distilled from the 2026-05 melody-onset arc (de-merge
 win + voice / op48 / semitone results).
 
+**Learnability framing.** These three axes are not co-equal: subordinate to
+[`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md), **fidelity
+is a hard constraint (the floor/gate), context-efficiency is a bounded constraint, and
+learnability is the OBJECTIVE** — you maximize learnability *among* fidelity-valid,
+budget-feasible encodings. The "priority order when they conflict" below is the
+constraint-resolution rule (you can never ship a non-faithful or out-of-budget encoding),
+**not** a statement that fidelity/efficiency outrank the goal. When a fidelity-neutral,
+budget-neutral choice remains, the learnability axis decides — and is now measurable
+training-free (`audit/learnability_triage.py`).
+
 ## The three axes
 
-A token encoding is judged on three axes, in priority order when they conflict:
+A token encoding is judged on three axes — two constraints then the objective; the order
+below is how they resolve **when they conflict**:
 
 1. **Fidelity (the floor).** `decode(encode(x))` must reproduce the SID register writes
    that matter for audio. Byte-exact is the default; the *content tier* is allowed to be

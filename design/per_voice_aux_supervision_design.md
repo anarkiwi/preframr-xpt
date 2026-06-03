@@ -5,6 +5,8 @@ exhaustion of token-form interventions (`weighted_token_loss_mini`
 refuted, `learnable_class_loss_mini` refuted, `set_to_diff_mini`
 refuted via alphabet inflation +90% on motion-reg DIFF expansion).
 
+**Learnability framing (caution).** This is a model-side content intervention — the class refuted against the ~0.13 ceiling that tokenizer-side `full_macros` later lifted. Forcing musical state into hidden activations is not a substitute for exposing it in the token stream as induction-head-expressible DEF→REF; prefer the tokenizer-side residual-SET / codebook program before spending a run here ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)).
+
 ## The problem
 
 Per-class audit on `accuracy_push_prodlike_4x` (2026-05-19): the

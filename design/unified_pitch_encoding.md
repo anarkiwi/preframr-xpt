@@ -16,6 +16,8 @@ built on), [`encoding_principles.md`](encoding_principles.md),
 [`landed/trajectory_anchoring.md`](landed/trajectory_anchoring.md) (level-change segmentation),
 [`superframe_voice_lane_design.md`](superframe_voice_lane_design.md) (cross-voice).
 
+**Learnability framing.** Under [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md), its three criteria subordinate to learnability: SKEL-interval = anchor-to-reference (P4.2), ARP-codebook = DEF→REF induction-copy (P2), and the note/ornament split front-loads the low-entropy determinant (P4.1).
+
 ## Goal
 
 One pitch encoding that is:

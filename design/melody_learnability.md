@@ -5,6 +5,8 @@ the first confirmed content win (`full_macros`) turned out to be **SET scaffoldi
 (FREQ_TRAJ ~0.026 acc; the model rarely emits FREQ_TRAJ at all), four landed encoding/loss
 features attack the melody question and converged probes localise the blocker.
 
+**Learnability framing.** The V0-onset≈0 result is Principle 4.2 of [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md): an absolute onset pitch is a high-entropy, determinant-less early token, so it fails to learn and derails downstream — the interval-V0 fix is the prescribed anchor-to-a-nearby-reference.
+
 ## OVERTURNED 2026-05-28/29 — it was tokenization, not scale (the section below is superseded)
 
 The "scale-bound" diagnosis was wrong. A focused tokenization sweep on the clean

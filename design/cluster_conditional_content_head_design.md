@@ -7,6 +7,8 @@ Retained for reference; do not reopen without the condition in
 `preframr_experiments/data/refuted/`. Originally drafted as anticipatory work
 while v12 (lambda=0.02) trained.
 
+**Learnability framing.** A REFUTED model-side content head — it founders on the ~0.13 ceiling that tokenizer-side `full_macros` then lifted. The lever is representation learnability, not the head ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)).
+
 ## Problem (re-anchored after v11 + v12)
 
 The entropy-regularisation thread (v10 → v11 → mini sweep → v12)

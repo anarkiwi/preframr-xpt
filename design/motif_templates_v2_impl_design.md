@@ -8,6 +8,8 @@ content-tier did not beat no-motif full_macros (v2 0.036 vs baseline 0.045). See
 change in Phases 0–2** (the win is tested with the existing single-head model);
 the field-factorized variant is Phase 3 = `compound_token_design.md`.
 
+**Learnability framing.** The "one template per shape" consistency win is the copy-fraction lever (one stable token per idiom = induction-head-able); its refutation means the residual lives elsewhere — re-rank with the training-free triage ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)) before another motif variant.
+
 ## Goal + honest scope (corrects the proposal's compression framing)
 
 The v1 finding: exact `(shape,value)` mining → 256 motifs over **10 shapes**, and

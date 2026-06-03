@@ -7,6 +7,8 @@ where it is theoretically better or worse. Companion to
 `music_llm_landscape_and_fail_fast_plan.md` (which ranks *ideas to
 borrow*); this doc argues the *scheme itself*.
 
+**Learnability framing.** The "ceiling is the tokenization, not the model" conclusion is exactly [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)'s thesis (the architecture is already exonerated); compare schemes by copy-fraction / per-frame h_k, not gzip-style compressibility.
+
 ## What preframr tokenizes
 
 The token stream is the **SID's register-write program**, not a score

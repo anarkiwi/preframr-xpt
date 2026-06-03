@@ -6,6 +6,8 @@ This captures the layout + rationale the existing `super_frame` scaffold left bl
 do not implement until the current melody-stream diagnosis lands and the two open
 prereqs below are answered.
 
+**Learnability framing.** Voice-major lanes shorten the dependency horizon and make the same-voice predecessor positionally local ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principles 1+4) — the structural realization of the de-mux lever; gate it on per-frame h_k, not only V0-onset accuracy.
+
 ## What already exists
 
 A `super_frame` scaffold is shipped but inert:

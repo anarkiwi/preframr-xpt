@@ -9,6 +9,8 @@
 `workorder_residual_set_elimination.md` (the mechanism census) — this is the *how*. Census says the
 residual is ~85% CTRL, ~10% envelope, ~1.5% FREQ(startup). So this plan is **CTRL-register-first**.
 
+**Learnability framing.** The *why* behind census-to-zero: each PR removes an implicit counter or exposes hidden state locally — a learnability win, not only compression ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principle 3).
+
 ## The "add a macro" recipe (every macro follows this in the codebase)
 A macro is one declared unit (see `macro_abstraction_consolidation.md`):
 1. **op id(s)** in `stfconstants.py` (+ subreg constants); register in `macros/op_contracts.py`

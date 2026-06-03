@@ -7,6 +7,8 @@ vocab and densifying per-token training statistics. Complements the
 existing macro-level normalization in `preframr_tokens.macros`
 (rule-based) by adding an emulation-grounded value-level pass.
 
+**Learnability framing.** The vocab-size / data-density argument here serves learnability — but compare schemes by copy-fraction / per-frame h_k, not gzip-style compressibility ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principle 2).
+
 Sibling to (but smaller than) the full audio-equivalence
 tokenization research direction — that direction handles
 sequence-level equivalences (write order, redundant writes,

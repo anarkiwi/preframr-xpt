@@ -7,6 +7,8 @@ Reference: [`tokens_architecture.md`](tokens_architecture.md) (the pass framewor
 pipeline) and [`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md) (driver
 mechanics). All paths below are under `/scratch/anarkiwi/preframr-tokens/`.
 
+**Learnability framing.** RESID-completeness is a learnability metric, not only coverage ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principle 3): each leaked mechanism the model must otherwise infer is an implicit per-frame counter / hidden state, and the provenance-invariance test (#11.4) is the induction-head case (same gesture → same tokens → one copyable pattern).
+
 Shared docker gate — use the **baked cache image** `anarkiwi/preframr-tokens-test` (deps
 pre-installed; editable `--no-deps` is instant and picks up working-tree edits → ~6s/run vs
 ~90s reinstalling). ~the gate:

@@ -17,6 +17,8 @@ encode the expressive RESID tail** — the wide arps are 83% cleanly cyclic, reu
 [`landed/trajectory_anchoring.md`](landed/trajectory_anchoring.md), and the
 `ornament-encoding-transfer-gap` memory.
 
+**Learnability framing.** The mined WAVETABLE codebook is a DEF→REF induction-copy primitive ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principle 2) — its real value is learnability (REF→DEF copy), not only budget/fidelity; per-note alignment is causal-state reduction (Principle 1).
+
 ## The problem (measured)
 
 A model trained on the interleaved skeleton+ornament stream reproduces the melody skeleton but

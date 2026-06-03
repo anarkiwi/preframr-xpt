@@ -11,6 +11,8 @@ transfer lever), [`melody_channel_factorization.md`](melody_channel_factorizatio
 (voice de-mux is the recurring lever), [`unified_pitch_encoding.md`](unified_pitch_encoding.md)
 (skeleton generalises).
 
+**Learnability framing.** This per-pass triage is the macro-scoped instance of [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md), which supplies its information-theoretic backing and a whole-stream tool (`audit/learnability_triage.py`); relative + inline define→ref passes are Principle 2 (induction-head copy).
+
 ## The transfer test (one principle)
 
 A macro transfers across songs/composers iff its payload is resolvable from either

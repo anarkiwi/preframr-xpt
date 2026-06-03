@@ -13,6 +13,8 @@ OFF by default. **A 2026-05-27 dict+corpus analysis found exact (shape,value)
 mining leaves ~54% of motif-shape instances uncaptured (value-shift
 fragmentation) → motivates a value-slotted v2 (see Findings + Proposed fix).**
 
+**Learnability framing.** The failure is diagnosable training-free: exact-mining fragments one idiom across motif ids (low copy-fraction, larger causal-state) instead of yielding clean DEF→REF induction-copy. Re-judge motif candidates by the triage's copy-fraction + per-frame h_k ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)), not compression.
+
 ## Problem / motivation
 
 After four content-head architectures were refuted (see

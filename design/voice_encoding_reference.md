@@ -3,6 +3,8 @@
 **Status:** Reference. Documents the shipped encoding (preframr-tokens `RegLogParser`)
 so the FRAME-val voice-order packing doesn't get re-derived. Not an experiment.
 
+**Learnability framing.** The FRAME-val voice multiplex is the cross-voice causal-state the de-mux lever targets — see [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) and [`superframe_voice_lane_design.md`](superframe_voice_lane_design.md).
+
 ## The trap (read this first)
 
 In the token stream, **`VOICE` (reg −126) markers carry `val=0` and tell you nothing

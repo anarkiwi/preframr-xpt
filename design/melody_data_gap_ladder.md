@@ -5,6 +5,8 @@ the data's intrinsic melodic predictability (heterogeneous, less-constrained gam
 homogeneous Bach chorales), not the encoding. Localised by progressive simplification of the
 EXISTING mini data (no new corpus).
 
+**Learnability framing.** The onset-scoped instance of [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)'s entropy-rate triage (`audit/melody_predictability.py` is the same math on V0 onsets); the key-invariant interval conclusion = anchoring a high-entropy determinant to a low-entropy reference (Principle 4.2).
+
 ## Settled conclusions (the arc that led here)
 
 1. **Architecture generalizes** — `framework_arch_test`, held-out 0.90.
