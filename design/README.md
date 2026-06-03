@@ -127,6 +127,7 @@ landed; corpus-scale gate pending).
 |---|---|---|
 | [`streaming_unembed_ce_design.md`](streaming_unembed_ce_design.md) | Stream `output(chunk) + ce_chunk` in one checkpoint; eliminates the 8.6 GiB chunk slab, restores `batch_size=4` + prodlike wallclock. | Pending impl |
 | [`orin_inference_optimization_design.md`](orin_inference_optimization_design.md) | Predict-host throughput: vocab shrink + GPU-resident constrained-decode (Orin ~4% GPU util at predict). | Pending impl |
+| [`parse_decode_walker_profile.md`](parse_decode_walker_profile.md) | Why parsing is slow (cProfile, 8.7 s/song): the pure-Python `FrameWalker` decode runs **~24×/song** (59% of time) — passes that decode-with-state + the arbiter's `validate=True` re-decoding source AND candidate per register-exact pass (`register_state` 12×/song, 33%). Low-risk fixes ranked: thread decoded state through `arbitrate` (return `(out, out_state)`) to kill redundant re-decodes; trim per-row allocation in the walk loop; build pass outputs column-wise not via per-row dict boxing. | Scoping — profiled 2026-06-03, unbuilt |
 
 Cross-axis: [`compound_token_design.md`](compound_token_design.md) (token budget;
 primary in Generalization). Vocab shrink (tkvocab ~8× to 4096) is queued under
