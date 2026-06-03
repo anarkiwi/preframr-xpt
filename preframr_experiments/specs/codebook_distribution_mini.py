@@ -36,7 +36,7 @@ from __future__ import annotations
 
 from preframr_experiments.base import Arm, ExperimentSpec, mini_train_args
 
-_IMAGE = "anarkiwi/preframr:0.2.17"
+_IMAGE = "anarkiwi/preframr:0.2.18"
 
 # Shared structural base both substrates carry (preset / hard-restart / legato /
 # voice-block / ctrl-bigram / loop). Excludes any freq substrate -- the codebook
