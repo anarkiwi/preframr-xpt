@@ -87,29 +87,40 @@ follow-up; the h_k-plateau + MI-decay are its empirical proxies for now.
 `learnability_triage.py --configs baseline,full_macros,codebook` (codebook = base + skeleton/stamp/
 sweep/pw/filter/wavetable/patch/held_arp; `ctrl_osc`/`note_off` not yet shipped at 0.42.1 → auto-dropped):
 
+**`--mode song` (full-song parse, 9/9 tunes, robust):**
+
 | config | alphabet | tok/frame | h∞/frame | h∞/token | induction-copy | MI@1 | MI@16 |
 |---|---|---|---|---|---|---|---|
-| baseline | 727 | 5.88 | **4.93** | 0.839 | 0.975 | 3.18 | 1.46 |
-| full_macros | 1678 | 5.33 | **3.83** | 0.718 | 0.960 | 4.32 | 2.40 |
+| baseline | 727 | 5.88 | 4.93 | 0.839 | 0.975 | 3.18 | 1.46 |
+| full_macros | 1678 | 5.33 | 3.83 | 0.718 | 0.960 | 4.32 | 2.40 |
 | codebook | 1781 | 4.78 | **3.65** | 0.762 | 0.955 | 3.84 | 1.91 |
 
-Read (training-free):
-- **Per-frame information floor h∞/frame** (≈ achievable next-token CE per unit *music*): codebook 3.65 <
-  full_macros 3.83 < baseline 4.93 — the macros cut the information the model must predict per music-frame
-  by ~22–26%. This is the learnability signal, and **codebook edges full_macros** — measured with **zero
-  training**.
-- **Compression** tok/frame: codebook 4.78 < full_macros 5.33 < baseline 5.88.
-- **Short horizon:** effective branching 2^h_k collapses 100–160 → <2 by k=4 — most predictive power is in
-  the nearest 1–2 tokens, the regime transformers handle without a maintained counter. No fat far-lag MI
-  spike (no out-of-reach counter at a 16-token window).
-- **Induction-copy is near-saturated** (~0.95–0.98; SID is hugely repetitive) → **not** the discriminating
-  metric here; h∞/frame is. Baseline copies highest only because its un-collapsed repeats are trivially
-  copyable.
+Both macro arms cut per-frame information ~22–26% vs baseline, and here **codebook edges full_macros**.
+**But song mode is the wrong stream:** the model trains/predicts on **self-contained blocks**, not whole
+songs, and song mode lets a codebook's REFs accumulate over the entire tune — over-crediting its
+compression (see `macro_learnability_risk_review.md`).
 
-**This reproduces the known empirical ordering** (full_macros content eval_a 0.219→0.324) *without a run* —
-the triage's first validation as a direction-finder. Prediction it makes for the open work: the residual
-arm (`ctrl_osc`+`note_off`+ctrl-codebook) should push h∞/frame **below** the codebook 3.65 by draining the
-implicit-counter CTRL residual — re-run once merged (Task #2/#3) to confirm before spending a canonical run.
+**`--mode blocks` (self-contained-block stream the model actually sees; EXPERIMENTAL, 5/9 tunes — the
+standalone block re-encode trips on ops needing parser context, faithful version needs the Corpus
+block-builder):**
+
+| config | alphabet | tok/frame | h∞/frame | h∞/token | induction-copy | MI@1 | MI@16 |
+|---|---|---|---|---|---|---|---|
+| baseline | 573 | 3.64 | 3.01 | 0.827 | 0.920 | 3.51 | 1.57 |
+| full_macros | 1052 | 0.99 | **0.40** | **0.403** | 0.834 | 5.88 | 3.95 |
+| codebook | 1354 | 1.04 | 0.55 | 0.526 | **0.683** | 5.20 | 2.91 |
+
+**At block scale the ordering FLIPS: full_macros beats codebook on every metric** (h∞/frame 0.40 < 0.55,
+h∞/token 0.403 < 0.526), and crucially the codebook arm's **in-window induction-copy collapses to 0.683**
+(vs full_macros 0.834) while its alphabet is largest (1354). Reading: the heavy codebook passes
+(stamp/wavetable/patch) must recur *within one ~2048-frame block* to pay off, and many don't — so they add
+vocabulary without buying back reuse. **The codebook compression does not survive to the scale the model
+learns at.** This is decision-relevant — it cautions against the codebook pipeline as a *learnability* bet,
+consistent with the project's confirmed `full_macros` content win (eval_a 0.219→0.324) and the codebooks
+remaining experimental. Caveats: 5/9 tunes (biased toward simpler tunes), absolute pre-voice-reg blocks,
+high-k undersampling — the DIRECTION is the read; **certify on full coverage via the Corpus block-builder
+before acting**. (The earlier "codebook edges full_macros, re-run the residual arm to push below 3.65"
+claim was a song-mode artifact — withdrawn.)
 
 ## Honest limit
 Theory + these metrics give **sign, relative difficulty, and ordering** — not val_acc, and **not the

@@ -26,8 +26,16 @@ Read: low per-frame h_k + early h_k plateau + fast MI decay + high induction-cop
 predicted learnable; fat MI tail + low copy-fraction -> predicted to collapse.
 
 The metric functions are pure stdlib (host-importable, unit-tested in
-tests/test_learnability_triage.py). The corpus loader imports preframr_tokens lazily and
-tokenizes through the REAL RegLogParser.parse so the stream is exactly what trains."""
+tests/test_learnability_triage.py). The corpus loader imports preframr_tokens lazily.
+--mode song (default) tokenizes the full-song parse() stream: robust + full coverage, but it
+OVER-CREDITS codebook compression that accumulates over a whole song. --mode blocks targets the
+SELF-CONTAINED-BLOCK stream the model actually trains/predicts on (references block-local) but is
+EXPERIMENTAL -- it reproduces the block-builder standalone and drops tunes whose ops need parser
+context (partial coverage); the faithful version must route through the Corpus block-builder.
+Known signal from the partial block run: codebook compression does NOT survive to block scale
+(its in-window induction-copy collapses), so full_macros pulls ahead of the codebook arm -- the
+reverse of the song-mode ordering. Certify via the Corpus-API version before acting on it.
+"""
 
 from __future__ import annotations
 
@@ -205,9 +213,34 @@ def _config_flags(name):
     return want
 
 
-def tokenize_corpus(config_name, dump_paths, seq_len=4096):
-    """Tokenize each dump through the real parse pipeline under `config_name`; return
-    (per-tune symbol sequences, total decoded frames)."""
+def _symbols(df, vocab):
+    """Map a row df's (op, reg, subreg, val) tuples to interned int symbols."""
+    ops = df["op"].tolist()
+    regs = df["reg"].tolist()
+    subs = df["subreg"].tolist() if "subreg" in df.columns else [-1] * len(df)
+    vals = df["val"].tolist()
+    return [
+        vocab.setdefault((int(o), int(r), int(sb), int(v)), len(vocab))
+        for o, r, sb, v in zip(ops, regs, subs, vals)
+    ]
+
+
+def _decoded_frames(df, register_state):
+    """DECODED frame count (register_state EXPANDS loop/codebook refs) -- the true,
+    cross-config-comparable timeline (a FRAME-marker count undercounts any loop_pass config).
+    """
+    try:
+        return int(register_state(df).shape[0])
+    except Exception:  # noqa: BLE001
+        return 0
+
+
+def tokenize_corpus(config_name, dump_paths, seq_len=4096, mode="blocks"):
+    """Tokenize each dump under `config_name`; return (per-sequence symbol lists, total
+    decoded frames). mode="blocks" (default) measures the SELF-CONTAINED BLOCK stream the model
+    actually trains/predicts on -- `iter_voiced_blocks` (expand-to-literal -> slice -> re-encode
+    -> voice-reg), one sequence per block, references block-local. mode="song" measures the
+    full-song parse() stream (NOT what the model sees; kept for comparison)."""
     from preframr_tokens.reglogparser import RegLogParser
     from preframr_tokens.tokenizer_config import default_tokenizer_args
     from preframr_tokens.audit_primitives import register_state
@@ -215,9 +248,15 @@ def tokenize_corpus(config_name, dump_paths, seq_len=4096):
     flags = _config_flags(config_name)
     args = default_tokenizer_args(seq_len=seq_len, **{f: True for f in flags})
     parser = RegLogParser(args)
+    if mode == "blocks":
+        from preframr_tokens.macros.blocks import iter_self_contained_row_blocks
+        from preframr_tokens.blocks import remove_voice_reg
+
+        frames_per_block = max(1, seq_len // 2)
     seqs = []
     total_frames = 0
     vocab = {}
+    n_ok = 0
     for path in dump_paths:
         try:
             df = next(parser.parse(path, max_perm=1, require_pq=False))
@@ -227,28 +266,46 @@ def tokenize_corpus(config_name, dump_paths, seq_len=4096):
         except Exception as e:  # noqa: BLE001
             print(f"  skip {path}: {type(e).__name__}: {e}")
             continue
-        ops = df["op"].tolist()
-        regs = df["reg"].tolist()
-        subs = df["subreg"].tolist() if "subreg" in df.columns else [-1] * len(df)
-        vals = df["val"].tolist()
-        seq = [
-            vocab.setdefault((int(o), int(r), int(sb), int(v)), len(vocab))
-            for o, r, sb, v in zip(ops, regs, subs, vals)
-        ]
-        if not seq:
-            continue
-        # DECODED frame count (register_state EXPANDS loop/codebook refs) -- the true,
-        # cross-config-comparable music timeline. A FRAME-marker count would undercount any
-        # config with loop_pass (refs replace the looped-away frame markers).
-        try:
-            frames = int(register_state(df).shape[0])
-        except Exception as e:  # noqa: BLE001
-            print(
-                f"  warn {path}: register_state failed ({type(e).__name__}); per-frame skipped"
-            )
-            frames = 0
-        seqs.append(seq)
-        total_frames += frames
+        # Frame denominator = the SONG's decoded music timeline (config- and mode-invariant),
+        # counted once from the full parse -- NOT the sum of per-block register_state (which
+        # double-counts block-boundary lead frames). tokens come from the blocks.
+        song_frames = _decoded_frames(df, register_state)
+        if mode == "song":
+            units = [df]
+        else:
+            # Self-contained blocks (expand-to-literal -> slice -> re-encode, codebooks/loops
+            # re-mined block-local) in ABSOLUTE pre-voice-reg form -- the voice-reg header is a
+            # deterministic re-encoding orthogonal to DEF->REF locality, and skipping it avoids
+            # the _add_voice_reg voicing step (irrelevant to this measurement).
+            try:
+                abs_df, _ = remove_voice_reg(df.copy(), {})
+                units = [
+                    b
+                    for b in iter_self_contained_row_blocks(
+                        abs_df, frames_per_block, args=args
+                    )
+                    if not b.empty
+                ]
+            except Exception as e:  # noqa: BLE001
+                print(f"  skip {path}: blocks failed ({type(e).__name__}: {e})")
+                continue
+        got = False
+        for unit in units:
+            seq = _symbols(unit, vocab)
+            if seq:
+                seqs.append(seq)
+                got = True
+        if got:
+            total_frames += song_frames
+            n_ok += 1
+    n_drop = len(dump_paths) - n_ok
+    cov = f"  COVERAGE: {n_ok}/{len(dump_paths)} dumps contributed"
+    if mode == "blocks" and n_drop:
+        cov += (
+            f" ({n_drop} dropped -- EXPERIMENTAL block re-encode trips on ops needing parser "
+            f"context; the faithful version routes through the Corpus block-builder)"
+        )
+    print(cov, flush=True)
     return seqs, total_frames
 
 
@@ -314,16 +371,26 @@ def main():
         "--dumps", nargs="+", required=True, help="*.dump.parquet paths (digi-excluded)"
     )
     ap.add_argument("--seq-len", type=int, default=4096)
+    ap.add_argument(
+        "--mode",
+        default="song",
+        choices=["song", "blocks"],
+        help="song = full-song parse() stream (robust, full coverage; over-credits codebook "
+        "compression that accumulates over a whole song) [default]; blocks = the self-contained-"
+        "block stream the model actually sees (EXPERIMENTAL: reproduces the block-builder "
+        "standalone and drops tunes whose ops need parser context -- partial coverage; the "
+        "faithful version must route through the Corpus block-builder)",
+    )
     ap.add_argument("--kmax", type=int, default=4)
     ap.add_argument("--maxlag", type=int, default=16)
     a = ap.parse_args()
     results = {}
     for cfg in [c.strip() for c in a.configs.split(",") if c.strip()]:
         print(
-            f"\n##### tokenizing config '{cfg}' over {len(a.dumps)} dumps #####",
+            f"\n##### tokenizing config '{cfg}' ({a.mode} mode) over {len(a.dumps)} dumps #####",
             flush=True,
         )
-        seqs, frames = tokenize_corpus(cfg, a.dumps, a.seq_len)
+        seqs, frames = tokenize_corpus(cfg, a.dumps, a.seq_len, mode=a.mode)
         if not seqs:
             print(f"  no usable tunes for {cfg}")
             continue

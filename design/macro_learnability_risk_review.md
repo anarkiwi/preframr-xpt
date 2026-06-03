@@ -25,11 +25,14 @@ the window" for the generation side. **No sliding-window-DEF-refresh fix is need
 already guarantees it.** Residual (LOW): within a block a DEF→REF can still span up to ~block length, but
 that is in-window long-range copy (the normal induction-head case), not an unresolvable reference.
 
-> **Tool caveat (real, from this correction):** `audit/learnability_triage.py` currently tokenizes the
-> **full song** via `parse()`, which is *not* the stream the model sees. To measure true learnability it
-> should tokenize via `iter_self_contained_row_blocks` (block-local codebooks, more literal at block
-> boundaries). The headline ordering (codebook < full_macros < baseline) likely survives directionally,
-> but the per-frame numbers should be recomputed on the block stream. Tracked as the next triage refinement.
+> **Tool refinement (done, partial):** `audit/learnability_triage.py` gained `--mode blocks` (the
+> self-contained-block stream the model sees) vs the default `--mode song` (full-song `parse()`). Block
+> mode is **EXPERIMENTAL** — reproducing the block-builder standalone trips re-encode assertions on tunes
+> whose ops need parser context (5/9 in the sample), so it under-covers; the faithful version must route
+> through the **Corpus block-builder**. Even partial, it overturned the song-mode read: at block scale
+> **full_macros beats the codebook arm on every metric** (h∞/frame 0.40 vs 0.55, in-window induction-copy
+> 0.83 vs 0.68) — the codebook's compression doesn't survive to the window the model learns at. See
+> `learnability_token_ordering_theory.md` "First read"; certify on full coverage before acting.
 
 ## MEDIUM — `note_off` ships Option B (standalone token), not duration
 In-flight `note_off` is **Option B**: a standalone `NOTE_OFF_OP` re-labelling the gate-clear at the
