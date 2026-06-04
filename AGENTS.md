@@ -290,8 +290,16 @@ lifted by tokenizer-side `full_macros`):
   audible region preserved. Byte-exact verified `parse_audit=raise` (cb config, no preset) 56/57 clean
   (1 filtered). All default-OFF, OUT of `REGISTERED_MACROS`. Merged tokens PRs #54 (drain) + #55 (md
   cleanup, README-only); released **v0.44.0** (tag → `release.yml` OIDC → PyPI, run green, live).
-  Census-arm flags updated in `audit/residual_set_census.py` (`resid/census-arm`). NEXT: cross-repo
-  release (framework floor `>=0.44.0` + image, xpt rebake) + full-corpus census == 0.
+  **Cross-repo release DONE:** framework **0.2.20** floors `preframr-tokens>=0.44.0` (all 3 req files;
+  `run_tests.sh` green, images published) + xpt image **0.2.20** rebuilt on it (fogbank, 169 tests).
+  **Full-corpus census (step 10, 8705 tunes, reparse=True): 8186 clean / 199 dirty / 400 residual SETs
+  / 320 digis = 97.6% of non-digi tunes fully clean.** CAUGHT A CENSUS-TOOL BUG: `residual_set_census`
+  omitted `reparse=True`, so it read STALE pre-drain tokenization caches (falsely reporting ~715k
+  residual / ~33% dirty); fixed (xpt `9ed9cd2`) — the drain itself is corpus-effective. The remaining
+  400 is the real tail (NOT zero): recurring CTRL gate/waveform bytes `(4,-1,{65,33,129,17})` that
+  escaped `ctrl_wavetable`/`onset_def`, FREQ words `(0,-1,*)` (startup/non-recurring), a few AD/SR +
+  `(24,-1,31)`. That's the genuine next-drain work-queue. ALWAYS pass `reparse=True` for residual/
+  byte-exact corpus measurements (parse() returns the stale cache otherwise).
 - **2026-06-02** — tokens **0.42.0** shipped (PW/filter sweep mining + `op_name_by_id()`/`op_name_tiers()`
   API; PyPI). Framework owner-cleanup landed on `feat/per-op-accuracy`: `tier_map.build_op_map` swapped to
   tokens `op_name_by_id` (local dir-scan deleted), `requirements.txt` floored `>=0.42.0`; tier_map/onset/
