@@ -54,9 +54,23 @@ _RESIDUAL_ARM = (
     "patch_pass",
     "ctrl_osc",
     "ctrl_wavetable",
+    "env_wavetable",
+    "filter_wavetable",
+    "modevol_wavetable",
+    "freq_wavetable",
+    "pw_wavetable",
     "note_off",
     "envelope_osc",
     "init_preamble",
+    "modevol_gradient",
+    "env_gradient",
+    "filter_gradient",
+    "ctrl_gradient",
+    "onset_instrument",
+    "onset_def",
+    "env_multiload",
+    "pre_gate_freq",
+    "nibble_wavetable",
 )
 
 _KW = None
