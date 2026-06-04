@@ -120,7 +120,11 @@ def check(path):
         from preframr_tokens.reglogparser import RegLogParser
         from preframr_tokens.stfconstants import SET_OP
 
-        df = next(RegLogParser(_kw()).parse(path, max_perm=1, require_pq=False))
+        df = next(
+            RegLogParser(_kw()).parse(
+                path, max_perm=1, require_pq=False, reparse=True
+            )
+        )
     except StopIteration:
         return (name, "ok", 0, ())
     except Exception as e:  # noqa: BLE001
