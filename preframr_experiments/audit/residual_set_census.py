@@ -20,10 +20,38 @@ from __future__ import annotations
 import argparse
 import glob
 import os
+import signal
 import statistics
 import sys
 from collections import Counter
 from multiprocessing import Pool
+
+import pyarrow.parquet as pq
+
+_TIMEOUT = 120
+
+
+class _Timeout(Exception):
+    pass
+
+
+def _init(timeout):
+    """Per-worker SIGALRM timeout so a single pathological dump can't pin a worker."""
+    global _TIMEOUT
+    _TIMEOUT = timeout
+    signal.signal(signal.SIGALRM, lambda *_: (_ for _ in ()).throw(_Timeout()))
+
+
+def _admit(path, max_rows):
+    """Footer-only gate: drop is_digi and over-row dumps (the straggler tail -- 7% of dumps over
+    120k rows are ~58% of all parse work, mostly PWM digis is_digi misses) before any full read."""
+    if _is_digi(path):
+        return None
+    try:
+        n = pq.ParquetFile(path).metadata.num_rows
+    except Exception:  # noqa: BLE001
+        return None
+    return None if (n <= 0 or n > max_rows) else n
 
 # The residual arm (mirror preframr-tokens residual_mechanism.py _BASE + _CODEBOOK). Kept here
 # so the census is self-contained; if residual_mechanism.py's arm changes, update this list.
@@ -112,23 +140,26 @@ def _is_digi(path):
 
 
 def check(path):
-    """Return (name, kind, residual_count, sample_atoms). kind in {ok, digi, error}."""
+    """Return (name, kind, residual_count, sample_atoms). kind in {ok, timeout, error}; admission
+    (is_digi + row cap) happens up front in main, so workers only see admitted paths."""
     name = path.rsplit("/", 1)[-1]
-    if _is_digi(path):
-        return (name, "digi", 0, ())
-    try:
-        from preframr_tokens.reglogparser import RegLogParser
-        from preframr_tokens.stfconstants import SET_OP
+    from preframr_tokens.reglogparser import RegLogParser
+    from preframr_tokens.stfconstants import SET_OP
 
+    signal.alarm(_TIMEOUT)
+    try:
         df = next(
-            RegLogParser(_kw()).parse(
-                path, max_perm=1, require_pq=False, reparse=True
-            )
+            RegLogParser(_kw()).parse(path, max_perm=1, require_pq=False, reparse=True)
         )
     except StopIteration:
+        signal.alarm(0)
         return (name, "ok", 0, ())
+    except _Timeout:
+        return (name, "timeout", -1, ())
     except Exception as e:  # noqa: BLE001
+        signal.alarm(0)
         return (name, "error", -1, (f"{type(e).__name__}: {e}",))
+    signal.alarm(0)
     ops = df["op"].to_numpy()
     regs = df["reg"].to_numpy()
     subs = df["subreg"].to_numpy() if "subreg" in df.columns else [-1] * len(df)
@@ -147,6 +178,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--glob", default="/scratch/preframr/hvsc/**/*.dump.parquet")
     ap.add_argument("--step", type=int, default=20, help="sample 1/step of the corpus")
+    ap.add_argument("--max-rows", type=int, default=120000, help="skip dumps over this many rows")
+    ap.add_argument("--timeout", type=int, default=120)
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 4) - 4))
     ap.add_argument(
         "--outlier-mult",
@@ -155,34 +188,50 @@ def main():
         help="flag a tune as suspected-missed-digi if its residual > outlier_mult * median nonzero",
     )
     a = ap.parse_args()
-    allf = sorted(glob.glob(a.glob, recursive=True))
-    sample = allf[:: a.step]
-    n = len(sample)
+    allf = sorted(glob.glob(a.glob, recursive=True))[:: a.step]
     print(
-        f"residual-SET census: total={len(allf)} sample(1/{a.step})={n} workers={a.workers}",
+        f"residual-SET census: scanning {len(allf)} footers (step={a.step}, max_rows={a.max_rows})...",
         flush=True,
     )
-    total = clean = digi = err = 0
-    dirty = []  # (name, count, sample_atoms)
+    admitted = []
+    skipped = 0
+    for p in allf:
+        rows = _admit(p, a.max_rows)
+        if rows is None:
+            skipped += 1
+        else:
+            admitted.append((rows, p))
+    admitted.sort(reverse=True)
+    work = [p for _, p in admitted]
+    n = len(work)
+    print(
+        f"admitted={n} skipped(digi/over-{a.max_rows}-rows/empty)={skipped} "
+        f"workers={a.workers} timeout={a.timeout}s; longest-first scheduling",
+        flush=True,
+    )
+    total = clean = timeouts = err = 0
+    dirty = []
     errors = []
-    with Pool(a.workers) as pool:
+    timed = []
+    with Pool(a.workers, initializer=_init, initargs=(a.timeout,)) as pool:
         for i, (name, kind, count, atoms) in enumerate(
-            pool.imap_unordered(check, sample, chunksize=4), 1
+            pool.imap_unordered(check, work, chunksize=1), 1
         ):
-            if kind == "digi":
-                digi += 1
+            if kind == "timeout":
+                timeouts += 1
+                timed.append(name)
             elif kind == "error":
                 err += 1
                 errors.append((name, atoms[0] if atoms else "?"))
+            elif count == 0:
+                clean += 1
             else:
-                if count == 0:
-                    clean += 1
-                else:
-                    total += count
-                    dirty.append((name, count, atoms))
+                total += count
+                dirty.append((name, count, atoms))
             if i % 200 == 0:
                 print(
-                    f"[{i}/{n}] clean={clean} dirty={len(dirty)} digi={digi} err={err} residual_SETs={total}",
+                    f"[{i}/{n}] clean={clean} dirty={len(dirty)} timeout={timeouts} "
+                    f"err={err} residual_SETs={total}",
                     flush=True,
                 )
 
@@ -191,9 +240,14 @@ def main():
     suspected = [(nm, c) for nm, c, _ in dirty if med and c > a.outlier_mult * med]
     print(
         f"\n===== VERDICT: residual_SETs={total} dirty_tunes={len(dirty)} "
-        f"(clean={clean} digi_excluded={digi} errors={err} of n={n}) =====",
+        f"(clean={clean} skipped={skipped} timeouts={timeouts} errors={err} of admitted n={n}) =====",
         flush=True,
     )
+    if timed:
+        print(
+            f"\nTIMEOUTS (>{a.timeout}s, excluded -- raise --timeout/--max-rows to include): {timed[:20]}",
+            flush=True,
+        )
     if suspected:
         print(
             f"\nSUSPECTED MISSED DIGIS (residual > {a.outlier_mult}x median {med}; likely PWM digis "
