@@ -77,7 +77,28 @@ prodlike-*scale* learnability read at mini-*cost* (static, minutes) — reserve 
 collapse→learning *threshold*. Model-side content interventions were refuted at the ~0.13 ceiling
 that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
 
-## Current arc — byte-exact + PW/filter sweep + unified macro-flags ALL SHIPPED; codebook distribution read is the next experiment (2026-06-02)
+## Current arc — instrument-program collapse SHIPPED (tokens #56/#57/#58, on main, UNRELEASED); WHOLE-CHIP ZERO is the active priority before any experiment (2026-06-04)
+
+### NOW — whole-chip zero (driver-mechanism) + clean freq slate
+The note ctrl/AD/SR cluster is collapsed into one `InstrumentProgramPass` define-on-first codebook
+(`register_state`-guarded, byte-exact); the subsumed passes were DELETED + `instrument_program` flipped
+default-on (tokens #57), guard env-flagged `PREFRAMR_INSTR_TRUST` to skip its ~20%/parse double-decode in
+production (#58). ctrl/AD/SR residual == 0. **Active goal: whole-chip ZERO** — every NON-freq register's
+residual to 0 (raw `SET` **and** escape-hatch ops) in the deployed default, byte-exact. Census
+(`/scratch/tmp/wholechip_census.py`: per register-class + mechanism + SOFT-residual, prod vs maxdrain arms)
+split it: (a) PW/FC/RES_FILT(23)/Mode-Vol(24) are drainable — `sweep`+`gradient` = 97%, tail = `periodic(P=2)`
+osc + irregular on 23/24; (b) the **lonely-catch-all family hides residual** — `freq_nudge`→`FREQ_NUDGE` is
+freq CONTENT (~573/tune = the melody, NOT a driver mechanism, so a raw-SET gate lied about freq),
+`ctrl_update`/`release_update` are DEAD (instrument owns ctrl/AD/SR → 0 of each). **Freq is content, left as
+raw `SET` = the clean slate the pitch/research arm picks up next.** Work order (handed to an agent):
+`preframr-tokens/AGENT_TASK_whole_chip_zero.md` — Part A: fold `sweep`+`gradient` into `REGISTERED_MACROS` +
+build one oscillation pass (the deleted `CtrlOscPass` is the template) for the 23/24 tail → non-freq raw
+`SET`==0; Part B: delete the whole catch-all family (`freq_nudge`/`freq_onset`/`ctrl_update`/`release_update`
+/`lonely_validator` + `lonely_catch_all`/`strict_lonely` flags). Tokens **0.45.0 release HELD** to bundle
+whole-chip zero into ONE breaking release; then framework floor + xpt rebuild, THEN the learnability/pitch
+experiment. The arc below is now background.
+
+### Background arc — byte-exact + PW/filter sweep + unified macro-flags (2026-06-02)
 
 The lever is **re-encoding**; training is **gated** behind a byte-exact encoding. **Byte-exactness is DONE
 and released — preframr-tokens v0.41.1, image 0.2.16 — corpus dirty rate ~8% → 0.** Root-fixes this arc (all
@@ -279,6 +300,40 @@ lifted by tokenizer-side `full_macros`):
 
 ## Resolved log (compact; details in git log + design/landed/ + data/refuted/)
 
+- **2026-06-04 (SHIPPED — instrument collapse done tokens #56/#57/#58; whole-chip-zero work order handed off; live state is the Current-arc NOW block)** — **residual→0 pivoted from
+  point-fixes to the instrument-program COLLAPSE.** After driving the corpus residual census to ~97.6%
+  and chasing the tail, classified the remaining residual: ~half is pre-/never-gated FREQ (pitch
+  channel), ~half post-gate ctrl/AD/SR singletons. Root realization (user-led, "too much complexity vs
+  the drivers; some sequences are note-associated, some not"): the ~10 note-associated passes
+  (`stamp`/`patch`/`preset`/`ctrl_wavetable`+nibble/`onset_def`/`ctrl_osc`/`ctrl_triple`/`ctrl_bigram` +
+  `hard_restart`/`note_off` markers) are all **fragments of ONE driver concept** — the per-frame
+  *instrument program* (waveform/AD/SR walk) a note-onset fires, a small bank reused by id. The residual
+  tail IS the gaps between each pass's escape condition (`MINREP≥2`, `fr_reg_count==1`, onset floor,
+  osc-period, nibble-lane id). **Collapse them into one define-on-first codebook → residual==0
+  structurally.**
+  - **Empirically validated** (861,098 spans, `register_state`, `/scratch/tmp/empirical_checks.py`):
+    AD/SR constant within a gate-held span **97.0/96.3%** (onset-anchored span ✓), waveform-walk mean
+    **1.91** frames (short program ✓), program `(ctrl-walk,AD,SR)` **exact-recurrence 98.0%** within a
+    tune (small reused bank ✓ → exact-REF + define-on-first ⇒ residual==0 by construction).
+  - **Design doc:** `design/instrument_program_codebook_design.md` (supersedes
+    `instrument_state_codebook_design.md`; the 3 contracts — span=gate/HR boundary, program↔sweep
+    set-vs-delta, exact REF — are DECIDED + VERIFIED). Scope: this collapse is the **timbre** channel
+    (ctrl/AD/SR); pitch stays with the ornament stack, PW/filter with the sweep channel.
+  - **Executable impl doc handed to the other agent:** `preframr-tokens/design/instrument_program_pass_impl.md`
+    — self-contained inside preframr-tokens (StampPass is the template; new ops 78–81; new `"instrument"`
+    CodebookFamily + codec; new `InstrumentProgramPass` run **inline on actual voice regs** = the
+    voice-confusion guardrail; flag `instrument_program` default OFF; in-repo residual gate + xdist tests).
+  - **Interim point-fixes this session:** `ctrl_wt` lane-keying id-collision fix (committed, tokens
+    branch `resid/ctrl-wt-lane-keying`, NOT released); never-gated-voice FREQ drop in `pre_gate_freq`
+    (was REVERTED — pitch channel, the collapse/ornament handles it; do not re-add).
+  - **PICK UP AFTER THE AGENT:** (1) verify their gate — `instrument_program=True` ⇒ ctrl/AD/SR residual
+    **0** corpus-wide `reparse=True` digi-excluded (their §6.1 script) + byte-exact `register_state` +
+    xdist green; (2) run a reject-claim audit to confirm no new divergences; (3) **12-SID WAV
+    audio-equivalence audition** before flipping any default; (4) only then flip `instrument_program` into
+    `REGISTERED_MACROS` and ship tokens **0.45.0** cross-repo (per `design/release_build_cache.md`);
+    (5) the DELETION release (remove the ~10 subsumed passes/ops/decoders) comes LAST, once the unified
+    path is default + green. Standing gate: **ZERO is non-negotiable; always `reparse=True`; validate on
+    the corpus not a sample; progress markers in every sweep.**
 - **2026-06-04** — **residual-SET drain COMPLETE on the sample; tokens 0.44.0 shipped (PyPI).** Raw
   `SET`s on the digi-excluded stride sample driven 444 → 0 across five mechanisms (GRADIENT + INIT
   prior; then `onset_def` 215→20, `env_multiload` 20→11, `pre_gate_freq` 11→6, `nibble_wavetable`
