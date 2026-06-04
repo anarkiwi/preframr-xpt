@@ -9,22 +9,25 @@ corpus live elsewhere.
 - **`preframr` 0.2.19** — framework only (train / inference / model / args /
   parse / stftokenize / utils). Image `anarkiwi/preframr`. No PyPI; ships as the
   docker image (`0.2.19` + `:latest` published on main-push). Carries the
-  per-op-accuracy gate. Floors `preframr-tokens>=0.43.0` (in **all** req files:
+  per-op-accuracy gate. Floors `preframr-tokens>=0.44.0` (in **all** req files:
   `requirements.txt`, `predict-requirements.txt`, `jetson/predict-requirements.txt`
   — `op_name_by_id` is on the predict import path). `tier_map.build_op_map` reads
   op→name from tokens' `op_name_by_id()`. **Macro passes are supplied as ONE
   validated list** — `apply_macro_flags_to_args` resolves `--macro-flags` /
   `--macro-config` off the tokens registry (default all-OFF); the old per-flag
   `--foo-pass` args + `_PIPELINE_NAME_TO_FLAG` + `--pipeline-spec` are gone.
-- **`preframr-tokens` 0.43.0** (PyPI) — torch-free parser/tokenizer + macros
+- **`preframr-tokens` 0.44.0** (PyPI) — torch-free parser/tokenizer + macros
   + `render_play`. **Byte-exact** (corpus dirty ~8%→0; 1 known load-dependent
   outlier `Ascension.1`, debug deferred); STAMP/PATCH/SWEEP/held-ARP/WAVETABLE
-  codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`). **0.43.0:** codebook
-  ids are pure define→ref ordinals never value-snapped (`is_codebook_id_atom` guard
-  + alphabet id-range coverage; STAMP_DEF char-drop) + a `register_state` decode memo
-  (~6.6% parse). 0.42 added PW/filter sweep mining + `op_name_by_id()`/`op_name_tiers()`.
-  0.42.1 fixed the `per_reg_burst` empty-cand+barrier crash (unblocked the codebook pipeline on the
-  real corpus) + a `FrameWalker` parse speedup (~7-12%, byte-exact).
+  codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`). **0.44.0 (residual-SET
+  drain):** raw `SET`s (unmodeled driver mechanisms) on the digi-excluded stride sample
+  drained to **0** — `onset_def` (define-on-first via CTRL_WT), `env_multiload` (AD/SR
+  hard-restart), `pre_gate_freq` (drop/relocate inaudible pre-gate freq — the first
+  AUDIO-exact atom, in `parse_audit._LOSSY_RESETS`), `nibble_wavetable` (CTRL_WT subreg
+  0/1 lanes). All default-OFF, OUT of `REGISTERED_MACROS`. **0.43.0:** codebook ids are
+  pure define→ref ordinals never value-snapped + a `register_state` decode memo (~6.6%
+  parse). 0.42 added PW/filter sweep mining + `op_name_by_id()`/`op_name_tiers()`.
+  0.42.1 fixed the `per_reg_burst` empty-cand+barrier crash + a `FrameWalker` parse speedup.
 - **`preframr-audio` 0.5.6** (PyPI) — SID audio rendering primitives.
 - **`preframr-experiments`** (this repo; editable / PYTHONPATH, no PyPI) —
   runner + specs + `audit/` + tests. Pure orchestration on the host; audits
@@ -276,6 +279,19 @@ lifted by tokenizer-side `full_macros`):
 
 ## Resolved log (compact; details in git log + design/landed/ + data/refuted/)
 
+- **2026-06-04** — **residual-SET drain COMPLETE on the sample; tokens 0.44.0 shipped (PyPI).** Raw
+  `SET`s on the digi-excluded stride sample driven 444 → 0 across five mechanisms (GRADIENT + INIT
+  prior; then `onset_def` 215→20, `env_multiload` 20→11, `pre_gate_freq` 11→6, `nibble_wavetable`
+  6→0). `onset_def`/`env_multiload`/`nibble_wavetable` are register-state-exact by arbiter
+  construction (reuse the CTRL_WT codebook + HARD_RESTART_OP — no new ops/families); `pre_gate_freq`
+  is the **first AUDIO-exact (not register-state-exact) drain atom** — a freq before a voice's first
+  gate-on is inaudible (proven in preframr-audio `test_freq_write_audibility`), DROP it if the first
+  note sets its own freq else RELOCATE into the gate frame; it sits in `parse_audit._LOSSY_RESETS`,
+  audible region preserved. Byte-exact verified `parse_audit=raise` (cb config, no preset) 56/57 clean
+  (1 filtered). All default-OFF, OUT of `REGISTERED_MACROS`. Merged tokens PRs #54 (drain) + #55 (md
+  cleanup, README-only); released **v0.44.0** (tag → `release.yml` OIDC → PyPI, run green, live).
+  Census-arm flags updated in `audit/residual_set_census.py` (`resid/census-arm`). NEXT: cross-repo
+  release (framework floor `>=0.44.0` + image, xpt rebake) + full-corpus census == 0.
 - **2026-06-02** — tokens **0.42.0** shipped (PW/filter sweep mining + `op_name_by_id()`/`op_name_tiers()`
   API; PyPI). Framework owner-cleanup landed on `feat/per-op-accuracy`: `tier_map.build_op_map` swapped to
   tokens `op_name_by_id` (local dir-scan deleted), `requirements.txt` floored `>=0.42.0`; tier_map/onset/
