@@ -63,7 +63,7 @@ capacity + optimization + exposure bias. Two training-free rules:
    is exactly why **V0 onset ≈ 0** while trajectory *structure* learns: onset pitch is high-entropy with
    no local determinant, so it both fails to learn and derails what follows. Anchoring it to a nearby
    reference (interval-from-previous) is the theory-prescribed fix
-   (see `melody_data_gap_ladder.md`, `melody_predictability.py`).
+   (see `audit/melody_predictability.py`).
 
 ## The training-free triage (substitutes for direction-finding A/Bs)
 Compute on the tokenized corpus, no transformer — `audit/learnability_triage.py`:
@@ -98,7 +98,8 @@ sweep/pw/filter/wavetable/patch/held_arp; `ctrl_osc`/`note_off` not yet shipped 
 Both macro arms cut per-frame information ~22–26% vs baseline, and here **codebook edges full_macros**.
 **But song mode is the wrong stream:** the model trains/predicts on **self-contained blocks**, not whole
 songs, and song mode lets a codebook's REFs accumulate over the entire tune — over-crediting its
-compression (see `macro_learnability_risk_review.md`).
+compression (block-locality keeps DEF→REF in-block; the generator-MDL codebook follows this —
+`generator_mdl_representation.md`).
 
 **`--mode blocks` at `seq_len=8192` (the real prodlike/predict block scale; EXPERIMENTAL, 5/9 tunes — the
 standalone block re-encode trips on ops needing parser context, faithful version needs the Corpus
@@ -130,6 +131,46 @@ Caveats on these numbers: 5/9 tunes (biased simpler), absolute pre-voice-reg blo
 — trust the DIRECTION; **certify on full coverage via the Corpus block-builder before acting**. (The earlier "codebook edges full_macros, re-run the residual arm to push below 3.65"
 claim was a song-mode artifact — withdrawn.)
 
+## Compatibility with the generator-MDL pipeline + the open question (2026-06-05)
+The generator-MDL encoding (`generator_mdl_representation.md`) is, in most respects, the encoding this theory
+prescribes — but it inherits the theory's own *unresolved* risk, which must be measured before committing.
+
+**Where it is the theory's ideal:**
+- **Principle 3, maximally.** Every implicit per-frame counter (arp index, ramp/sweep counter, wavetable
+  pointer) becomes ONE explicit-parameter atom (ACCUM/SWEEP/TABLE). Counter-elimination is now structural, not
+  pass-by-pass — the strongest version of the residual-SET-as-learnability program.
+- **Principle 2.** `GEN_TABLE` is a DEF→REF codebook = the induction-head-easy regime by construction.
+- **Principle 1.** A gesture's latent is its O(1) generator params; the per-frame counter lives in the
+  deterministic DECODER, OUT of the model's prediction target.
+
+**The open risk (the theory's own block-scale measurement, still unresolved).** The `--mode blocks` table
+above found **codebooks did NOT survive to block scale** (full_macros beat the codebook arm: h∞/frame
+0.38<0.51, induction-copy 0.852>0.718) because stamp/wavetable/patch keyed on ABSOLUTE spans that don't recur
+within one 8192-token block. **The generator-MDL bets the opposite via transposition-invariant (note-relative)
+`GEN_TABLE` keys** — the same arp shape at different pitches collapses to one entry (measured −64% distinct
+shapes), which should RAISE in-block induction-copy where absolute codebooks couldn't. This is a prediction,
+directly testable: **re-run `learnability_triage.py --mode blocks --seq_len 8192` on the generator encoding; the
+go/no-go is whether its in-block induction-copy beats the old codebook arm's 0.718.** If note-relative keys
+still don't recur in-block, `GEN_TABLE` adds alphabet without buying copy — the same trap.
+
+**Two cautions the theory raises against the current impl spec:**
+1. **Optimize copy-fraction, not raw MDL.** Principle 2's "copy-fraction, not gzip" applies: the design is sold
+   as description-length (MDL), but L is only a PROXY — the lever is induction-copyable reuse + counter
+   elimination. An L-shrinking refinement that traded copy-fraction for shorter codes would HURT learnability.
+   State the objective as copy-fraction; let MDL track it, not the reverse.
+2. **The residual must not refragment the codebook key.** The impl doc stores each cycle's freq residual INSIDE
+   the `GEN_TABLE` entry and keys on (offsets, **residuals**) — so two arps with identical note-offsets but
+   different residuals (vibrato/detune) get DIFFERENT entries, destroying the transposition-invariant reuse the
+   win depends on (the −64% collapse was on offsets ALONE). Clean driver arps write exact LUT values
+   (resid=0) and still collapse, so the damage may be modest — but **measure the refragmentation**, and if
+   material, key on note-offsets only + carry the residual on a separate mostly-zero companion stream (the
+   note+resid split the impl doc collapsed for decode-simplicity — the wrong axis to optimize).
+
+**Unchanged hard limit (honest).** The generator-MDL does NOT make absolute onset pitch learnable — an ACCUM's
+`start` / a TABLE's `base_note` are absolute pitch: high-entropy, no local determinant ⇒ still ~0 next-token
+(Principle 4.2 / P6). The win is STRUCTURE learnability (gesture type + shape transfer), not pitch accuracy;
+score the latter distributionally.
+
 ## Honest limit
 Theory + these metrics give **sign, relative difficulty, and ordering** — not val_acc, and **not the
 scale threshold** where collapse flips to learning (an emergence phenomenon current DL theory cannot pin
@@ -141,10 +182,10 @@ corpus-scale re-run tightens them. The ordering is trustworthy because the bias 
 canonical confirmatory run.** Keep the experiment for the *threshold*; stop spending it on *direction*.
 
 ## Cross-links
-`macro_learnability_triage.md` (per-pass keep/retire triage — this doc supplies its information-theoretic
-backing + a whole-stream tool), `melody_data_gap_ladder.md` (conditional-predictability gap on the melody
-line), `audit/melody_predictability.py` (the same math scoped to V0 onsets),
-`workorder_residual_set_elimination.md` / `impl_residual_set_elimination.md` (the PRs Principle 3 ranks).
+`generator_mdl_representation.md` (the current encoding — one self-verifying generator decomposition over all
+channels with a block-local DEF→REF codebook; supersedes the per-pass pitch/ornament/residual-SET stack this
+doc's principles were originally applied to), `audit/melody_predictability.py` (the conditional-predictability
+math scoped to V0 onsets).
 
 ## References
 Liu et al. 2023 (shortcuts to automata); Merrill & Sabharwal 2023 (log-precision ⊆ TC⁰); Hahn 2020

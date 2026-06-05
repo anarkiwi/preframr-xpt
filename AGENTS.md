@@ -77,7 +77,39 @@ prodlike-*scale* learnability read at mini-*cost* (static, minutes) — reserve 
 collapse→learning *threshold*. Model-side content interventions were refuted at the ~0.13 ceiling
 that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
 
-## Current arc — byte-exact + PW/filter sweep + unified macro-flags ALL SHIPPED; codebook distribution read is the next experiment (2026-06-02)
+## Current arc — the GENERATOR-MDL pipeline is the active direction; a preframr-tokens agent is implementing it (2026-06-05)
+
+### NOW — one self-verifying generator model of every SID write (supersedes the per-pass macro zoo)
+The whole pitch/ornament/residual-SET/whole-chip-zero line of work has **converged** onto one design: model
+every value-channel's per-frame series as a sequence of generators `{HOLD, ACCUM, SWEEP, TABLE}` reused via a
+block-local DEF→REF bank, with pitch over a **unified per-tune semitone LUT** (no cents quantization). It is
+**lossless + residual-zero by construction** (a self-verifying longest-wins fitter ⇒ every claim is byte-exact;
+arbiter `validate=True` never drops) and **provenance-invariant**. Prototyped + scale-validated: **byte-exact +
+0 unexplained on 1580 corpus tunes, every historically-hard engine (Baggis/JCH, SoundMonitor, System6581,
+Commando, Camerock), and SID-Wizard (91 modules) + defMON (9) rendered through their own players.** Key
+simplification: two of the three ops already exist — `SWEEP_OP`=ACCUM, the GlobalOsc cycle=TABLE — so only the
+triangle SWEEP + tuning/codebook are new; the generator pass UNIFIES `SweepPass`+`GlobalOscPass` over all
+channels. Waveform is NEVER read to route pitch (the Facemorph guardrail: noise accents pitched notes, pulse
+plays percussion).
+
+- **Design (canonical):** `design/generator_mdl_representation.md`. The former per-pass pitch/ornament/melody
+  stack (unified-pitch, ornament-transfer, sweep-oscillation, melody-channel/skeleton/gap-ladder, macro-zoo
+  triage, residual-SET workorders, voice/role-lanes) was **removed from `design/` 2026-06-05** — generator-MDL
+  subsumes it; do not resurrect those approaches.
+- **Implementation — handed to a preframr-tokens agent:** `preframr-tokens/AGENT_TASK_generator_pipeline.md`
+  (self-contained, fully unambiguous: embedded fitter, exact 13 channels, exact op-ids 83+, the codebook, the
+  digi check, the module↔macros round-trip tests, through to a pushed PR). **xpt expects that agent's output:**
+  a new default tokenizer where `generator_pass` replaces `freq_trajectory`/`skeleton`/`sweep`/`gradient`/
+  `global_osc`/`preset`/`stamp`/`wavetable`/`per_reg_burst`/`note_off`/`init` (deleted; op-ids freed as holes),
+  `SWEEP_OP=64` reused (new producer), new ops `GEN_TRI=83`/`GEN_TUNING=84`/`GEN_TABLE_DEF..REF=85-88`,
+  `GLOBAL_OSC_OP=82` retired; `InstrumentProgramPass` KEPT for ctrl/AD/SR; `loop`/`hard_restart`/`legato`/
+  `voice_block` KEPT. **When that lands, xpt work to expect:** re-floor `preframr-tokens>=0.45.0` (all req
+  files), rebuild the xpt image, re-cut datasets (`op_name_by_id`/tier map shift as the op set changes), then
+  run the canonical-tier learnability go/no-go on the new encoding. The cross-repo 0.45.0 release + 12-SID WAV
+  audition gate happen BEFORE flipping the default (memory `cross-repo-release-ordering`,
+  `tokens-0.45.0-release-pending`). Until then `generator_pass` is default-OFF.
+
+### Background arc — byte-exact + PW/filter sweep + unified macro-flags (2026-06-02)
 
 The lever is **re-encoding**; training is **gated** behind a byte-exact encoding. **Byte-exactness is DONE
 and released — preframr-tokens v0.41.1, image 0.2.16 — corpus dirty rate ~8% → 0.** Root-fixes this arc (all
@@ -101,11 +133,12 @@ actual go/no-go needs the canonical/prodlike tier** (where loop_collapse_rate dr
 FREQ_TRAJ 49%, loop/reuse PATTERN_* 19%, SET 13% (86% of which is frame markers), ctrl-collapse 2.8%;
 **codebooks ~0% because stamp/patch/wavetable are NOT in REGISTERED_MACROS** (experimental, default-OFF).
 
-### The codebook pipeline is a SWAP, not an add-on
-`skeleton_pass` (WavetablePass needs it) **conflicts with `freq_trajectory_pass`** — alternative freq
-substrates. Swapping to the codebook pipeline drops FREQ_TRAJ (49%→0) for SKEL+ORN+STAMP/SWEEP/WAVETABLE, and
-PATCH takes recurring envelopes from RELEASE_UPDATE — **but PW/filter lose trajectory compression and revert
-to SET/PWM_PRESET/FC_PRESET (+16/+19/+6pp)**. That blowup motivates the handoff below.
+### (Resolved by the generator pipeline) the old codebook SWAP blowup
+The earlier codebook swap (skeleton/wavetable, conflicting with `freq_trajectory_pass`) dropped FREQ_TRAJ for
+SKEL+ORN+STAMP/WAVETABLE but **PW/filter reverted to SET/PWM_PRESET/FC_PRESET (+16/+19/+6pp)**. The
+generator-MDL pipeline removes this whole tension: PW/cutoff/res/modevol are ordinary generator channels
+(HOLD/ACCUM/TRI/TABLE), so there is no per-substrate blowup and no skeleton↔freq_trajectory conflict — all of
+those passes are deleted.
 
 ### SHIPPED + RELEASED — tokens 0.42.0, framework 0.2.17, unified macro-flags (2026-06-02)
 - **tokens 0.42.0** (PyPI): `SweepPass` mines PW (regs 2/9/16, `pw_sweep`) + filter cutoff (reg 21,
@@ -128,24 +161,20 @@ to SET/PWM_PRESET/FC_PRESET (+16/+19/+6pp)**. That blowup motivates the handoff 
   `sid_fixture_cache/*_20s` dumps trips, but so does `full_macros` — a fixture property; the real byte-exact
   gate is the corpus sweep `cb_div_audit.py`).
 
-### NEXT — proposed immediate experiment, then the strategic go/no-go
-1. **`codebook_distribution_mini` (write + run this next)** — the payoff read for the whole 0.42 + plumbing
-   arc, now finally launchable. Mini, `--tkvocab 0`, 2 arms:
-   - `codebook`: `macro_flags=(<base> + "skeleton_pass","held_arp","zero_plain","slide_wide","slide_landing",
-     "stamp_pass","sweep_pass","sweep_loop","pw_sweep","filter_sweep","wavetable_pass","wt_short","wt_oneshot","patch_pass")`
-     (NOT `freq_trajectory_pass` — `resolve_flags` rejects skeleton+freq_trajectory). `<base>` = preset/
-     hard_restart/legato c2/c4/voice_block/ctrl_bigram/loop/loop_transposed.
-   - `full_macros` baseline: `macro_config="full_macros"`.
-   **Read = the op DISTRIBUTION, not val_acc** (mini training mode-collapses regardless — established). Run
-   `audit_checkpoint_per_class` → `content_tier_report`; confirm (a) the PW/filter SET/PWM_PRESET/FC_PRESET
-   blowup (+16/+19/+6pp) becomes SWEEP, and (b) STAMP/WAVETABLE codebooks now register (were ~0% because they
-   weren't in REGISTERED_MACROS). This proves the encoding payoff before spending the canonical budget.
-   (NOTE: the `codebook_coupling.py` triage tool + `macro_learnability_triage.md` were removed by PR #5 —
-   read the distribution from `content_tier_report` directly.)
-2. **Canonical-tier learnability run** — the real go/no-go. Mini collapses regardless of vocab
-   (`loop_collapse_rate` ~1.0); only canonical/prodlike (where collapse drops) settles whether the compressing
-   vocab's PAYLOAD learns. `learnability_full_macros_mini` (now `macro_config="full_macros"` vs atomic
-   baseline) generalises to a canonical spec; gate on per-tier `content_over_structural` + per-op `op_acc`.
+### NEXT — gated behind the generator pipeline landing in tokens
+The experiment program waits on the tokens agent shipping `generator_pass`
+(`preframr-tokens/AGENT_TASK_generator_pipeline.md`). Once it's the default + released (0.45.0) and the xpt
+image is rebuilt on it:
+1. **Op-distribution read on the new encoding** — `audit_checkpoint_per_class` → `content_tier_report`:
+   confirm the stream is generator atoms (`SWEEP_OP`/`GEN_TRI`/`GEN_TABLE` DEF→REF + the kept loop/instrument
+   ops) with raw `SET` ~0, and that PW/filter are SWEEP/TABLE (the old +16/+19/+6pp `PWM_PRESET`/`FC_PRESET`
+   blowup is gone by construction). Read distribution, not val_acc (mini mode-collapses regardless).
+2. **Canonical-tier learnability go/no-go** — the real test. Mini collapses regardless of vocab
+   (`loop_collapse_rate` ~1.0); only canonical/prodlike settles whether the generator vocab's PAYLOAD learns.
+   Generalise the `full_macros`-vs-atomic A/B to a canonical spec on the new default; gate on per-tier
+   `content_over_structural` + per-op `op_acc`. The learnability prediction: provenance-invariant DEF→REF
+   generators + a transposition-invariant pitch LUT are induction-head-friendly (see
+   `design/learnability_token_ordering_theory.md`).
 
 ### Prior arc (compacted; details in `design/landed/` + git log)
 Substrate ablation (2026-05-28, `melody_substrate_iter_mini`) lifted FREQ_TRAJ 0.085→0.206 (2.4×); absorber
@@ -279,6 +308,40 @@ lifted by tokenizer-side `full_macros`):
 
 ## Resolved log (compact; details in git log + design/landed/ + data/refuted/)
 
+- **2026-06-04 (SHIPPED — instrument collapse done tokens #56/#57/#58; whole-chip-zero work order handed off; live state is the Current-arc NOW block)** — **residual→0 pivoted from
+  point-fixes to the instrument-program COLLAPSE.** After driving the corpus residual census to ~97.6%
+  and chasing the tail, classified the remaining residual: ~half is pre-/never-gated FREQ (pitch
+  channel), ~half post-gate ctrl/AD/SR singletons. Root realization (user-led, "too much complexity vs
+  the drivers; some sequences are note-associated, some not"): the ~10 note-associated passes
+  (`stamp`/`patch`/`preset`/`ctrl_wavetable`+nibble/`onset_def`/`ctrl_osc`/`ctrl_triple`/`ctrl_bigram` +
+  `hard_restart`/`note_off` markers) are all **fragments of ONE driver concept** — the per-frame
+  *instrument program* (waveform/AD/SR walk) a note-onset fires, a small bank reused by id. The residual
+  tail IS the gaps between each pass's escape condition (`MINREP≥2`, `fr_reg_count==1`, onset floor,
+  osc-period, nibble-lane id). **Collapse them into one define-on-first codebook → residual==0
+  structurally.**
+  - **Empirically validated** (861,098 spans, `register_state`, `/scratch/tmp/empirical_checks.py`):
+    AD/SR constant within a gate-held span **97.0/96.3%** (onset-anchored span ✓), waveform-walk mean
+    **1.91** frames (short program ✓), program `(ctrl-walk,AD,SR)` **exact-recurrence 98.0%** within a
+    tune (small reused bank ✓ → exact-REF + define-on-first ⇒ residual==0 by construction).
+  - **Design doc:** `design/instrument_program_codebook_design.md` (supersedes
+    `instrument_state_codebook_design.md`; the 3 contracts — span=gate/HR boundary, program↔sweep
+    set-vs-delta, exact REF — are DECIDED + VERIFIED). Scope: this collapse is the **timbre** channel
+    (ctrl/AD/SR); pitch stays with the ornament stack, PW/filter with the sweep channel.
+  - **Executable impl doc handed to the other agent:** `preframr-tokens/design/instrument_program_pass_impl.md`
+    — self-contained inside preframr-tokens (StampPass is the template; new ops 78–81; new `"instrument"`
+    CodebookFamily + codec; new `InstrumentProgramPass` run **inline on actual voice regs** = the
+    voice-confusion guardrail; flag `instrument_program` default OFF; in-repo residual gate + xdist tests).
+  - **Interim point-fixes this session:** `ctrl_wt` lane-keying id-collision fix (committed, tokens
+    branch `resid/ctrl-wt-lane-keying`, NOT released); never-gated-voice FREQ drop in `pre_gate_freq`
+    (was REVERTED — pitch channel, the collapse/ornament handles it; do not re-add).
+  - **PICK UP AFTER THE AGENT:** (1) verify their gate — `instrument_program=True` ⇒ ctrl/AD/SR residual
+    **0** corpus-wide `reparse=True` digi-excluded (their §6.1 script) + byte-exact `register_state` +
+    xdist green; (2) run a reject-claim audit to confirm no new divergences; (3) **12-SID WAV
+    audio-equivalence audition** before flipping any default; (4) only then flip `instrument_program` into
+    `REGISTERED_MACROS` and ship tokens **0.45.0** cross-repo (per `design/release_build_cache.md`);
+    (5) the DELETION release (remove the ~10 subsumed passes/ops/decoders) comes LAST, once the unified
+    path is default + green. Standing gate: **ZERO is non-negotiable; always `reparse=True`; validate on
+    the corpus not a sample; progress markers in every sweep.**
 - **2026-06-04** — **residual-SET drain COMPLETE on the sample; tokens 0.44.0 shipped (PyPI).** Raw
   `SET`s on the digi-excluded stride sample driven 444 → 0 across five mechanisms (GRADIENT + INIT
   prior; then `onset_def` 215→20, `env_multiload` 20→11, `pre_gate_freq` 11→6, `nibble_wavetable`
