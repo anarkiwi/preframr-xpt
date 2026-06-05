@@ -1,13 +1,44 @@
-# WORK ORDER (NEXT, blocked): the melody-skeleton interval layer on the generator-MDL freq channel
+# WORK ORDER (SELF-DIRECTING): the melody-skeleton interval layer on the generator-MDL freq channel
 
-**Status:** Pending impl — **BLOCKED on the generator-MDL pipeline landing** (`preframr-tokens/
-AGENT_TASK_generator_pipeline.md`, in flight by another agent). Do NOT start until that pipeline is merged +
-released and `generator_pass` is the default. **Keep this doc in preframr-xpt for now** (it is staged here so
-the in-flight tokens agent is not confused); when the generator pipeline lands, **copy this into
-preframr-tokens as `AGENT_TASK_melody_skeleton.md` and execute there.** Cross-ref
-[`generator_mdl_representation.md`](generator_mdl_representation.md) (the substrate), the
+**Status:** Pending impl — **auto-gated on the generator-MDL pipeline landing** (the other agent's
+`preframr-tokens/AGENT_TASK_generator_pipeline.md`). **This file is self-directing: an agent told only "execute
+this .md" must run §A's start-gate first — wait (autonomously, by re-checking on an interval) until the
+generator pipeline is the deployed default on tokens `origin/main`, then start §1 with NO further help or
+decisions.** Do not change the other agent's instructions; do not start partial work before the gate passes.
+Cross-ref [`generator_mdl_representation.md`](generator_mdl_representation.md) (the substrate), the
 [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) "Compatibility" section (why
 this is the melody fix), [`encoding_principles.md`](encoding_principles.md) (P4.2/P5/P6).
+
+## §A. START-GATE — run this FIRST; it is the entire "wait for the other agent" mechanism
+
+Executing this file means: **(1) run the landing check; (2) if WAITING, schedule a re-check and STOP this turn;
+(3) if LANDED, start §1 immediately.** No human decision is needed at any step — the check is the decision.
+
+**The landing check (copy-paste; LANDED only when the generator pipeline is merged AND is the default AND the
+subsumed zoo is gone on tokens `origin/main`):**
+```bash
+T=/scratch/anarkiwi/preframr-tokens
+git -C "$T" fetch origin -q && \
+  git -C "$T" show origin/main:preframr_tokens/tokenizer_config.py 2>/dev/null | grep -q '"generator_pass"' && \
+  ! git -C "$T" cat-file -e origin/main:preframr_tokens/macros/freq_trajectory_pass.py 2>/dev/null && \
+  ! git -C "$T" cat-file -e origin/main:preframr_tokens/macros/skeleton_pass.py 2>/dev/null && \
+  echo LANDED || echo WAITING
+```
+- **`WAITING`** → the generator pipeline is not yet the default. **Schedule a wake-up ~30–60 min out
+  (`ScheduleWakeup`, or a `/loop` re-running this file) and STOP — do not block, do not start.** On each
+  wake-up, re-run the check. (Optional faster signal: also poll `gh -R anarkiwi/preframr-tokens pr list
+  --state merged --search "generator"` — but the file check above is authoritative.)
+- **`LANDED`** → proceed immediately to §1. The tokens 0.45.0 PyPI release is orthogonal and **not** required
+  to start this in-repo work (you build on tokens source `origin/main`).
+
+**On LANDED, set up and go (no decisions):**
+```bash
+cd /scratch/anarkiwi/preframr-tokens && git fetch origin -q && git switch -c melody-skeleton origin/main
+```
+Confirm the base is green first (`git -C "$T" log origin/main -1` is a merged PR; the tokens suite passes on
+it). Then execute §1–§6 end-to-end and open a PR (merge it on green if the repo allows; else leave it open).
+You operate **entirely inside preframr-tokens** (this doc is your spec; you need not move it). Everything below
+is fully specified — implement it as written, raise nothing back.
 
 ## 0. Why this exists (the gap the generator pipeline leaves)
 
