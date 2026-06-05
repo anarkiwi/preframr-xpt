@@ -105,12 +105,17 @@ remains the natural BLOCK header for constrained decode (below), but is not need
 - **2SID / heavy multispeed:** parser declines (`StopIteration`, 29/1609) — channel-count extension.
 - **LUT calibration:** per-tune tuning offset required; per-engine LUT variant for non-12-TET drivers.
 
-## Melody learnability — handled by a SEPARATE next layer (do not conflate)
-This encoding makes **structure** learnable and **de-ornaments** (arp/vibrato/slide → separate note-relative
-atoms, off the melody line), but it leaves each freq note-onset as **absolute pitch** = high-entropy ≈ 0
-next-token (P4.2). Melody is made learnable by re-keying note-onsets to **key-invariant intervals** (measured
-held-out next-interval 0.52 > cross-tune ceiling 0.41 — genuine transfer); that is a distinct work order built
-ON this pipeline: [`melody_skeleton_impl.md`](melody_skeleton_impl.md) (Pending impl, BLOCKED on this landing).
+## Melody learnability — a SEPARATE three-layer stack (this pipeline is only layer 1)
+This encoding makes **structure** learnable and **de-ornaments** (layer 1) — but melody needs two more layers,
+both in [`melody_skeleton_impl.md`](melody_skeleton_impl.md) (Pending, BLOCKED on this landing):
+- **Layer 2 — interval-skeleton:** re-key freq note-onsets to **key-invariant intervals** (measured held-out
+  next-interval 0.52 > cross-tune ceiling 0.41). Fixes the absolute-pitch ≈ 0 problem (P4.2).
+- **Layer 3 — cross-voice/role de-multiplexing (the DOMINANT lever):** the 0.52 was on *de-multiplexed*
+  single-voice data; deployed, the voices are frame-interleaved (P3 violation) so melody-onset ≈ 0 vs the
+  ~0.34 per-voice ceiling. Reorder into contiguous lanes ([`superframe_voice_lane_design.md`](superframe_voice_lane_design.md)
+  / [`role_lane_factorization.md`](role_lane_factorization.md)). Untested at deployment → triage + canonical gate.
+This pipeline is a good *substrate* for both (each voice's line is already a coherent unit), but provides
+neither — do not mistake "structure learnable" for "melody learnable."
 
 ## Open design choices (decide before production code)
 1. **Pitch:** note-index + residual as two channels, vs one freq channel with note-relative bank keying.
