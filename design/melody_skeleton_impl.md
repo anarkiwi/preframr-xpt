@@ -135,16 +135,21 @@ Layer 2 makes each voice's line clean + key-invariant but the stream is **frame-
 so the next-melody-note horizon is polluted by the other voices' tokens. Layer 3 reorders into per-channel
 lanes so each line is **contiguous** — BUT contiguity alone is not enough and can BACKFIRE.
 
-**The load-bearing subtlety — CAUSAL ORDER, not just de-mux.** The dominant determinant of the next melody
-note is the current **harmony** (the accompaniment voices). Plain voice-major lanes make the melody's *own*
-history local but push its *harmonic* determinant out of locality — and if the melody lane is emitted *before*
-the accompaniment lanes, the model must predict the melody **before its cause** (a direct Principle-4
-violation: "if A causes B, emit A before B"). So the mechanism is **causal-DAG-ordered lanes: emit the
-conditioning roles (bass/harmony) BEFORE the conditioned role (melody)**, so the melody note is predicted with
-its full harmonic context already in-context (and generated *after* the accompaniment). **This REQUIRES role
-identification** — you cannot order "accompaniment before melody" without knowing which lane is which — so the
-**role-lane** form ([`role_lane_factorization.md`](role_lane_factorization.md)) is the *mechanism*, not a
-follow-up. Physical voice-lanes in arbitrary order are a weak first cut that may not help (or may hurt).
+**The load-bearing subtlety — CAUSAL ORDER, not just de-mux — is now MEASURED, not just argued
+(`/scratch/tmp/measure_melody.py`, 415 corpus tunes, 132k melody steps; heuristic extraction, trust direction):**
+the current **harmony adds 0.294 bits of information about the next melodic interval BEYOND the melody's own
+history** (H(next|self) 0.956 → H(next|self+harmony) 0.662, a ~31% conditional-entropy cut). So the harmony is
+a real, non-redundant determinant — and the next interval is **low-entropy** (1.54 marginal → 0.66 conditioned),
+i.e. melody is *learnable once self-history + harmony are surfaced*; the deployed ≈0 is a representation failure,
+not a data ceiling. Plain voice-major lanes make the melody's *own* history local but push its *harmonic*
+determinant out of locality — and if the melody lane is emitted *before* the accompaniment, the model predicts
+melody **before its cause** (P4 violation). So the mechanism is **causal-DAG-ordered lanes: emit the
+conditioning roles (bass/harmony) BEFORE the melody role** — now evidence-backed, not a guess. **This REQUIRES
+role identification**, so the **role-lane** form ([`role_lane_factorization.md`](role_lane_factorization.md)) is
+the *mechanism*, not a follow-up — and **measured: 63% of tunes' lead voice HOPS** (only 37% single-lead
+all-tune), so fixed physical voice-lanes are wrong for most tunes; **but the lead changes only ~2.5×/tune, so
+role assignment can be COARSE (per-section/block), not per-note.** The triage still gates the *magnitude*; the
+*existence* of the harmony→melody dependency is settled.
 
 **Spec:**
 - **A `voice_lane` reordering pass**, per self-contained block (reuse `block_refire` + the
@@ -153,11 +158,12 @@ follow-up. Physical voice-lanes in arbitrary order are a weak first cut that may
   reg-class sub-lanes so PW/filter re-admit without re-fragmenting the line; the global filter/mode lane stays
   shared. The **block (superframe) is the harmonic window** — short enough that cross-lane harmonic context is
   in-window.
-- **Lane ORDER is the actual lever, and is a TESTED variable** (not assumed): try **accompaniment→melody
-  (melody-last)** vs **melody-first** vs frame-major. Identify the melody/lead lane by a cheap role heuristic
-  (e.g. highest-register sustained-pitched line; control-aware, NEVER by waveform — Facemorph guardrail) — this
-  is the entry point to role-lanes; refine role assignment iteratively. Melody-last (P4-causal) is the
-  hypothesis to beat.
+- **Lane ORDER is the lever; melody-last is the evidence-backed default, the MAGNITUDE is the TESTED variable.**
+  Order **accompaniment→melody (melody-last)** so the harmony (measured: +0.294 bits) precedes the melody;
+  triage melody-last vs melody-first vs frame-major to confirm the gain transfers to the tokenized stream.
+  Identify the melody/lead lane by a **COARSE per-section role tracker** (the lead hops only ~2.5×/tune, so a
+  per-block assignment suffices — do NOT track per-note): highest-register sustained-pitched line, control-aware,
+  **NEVER by waveform** (Facemorph guardrail). Bass = lowest line (the harmonic anchor, emit first).
 - **Lossless = a permutation with a recorded byte-exact inverse.** Decode MUST restore the canonical
   voice-respecting, reg-ascending, frame-major render order (intra-frame write order is audible — the ADSR
   bug; only the canonical order the dumps already use is inaudible — `sid_render_fidelity_contract.md`). The
@@ -181,10 +187,14 @@ Layers 2–3 surface melodic **contour** (interval) and the melodic **line + its
 NOT the two remaining low-entropy determinants Principle 4 says to front-load. Open this ONLY if layer 3
 plateaus below the per-voice ceiling; it is lossy/hard and must be content-tier + audition-gated:
 - **Rhythmic / metric position** — a beat/meter token local to each note (strong beats take chord tones).
-- **Explicit harmonic context** — a chord/scale token (the biggest determinant), or **scale-degree anchoring
-  vs interval-from-previous**: scale-degree (relative to the tune's key) generalizes across keys AND across
-  melodies (an interval only across keys), but needs key detection → measure it as an alternative to layer 2's
-  interval, not a replacement, gated distributionally + by audition.
+- **Explicit harmonic context** — a chord/scale token (the biggest determinant; layer 3 already orders it
+  before the melody, this would also tag it).
+- **Scale-degree vs interval anchoring** — scale-degree (relative to the tune's key) generalizes across keys
+  AND across melodies; an interval only across keys. **Measured caveat (`measure_melody.py`): WITHIN a tune,
+  abs-pc / interval / scale-degree have ~equal entropy (0.94/0.97/0.94) — they're a relabeling at fixed key,
+  so per-tune entropy CANNOT distinguish them.** The only axis that can is **cross-tune transfer**, so resolve
+  this with a held-out cross-tune probe (does a scale-degree model trained on tune A predict tune B better than
+  interval?) before building it; it needs key detection (lossy), gated distributionally + by audition.
 These need beat-tracking / key+chord detection (lossy) — name them now as the endpoint; do not build until the
 measured layers 2–3 have landed and shown a plateau.
 
@@ -212,12 +222,17 @@ measured layers 2–3 have landed and shown a plateau.
 - Stay in preframr-tokens; no release/tag without the cross-repo procedure; PR through to merge.
 
 ## 7. Honest non-claims (state in the PR; do not relitigate)
-- **Not a melody-accuracy bet.** Exact next-note pitch is data-limited (~0.51 ceiling, P5/P6) and will not
-  rise; the win is **key-invariance + de-ornamentation → transferable, plausible melody**, scored
-  distributionally + by audition. That is "learning melody" in the only sense the data supports.
-- **Interval, not absolute, is the lever** — measured (0.52 held-out beats the 0.41 cross-tune ceiling); the
-  generator pipeline supplies the de-ornamentation that makes the interval line clean.
-- **De-mux (layer 3) is the DOMINANT but UNTESTED-at-deployment lever** — the 0.52 was on de-multiplexed
-  single-voice data; deployed melody needs contiguous lanes (P3). Gate it hard (triage + one canonical run);
-  do not assume "de-mux helps." Role-vs-voice (melody hops voices) is a real open subtlety — voice-lanes first,
+- **Within-context, melody is MORE learnable than the old "~0.51 ceiling" framing implied** — measured next
+  interval is low-entropy (1.54 marginal → 0.66 conditioned on self+harmony; `measure_melody.py`), so the
+  deployed ≈0 was a representation failure, not a data ceiling. The remaining hard limit is **cross-tune
+  transfer** (the 0.30–0.41 ceilings), which no encoding removes; score that axis distributionally + by
+  audition. So: surface the determinants (this work order) → reach the conditional ceiling; transfer is the
+  separate, residual limit.
+- **Interval, not absolute, is the lever for transfer** — measured (0.52 held-out beats the 0.41 cross-tune
+  ceiling; and within-tune entropy can't distinguish them, so the justification IS transfer); the generator
+  pipeline supplies the de-ornamentation that makes the interval line clean.
+- **De-mux + causal ordering (layer 3) is the DOMINANT lever; its PREMISE is now measured** (harmony adds
+  0.294 bits beyond melody history → melody-last ordering justified) but its **deployed MAGNITUDE is
+  untested** — gate hard (triage + one canonical run + no other-content regression). Role identification is
+  required (63% of tunes' lead hops) but coarse/per-section suffices (~2.5 changes/tune); voice-lanes first,
   role-lanes the follow-up.
