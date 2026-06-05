@@ -47,9 +47,9 @@ fidelity-neutral is *not* learnability-neutral.
   cross-song adjacent 2-gram tops out at ~0.30 and the model already hits 0.35 — so forcing
   onset adjacency (pairing / voice-lanes) adds nothing the model isn't already extracting.
   Locality helps only where there is cross-song-predictable structure being separated; it can't
-  manufacture predictability for a multi-modal target (→ P5/P6). Voice-lanes
-  ([`superframe_voice_lane_design.md`](superframe_voice_lane_design.md)) remain justified for
-  de-multiplexing + PW re-admission, *not* for the magnitude.
+  manufacture predictability for a multi-modal target (→ P5/P6). Cross-voice de-multiplexing remains a
+  separate lever (now subsumed into the generator-MDL pipeline,
+  [`generator_mdl_representation.md`](generator_mdl_representation.md)), *not* for the magnitude.
 - **P3 — Don't multiplex the target.** Interleaving independent streams (voices) into the
   next-token position dilutes any one stream's signal. *Evidence:* melody is three voices
   multiplexed by the frame header; the per-voice line is the actual prediction target.
@@ -135,8 +135,8 @@ fidelity-neutral is *not* learnability-neutral.
 - `freq_v0_interval` — P1/P5: makes the onset *sign* a separable ~2-value atom (the bankable
   melody win); the magnitude residual is P6 territory.
 - `melody_merge_split` — P1/P2: un-welds cross-boundary Unigram merges.
-- `superframe_voice_lane_design` — P2/P3: voice-major lanes maximise per-voice onset locality
-  and de-multiplex; the home for the freq_traj-pairing/locality work.
+- `generator_mdl_representation` — supersedes the per-pass pitch/ornament stack: one self-verifying
+  generator decomposition over all channels (P1 separability + P7 provenance-invariance by construction).
 - `voice_encoding_reference` — P4: voice is a structural variable, now single-sourced.
 - Refuted by these principles: op48 single-byte interval (wrong factoring, P1), semitone-quantize
   (P5), voice-feature injection (`voice_trajectory`, P4), write-order normalization

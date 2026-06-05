@@ -3,8 +3,8 @@
 **Status:** Reference (background). How C64 SID music drivers generate per-frame **ornamentation** —
 pitch (arpeggio / vibrato / portamento), **pulse-width**, and **filter** — at the register level.
 Distilled from a 2026-05-29 read of four drivers (References below). Other designs cite this rather
-than re-deriving it; see [`ornament_transfer.md`](ornament_transfer.md),
-[`encoding_principles.md`](encoding_principles.md),
+than re-deriving it; see [`generator_mdl_representation.md`](generator_mdl_representation.md) (the current
+encoding that builds on this), [`encoding_principles.md`](encoding_principles.md),
 [`landed/trajectory_anchoring.md`](landed/trajectory_anchoring.md),
 [`landed/freq_v0_interval.md`](landed/freq_v0_interval.md),
 [`voice_encoding_reference.md`](voice_encoding_reference.md).

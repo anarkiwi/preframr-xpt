@@ -3,7 +3,7 @@
 **Status:** Reference. Documents the shipped encoding (preframr-tokens `RegLogParser`)
 so the FRAME-val voice-order packing doesn't get re-derived. Not an experiment.
 
-**Learnability framing.** The FRAME-val voice multiplex is the cross-voice causal-state the de-mux lever targets — see [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) and [`superframe_voice_lane_design.md`](superframe_voice_lane_design.md).
+**Learnability framing.** The FRAME-val voice multiplex is the cross-voice causal-state the de-mux lever targets — see [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) and the generator-MDL pipeline [`generator_mdl_representation.md`](generator_mdl_representation.md).
 
 ## The trap (read this first)
 
@@ -88,7 +88,7 @@ on, `VOICE.val == 0`.**
   also marks the time tick. The FRAME class is therefore load-bearing for content, not
   just scaffolding — its per-class accuracy is worth reading alongside V0-onset acc
   (if the model can't predict the voice-order header, voice attribution is broken
-  upstream of pitch). See [`melody_learnability.md`](melody_learnability.md).
+  upstream of pitch).
 - `per_voice_aux_supervision_design.md` (per-voice aux heads) and any voice-trajectory
   work depend on this: the supervision target is the FRAME-derived voice, not a VOICE
   token field.

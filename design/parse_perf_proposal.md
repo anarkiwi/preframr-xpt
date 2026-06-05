@@ -183,10 +183,10 @@ Block path 21.6s → ~12.9s (~40%, dominated by `_smooth`); full pytest 69.6s �
   is strictly worse. `expand_to_literal`/markers/consolidator are already hoisted out of the loop.
 
 ## Macro-abstraction consolidation (separate analysis)
-See [`macro_abstraction_consolidation.md`](macro_abstraction_consolidation.md). The macro *mechanics*
-are essential complexity; the *registration/wiring* is fragmented across ~5 surfaces glued by a
-checker. Consolidating is performance-NEUTRAL directly but de-risks the decode-core compile and the
-arbiter drain-span contract (one declared place per macro).
+The macro *mechanics* are essential complexity; the *registration/wiring* was fragmented across ~5
+surfaces glued by a checker. The generator-MDL pipeline
+([`generator_mdl_representation.md`](generator_mdl_representation.md)) collapses most of that zoo into one
+pass, which is the real consolidation; this is performance-NEUTRAL directly but de-risks the decode-core.
 
 ## Dead ends (recorded so they're not re-attempted)
 - **Structural block slice (reuse song atoms instead of per-block re-encode)** — diverges 0/33 even

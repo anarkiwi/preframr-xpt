@@ -1,6 +1,6 @@
 # Instrument-program codebook — collapse the note-associated macro cluster
 
-**Status:** Design (2026-06-04). Supersedes `instrument_state_codebook_design.md` (which modelled a
+**Status:** Design (2026-06-04). Supersedes the older instrument-state-codebook design (removed; modelled a
 *static* per-voice `(waveform,AD,SR)` state and was withdrawn as "not needed for correctness"). Prompted
 by: "revisit the driver doc — there is more complexity here than is actually in the drivers; some
 operations/sequences are associated with notes, some are not." Grounds in
