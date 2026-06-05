@@ -4,8 +4,12 @@ interval-skeleton ([`melody_skeleton_impl.md`](melody_skeleton_impl.md)) make ea
 key-invariant but emit it frame-interleaved; de-multiplexing into contiguous lanes is the dominant melody
 lever (P3). [`superframe_voice_lane_design.md`](superframe_voice_lane_design.md) does it by physical VOICE;
 this doc argues the truer target is musical **role** (melody/bass/harmony/percussion), because roles HOP
-voices — a fixed voice-lane splits one melodic line and welds two roles. Start with voice-lanes (simpler,
-byte-exact reorder), treat role-lanes as the harder follow-up. Learnability-framed by
+voices — a fixed voice-lane splits one melodic line and welds two roles. **Role identification is the MECHANISM
+that makes de-mux actually help, not a follow-up:** layer 3's real lever is **causal-DAG ordering —
+accompaniment roles BEFORE the melody role** (so the melody is predicted with its harmonic context in-context,
+P4), which is impossible without knowing which lane is which. Voice-lanes are the byte-exact substrate; the
+role/causal-order is what turns contiguity into a melody win (plain physical lanes can backfire by pushing the
+harmonic determinant out of locality). Learnability-framed by
 [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md); grounded in
 [[control-aware-encoding]] (the ctrl reg already tags per-frame role). (Was wrongly deleted in the 2026-06-05
 consolidation; restored — it is complementary to the generator-MDL, not superseded by it.)
