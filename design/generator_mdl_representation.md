@@ -105,6 +105,13 @@ remains the natural BLOCK header for constrained decode (below), but is not need
 - **2SID / heavy multispeed:** parser declines (`StopIteration`, 29/1609) — channel-count extension.
 - **LUT calibration:** per-tune tuning offset required; per-engine LUT variant for non-12-TET drivers.
 
+## Melody learnability — handled by a SEPARATE next layer (do not conflate)
+This encoding makes **structure** learnable and **de-ornaments** (arp/vibrato/slide → separate note-relative
+atoms, off the melody line), but it leaves each freq note-onset as **absolute pitch** = high-entropy ≈ 0
+next-token (P4.2). Melody is made learnable by re-keying note-onsets to **key-invariant intervals** (measured
+held-out next-interval 0.52 > cross-tune ceiling 0.41 — genuine transfer); that is a distinct work order built
+ON this pipeline: [`melody_skeleton_impl.md`](melody_skeleton_impl.md) (Pending impl, BLOCKED on this landing).
+
 ## Open design choices (decide before production code)
 1. **Pitch:** note-index + residual as two channels, vs one freq channel with note-relative bank keying.
    (Split gives the clean transposition-invariant note line; residual is a real ~40% channel.)
