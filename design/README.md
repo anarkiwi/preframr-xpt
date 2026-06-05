@@ -92,14 +92,19 @@ removed 2026-06-05**; the generator model subsumes them). One self-verifying gen
 `{HOLD,ACCUM,SWEEP,TABLE}` over every channel + a unified per-tune semitone LUT + a block-local DEF→REF
 codebook: **lossless + residual-zero by construction, provenance-invariant.** Implementation is handed to an
 agent in preframr-tokens: **`preframr-tokens/AGENT_TASK_generator_pipeline.md`** (see AGENTS.md "Current arc").
-**Melody learnability is a THREE-LAYER stack** (the generator pipeline gives only layer 1): layer 1 =
+**Melody learnability is a layered stack** (the generator pipeline gives only layer 1): layer 1 =
 de-ornamentation (generator); **layer 2 = interval-skeleton** (key-invariant onsets, 0.52 held-out > 0.41
-ceiling); **layer 3 = cross-voice/role de-multiplexing into contiguous lanes** — the *dominant* lever (deployed
-melody-onset ≈ 0 vs ~0.34 per-voice ceiling is cross-voice multiplexing). The self-directing work order
-[`melody_skeleton_impl.md`](melody_skeleton_impl.md) builds **layers 2 AND 3** (BLOCKED on the generator
-pipeline). Layer 3's designs: [`superframe_voice_lane_design.md`](superframe_voice_lane_design.md) (voice) +
-[`role_lane_factorization.md`](role_lane_factorization.md) (the truer role form). Layer 3 is theory+measurement
--motivated but **untested at deployment** → triage pre-screen + one canonical run gate it.
+ceiling); **layer 3 = de-multiplex AND causally order the lanes** — the *dominant* lever (deployed melody-onset
+≈ 0 vs ~0.34 per-voice ceiling is cross-voice multiplexing). Layer 3's real lever is **causal-DAG ordering:
+accompaniment roles before the melody role** (so melody is predicted with its harmony in-context, P4) — which
+makes ROLE identification the mechanism, not a follow-up; plain physical voice-lanes can backfire. **Layer 4
+(deferred hypothesis):** surface rhythmic/harmonic determinants + scale-degree anchoring (lossy; open only if
+layer 3 plateaus). The self-directing work order [`melody_skeleton_impl.md`](melody_skeleton_impl.md) builds
+**layers 2 AND 3** (BLOCKED on the generator pipeline). Layer-3 designs:
+[`superframe_voice_lane_design.md`](superframe_voice_lane_design.md) (lane mechanics) +
+[`role_lane_factorization.md`](role_lane_factorization.md) (role/causal-order mechanism). Layer 3 is
+theory+measurement-motivated but **untested at deployment** → triage (lane-order variants + no other-content
+regression) + one canonical run gate it.
 
 | Doc | Summary | Status |
 |---|---|---|

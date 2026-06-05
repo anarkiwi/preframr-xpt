@@ -110,12 +110,15 @@ This encoding makes **structure** learnable and **de-ornaments** (layer 1) — b
 both in [`melody_skeleton_impl.md`](melody_skeleton_impl.md) (Pending, BLOCKED on this landing):
 - **Layer 2 — interval-skeleton:** re-key freq note-onsets to **key-invariant intervals** (measured held-out
   next-interval 0.52 > cross-tune ceiling 0.41). Fixes the absolute-pitch ≈ 0 problem (P4.2).
-- **Layer 3 — cross-voice/role de-multiplexing (the DOMINANT lever):** the 0.52 was on *de-multiplexed*
-  single-voice data; deployed, the voices are frame-interleaved (P3 violation) so melody-onset ≈ 0 vs the
-  ~0.34 per-voice ceiling. Reorder into contiguous lanes ([`superframe_voice_lane_design.md`](superframe_voice_lane_design.md)
+- **Layer 3 — de-multiplex AND causally order the lanes (the DOMINANT lever):** the 0.52 was on
+  *de-multiplexed* single-voice data; deployed, the voices are frame-interleaved (P3) so melody-onset ≈ 0 vs
+  the ~0.34 per-voice ceiling. The real lever is **causal-DAG ordering — accompaniment roles before the melody
+  role** (predict melody with its harmony in-context, P4) — so ROLE identification is the mechanism, not a
+  follow-up; plain physical lanes can backfire ([`superframe_voice_lane_design.md`](superframe_voice_lane_design.md)
   / [`role_lane_factorization.md`](role_lane_factorization.md)). Untested at deployment → triage + canonical gate.
-This pipeline is a good *substrate* for both (each voice's line is already a coherent unit), but provides
-neither — do not mistake "structure learnable" for "melody learnable."
+- **Layer 4 (deferred hypothesis):** surface rhythmic/harmonic determinants + scale-degree anchoring (lossy).
+This pipeline is a good *substrate* for all of them (each voice's line is already a coherent unit), but
+provides none — do not mistake "structure learnable" for "melody learnable."
 
 ## Open design choices (decide before production code)
 1. **Pitch:** note-index + residual as two channels, vs one freq channel with note-relative bank keying.
