@@ -166,8 +166,11 @@ The experiment program waits on the tokens agent shipping `generator_pass`
 (`preframr-tokens/AGENT_TASK_generator_pipeline.md`). **The queued NEXT tokens work order is SELF-DIRECTING:
 `design/melody_skeleton_impl.md`** — tell its agent only "execute this .md"; its §A start-gate polls tokens
 `origin/main`, **waits autonomously** until `generator_pass` is the deployed default (+ the zoo deleted), then
-executes the melody-learnability layer (note segmentation + interval-from-previous onset encoding) in
-preframr-tokens with no further help/decisions. It stays out of tokens until that gate passes, so the in-flight
+executes the melody-learnability layers in preframr-tokens with no further help/decisions: **layer 2** (note
+segmentation + interval-from-previous onset encoding) AND **layer 3** (`voice_lane` cross-voice de-mux into
+contiguous lanes — the DOMINANT melody lever the generator pipeline does NOT provide; deployed melody-onset ≈ 0
+vs ~0.34 per-voice ceiling is cross-voice multiplexing, triage- + canonical-run-gated; designs
+`superframe_voice_lane_design.md` / `role_lane_factorization.md`, reinstated). It stays out of tokens until that gate passes, so the in-flight
 generator agent is never confused. Once the generator pipeline is the default + released (0.45.0) and the xpt
 image is rebuilt on it, the experiment program runs:
 1. **Op-distribution read on the new encoding** — `audit_checkpoint_per_class` → `content_tier_report`:
