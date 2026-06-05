@@ -163,12 +163,13 @@ those passes are deleted.
 
 ### NEXT — gated behind the generator pipeline landing in tokens
 The experiment program waits on the tokens agent shipping `generator_pass`
-(`preframr-tokens/AGENT_TASK_generator_pipeline.md`). **The queued NEXT tokens work order (staged in xpt, do
-NOT put it in tokens yet — it would confuse the in-flight agent): `design/melody_skeleton_impl.md`** — the
-melody-learnability layer (note segmentation + interval-from-previous onset encoding) that the generator
-pipeline does NOT provide on its own (it de-ornaments but leaves absolute pitch ≈ unlearnable). Move it into
-tokens as `AGENT_TASK_melody_skeleton.md` once `generator_pass` lands. Once it's the default + released (0.45.0)
-and the xpt image is rebuilt on it:
+(`preframr-tokens/AGENT_TASK_generator_pipeline.md`). **The queued NEXT tokens work order is SELF-DIRECTING:
+`design/melody_skeleton_impl.md`** — tell its agent only "execute this .md"; its §A start-gate polls tokens
+`origin/main`, **waits autonomously** until `generator_pass` is the deployed default (+ the zoo deleted), then
+executes the melody-learnability layer (note segmentation + interval-from-previous onset encoding) in
+preframr-tokens with no further help/decisions. It stays out of tokens until that gate passes, so the in-flight
+generator agent is never confused. Once the generator pipeline is the default + released (0.45.0) and the xpt
+image is rebuilt on it, the experiment program runs:
 1. **Op-distribution read on the new encoding** — `audit_checkpoint_per_class` → `content_tier_report`:
    confirm the stream is generator atoms (`SWEEP_OP`/`GEN_TRI`/`GEN_TABLE` DEF→REF + the kept loop/instrument
    ops) with raw `SET` ~0, and that PW/filter are SWEEP/TABLE (the old +16/+19/+6pp `PWM_PRESET`/`FC_PRESET`
