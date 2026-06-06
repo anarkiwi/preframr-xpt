@@ -42,26 +42,43 @@ induction-copy). Run on **fogbank**, in the xpt image, `PYTHONPATH` to local tok
 
 ```
 python3 -m preframr_experiments.audit.learnability_triage \
-  --configs baseline,full_macros --mode blocks --seq-len 8192 \
+  --configs baseline,full_macros --mode window --seq-len 8192 \
   --dumps <digi-excluded *.dump.parquet sample>
 ```
 
 **Reading it:**
-- `--mode blocks` is mandatory — it measures the **self-contained block stream the model trains/predicts on**
-  (`iter_self_contained_row_blocks` → slice → re-encode), not the full-song parse (`--mode song` over-credits
-  codebook compression that accumulates over a whole song and does not survive to block scale).
-- `full_macros` now resolves dynamically to `REGISTERED_MACROS` = **the generator encoding**. `baseline` = the
-  atomic control. The old **`codebook`/`skeleton` presets are dead** — their flags
-  (`skeleton_pass`/`stamp`/`wavetable`/`patch`/…) are deleted on `main`, so `_config_flags` drops them all and
-  the arm collapses toward baseline (the tool degrades gracefully, prints "dropped flags unavailable", does
-  not crash). Do **not** trust a `codebook` arm number from this run — compare the generator's induction-copy
-  against the **historical recorded 0.718** instead.
-- **GO** if generator (`full_macros`) shows: induction-copy > ~0.718 **and** lower per-frame `h_∞` (entropy
-  floor) **and** earlier `h_k` plateau than baseline. **NO-GO / investigate** if induction-copy regresses to
-  baseline — that would mean the generator atoms fragment the in-block bigram statistics (the refragmentation
-  risk, §3).
-- Use the **same digi-excluded dump sample** the residual census uses (filter by parquet row count; digis
-  hammer ctrl regs and manufacture false bottlenecks — memory `log-progress-in-sweep-tools`).
+- **Use `--mode window`** (added 2026-06-06; now default). It slices the full-song `parse()` stream into
+  `seq_len`-TOKEN, frame-aligned windows and measures each block-local — robust full coverage, no whole-song
+  reuse credit. **`--mode blocks` is BROKEN on the generator**: its expand→re-encode reproducer
+  (`iter_self_contained_row_blocks`) chokes on `GEN_*` atoms (signed residuals overflow its `uint16` cast; new
+  op-ids are unknown to `expand_ops`) → **0/90 coverage**. `--mode song` over-credits whole-song reuse. Window
+  is the faithful cheap read until the tokens-side block reproducer learns `GEN_*`.
+- `full_macros` resolves dynamically to `REGISTERED_MACROS` = **the generator encoding**; `baseline` = the
+  atomic control. The old `codebook`/`skeleton` presets are dead (deleted flags; the tool drops them and warns).
+  The historical 0.718 codebook number is NOT comparable across mode/sample — compare generator **vs the
+  baseline arm in the same run**.
+- **GO** if generator shows higher induction-copy **and** lower/equal per-frame `h_∞` than baseline. **NO-GO /
+  investigate** if copy regresses to/below baseline — generator atoms are fragmenting the in-block bigram
+  statistics (the refragmentation risk, §3).
+- Use the **same digi-excluded dump sample** the residual census uses (memory `log-progress-in-sweep-tools`).
+
+### RESULT (2026-06-06, window mode, seq_len=8192, 30-tune digi-excluded sample) — **conditional NO-GO**
+| per-frame | baseline (atomic) | generator | read |
+|---|---|---|---|
+| alphabet | 926 | **3412 (3.7×)** | generator mints far more distinct atoms |
+| h_∞ / frame | 3.84 | 3.86 | **tied** (same CE floor) |
+| induction-copy | **0.930** | 0.916 | generator **slightly LOWER** |
+| MI @1/@8/@16 | 3.37/1.87/1.57 | 4.03/2.43/2.11 | generator higher, slower decay |
+
+The design's bet (DEF→REF + LUT ⇒ *more* copyable) is **not confirmed** — block-local copy is marginally
+*below* atomic, the entropy floor is identical, and the alphabet is 3.7× larger. **Root cause = §3
+refragmentation:** induction-copy counts EXACT `(op,reg,subreg,val)` bigram repeats, and the generator embeds
+**exact residuals in the atom key**, so near-identical gestures become distinct tokens — inflating the alphabet
+AND suppressing copy at once. This is an encoding *choice*, not a fundamental limit. **Implication: do the §3
+measurement + residual-out-of-key fix BEFORE queuing the canonical run** — don't expect a clean generator win
+on the current encoding. Caveats: static first-order read (not training); n=30; the generator's higher MI cuts
+both ways (a transformer with induction heads may exploit the long-range structure the static heuristic
+penalizes) — only the canonical run (§4) settles that.
 
 This costs minutes and is the queue-or-not signal for the expensive canonical run.
 
