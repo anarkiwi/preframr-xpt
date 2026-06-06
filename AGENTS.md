@@ -77,15 +77,36 @@ prodlike-*scale* learnability read at mini-*cost* (static, minutes) — reserve 
 collapse→learning *threshold*. Model-side content interventions were refuted at the ~0.13 ceiling
 that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
 
-## Current arc — the GENERATOR-MDL pipeline has LANDED on tokens `main` (unreleased); measurement is the active work (2026-06-06)
+## Current arc — PITCH REALIGNMENT (universal recovered-table) is the active encoding work; this session owns it (2026-06-06)
 
-**LANDING (2026-06-06):** the generator pipeline is **merged on `preframr-tokens` `origin/main`** (PRs
-#62/#64/#65/#66/#67/#68): `generator_pass` is the deployed default in `REGISTERED_MACROS`, the per-pass macro
-zoo is **deleted**, ops `GEN_TRI=83`/`GEN_TUNING=84`/`GEN_TABLE_{DEF=85,STEP=86,END=87,REF=88}` + reused
-`SWEEP_OP=64` are live. It is **NOT yet on PyPI** (latest 0.44.0) — held on `main` to bundle whole-chip-zero
-into one breaking **0.45.0** (memory `tokens-0.45.0-release-pending`). **The measurement plan is now the active
-work: `design/generator_measurement_readiness.md`** — what to run now (cheap static triage, runnable against
-local `main` source) vs what is release-gated (the decisive canonical training run).
+**NOW — pitch realignment (the live direction).** The generator's `unified per-tune semitone LUT` (single
+scalar `ref` via `tune_ref`/`note_of`/`recon`) is being replaced by a **universal recovered-table pitch model**
+(`design/universal_multiresolution_pitch.md`, validated). A tracker plays note N as an EXACT entry from its
+note→freq table, so: **shared NOTE INDEX** (note 49≈C5 in every tune — the universal, transferable prediction
+target) + **per-voice recovered table** (the exact tracker entries) + **per-voice tuning** (handles
+chorus/detune; circular-mean over held freqs) + **modulation in CENTS relative to the note** (tuning-invariant,
+so a +Xc gesture is the same tokens at any tuning). Cross-tune transfer of *base* pitch comes from **intervals
+(Δnote)** — the melody-skeleton `MELODY_INTERVAL` op — which must be re-keyed onto this universal note index.
+**Validated, exact (not within-cents):** SWM/defMON/Hubbard recover the trackers' literal pitches + notes
+bit-exactly (note-index == the trackers' own `FREQTBL`/`NOTE_PITCH` table index, 40/40 SWM voice-traces 100% on
+sustained frames); Galway recovers too (heavy gradient vibrato carried as modulation). Foundation on branch
+**`feat/universal-pitch-grid`** (`preframr_tokens/macros/pitch_grid.py` + tests; not yet wired into the pass).
+**Why:** the deployed generator encoding's block-scale induction-copy regressed (0.916 ≤ baseline 0.930,
+alphabet 3412 vs 926 — pitch refragmentation); the universal note/interval stream is the fix.
+
+**TAKEOVER (2026-06-06):** the melody-skeleton agent is **stopped**; this session owns the pitch + melody work.
+Layers 2 (interval) + 3 (`voice_lane` de-mux + `role_lane` + `lane_rank` causal ordering) **landed default-OFF**
+(#69/#70). The pieces exist but are **not wired together**: `role_lane`→`lane_rank`→`voice_lane` is unconnected,
+`voice_lane` isn't driven by the pass, and `MELODY_INTERVAL` still uses the OLD single-`ref` `note_of` (wrong
+under chorus/detune). **Active integration (one coupled, byte-exact, default-OFF `universal_pitch` flag):**
+(1) per-voice tuning compute + emission (per-voice `GEN_TUNING`); (2) decoder per-voice `gen_ref`; (3) switch
+`_melody_rows`/`_stability`/`GEN_TABLE` to `pitch_grid.note_index`+`note_freq` (unifies interval+arps on the
+universal index); (4) connect `role_lane`→`lane_rank`→`voice_lane` in the pass; (5) gate: `parse_audit=raise`
+one tune → `cb_div_audit` corpus → `learnability_triage --mode window` go/no-go. Default unchanged until (5).
+
+**GENERATOR LANDING (context, 2026-06-06):** generator pipeline merged on `main` (#62–#68): `generator_pass`
+default, zoo deleted, `GEN_*` ops + reused `SWEEP_OP=64` live. **NOT on PyPI** (0.44.0) — held for the breaking
+**0.45.0** (memory `tokens-0.45.0-release-pending`). Measurement plan: `design/generator_measurement_readiness.md`.
 
 ### NOW — one self-verifying generator model of every SID write (supersedes the per-pass macro zoo)
 The whole pitch/ornament/residual-SET/whole-chip-zero line of work has **converged** onto one design: model
@@ -179,18 +200,19 @@ residual-in-key refragmentation check (runnable now), and §4 the **release-gate
 (generator vs atomic; needs 0.45.0 → image rebuild → re-cut). The two summarized points below (op-distribution
 read; canonical go/no-go) are detailed there.
 
-**The melody layer is the NEXT tokens work order (now unblocked): SELF-DIRECTING
-`design/melody_skeleton_impl.md`** — tell its agent only "execute this .md"; its §A start-gate polled tokens
-`origin/main` for `generator_pass` deployed-default + zoo-deleted (**now satisfied**), then
-executes the melody-learnability layers in preframr-tokens with no further help/decisions: **layer 2** (note
-segmentation + interval-from-previous onset encoding) AND **layer 3** (`voice_lane` de-mux + **causal-DAG lane
-ordering: accompaniment roles before melody** so melody is predicted with its harmony in-context — the DOMINANT
-lever; role identification is the mechanism, plain physical lanes can backfire; deployed melody-onset ≈ 0 vs
-~0.34 ceiling; triage (lane-order variants + no other-content regression) + canonical-run gated; designs
-`superframe_voice_lane_design.md` / `role_lane_factorization.md`, reinstated). **Layer 4** (rhythmic/harmonic
-determinants + scale-degree anchoring) is a named deferred hypothesis if layer 3 plateaus. It stays out of tokens until that gate passes, so the in-flight
-generator agent is never confused. Once the generator pipeline is the default + released (0.45.0) and the xpt
-image is rebuilt on it, the experiment program runs:
+**Triage caveat:** `learnability_triage --mode blocks` is **broken on the generator encoding** (its standalone
+block re-encoder chokes on `GEN_*` atoms → 0/90 coverage); use **`--mode window`** (added 2026-06-06; slices the
+working `parse()` stream into block-local windows). The block-scale result on the *current* generator encoding
+was a **conditional NO-GO** (induction-copy 0.916 ≤ baseline 0.930, alphabet 3.7×) — pitch refragmentation — which
+is exactly what the pitch realignment (Current arc NOW) is built to fix.
+
+**Melody layers LANDED + agent stopped — this session owns it (see Current arc TAKEOVER).** Layer 2 (interval)
++ layer 3 (`voice_lane` de-mux + `role_lane` + `lane_rank` causal ordering) merged default-OFF (#69/#70). They
+are NOT wired together and the interval op uses the old single-`ref` `note_of`; the active work is the gated
+`universal_pitch` integration (per-voice tuning + interval-on-universal-index + connect role→lane→voice_lane +
+`--mode window` triage). `design/universal_multiresolution_pitch.md` is the spec; `design/melody_skeleton_impl.md`
++ `superframe_voice_lane_design.md` / `role_lane_factorization.md` are the layer-2/3 design records. Once the
+encoding is validated + the generator pipeline released (0.45.0) and the xpt image rebuilt, the experiment runs:
 1. **Op-distribution read on the new encoding** — `audit_checkpoint_per_class` → `content_tier_report`:
    confirm the stream is generator atoms (`SWEEP_OP`/`GEN_TRI`/`GEN_TABLE` DEF→REF + the kept loop/instrument
    ops) with raw `SET` ~0, and that PW/filter are SWEEP/TABLE (the old +16/+19/+6pp `PWM_PRESET`/`FC_PRESET`
