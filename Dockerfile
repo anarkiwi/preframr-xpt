@@ -23,12 +23,12 @@ RUN pip install ${PIP_OPTS} --no-deps --break-system-packages -e .
 # importlib_resources, bidict, mido, etc.) installs cleanly; the upgrade
 # strategy keeps the base image's torch/numpy in place.
 RUN pip install ${PIP_OPTS} --upgrade-strategy only-if-needed --break-system-packages \
-    muspy==0.5.0 pretty_midi==0.2.11
+    muspy==0.5.0 pretty_midi==0.2.11 "pytest-xdist>=3.5"
 
 # Validate the runner (+ audits once migrated) against the base's preframr.
 # test_src_bind_gate exercises host docker --bind-src plumbing (no DinD in the
 # build); it is covered host-side by `pytest tests`.
-RUN python3 -m pytest tests -q -p no:cacheprovider --ignore=tests/test_src_bind_gate.py
+RUN python3 -m pytest tests -q -n auto --dist worksteal -p no:cacheprovider --ignore=tests/test_src_bind_gate.py
 
 # Smoke: the runner CLI resolves and preframr is importable from the base.
 RUN preframr-experiments-run --help >/dev/null \
