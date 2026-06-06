@@ -69,30 +69,65 @@ exact freq for note n over the voice's frames (the entry the tracker actually wr
 seen only modulated still gets a table anchor (its modal freq) and the modulation rides as residual. Per-voice
 tables form a small codebook (DEF→REF): non-chorus tunes share one table across voices; a chorus adds a second.
 
-## 6. Losslessness, tiers, gates
-- **Lossless by construction:** NOTE + per-voice TUNING + LSB reconstructs the exact 16-bit freq; the fitter
-  self-verifies (longest-prefix accept) as today. Residual-zero gate unchanged (`test_whole_chip_no_singleton_set`).
-- **Byte-exact:** validated via `parse_audit='raise'` corpus sweep (`cb_div_audit.py`) — the standing oracle.
-- **Tiering:** NOTE = structural; TUNING = low-entropy structural (or its own tier); LSB = content tier
-  (de-weighted in training, scored separately) — wire op→tier in `tier_map`/`op_name_tiers`.
-- **Default-OFF flag**, landed incrementally, never flips the deployed default until the triage (`--mode
-  window`) shows the NOTE-pass induction-copy beats the current encoding AND the round-trip tests stay green.
+## 5b. Transfer: base pitch and effects use two relative encodings
+The model transfers pitch across tunes via two complementary normalizations (see also
+`learnability_token_ordering_theory.md`):
+- **Effects → CENTS relative to the note** (tuning-invariant): modulation is emitted as `mod` in cents from the
+  note's table entry + an exact `closure`. A +Xc vibrato/slide is the SAME tokens at any tuning, so the model
+  learns the gesture, not absolute freq. (`decompose_voice` does this; proven by the tuning-invariance test —
+  same gesture at note 36 vs 72 → identical cents, raw deltas differ >20.)
+- **Base pitch → INTERVALS (Δnote)** (transposition-invariant): the absolute NOTE index anchors register
+  (C5=49 everywhere), but cross-*key* transfer is the **interval** stream (`MELODY_INTERVAL`, the melody layer).
+  A melody transposed +2 semitones in a tune tuned +44c yields the IDENTICAL interval stream (the +2 cancels in
+  the difference, the +44c lives in the per-voice tuning token). **The interval op must key off this universal
+  `note_index`, not the old single-`ref` `note_of`** (it currently doesn't — the integration gap, §7).
+- **Per-voice tuning** (the tune's detune, chorus) is genuinely tune-specific and is NOT transferable — it is a
+  small per-voice attribute token, kept OUT of the note/interval stream so it doesn't pollute the transferable
+  content. Ceiling: absolute onset pitch (first note / key) stays high-entropy ≈0 next-token — intervals fix
+  within-melody transfer, not the absolute anchor (distributional/audition scoring, not exact argmax).
 
-## 7. Implementation outline (evolves `generator_fit` + `generator_pass` + `codebook`)
+## 6. Losslessness, tiers, gates
+- **Lossless by construction:** NOTE index + per-voice TUNING + per-frame `mod` (cents) + `closure` reconstructs
+  the exact 16-bit freq (`reconstruct == freq`, proven on real corpus + 4 trackers). Residual-zero gate
+  unchanged (`test_whole_chip_no_singleton_set`).
+- **Byte-exact:** `parse_audit='raise'` corpus sweep (`cb_div_audit.py`) — the standing oracle.
+- **Tiering:** NOTE index / interval = structural (the model's prediction target); per-voice TUNING = low-entropy
+  attribute; `mod` cents = structural-ish (transferable gestures); `closure` = content tier (carried, not
+  predicted) — wire op→tier in `tier_map`/`op_name_tiers`.
+- **Default-OFF flag** (`universal_pitch`), landed incrementally, never flips the deployed default until the
+  triage (`--mode window`) shows the NOTE/interval induction-copy beats the current encoding AND the tracker
+  pitch-recovery + round-trip tests stay green.
+
+## 7. Implementation — the gated `universal_pitch` wiring (active; this session owns it)
 Foundation landed (`feat/universal-pitch-grid`, `preframr_tokens/macros/pitch_grid.py` + tests):
-`note_index` / `recover_table` / `decompose_voice` / `reconstruct` / `pure_fraction` — lossless, validated.
-1. **Shared anchor:** replace `_lut(ref)`'s per-tune `ref` with the fixed canonical anchor; `note_index` is
-   grid-absolute (no per-tune LUT).
-2. **Recover table:** per voice, `table[n]` = modal exact freq (the tracker entry); emit it once as a TABLE
-   codebook DEF (shared via REF across voices; +1 DEF per chorus detune).
-3. **Atoms:** NOTE-index stream (existing freq note slot); per-frame residual is 0 (omitted) for static notes,
-   else a modulation trajectory via `SWEEP_OP`/`GEN_TRI`/`GEN_TABLE`.
-4. **Codebook key:** `GEN_TABLE` freq keys on **NOTE offsets only** (de-fragments — the §3 goal — since the
-   exact pitch lives in the recovered table, not the key).
-5. **Gates:** single-tune byte-exact (`parse_audit`) → corpus `cb_div_audit` → residual-zero census →
-   `--mode window` triage NOTE-copy delta → SWM/defMON round-trip (now in tokens `tests/`).
+`note_index` / `voice_tuning` / `note_freq` (shared grid-recon) / `recover_table` / `decompose_voice` /
+`reconstruct` — lossless, validated bit-exact on real corpus + 4 trackers. The pass change is one coupled,
+byte-exact, **default-OFF `universal_pitch`** flag (NOT in `REGISTERED_MACROS`) replacing the single per-tune
+`ref` (`tune_ref`/`note_of`/`recon`) with per-voice tuning throughout:
+1. **Per-voice tuning:** compute `pitch_grid.voice_tuning` per freq voice; emit a `GEN_TUNING` atom **per voice**
+   (add a `VOICE` subreg) instead of one per tune.
+2. **Decoder:** `state.gen_ref` becomes per-voice; the `GEN_TUNING` decoder stores by voice.
+3. **Note assignment (interval unification = the load-bearing step):** `_melody_rows`/`_stability` and the
+   `MELODY_INTERVAL` decoder use `pitch_grid.note_index(f, voice_tuning)` + `note_freq` (the residual stays
+   exact). This fixes the chorus/detune bug and makes intervals transferable; the interval op now keys off the
+   universal index, composing pitch + melody.
+4. **Arps:** `GEN_TABLE` freq keys on NOTE offsets only via the same per-voice `note_index` (de-fragments — §3).
+5. **Causal ordering:** connect `role_lane` → `lane_rank` → `voice_lane` in the pass (they landed #70 but are
+   unwired) so melody is emitted after its accompaniment.
+6. **Gates:** `parse_audit='raise'` one `universal_pitch`-on tune → corpus `cb_div_audit` → residual-zero census
+   → `learnability_triage --mode window` NOTE/interval-copy delta → the tracker pitch-recovery + round-trip
+   tests. Default unchanged until the triage shows a gain.
 
 ## 8. Evidence index
+- **EXACT tracker pitch + note recovery (strict, not within-cents):** SWM/defMON/Hubbard recover the trackers'
+  literal pitches bit-exactly AND the recovered note index == the tracker's OWN table index (`FREQTBL`/
+  `NOTE_PITCH`) on sustained frames — **40/40 SWM voice-traces 100%** (`/scratch/tmp/swm_note_correctness.py`,
+  validated against the player's internal note state); Hubbard ET-residual 0.5c, Galway recovers (heavy gradient
+  vibrato → modulation). Committed: tokens `tests/test_tracker_pitch_recovery.py`. **The earlier 44–96% "miss"
+  was a validation bug** — comparing to the player's base pattern note `v.note`, which the wavetable/arp
+  transposes; vs the actual table index it is 100%.
+- **Per-voice tuning** fixes detuned tunes (Galway ~+44c) + chorus; fit over DISTINCT held freqs so arp/vibrato
+  excursions don't skew it (`/scratch/tmp/hubbard_galway_pitch.py`, `swm_note_correctness.py`).
 - **Recovered table → 83.1% PURE notes** (30 tunes, 11/30 100% pure, ~20 entries/voice): `/scratch/tmp/recover_table.py` — the decisive validation that trackers use pure-note tables under everything.
 - Driver tables = canonical `2^(n/12)@C5` ±1: `/scratch/tmp/compare_luts.py`.
 - Residual is per-NOTE deterministic (the table), not per-frame noise — 62% static / 2% within ±1 of the *universal* grid (why a fixed grid fails; the table fixes it): `/scratch/tmp/measure_lut_hypothesis.py` (44-tune).
