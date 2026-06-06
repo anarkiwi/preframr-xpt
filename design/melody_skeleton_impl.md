@@ -1,13 +1,15 @@
 # WORK ORDER (SELF-DIRECTING): melody learnability — interval-skeleton (layer 2) + cross-voice de-mux (layer 3)
 
-**Status:** Pending impl — **auto-gated on the generator-MDL pipeline landing** (the other agent's
-`preframr-tokens/AGENT_TASK_generator_pipeline.md`). **This file is self-directing: an agent told only "execute
-this .md" must run §A's start-gate first — wait (autonomously, by re-checking on an interval) until the
+**Status:** Pending impl — **the executable copy now lives in `preframr-tokens/AGENT_TASK_melody_skeleton.md`
+(2026-06-06, untracked, ready to run); THIS is the kept-in-sync design record.** Auto-gated on the generator-MDL
+pipeline landing (the other in-flight agent's `preframr-tokens/AGENT_TASK_generator_pipeline.md`).
+**Self-directing: an agent told only "execute this .md" must run §A's start-gate first — wait (autonomously, by re-checking on an interval) until the
 generator pipeline is the deployed default on tokens `origin/main`, then start §1 with NO further help or
 decisions.** Do not change the other agent's instructions; do not start partial work before the gate passes.
-Cross-ref [`generator_mdl_representation.md`](generator_mdl_representation.md) (the substrate), the
-[`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) "Compatibility" section (why
-this is the melody fix), [`encoding_principles.md`](encoding_principles.md) (P4.2/P5/P6).
+You operate ENTIRELY inside `/scratch/anarkiwi/preframr-tokens`; this file is your spec. Background reference
+docs (in `/scratch/anarkiwi/preframr-xpt/design/`): `generator_mdl_representation.md` (the substrate this
+extends), `learnability_token_ordering_theory.md` "Compatibility with the generator-MDL pipeline" (why this is
+the melody fix), `encoding_principles.md` (P4.2/P5/P6). Read them for grounding; everything you must DO is here.
 
 ## §A. START-GATE — run this FIRST; it is the entire "wait for the other agent" mechanism
 
@@ -35,10 +37,20 @@ git -C "$T" fetch origin -q && \
 ```bash
 cd /scratch/anarkiwi/preframr-tokens && git fetch origin -q && git switch -c melody-skeleton origin/main
 ```
-Confirm the base is green first (`git -C "$T" log origin/main -1` is a merged PR; the tokens suite passes on
-it). Then execute §1–§6 end-to-end and open a PR (merge it on green if the repo allows; else leave it open).
-You operate **entirely inside preframr-tokens** (this doc is your spec; you need not move it). Everything below
-is fully specified — implement it as written, raise nothing back.
+Confirm the base is green first (`./run_tests.sh` passes on `origin/main`, including
+`tests/test_whole_chip_no_singleton_set.py` — it is `xfail`'d until generator_pass is the default, and
+un-`xfail`'d by PART D, so a LANDED base has it green). Then execute §1–§6 end-to-end and open a PR (merge on
+green if the repo allows; else leave it open). Everything below is fully specified — implement it as written,
+raise nothing back.
+
+**Known implementation anchors (the LANDED generator pipeline you build ON — verify they still exist, they
+were committed in PR #62 / `generator-pipeline`):** `preframr_tokens/macros/generator_fit.py` exposes
+`note_of(f, ref)`, `recon(note, ref)`, `tune_ref(freqs)`, `channels(state)`, `decompose(series)`, the LUT; the
+freq channels are `GEN_FREQ_REGS=(0,7,14)` (16-bit combined). A freq note-onset's pitch currently rides as the
+**`SWEEP_OP` START** (HOLD/ACCUM, raw 16-bit) or the **`GEN_TABLE` base_note** (note-relative; the freq DEF key
+is `("note", offsets, residuals)`). `GEN_TUNING_OP=84` carries the per-tune `ref_q`. The highest live op is 88
+(`GEN_TABLE_REF_OP`); **your new `MELODY_INTERVAL_OP` = 89** (next free; never renumber). `GeneratorPass` runs
+inline in `reglogparser.py`'s pass list and is gated by the `generator_pass` flag.
 
 ## 0. Why this exists (the gap the generator pipeline leaves)
 
@@ -93,9 +105,10 @@ Layer-3 designs: [`superframe_voice_lane_design.md`](superframe_voice_lane_desig
 
 ## 2. Precise spec (builds on the generator pipeline's freq channel)
 
-The generator pipeline encodes freq as one 16-bit channel → `SWEEP_OP`(HOLD/ACCUM) / `GEN_TRI` / `GEN_TABLE`
-atoms, with `GEN_TUNING` carrying `ref_q` and `note_of`/`recon` the LUT maps (§1A there). This layer changes
-ONLY how the **note-onset base pitch** of each voice's freq atoms is keyed:
+The generator pipeline encodes freq as one 16-bit channel → `SWEEP_OP`(HOLD/ACCUM, raw-16-bit START) /
+`GEN_TRI` / `GEN_TABLE`(base_note + note-relative offsets+residuals) atoms, with `GEN_TUNING` carrying `ref_q`
+and `note_of`/`recon` the LUT maps (in `macros/generator_fit.py`). This layer changes ONLY how the
+**note-onset base pitch** of each voice's freq atoms is keyed:
 
 - **Run the segmenter** (piece 1) per voice on the freq channel → note-onset frames.
 - **A freq atom that STARTS on a note-onset frame is a melody onset.** Replace its absolute start/base note
