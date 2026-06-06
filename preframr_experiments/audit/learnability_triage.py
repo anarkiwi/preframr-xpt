@@ -268,6 +268,34 @@ def _decoded_frames(df, register_state):
         return 0
 
 
+def _window_blocks(df, seq_len):
+    """Slice the parsed song token stream into ``seq_len``-TOKEN windows, frame-aligned -- the
+    block-scale stream WITHOUT the experimental expand/re-encode (``mode=blocks``), which breaks
+    on the generator's GEN_* atoms (signed residuals overflow the re-encoder's uint16 cast; new
+    op-ids are unknown to expand_ops). Windows are sized in TOKENS (what the model's context
+    actually holds), cut at the next FRAME/DELAY marker once a window reaches ``seq_len`` rows --
+    NOT in frames (tokens/frame ~6 here, so a frame-sized window would be ~6x too long and degrade
+    to whole-song = ``mode=song``). Each window is one sequence, so induction-copy / h_k / MI are
+    BLOCK-LOCAL (no whole-song reuse credit). Fidelity caveat vs the true Corpus block-builder:
+    DEF->REF ids are not re-mined block-local and no voice-reg header is added; neither changes the
+    (op,reg,subreg,val)-bigram statistics this triage reads."""
+    from preframr_tokens.stfconstants import FRAME_REG, DELAY_REG
+
+    regs = df["reg"].tolist()
+    marker_pos = [i for i, r in enumerate(regs) if r in (FRAME_REG, DELAY_REG)]
+    if len(marker_pos) < 2:
+        return [df]
+    out = []
+    win_start = 0
+    for m in marker_pos:
+        if m - win_start >= seq_len:
+            out.append(df.iloc[win_start:m])
+            win_start = m
+    if win_start < len(df):
+        out.append(df.iloc[win_start:])
+    return [w for w in out if len(w)]
+
+
 def tokenize_corpus(config_name, dump_paths, seq_len=4096, mode="blocks"):
     """Tokenize each dump under `config_name`; return (per-sequence symbol lists, total
     decoded frames). mode="blocks" (default) measures the SELF-CONTAINED BLOCK stream the model
@@ -281,11 +309,10 @@ def tokenize_corpus(config_name, dump_paths, seq_len=4096, mode="blocks"):
     flags = _config_flags(config_name)
     args = default_tokenizer_args(seq_len=seq_len, **{f: True for f in flags})
     parser = RegLogParser(args)
+    frames_per_block = max(1, seq_len // 2)
     if mode == "blocks":
         from preframr_tokens.macros.blocks import iter_self_contained_row_blocks
         from preframr_tokens.blocks import remove_voice_reg
-
-        frames_per_block = max(1, seq_len // 2)
     seqs = []
     total_frames = 0
     vocab = {}
@@ -305,6 +332,8 @@ def tokenize_corpus(config_name, dump_paths, seq_len=4096, mode="blocks"):
         song_frames = _decoded_frames(df, register_state)
         if mode == "song":
             units = [df]
+        elif mode == "window":
+            units = _window_blocks(df, seq_len)
         else:
             # Self-contained blocks (expand-to-literal -> slice -> re-encode, codebooks/loops
             # re-mined block-local) in ABSOLUTE pre-voice-reg form -- the voice-reg header is a
@@ -415,13 +444,16 @@ def main():
     )
     ap.add_argument(
         "--mode",
-        default="song",
-        choices=["song", "blocks"],
+        default="window",
+        choices=["song", "window", "blocks"],
         help="song = full-song parse() stream (robust, full coverage; over-credits codebook "
-        "compression that accumulates over a whole song) [default]; blocks = the self-contained-"
-        "block stream the model actually sees (EXPERIMENTAL: reproduces the block-builder "
-        "standalone and drops tunes whose ops need parser context -- partial coverage; the "
-        "faithful version must route through the Corpus block-builder)",
+        "compression that accumulates over a whole song); window = the song stream SLICED into "
+        "seq_len-sized per-block windows at frame markers (RECOMMENDED block-scale read: robust "
+        "full coverage via parse(), measures BLOCK-LOCAL copy/h_k/MI without whole-song reuse "
+        "credit, and works on the generator GEN_* ops that break `blocks`) [default]; blocks = "
+        "the self-contained-block stream via expand/re-encode (EXPERIMENTAL: drops tunes whose "
+        "ops need parser context -- BROKEN on generator GEN_* atoms; the faithful version routes "
+        "through the Corpus block-builder)",
     )
     ap.add_argument("--kmax", type=int, default=4)
     ap.add_argument("--maxlag", type=int, default=16)
