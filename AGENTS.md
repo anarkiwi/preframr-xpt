@@ -272,6 +272,17 @@ per (arm, seed). parse+tokenize ~25 min/prodlike uncached.
 ## Forward-looking work
 
 ### Land any time
+- **FOLLOW-UP — move the staged tracker round-trip tests into `preframr-tokens/tests/`.**
+  `staging/tokens_tests/` (in THIS repo) holds **written + verified** SWM/defMON forward
+  round-trip tests (`module → register log → generator_pass → decode == player output`,
+  equivalence via `parse_audit='raise'`). These are the §7B Tier-1 / §7.2 tests the generator
+  work order specified but PRs #62–#68 shipped WITHOUT (the agent never wired pysidwizard/
+  pydefmon). Verified green on tokens `main` @ 632f498: **11 passed (6 SWM + 5 defMON), 1
+  skipped (non-`$1800` fixture), 1 xfail** (the unbuilt reverse `log → SWM → log` recompiler,
+  `design/log_to_swm_recompiler_design.md`). To land: add pysidwizard+pydefmon as **test-only**
+  deps, drop the `conftest.py` source-path shim, provision fixtures via
+  `pysidwizard.tests._swm_cache` + pydefmon's bundled `build/fixtures` (no SID binaries in git),
+  keep the reverse xfail as the recompiler's tracking test. See `staging/tokens_tests/README.md`.
 - **Profile + optimize preframr-tokens parsing** — correct but slow; big share
   of uncached run setup. Keep the per-frame fidelity oracle green.
 - **Recover control-write-rejected dumps** — characterize dumps rejected for
