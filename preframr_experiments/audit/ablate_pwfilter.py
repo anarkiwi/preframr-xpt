@@ -106,7 +106,9 @@ def _render(dump: Path, outdir: Path, cents: int = 50) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dump", type=Path, required=True)
-    ap.add_argument("--outdir", type=Path, default=Path("/scratch/tmp/ablation_audition"))
+    ap.add_argument(
+        "--outdir", type=Path, default=Path("/scratch/tmp/ablation_audition")
+    )
     ap.add_argument("--render", action="store_true")
     ap.add_argument("--cents", type=int, default=50)
     cli = ap.parse_args()

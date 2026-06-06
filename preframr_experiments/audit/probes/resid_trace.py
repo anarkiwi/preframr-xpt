@@ -5,11 +5,18 @@ co-reading the control register and the RAW freq word. Drives the iterate->refin
 when a sample hits RESID=0 it is expanded. Output -> /scratch/tmp.
 
 Usage:  resid_trace.py <fixtures|N|path[,path...]> [procs] [worst_n]
-  fixtures = the documented canonical tunes (Baggis/Camerock JCH, Commando Hubbard, Trap Crowther)."""
+  fixtures = the documented canonical tunes (Baggis/Camerock JCH, Commando Hubbard, Trap Crowther).
+"""
+
 import os
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import sys, glob, random, subprocess  # noqa: E401,E402
 from collections import Counter, defaultdict  # noqa: E402
@@ -17,7 +24,10 @@ from collections import Counter, defaultdict  # noqa: E402
 sys.path.insert(0, "/scratch/anarkiwi/preframr-tokens/tests")
 sys.path.insert(0, "/scratch/anarkiwi/preframr-tokens")
 from preframr_tokens.reglogparser import RegLogParser  # noqa: E402
-from preframr_tokens.macros.skeleton_pass import SkeletonPass, _OFFSET_LIMIT  # noqa: E402
+from preframr_tokens.macros.skeleton_pass import (
+    SkeletonPass,
+    _OFFSET_LIMIT,
+)  # noqa: E402
 from parse_probes import parse_args  # noqa: E402
 
 CORPUS = "/scratch/preframr/hvsc"
@@ -39,8 +49,13 @@ def driver_map(dirs):
     for d in sorted(set(dirs)):
         m = {}
         try:
-            r = subprocess.run(["sidid", d], capture_output=True, text=True, timeout=120,
-                               env={**os.environ, "SIDIDCFG": SIDID_CFG})
+            r = subprocess.run(
+                ["sidid", d],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                env={**os.environ, "SIDIDCFG": SIDID_CFG},
+            )
             for ln in r.stdout.splitlines():
                 parts = ln.split()
                 if len(parts) >= 2 and parts[0].lower().endswith(".sid"):
@@ -130,19 +145,27 @@ def classify(rec):
             return "freq-sweep/skydive (linear-freq ramp)" + suffix
         return "wide irregular (>24, aperiodic)" + suffix
     diffs = [b - a for a, b in zip(poff, poff[1:])]
-    monotone = bool(diffs) and (all(d >= 0 for d in diffs) or all(d <= 0 for d in diffs))
+    monotone = bool(diffs) and (
+        all(d >= 0 for d in diffs) or all(d <= 0 for d in diffs)
+    )
     if monotone and abs(poff[-1] - poff[0]) >= 2:
         if _uniform_ramp(pfn, 8):
             return "freq-slide (linear-freq ramp, semitone-accel)" + suffix
-        return ("glissando/slide (uniform, noise-poisoned)" + suffix) if contam \
+        return (
+            ("glissando/slide (uniform, noise-poisoned)" + suffix)
+            if contam
             else "glissando/slide (non-uniform rate)"
+        )
     if _period(poff, 8) is not None:
         return "arp/octave (periodic<=8, noise-poisoned)" + suffix
     # held/stretched arp: collapse wave-delay holds, then look for a chord cycle
     rvals, rholds = _rle(poff)
     rp = _period(rvals, 8)
     if rp is not None and len(set(rholds)) <= 2:
-        return f"HELD-ARP (chord cycle p={rp}, hold~{max(set(rholds), key=rholds.count)})" + suffix
+        return (
+            f"HELD-ARP (chord cycle p={rp}, hold~{max(set(rholds), key=rholds.count)})"
+            + suffix
+        )
     if _period(poff, 24) is not None:
         return "arp (period 9-24, ARP-cap overflow)" + suffix
     distinct = len(set(poff))
@@ -153,8 +176,8 @@ def classify(rec):
 
 
 def trace(paths, dmap):
-    by_drv_mech = defaultdict(Counter)   # driver -> mech -> count
-    worst = []                            # (len, driver, comp, tune, mech, rec)
+    by_drv_mech = defaultdict(Counter)  # driver -> mech -> count
+    worst = []  # (len, driver, comp, tune, mech, rec)
     a = _args()
     for p in paths:
         seg = p.split("/MUSICIANS/", 1)
@@ -163,7 +186,12 @@ def trace(paths, dmap):
         drv = dmap.get(os.path.dirname(p), {}).get(tune.lower(), "?")
         SkeletonPass._resid_diag = []
         try:
-            parsed = next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
+            parsed = next(
+                RegLogParser(args=a).parse(
+                    p, max_perm=1, require_pq=False, reparse=True
+                ),
+                None,
+            )
         except Exception:
             SkeletonPass._resid_diag = None
             continue

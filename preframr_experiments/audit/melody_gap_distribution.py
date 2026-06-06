@@ -15,7 +15,6 @@ from __future__ import annotations
 import argparse
 import glob as _glob
 import json
-import statistics
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Iterable, Optional
@@ -51,7 +50,8 @@ def gap_stats(positions: np.ndarray, kbacks=(1, 2, 3)) -> dict:
 
 def within_context(positions: np.ndarray, ctx_len: int, k: int = 2) -> dict:
     """Fraction of positions for which the k-th prior melody position sits within
-    ``ctx_len`` tokens back (i.e. inside the attention window when predicting position i)."""
+    ``ctx_len`` tokens back (i.e. inside the attention window when predicting position i).
+    """
     if positions.size <= k:
         return {"n": 0, "frac_in_ctx": None, "frac_in_half_ctx": None}
     diffs = positions[k:] - positions[:-k]

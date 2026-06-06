@@ -246,7 +246,9 @@ def run_epoch_eval(
     return loss_sum / max(n, 1), hits / max(denom, 1)
 
 
-def run(cfg: Config, seed: int, device: str | None = None, verbose: bool = True) -> dict:
+def run(
+    cfg: Config, seed: int, device: str | None = None, verbose: bool = True
+) -> dict:
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.manual_seed(seed)

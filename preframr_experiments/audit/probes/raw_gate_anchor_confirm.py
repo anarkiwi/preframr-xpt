@@ -3,6 +3,7 @@ Per voice, at frame granularity: gate state (control bit0), end-of-frame 16-bit 
 and |semitone delta| vs previous frame. Tests: (1) what fraction of gate-on events
 carry a fresh freq write in the same frame; (2) are the large (note-level) freq
 changes concentrated at gate-on vs sustain frames."""
+
 import sys, math
 from collections import defaultdict
 import numpy as np
@@ -28,11 +29,16 @@ def analyze(path):
                 order.append(irq)
             f = frames[irq]
             if reg == flo:
-                lo = val; f["lo"] = val; f["freq_written"] = True
+                lo = val
+                f["lo"] = val
+                f["freq_written"] = True
             elif reg == fhi:
-                hi = val; f["hi"] = val; f["freq_written"] = True
+                hi = val
+                f["hi"] = val
+                f["freq_written"] = True
             else:
-                gate = val & 1; f["gate"] = gate
+                gate = val & 1
+                f["gate"] = gate
         if len(order) < 20:
             continue
         # walk frames in time order; detect gate-on, freq, semitone delta
@@ -59,12 +65,18 @@ def analyze(path):
         dg, ds = np.array(d_gateon), np.array(d_sustain)
         if gate_on_total < 10:
             continue
-        print(f"  voice {v}: gate-on events={gate_on_total}  "
-              f"with same-frame freq write={100*gate_on_with_freq/gate_on_total:.0f}%")
-        print(f"           |Δsemitone| at gate-on: mean={dg.mean():.1f} median={np.median(dg):.0f} "
-              f">0: {100*(dg>0).mean():.0f}%  (n={len(dg)})")
-        print(f"           |Δsemitone| sustain:    mean={ds.mean():.1f} median={np.median(ds):.0f} "
-              f">0: {100*(ds>0).mean():.0f}%  (n={len(ds)})")
+        print(
+            f"  voice {v}: gate-on events={gate_on_total}  "
+            f"with same-frame freq write={100*gate_on_with_freq/gate_on_total:.0f}%"
+        )
+        print(
+            f"           |Δsemitone| at gate-on: mean={dg.mean():.1f} median={np.median(dg):.0f} "
+            f">0: {100*(dg>0).mean():.0f}%  (n={len(dg)})"
+        )
+        print(
+            f"           |Δsemitone| sustain:    mean={ds.mean():.1f} median={np.median(ds):.0f} "
+            f">0: {100*(ds>0).mean():.0f}%  (n={len(ds)})"
+        )
 
 
 for p in sys.argv[1:]:

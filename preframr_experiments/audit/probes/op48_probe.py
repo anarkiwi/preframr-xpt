@@ -42,8 +42,14 @@ def main():
     args = copy.deepcopy(hp["args"])
     args.compile = False
     tokens = hp["tokens"]
-    model = Model(args, hp["n_vocab"], tokens, hp["tkmodel"], hp.get("metadata"),
-                  reg_widths=hp.get("reg_widths"))
+    model = Model(
+        args,
+        hp["n_vocab"],
+        tokens,
+        hp["tkmodel"],
+        hp.get("metadata"),
+        reg_widths=hp.get("reg_widths"),
+    )
     model.load_state_dict(ckpt["state_dict"], strict=False)
     model.eval().to(cli.device)
 
@@ -61,11 +67,19 @@ def main():
     gt_all, pred_all = [], []
     with torch.inference_mode():
         from pathlib import Path as _P
+
         for _name, block in _iter_eval_blocks(_P(cli.work_dir), 0):
             x = torch.from_numpy(block[:-1]).long().unsqueeze(0).to(cli.device)
             logits = model.model(x)
-            pred = (torch.cat([c.argmax(-1) for c in logits], 1) if isinstance(logits, list)
-                    else logits.argmax(-1)).flatten().tolist()
+            pred = (
+                (
+                    torch.cat([c.argmax(-1) for c in logits], 1)
+                    if isinstance(logits, list)
+                    else logits.argmax(-1)
+                )
+                .flatten()
+                .tolist()
+            )
             gt_all.extend(int(t) for t in block[1:].tolist())
             pred_all.extend(int(t) for t in pred)
     gt = np.array(gt_all)
@@ -82,20 +96,28 @@ def main():
         # value/reg structure of the GT atoms
         vals = uid_val[gt[m]]
         regs = uid_reg[gt[m]]
-        print(f"  distinct GT values: {len(set(vals.tolist()))}  | reg mix: "
-              f"{dict(Counter(regname(r) for r in regs.tolist()).most_common())}")
+        print(
+            f"  distinct GT values: {len(set(vals.tolist()))}  | reg mix: "
+            f"{dict(Counter(regname(r) for r in regs.tolist()).most_common())}"
+        )
         print(f"  top GT values: {Counter(vals.tolist()).most_common(8)}")
         # what op does the model predict AT these positions?
         pop = Counter(int(o) for o in pred_op[m].tolist())
         print(f"  predicted-op histogram here: {pop.most_common(6)}")
         same_op = int((pred_op[m] == op).sum())
-        print(f"  predicted op{op} at all (op-level recall): {same_op}/{ngt} = {same_op/ngt:.3f}")
+        print(
+            f"  predicted op{op} at all (op-level recall): {same_op}/{ngt} = {same_op/ngt:.3f}"
+        )
         if same_op:
             exact = int((pred[m] == gt[m]).sum())
-            print(f"  exact-atom match (op+reg+subreg+val): {exact}/{ngt} = {exact/ngt:.3f}")
+            print(
+                f"  exact-atom match (op+reg+subreg+val): {exact}/{ngt} = {exact/ngt:.3f}"
+            )
         # model's overall appetite for emitting this op anywhere
-        print(f"  model emits op{op} anywhere: {int((pred_op==op).sum())} times "
-              f"(of {len(pred)} predictions)")
+        print(
+            f"  model emits op{op} anywhere: {int((pred_op==op).sum())} times "
+            f"(of {len(pred)} predictions)"
+        )
 
     print(f"total scored positions: {len(gt)}")
     report(48, "FREQ_ONSET")

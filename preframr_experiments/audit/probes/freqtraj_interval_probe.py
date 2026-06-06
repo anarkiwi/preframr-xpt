@@ -13,7 +13,10 @@ from preframr_tokens.blocks import glob_dumps, iter_voiced_blocks
 from preframr_tokens.macros.motif_pass import _atoms_of
 from preframr_tokens.reglogparser import RegLogParser
 from preframr_tokens.stfconstants import (
-    FREQ_TRAJ_OP, FT_SUBREG_FLAGS, FT_SUBREG_V0_HI, FT_SUBREG_V0_LO,
+    FREQ_TRAJ_OP,
+    FT_SUBREG_FLAGS,
+    FT_SUBREG_V0_HI,
+    FT_SUBREG_V0_LO,
 )
 from preframr.args import add_args, apply_macro_flags_to_args
 
@@ -57,12 +60,13 @@ def stats(counter):
     N = sum(counter.values())
     ps = [c / N for c in counter.values()]
     H = -sum(p * math.log2(p) for p in ps if p > 0)
-    return N, len(counter), H, 2 ** H, max(counter.values()) / N
+    return N, len(counter), H, 2**H, max(counter.values()) / N
 
 
 def main():
     ap = add_args(argparse.ArgumentParser())
-    ap.add_argument("--motif-out"); ap.add_argument("--motif-k", type=int, default=0)
+    ap.add_argument("--motif-out")
+    ap.add_argument("--motif-k", type=int, default=0)
     ap.add_argument("--motif-min-count", type=int, default=0)
     ap.add_argument("--motif-min-composers", type=int, default=0)
     ap.add_argument("--motif-mine-version", type=int, default=1)
@@ -89,21 +93,29 @@ def main():
         abs_c.update(sem)
         int_c.update(b - a for a, b in zip(sem, sem[1:]))
 
-    print(f"blocks={len(streams)}  FREQ_TRAJ regs={len(per_reg)}  "
-          f"anchor events={sum(len(v) for v in per_reg.values())}")
+    print(
+        f"blocks={len(streams)}  FREQ_TRAJ regs={len(per_reg)}  "
+        f"anchor events={sum(len(v) for v in per_reg.values())}"
+    )
     for name, c in (("ABSOLUTE semitone", abs_c), ("INTERVAL (relative)", int_c)):
         N, k, H, eff, maj = stats(c)
-        print(f"  {name:<22} N={N:>7} distinct={k:>4} entropy={H:>5.2f} bits  "
-              f"eff_classes={eff:>5.0f}  majority_floor={maj:.3f}")
+        print(
+            f"  {name:<22} N={N:>7} distinct={k:>4} entropy={H:>5.2f} bits  "
+            f"eff_classes={eff:>5.0f}  majority_floor={maj:.3f}"
+        )
     if abs_c and int_c:
         _, _, Ha, ea, _ = stats(abs_c)
         _, _, Hi, ei, _ = stats(int_c)
-        print(f"\n  interval encoding cuts entropy {Ha:.2f}->{Hi:.2f} bits "
-              f"({Ha-Hi:+.2f}); effective vocab {ea:.0f}->{ei:.0f}")
+        print(
+            f"\n  interval encoding cuts entropy {Ha:.2f}->{Hi:.2f} bits "
+            f"({Ha-Hi:+.2f}); effective vocab {ea:.0f}->{ei:.0f}"
+        )
         top = int_c.most_common(9)
         tot = sum(int_c.values())
-        print("  top intervals (semitones): " +
-              ", ".join(f"{k:+d}:{100*v/tot:.0f}%" for k, v in top))
+        print(
+            "  top intervals (semitones): "
+            + ", ".join(f"{k:+d}:{100*v/tot:.0f}%" for k, v in top)
+        )
 
 
 if __name__ == "__main__":

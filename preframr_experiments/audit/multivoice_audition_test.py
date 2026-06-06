@@ -99,20 +99,30 @@ def _emit_tune(motifs, allowed, motifs_per_tune, note_frames, rng):
 
 def build_corpus(cfg, seed):
     rng = np.random.default_rng(seed)
-    motifs = _make_motifs(cfg["n_shared"] + cfg["n_held"], cfg["motif_len"], cfg["P"], rng)
-    shared, allm = np.arange(cfg["n_shared"]), np.arange(cfg["n_shared"] + cfg["n_held"])
+    motifs = _make_motifs(
+        cfg["n_shared"] + cfg["n_held"], cfg["motif_len"], cfg["P"], rng
+    )
+    shared, allm = np.arange(cfg["n_shared"]), np.arange(
+        cfg["n_shared"] + cfg["n_held"]
+    )
     splits = []
     for allowed, n in ((shared, cfg["n_train"]), (allm, cfg["n_val"])):
-        splits.append([
-            _emit_tune(motifs, allowed, cfg["motifs_per_tune"], cfg["note_frames"], rng)
-            for _ in range(n)
-        ])
+        splits.append(
+            [
+                _emit_tune(
+                    motifs, allowed, cfg["motifs_per_tune"], cfg["note_frames"], rng
+                )
+                for _ in range(n)
+            ]
+        )
     train, val = splits
     alpha = {}
     for sp in (train, val):
         for atoms, _, _ in sp:
             for a in atoms:
-                alpha.setdefault(a[:4], len(alpha))  # key on (op,reg,subreg,val); diff is decode-side
+                alpha.setdefault(
+                    a[:4], len(alpha)
+                )  # key on (op,reg,subreg,val); diff is decode-side
 
     def pack(sp):
         L = max(len(a) for a, _, _ in sp)
@@ -132,9 +142,16 @@ def build_corpus(cfg, seed):
 
 def build_model(vocab, seq_len, cfg, device):
     args = argparse.Namespace(
-        layers=cfg["layers"], heads=cfg["heads"], kv_heads=cfg["kv_heads"],
-        embed=cfg["embed"], max_seq_len=seq_len, attn_dropout=0.1, norm_eps=1e-5,
-        rope_base=500000, rope_scale=1.0, tie_word_embeddings=False,
+        layers=cfg["layers"],
+        heads=cfg["heads"],
+        kv_heads=cfg["kv_heads"],
+        embed=cfg["embed"],
+        max_seq_len=seq_len,
+        attn_dropout=0.1,
+        norm_eps=1e-5,
+        rope_base=500000,
+        rope_scale=1.0,
+        tie_word_embeddings=False,
     )
     return get_llama3_2(vocab, args).to(device)
 
@@ -167,7 +184,9 @@ def train(model, x, cfg, vocab, device):
             b = rng.permutation(len(x))[i : i + cfg["batch_size"]]
             xb = torch.from_numpy(x[b]).to(device)
             logits = _fwd(model, xb)
-            loss = F.cross_entropy(logits[:, :-1].reshape(-1, vocab), xb[:, 1:].reshape(-1))
+            loss = F.cross_entropy(
+                logits[:, :-1].reshape(-1, vocab), xb[:, 1:].reshape(-1)
+            )
             opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
@@ -191,7 +210,9 @@ def render_ids(ids, inv, args, wav_path):
     for tid in ids:
         op, reg, sr, val = inv[int(tid)]
         diff = IRQ if reg == -128 else 0
-        rows.append(dict(op=op, reg=reg, subreg=sr, val=val, diff=diff, irq=IRQ, description=0))
+        rows.append(
+            dict(op=op, reg=reg, subreg=sr, val=val, diff=diff, irq=IRQ, description=0)
+        )
     df = pd.DataFrame(rows)
     n, _ = render_df_to_wav(df, IRQ, args, Path(wav_path))
     return n
@@ -204,12 +225,37 @@ def main():
     cli = ap.parse_args()
     cli.out.mkdir(parents=True, exist_ok=True)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    cfg = dict(P=64, motif_len=8, n_shared=6, n_held=2, n_train=768, n_val=192,
-               motifs_per_tune=6, note_frames=4, layers=6, heads=8, kv_heads=4,
-               embed=288, epochs=20, batch_size=16)
+    cfg = dict(
+        P=64,
+        motif_len=8,
+        n_shared=6,
+        n_held=2,
+        n_train=768,
+        n_val=192,
+        motifs_per_tune=6,
+        note_frames=4,
+        layers=6,
+        heads=8,
+        kv_heads=4,
+        embed=288,
+        epochs=20,
+        batch_size=16,
+    )
     if cli.quick:
-        cfg.update(P=16, motif_len=4, n_shared=3, n_held=1, n_train=96, n_val=48,
-                   motifs_per_tune=3, layers=2, heads=4, kv_heads=2, embed=64, epochs=2)
+        cfg.update(
+            P=16,
+            motif_len=4,
+            n_shared=3,
+            n_held=1,
+            n_train=96,
+            n_val=48,
+            motifs_per_tune=3,
+            layers=2,
+            heads=4,
+            kv_heads=2,
+            embed=64,
+            epochs=2,
+        )
     print(f"device={device}")
     x, om, bm, vx, vom, vbm, vocab, inv = build_corpus(cfg, seed=0)
     seq_len = x.shape[1]
@@ -220,12 +266,19 @@ def main():
     print(f"3 voices (pulse/tri/noise) vocab={vocab} seq_len={seq_len}")
     print(f"  train_onset_acc={tr:.3f}  HELDOUT_onset_acc={va:.3f}")
     thr = 0.0 if cli.quick else 0.80
-    print("VERDICT:", "ENCODING SUFFICIENT under multiplexing+waveforms"
-          if va >= thr else "DEFICIENT under multiplexing")
+    print(
+        "VERDICT:",
+        (
+            "ENCODING SUFFICIENT under multiplexing+waveforms"
+            if va >= thr
+            else "DEFICIENT under multiplexing"
+        ),
+    )
     # audition: continue a held-out tune from its first third
     args = None
     try:
         from preframr_tokens.tokenizer_config import named_config
+
         args = named_config("baseline")
     except Exception as e:  # pragma: no cover
         print("audio args unavailable:", e)
@@ -238,9 +291,13 @@ def main():
         ngt = render_ids(seq[:nz].tolist(), inv, args, cli.out / "ground_truth.wav")
         # fraction of generated continuation matching ground truth (token-level)
         cont_match = np.mean([gen[i] == int(seq[i]) for i in range(len(prompt), nz)])
-        print(f"audition: prompt={len(prompt)} gen->{nz} | "
-              f"continuation token-match={cont_match:.3f}")
-        print(f"  WAV: {cli.out}/prediction.wav ({ng} samp), {cli.out}/ground_truth.wav ({ngt} samp)")
+        print(
+            f"audition: prompt={len(prompt)} gen->{nz} | "
+            f"continuation token-match={cont_match:.3f}"
+        )
+        print(
+            f"  WAV: {cli.out}/prediction.wav ({ng} samp), {cli.out}/ground_truth.wav ({ngt} samp)"
+        )
     return 0 if cli.quick or va >= thr else 1
 
 

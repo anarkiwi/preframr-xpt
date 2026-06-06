@@ -28,3 +28,7 @@ include = ["preframr_experiments*"]
     "data/refuted/*.md",
     "preflight/*.py",
 ]
+
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312"]

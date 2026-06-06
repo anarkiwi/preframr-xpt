@@ -49,7 +49,7 @@ def test_marginal_floor_and_copy_coverage():
     seqs = [[5, 5, 5, 5, 7]]
     floor, n = mp.marginal_floor(seqs)
     assert n == 5 and abs(floor - 4 / 5) < 1e-9
-    acc, cov = mp.copy_oracle(seqs, 1)
+    _acc, cov = mp.copy_oracle(seqs, 1)
     # contexts at positions 1..4: (5)->5,(5)->5,(5)->7 with 5 seen before each time
     assert cov > 0.0
 

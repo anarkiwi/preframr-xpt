@@ -42,7 +42,9 @@ def aggregate_per_arm(arm_reports: list[dict]) -> dict:
     out = {
         "n": len(arm_reports),
         "headline_mean": float(statistics.mean(headlines)) if headlines else 0.0,
-        "headline_std": float(statistics.stdev(headlines)) if len(headlines) > 1 else 0.0,
+        "headline_std": (
+            float(statistics.stdev(headlines)) if len(headlines) > 1 else 0.0
+        ),
         "verdicts": dict(verdicts),
         "features": {
             f: {
@@ -58,7 +60,9 @@ def aggregate_per_arm(arm_reports: list[dict]) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("root", type=Path, help="audition root holding <arm>/seedN/val_I.pred.parquet")
+    ap.add_argument(
+        "root", type=Path, help="audition root holding <arm>/seedN/val_I.pred.parquet"
+    )
     ap.add_argument(
         "--baseline",
         type=Path,
@@ -85,12 +89,14 @@ def main() -> int:
     print("\n=== per-arm summary ===")
     fmt = "{:24s} n={:2d}  headline={:5.2f}±{:4.2f}  verdicts={}"
     for arm, s in summary.items():
-        print(fmt.format(arm, s["n"], s["headline_mean"], s["headline_std"], s["verdicts"]))
+        print(
+            fmt.format(
+                arm, s["n"], s["headline_mean"], s["headline_std"], s["verdicts"]
+            )
+        )
     print("\n=== feature means per arm ===")
     feature_order = list(FEATURES)
-    header = "{:30s}".format("feature") + "".join(
-        f"{a[:14]:>16s}" for a in summary
-    )
+    header = "{:30s}".format("feature") + "".join(f"{a[:14]:>16s}" for a in summary)
     print(header)
     for f in feature_order:
         row = "{:30s}".format(f)
@@ -100,12 +106,19 @@ def main() -> int:
             row += f"{cell:>16s}"
         print(row)
     if cli.out:
-        cli.out.write_text(json.dumps({
-            "per_arm_reports": {k: [
-                {**r, "rows": r["rows"]} for r in v
-            ] for k, v in per_arm_reports.items()},
-            "summary": summary,
-        }, indent=2, default=float))
+        cli.out.write_text(
+            json.dumps(
+                {
+                    "per_arm_reports": {
+                        k: [{**r, "rows": r["rows"]} for r in v]
+                        for k, v in per_arm_reports.items()
+                    },
+                    "summary": summary,
+                },
+                indent=2,
+                default=float,
+            )
+        )
         print(f"\nwrote {cli.out}")
     return 0
 

@@ -4,11 +4,17 @@ FULL-verifies every sampled tune (parse OFF + ON, compare register_state) and LO
 a divergence diagnostic (shapes + first differing frame/reg/value), so the failure can be root-caused.
 
 Usage: resid_byte_exact_hunt.py <N|all|paths> [procs]"""
+
 import os
 import sys
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import glob  # noqa: E402
 import random  # noqa: E402
@@ -25,17 +31,33 @@ import sidid_cache  # noqa: E402
 import numpy as np  # noqa: E402
 
 CORPUS = "/scratch/preframr/hvsc"
-BASE = dict(skeleton_pass=True, trajectory_anchor_pass=True,
-            stamp_pass=True, sweep_pass=True, patch_pass=True, held_arp=True)
+BASE = dict(
+    skeleton_pass=True,
+    trajectory_anchor_pass=True,
+    stamp_pass=True,
+    sweep_pass=True,
+    patch_pass=True,
+    held_arp=True,
+)
 # Full Phase-4 deployed stack (the intended W7 default-ON set); OFF baseline is BASE alone.
-STACK = dict(wavetable_pass=True, zero_plain=True, wt_short=True, wt_oneshot=True,
-             slide_wide=True, slide_landing=True, sweep_loop=True)
+STACK = dict(
+    wavetable_pass=True,
+    zero_plain=True,
+    wt_short=True,
+    wt_oneshot=True,
+    slide_wide=True,
+    slide_landing=True,
+    sweep_loop=True,
+)
 _DMAP = {}
 
 
 def parse_df(dump, **flags):
     a = parse_args(**{**BASE, **flags})
-    return next(RegLogParser(args=a).parse(dump, max_perm=1, require_pq=False, reparse=True), None)
+    return next(
+        RegLogParser(args=a).parse(dump, max_perm=1, require_pq=False, reparse=True),
+        None,
+    )
 
 
 def first_diff(a, b):
@@ -56,8 +78,11 @@ def analyze(args):
     n_ok = n_bad = n_err = 0
     for k, p in enumerate(paths):
         if (k + 1) % 100 == 0:
-            print(f"[w{wid}] {k+1}/{len(paths)} ok={n_ok} bad={n_bad} err={n_err}",
-                  file=sys.stderr, flush=True)
+            print(
+                f"[w{wid}] {k+1}/{len(paths)} ok={n_ok} bad={n_bad} err={n_err}",
+                file=sys.stderr,
+                flush=True,
+            )
         tune = os.path.basename(p).split(".")[0].lower()
         eng = _DMAP.get(os.path.dirname(p), {}).get(tune, "?")
         try:
@@ -67,7 +92,9 @@ def analyze(args):
                 continue
             if d_off is None or d_on is None:
                 n_bad += 1
-                bad.append((p, eng, f"one-None off={d_off is not None} on={d_on is not None}"))
+                bad.append(
+                    (p, eng, f"one-None off={d_off is not None} on={d_on is not None}")
+                )
                 continue
             so, sn = register_state(d_off), register_state(d_on)
             if np.array_equal(so, sn):
@@ -95,7 +122,11 @@ def main():
         random.shuffle(sample)
         if spec != "all":
             sample = sample[: int(spec)]
-    print(f"byte-exact hunt over {len(sample)} tunes on {procs} procs", file=sys.stderr, flush=True)
+    print(
+        f"byte-exact hunt over {len(sample)} tunes on {procs} procs",
+        file=sys.stderr,
+        flush=True,
+    )
     global _DMAP
     full = sidid_cache.by_dir()
     _DMAP = {os.path.dirname(p): full.get(os.path.dirname(p), {}) for p in sample}
@@ -104,6 +135,7 @@ def main():
     shards = [s for s in shards if s[0]]
 
     import multiprocessing as mp
+
     t0 = time.time()
     allbad = []
     tot_ok = tot_bad = tot_err = done = 0
@@ -111,15 +143,22 @@ def main():
     with mp.Pool(min(procs, len(shards))) as pool:
         for bad, n_ok, n_bad, n_err in pool.imap_unordered(analyze, shards):
             allbad.extend(bad)
-            tot_ok += n_ok; tot_bad += n_bad; tot_err += n_err
+            tot_ok += n_ok
+            tot_bad += n_bad
+            tot_err += n_err
             done += n_ok + n_bad + n_err
             for p, eng, _ in bad:
                 by_eng[eng][1] += 1
             el = int(time.time() - t0)
-            print(f"[parent] {done}/{len(sample)} ok={tot_ok} BAD={tot_bad} err={tot_err} {el}s",
-                  file=sys.stderr, flush=True)
-    print(f"\n=== BYTE-EXACT HUNT: {len(sample)} tunes, OK={tot_ok} BAD={tot_bad} ERR={tot_err} "
-          f"({100*tot_bad/max(tot_ok+tot_bad,1):.1f}% non-exact) ===")
+            print(
+                f"[parent] {done}/{len(sample)} ok={tot_ok} BAD={tot_bad} err={tot_err} {el}s",
+                file=sys.stderr,
+                flush=True,
+            )
+    print(
+        f"\n=== BYTE-EXACT HUNT: {len(sample)} tunes, OK={tot_ok} BAD={tot_bad} ERR={tot_err} "
+        f"({100*tot_bad/max(tot_ok+tot_bad,1):.1f}% non-exact) ==="
+    )
     eng_bad = defaultdict(int)
     for p, eng, _ in allbad:
         eng_bad[eng] += 1

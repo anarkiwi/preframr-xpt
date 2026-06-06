@@ -3,6 +3,7 @@ while sustain-phase frequency writes are arp/vibrato modulation. For each voice,
 track the SID gate bit (control reg bit0) and the 16-bit frequency; classify every
 frequency write as gate-anchored (same frame as a gate-on) vs sustain modulation;
 compare entropy of the gate-on base-note sequence vs the full frequency stream."""
+
 import sys, math
 from collections import Counter
 import pandas as pd
@@ -75,11 +76,15 @@ def analyze(path):
 
         Hall, kall, nall = ent(coll)
         Hg, kg, ng = ent(gate_notes) if gate_notes else (0, 0, 0)
-        print(f"  voice {v}: gate-on notes={len(gate_on_frames)}  freq writes={tot}  "
-              f"({100*anchored/tot:.0f}% at gate-on, {100*sustain/tot:.0f}% sustain-mod)  "
-              f"freq-writes/note={tot/max(1,len(gate_on_frames)):.1f}")
-        print(f"           ENTROPY  full-freq-stream {Hall:.2f}b ({kall} pitches) "
-              f"vs gate-on base notes {Hg:.2f}b ({kg} pitches, n={ng})")
+        print(
+            f"  voice {v}: gate-on notes={len(gate_on_frames)}  freq writes={tot}  "
+            f"({100*anchored/tot:.0f}% at gate-on, {100*sustain/tot:.0f}% sustain-mod)  "
+            f"freq-writes/note={tot/max(1,len(gate_on_frames)):.1f}"
+        )
+        print(
+            f"           ENTROPY  full-freq-stream {Hall:.2f}b ({kall} pitches) "
+            f"vs gate-on base notes {Hg:.2f}b ({kg} pitches, n={ng})"
+        )
 
 
 for p in sys.argv[1:]:

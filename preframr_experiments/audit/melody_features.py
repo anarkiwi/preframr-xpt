@@ -68,8 +68,8 @@ class Note:
 
 
 PHI2_TO_MASTER = 18  # raw dumps store clock in PAL master cycles; audio dfs
-                     # store diff in PHI2 cycles. Convert when needed so the
-                     # rest of the analyzer uses one unit (PAL master).
+# store diff in PHI2 cycles. Convert when needed so the
+# rest of the analyzer uses one unit (PAL master).
 
 
 def _ensure_clock(df: pd.DataFrame) -> pd.DataFrame:
@@ -145,6 +145,7 @@ def notes_to_pretty_midi(notes: list[Note]):
     waveforms are >50% noise (PCM_BIT set on the gate). Returns a
     pretty_midi.PrettyMIDI -- raises ImportError if pretty_midi missing."""
     import pretty_midi
+
     pm = pretty_midi.PrettyMIDI(initial_tempo=120.0)
     by_voice: dict[int, list[Note]] = {0: [], 1: [], 2: []}
     for n in notes:
@@ -206,6 +207,7 @@ def features_from_notes(notes: list[Note], total_seconds: float) -> dict[str, fl
     out: dict[str, float | None] = {}
     try:
         import muspy
+
         pm = notes_to_pretty_midi(notes)
         has_pitched = pm.instruments and any(
             inst.notes for inst in pm.instruments if not inst.is_drum
@@ -252,9 +254,7 @@ def features_from_notes(notes: list[Note], total_seconds: float) -> dict[str, fl
     if intervals:
         top = Counter(intervals).most_common(1)[0][1]
         out["top_interval_share"] = top / len(intervals)
-        out["interval_repeat_share"] = (
-            Counter(intervals).get(0, 0) / len(intervals)
-        )
+        out["interval_repeat_share"] = Counter(intervals).get(0, 0) / len(intervals)
     else:
         out["top_interval_share"] = None
         out["interval_repeat_share"] = None
