@@ -77,7 +77,15 @@ prodlike-*scale* learnability read at mini-*cost* (static, minutes) — reserve 
 collapse→learning *threshold*. Model-side content interventions were refuted at the ~0.13 ceiling
 that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
 
-## Current arc — the GENERATOR-MDL pipeline is the active direction; a preframr-tokens agent is implementing it (2026-06-05)
+## Current arc — the GENERATOR-MDL pipeline has LANDED on tokens `main` (unreleased); measurement is the active work (2026-06-06)
+
+**LANDING (2026-06-06):** the generator pipeline is **merged on `preframr-tokens` `origin/main`** (PRs
+#62/#64/#65/#66/#67/#68): `generator_pass` is the deployed default in `REGISTERED_MACROS`, the per-pass macro
+zoo is **deleted**, ops `GEN_TRI=83`/`GEN_TUNING=84`/`GEN_TABLE_{DEF=85,STEP=86,END=87,REF=88}` + reused
+`SWEEP_OP=64` are live. It is **NOT yet on PyPI** (latest 0.44.0) — held on `main` to bundle whole-chip-zero
+into one breaking **0.45.0** (memory `tokens-0.45.0-release-pending`). **The measurement plan is now the active
+work: `design/generator_measurement_readiness.md`** — what to run now (cheap static triage, runnable against
+local `main` source) vs what is release-gated (the decisive canonical training run).
 
 ### NOW — one self-verifying generator model of every SID write (supersedes the per-pass macro zoo)
 The whole pitch/ornament/residual-SET/whole-chip-zero line of work has **converged** onto one design: model
@@ -103,11 +111,12 @@ plays percussion).
   `global_osc`/`preset`/`stamp`/`wavetable`/`per_reg_burst`/`note_off`/`init` (deleted; op-ids freed as holes),
   `SWEEP_OP=64` reused (new producer), new ops `GEN_TRI=83`/`GEN_TUNING=84`/`GEN_TABLE_DEF..REF=85-88`,
   `GLOBAL_OSC_OP=82` retired; `InstrumentProgramPass` KEPT for ctrl/AD/SR; `loop`/`hard_restart`/`legato`/
-  `voice_block` KEPT. **When that lands, xpt work to expect:** re-floor `preframr-tokens>=0.45.0` (all req
-  files), rebuild the xpt image, re-cut datasets (`op_name_by_id`/tier map shift as the op set changes), then
-  run the canonical-tier learnability go/no-go on the new encoding. The cross-repo 0.45.0 release + 12-SID WAV
-  audition gate happen BEFORE flipping the default (memory `cross-repo-release-ordering`,
-  `tokens-0.45.0-release-pending`). Until then `generator_pass` is default-OFF.
+  `voice_block` KEPT. **This LANDED on tokens `main` 2026-06-06** (`generator_pass` is the deployed default;
+  the zoo is deleted). **xpt work now:** the cheap static measurements
+  (`design/generator_measurement_readiness.md` §1–§3) run against local `main` source today; the release-gated
+  chain (re-floor `preframr-tokens>=0.45.0` all req files → rebuild xpt image → re-cut datasets → canonical
+  learnability A/B) waits on the cross-repo 0.45.0 release + the 12-SID WAV audition gate (memory
+  `cross-repo-release-ordering`, `tokens-0.45.0-release-pending`).
 
 ### Background arc — byte-exact + PW/filter sweep + unified macro-flags (2026-06-02)
 
@@ -161,11 +170,18 @@ those passes are deleted.
   `sid_fixture_cache/*_20s` dumps trips, but so does `full_macros` — a fixture property; the real byte-exact
   gate is the corpus sweep `cb_div_audit.py`).
 
-### NEXT — gated behind the generator pipeline landing in tokens
-The experiment program waits on the tokens agent shipping `generator_pass`
-(`preframr-tokens/AGENT_TASK_generator_pipeline.md`). **The queued NEXT tokens work order is SELF-DIRECTING:
-`design/melody_skeleton_impl.md`** — tell its agent only "execute this .md"; its §A start-gate polls tokens
-`origin/main`, **waits autonomously** until `generator_pass` is the deployed default (+ the zoo deleted), then
+### NEXT — generator pipeline LANDED on tokens `main`; measurement plan is `design/generator_measurement_readiness.md`
+The generator pipeline **landed on tokens `origin/main` 2026-06-06** (unreleased; 0.45.0 held). **The active
+experiment plan is `design/generator_measurement_readiness.md`** — §1 the cheap static learnability triage
+(`learnability_triage --configs baseline,full_macros --mode blocks --seq-len 8192`, runnable now vs local
+`main` source; generator induction-copy vs the historical 0.718 = the queue-or-not go/no-go), §3 the
+residual-in-key refragmentation check (runnable now), and §4 the **release-gated** canonical learnability A/B
+(generator vs atomic; needs 0.45.0 → image rebuild → re-cut). The two summarized points below (op-distribution
+read; canonical go/no-go) are detailed there.
+
+**The melody layer is the NEXT tokens work order (now unblocked): SELF-DIRECTING
+`design/melody_skeleton_impl.md`** — tell its agent only "execute this .md"; its §A start-gate polled tokens
+`origin/main` for `generator_pass` deployed-default + zoo-deleted (**now satisfied**), then
 executes the melody-learnability layers in preframr-tokens with no further help/decisions: **layer 2** (note
 segmentation + interval-from-previous onset encoding) AND **layer 3** (`voice_lane` de-mux + **causal-DAG lane
 ordering: accompaniment roles before melody** so melody is predicted with its harmony in-context — the DOMINANT
