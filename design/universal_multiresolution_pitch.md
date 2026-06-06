@@ -1,10 +1,11 @@
-# Universal multi-resolution pitch LUT — the learnable, lossless, transferable pitch model
+# Recovered-table pitch model — the learnable, lossless, transferable pitch model
 
-**Status:** Active design (2026-06-06). Supersedes the per-tune-LUT and content-tier-residual fixes for
-generator freq (`design/generator_measurement_readiness.md` §3). Validated against driver ground-truth tables
-+ corpus measurement + the Cauldron II chorus case before implementation. Default-OFF flag, byte-exact +
-residual-zero gated, as with all generator work. Cross-ref `generator_mdl_representation.md` (the encoding it
-evolves), `learnability_token_ordering_theory.md` (why the coarse pass is the learnable target).
+**Status:** Active design (2026-06-06, revised). Supersedes the per-tune-LUT and content-tier-residual fixes
+(`design/generator_measurement_readiness.md` §3). **Mechanism corrected (user-led):** a tracker plays note N as
+an EXACT entry from its note→freq table, so the residual is not per-frame noise to quantize against a fixed grid
+(the earlier sub/LSB framing) — it is the table to **recover**. Validated on real corpus + the Cauldron II
+chorus. Default-OFF flag, byte-exact + residual-zero gated. Cross-ref `generator_mdl_representation.md` (the
+encoding it evolves), `learnability_token_ordering_theory.md` (why the NOTE index is the learnable target).
 
 ## 1. The problem (a trilemma the current model loses)
 A single pitch representation cannot be all three at once:
@@ -29,38 +30,44 @@ diff ≤1 LSB. So the "per-tracker LUT" is a myth — there is one canonical equ
 only by ±1 rounding and an octave index offset. The grid can therefore be **shared/universal**, fixed, not
 per-tune.
 
-## 3. The model: one universal grid, multiple resolution passes
-`idx = round(K · log2(freq / fbase))` against a fixed canonical `fbase` (C5 anchor), shared across all tunes.
-No single `K` works, so decompose by resolution (coarse→fine), lossless by construction:
+## 3. The model: shared note index + recovered per-voice table
+The note **index** `n = round(12·log2(freq/anchor))` is the universal abstraction — note 49 ≈ C5 in every tune,
+intervals = Δn (transposition-invariant). The exact pitch is a per-voice **recovered table** `table[n] = the
+exact 16-bit freq the voice uses for note n` (the tracker's table + the tune's tuning + per-voice detune),
+recovered as the modal freq per note over the voice's frames. Lossless for any table: `resid = freq − table[n]`,
+`freq = table[n] + resid`.
 
-| pass | resolution | what it is | tier / role |
-|---|---|---|---|
-| **NOTE** | semitone (K=12) | the musical line; intervals = Δidx (transposition-invariant) | **structural — the model predicts this** (small alphabet, universal) |
-| **TUNING** | fine, **per-voice**, per-tune-optimized step | sub-semitone offset = global tuning ± per-voice detune (chorus) | low-entropy (near-constant per voice); inter-voice difference = content |
-| **LSB** | exact | residue to hit the exact 16-bit freq | content tier — *carried losslessly, not predicted hard* |
+| component | what it is | role |
+|---|---|---|
+| **NOTE index** | shared-grid semitone; the musical line | **structural — the model predicts this** (small universal alphabet, transferable) |
+| **per-voice TABLE** | the exact note→freq map (~20 entries/voice), emitted once; a small codebook (usually 1, +1 per chorus detune) | recovered exactly; makes static notes PURE |
+| **residual** | `freq − table[note]`, **0 for static notes**, nonzero ONLY for genuine modulation | content — exists only where there is real vibrato/slide |
 
-**Modulation** (vibrato/slide/portamento) = a **trajectory in idx-space**, emitted with the existing generator
-primitives in log-idx units: slide→`ACCUM(Δidx)`, vibrato→`TRI`, arp→`TABLE(Δidx)`. "Multiple passes/atoms per
-pitch event, by whatever means" — exactly the right framing; the ~37% measured spread is this.
+**Static notes are PURE** (residual 0) — measured **83% of voiced frames** on real corpus (vs 20% for the
+discarded fixed-grid framing). The model predicts the NOTE-index stream (universal, mostly the whole signal);
+the table is a cheap per-tune dictionary. **Modulation** (the ~17%) = a residual **trajectory** emitted with the
+existing generator primitives: slide→`ACCUM`, vibrato→`TRI`, arp→`TABLE` (around/between table notes).
 
-The learnability win: the model's *prediction burden* is the small NOTE alphabet; the large alphabet only lives
-in the LSB tier, which is **carried, not predicted** (the content-vs-structural split, applied to pitch
-*resolution*). Universality gives **cross-tune transfer** — same pitch → same NOTE token everywhere.
+Why the earlier fixed-grid + sub/LSB framing was wrong: it approximated each freq against a universal log grid
+and carried the gap as an LSB, so ~70% of frames spuriously looked "modulated." Recovering the tune's own table
+collapses that to the true ~17%, because the freqs were exact table lookups all along.
 
-## 4. Per-voice tuning + the chorus guardrail (load-bearing)
-The TUNING pass is **per-voice**, not per-tune. **Cauldron II Remix (Linus)** is the proof case
+## 4. Per-voice table + the chorus guardrail (load-bearing)
+Tables are **per-voice**, not per-tune. **Cauldron II Remix (Linus)** is the proof case
 (`/scratch/tmp/chorus_detune.py`): voices 1&2 are a chorus pair — 890 co-gated frames, **median +12 cents,
 90% in the 1–60-cent range** (std 27c = a varying/phasing detune). That inter-voice detune **is the chorus
 effect = musical content**; a single per-tune `ref` flattens both voices to one note and dumps the 12c into the
-residual. The design carries it as voice 2's per-voice TUNING offset (explicit, lossless, low-entropy), and its
-slow variation as a modulation trajectory. **Never normalize voices to a single tuning** (the pitch analogue of
-the Facemorph waveform guardrail).
+residual. The design carries it in voice 2's **recovered table** (its entries are the detuned exact freqs), so
+the two voices share the NOTE-index stream (the unison line) but reference distinct tables — the +12c lives in
+the table values, exact, and Cauldron II decodes 75% pure. **Never normalize voices to a single tuning** (the
+pitch analogue of the Facemorph waveform guardrail).
 
-## 5. Per-tune-optimized fine resolution (with a floor)
-The TUNING-pass step `K_fine` is **chosen per tune** to minimize the LSB tail (token cost), **bounded below by
-the finest musically-meaningful detune in the tune** so chorus/vibrato survive — Cauldron II needs ≤~6c steps
-to resolve a 12c chorus with headroom (≈1/32-semitone). On-grid tunes can use a coarse `K_fine` (tiny LSB tail);
-detuned/chorus/NTSC tunes pick a finer one. The chosen `K_fine` is emitted once per tune (a few tokens).
+## 5. Table recovery (replaces the discarded per-tune resolution knob)
+There is no resolution/`K_fine` knob to tune — the table holds the EXACT 16-bit entries, so there is no
+quantization to trade off. Recovery: assign each frame a note index (`note_index`), and `table[n]` = the modal
+exact freq for note n over the voice's frames (the entry the tracker actually wrote). ~20 entries/voice. A note
+seen only modulated still gets a table anchor (its modal freq) and the modulation rides as residual. Per-voice
+tables form a small codebook (DEF→REF): non-chorus tunes share one table across voices; a chorus adds a second.
 
 ## 6. Losslessness, tiers, gates
 - **Lossless by construction:** NOTE + per-voice TUNING + LSB reconstructs the exact 16-bit freq; the fitter
@@ -72,20 +79,23 @@ detuned/chorus/NTSC tunes pick a finer one. The chosen `K_fine` is emitted once 
   window`) shows the NOTE-pass induction-copy beats the current encoding AND the round-trip tests stay green.
 
 ## 7. Implementation outline (evolves `generator_fit` + `generator_pass` + `codebook`)
-1. **Shared grid:** replace `_lut(ref)`'s per-tune `ref` with a fixed canonical `fbase`/anchor (the C5 table);
-   keep `_FBASE`. `note_of`/`recon` become grid-absolute.
-2. **Per-voice TUNING fit:** per voice, fit the fine offset (and `K_fine` per tune) that lands its notes on the
-   shared grid; the chorus falls out as a per-voice offset, not residual.
-3. **Passes as atoms:** NOTE (existing freq note), new TUNING atom (per-voice fine offset, op + content tier),
-   LSB content atom; modulation reuses `SWEEP_OP`/`GEN_TRI`/`GEN_TABLE` in idx units.
-4. **Codebook key:** `GEN_TABLE` freq keys on **NOTE offsets only** (de-fragments — the original §3 goal,
-   achieved as a side effect because tuning/LSB leave the key).
+Foundation landed (`feat/universal-pitch-grid`, `preframr_tokens/macros/pitch_grid.py` + tests):
+`note_index` / `recover_table` / `decompose_voice` / `reconstruct` / `pure_fraction` — lossless, validated.
+1. **Shared anchor:** replace `_lut(ref)`'s per-tune `ref` with the fixed canonical anchor; `note_index` is
+   grid-absolute (no per-tune LUT).
+2. **Recover table:** per voice, `table[n]` = modal exact freq (the tracker entry); emit it once as a TABLE
+   codebook DEF (shared via REF across voices; +1 DEF per chorus detune).
+3. **Atoms:** NOTE-index stream (existing freq note slot); per-frame residual is 0 (omitted) for static notes,
+   else a modulation trajectory via `SWEEP_OP`/`GEN_TRI`/`GEN_TABLE`.
+4. **Codebook key:** `GEN_TABLE` freq keys on **NOTE offsets only** (de-fragments — the §3 goal — since the
+   exact pitch lives in the recovered table, not the key).
 5. **Gates:** single-tune byte-exact (`parse_audit`) → corpus `cb_div_audit` → residual-zero census →
-   `--mode window` triage delta → SWM/defMON round-trip (now in tokens `tests/`).
+   `--mode window` triage NOTE-copy delta → SWM/defMON round-trip (now in tokens `tests/`).
 
 ## 8. Evidence index
+- **Recovered table → 83.1% PURE notes** (30 tunes, 11/30 100% pure, ~20 entries/voice): `/scratch/tmp/recover_table.py` — the decisive validation that trackers use pure-note tables under everything.
 - Driver tables = canonical `2^(n/12)@C5` ±1: `/scratch/tmp/compare_luts.py`.
-- Residual = 62% static / 37% modulation, 2% within ±1: `/scratch/tmp/measure_lut_hypothesis.py` (broad 44-tune).
+- Residual is per-NOTE deterministic (the table), not per-frame noise — 62% static / 2% within ±1 of the *universal* grid (why a fixed grid fails; the table fixes it): `/scratch/tmp/measure_lut_hypothesis.py` (44-tune).
 - §3 refragmentation (1.55× DEF collapse, 97.7% residuals nonzero): `/scratch/tmp/measure_refrag.py`.
 - Chorus = per-voice detune content (Cauldron II, voices 1-2 ~12c/90%): `/scratch/tmp/chorus_detune.py`.
 - Block-scale triage (current encoding: copy 0.916 ≤ baseline 0.930, alphabet 3.7×): `design/generator_measurement_readiness.md` §1.
