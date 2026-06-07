@@ -91,6 +91,18 @@ that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side re
 
 ## Current arc — CANONICAL RUN LAUNCHED: `pitch_resid_prodlike` on defroster (2026-06-07)
 
+### Run reliability (live) — 2026-06-07
+**Goal right now is RELIABILITY, not results.** The generator abstraction mis-encodes repeated patterns
+(user troubleshooting), so the current run's tokenized logs are WRONG and the experiment will be re-cut after
+the next tokens (generator) fix — do NOT treat val_acc/eval_b as a deliverable. Three robustness bugs were
+found + fixed + released this session: tokens **0.46.2** (note_freq/base_note overflow guard — universal_pitch
+parse hang), tokens **0.46.3** (`DIFF_PDTYPE` UInt16→Int32 — macro-arm tokenize crashed on the `diff=-1`
+voice-lane marker sentinel), framework **0.2.25** floors 0.46.3 → image `anarkiwi/preframr:0.2.25`.
+**Relaunched** `pitch_resid_isolated_prodlike` (3-arm) on 0.2.25, runner pid 266042, root
+`/scratch/tmp/preframr_experiments/pitch_resid_isolated_v2`, started 16:08. Reliability milestone to confirm:
+all 3 arms clear parse→tokenize→train-start cleanly (esp. tokenize now succeeds for pitch_resid + full_macros).
+Status: pitch_resid parse in progress. Await user signal for the generator-fix upgrade + restart.
+
 **THE CANONICAL RUN is live.** `preframr_experiments/specs/pitch_resid_prodlike.py`: prodlike A/B, target =
 `full_macros + universal_pitch + table_resid_split` (per-voice universal note-index for melody onsets AND
 GEN_TABLE arps), baseline = the atomic control (all passes OFF), on `anarkiwi/preframr:0.2.23` (tokens 0.46.1,
