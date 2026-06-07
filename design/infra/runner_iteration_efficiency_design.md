@@ -7,8 +7,8 @@ mount + dump-free cache; 8 new `test_dataset_cache` cases, 62-test suite green).
 (`base.py` runner core, `run.py` loop). Targets per-run *fixed overhead* and the
 disabled cache — the things that slow the parse→tokenize→train cycle independent
 of GPU train time. `--resume` / `auto_early_abort` / `--max-parallel-arms`
-already have deferred designs (`resume_design.md`, `auto_early_abort_design.md`,
-`max_parallel_arms_design.md`); this doc is the **not-yet-captured** set.
+already have a deferred design (`cloud_rental_runner_design.md`); this doc is the
+**not-yet-captured** set.
 
 ## Findings (ranked by value/effort)
 
@@ -24,7 +24,7 @@ correct and lets two arms *share* one parse+tokenize. But the macro specs
 arms would collide on one cached dataset. The workaround is
 `PREFRAMR_DATASET_CACHE_DISABLE=1`, which throws away the ~25 min parse+tokenize
 reuse across seeds and retries — for precisely the tokenizer-rework experiments
-in flight now (`OSCILLATE_REWORK`).
+this targeted (the `OSCILLATE_REWORK` arc, since concluded).
 
 **Fix (LANDED):** `_dataset_cache_key` now keys on the parse/tokenize-affecting
 slice of `arm.extra_cargs`. `_dataset_affecting_cargs` strips a denylist
@@ -111,12 +111,12 @@ chown is just the artefacts, not 2.4 GB of dumps.
 
 ## Already-designed (deferred) — reference, not re-proposed
 
-- `--resume` (`resume_design.md`): skip completed (arm, seed). The dataset cache
+- `--resume` (`cloud_rental_runner_design.md` §1): skip completed (arm, seed). The dataset cache
   covers parse+tokenize; a `_wallclock.json`-marker resume would also skip a
   finished train on crash/retry. Cheap subset worth pulling forward.
-- `auto_early_abort` (`auto_early_abort_design.md`): kill an arm when a
+- `auto_early_abort` (`cloud_rental_runner_design.md` §2): kill an arm when a
   `decision_rule` falsifies mid-train (several refuted arms ran to completion).
-- `--max-parallel-arms` (`max_parallel_arms_design.md`): single-GPU can't
+- `--max-parallel-arms` (`cloud_rental_runner_design.md` §3): single-GPU can't
   parallelize train; parse/tokenize (CPU, on `fogbank`) could overlap, but the
   dataset cache already removes most repeat parse/tokenize, so low marginal value
   until multi-GPU.
@@ -136,5 +136,4 @@ changes.
   `_try_dataset_cache_hit`, `stage_dumps`, `_chown_bind_root_to_runner`,
   `run_arm`); `run.py` loop.
 - AGENTS.md "Runner / infra fragility"; `full_macros_prodlike` cache-disable note.
-- Deferred: `resume_design.md`, `auto_early_abort_design.md`,
-  `max_parallel_arms_design.md`.
+- Deferred: `cloud_rental_runner_design.md` (resume + early-abort + max-parallel-arms).

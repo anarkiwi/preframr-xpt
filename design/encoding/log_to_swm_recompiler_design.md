@@ -16,7 +16,8 @@ so the original SWM bytes are unrecoverable and byte-identity is neither achieva
 re-render register-equivalence:** the emitted SWM, run through `pysidwizard`'s player, yields a register stream
 **identical to the input log** under the project fidelity oracle `sid_frame_diff.diff_dump_vs_pipeline`
 (CTRL/AD/SR/RES_FILT(23)/MODE_VOL(24) byte-exact in input order + nominal `_MIN_DIFF` timing; FREQ/PW/filter
-within the quantization tolerance), with the 12-SID WAV audition as the ultimate arbiter. This is exactly the
+within the quantization tolerance). That register-log match **is** the arbiter — same registers in the same
+order with the same delay produce the same output by construction, so no WAV render is needed. This is exactly the
 equivalence criterion the user set for the round-trip ("equivalent if they produce the same output").
 
 ## 2. The expressibility boundary (be honest, don't silently approximate)

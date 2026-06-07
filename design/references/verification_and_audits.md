@@ -42,9 +42,13 @@ construction*) "diverged" on ~65% of tunes under that external usage, yet is **1
 `PREFRAMR_PARSE_AUDIT=raise`. The control is the tell — if your method flags baseline as dirty, your method is
 wrong. **Always use parse_audit / cb_div_audit; never a bespoke register_state comparison.**
 
-**WAV is unnecessary for this.** Byte-exactness is a register-level property; the 12-SID WAV audition is a
-*separate, additional* perceptual gate for deliberately-lossy content-tier changes, not for checking
-losslessness.
+**WAV is never the fidelity gate.** Fidelity is entirely a register-level property: the same registers in the
+same input order with the same nominal `_MIN_DIFF` delay render *identically by construction*
+([`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md)). The tools above ARE the gate — for
+byte-exact changes AND for deliberately-lossy content-tier changes (the latter must still land within the
+contract's FREQ/PW/filter `freq_tol` tolerance, which `parse_audit`/`cb_div_audit` already apply). A change that
+diverges beyond that tolerance is invalid; there is no WAV render or listening step. (Rendering/listening only
+makes sense for judging *generated* model output — a separate quality question, not a fidelity check.)
 
 ### Related but narrower (keep for debugging, not for the verdict)
 - **`PREFRAMR_ARBITER_STRICT=1`** — raises if any *single pass's claim* changes `register_state` mid-arbitration.

@@ -1,9 +1,15 @@
 # Per-voice multi-target auxiliary supervision — design
 
-**Status (2026-05-20):** scoping. No code yet. Motivated by the
-exhaustion of token-form interventions (`weighted_token_loss_mini`
-refuted, `learnable_class_loss_mini` refuted, `set_to_diff_mini`
-refuted via alphabet inflation +90% on motion-reg DIFF expansion).
+**Status: Refuted (by class), never run.** Scoped 2026-05-20, no code. This is a
+model-side content intervention — the whole class was refuted at the ~0.13 ceiling
+that tokenizer-side `full_macros` then lifted (see the
+[`multi_modal_objective_design.md`](multi_modal_objective_design.md) anti-queue). It
+was never built or A/B'd; kept for the record. Motivated by the exhaustion of
+token-form interventions (`weighted_token_loss_mini` refuted, `learnable_class_loss_mini`
+refuted, `set_to_diff_mini` refuted via alphabet inflation +90% on motion-reg DIFF
+expansion). Framework paths below are normalized to the current `preframr/` layout;
+the A/B "base pipeline_spec" still names zoo macros that tokens 0.45.0 deleted, so it
+would not run as-written (flagged inline).
 
 **Learnability framing (caution).** This is a model-side content intervention — the class refuted against the ~0.13 ceiling that tokenizer-side `full_macros` later lifted. Forcing musical state into hidden activations is not a substitute for exposing it in the token stream as induction-head-expressible DEF→REF; prefer the tokenizer-side residual-SET / codebook program before spending a run here ([`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md)).
 
@@ -131,7 +137,7 @@ Stored as `*.aux.npy` next to `*.blocks.npy` per song.
 
 ## Model integration
 
-`preframr/core/model.py`:
+`preframr/model.py`:
 
 ```python
 class PreframrLM(LightningModule):
@@ -186,7 +192,9 @@ gradient). Hand-tuned; could anneal.
 
 Same base pipeline_spec as the corrected `set_to_diff_mini` (slope +
 preset + hard_restart + legato c2/c4 + voice_block_order + ctrl_bigram
-+ loop). 2 seeds, mini tier.
++ loop). 2 seeds, mini tier. **(Stale: this per-pass macro zoo was deleted in
+tokens 0.45.0 — the generator pipeline is the default now; the spec would need
+rebasing onto `full_macros` to run.)**
 
 **Metrics:**
 - Standard: `alphabet_size`, `val_loss_best`, `val_acc_at_best_loss`,
@@ -237,18 +245,18 @@ logits that callers ignore unless training).
 
 ## Implementation surface
 
-1. `preframr/core/macros/aux_labels.py` (new): per-voice state-walk
+1. `preframr/macros/aux_labels.py` (new): per-voice state-walk
    function returning the 5 label arrays for a df.
-2. `preframr/core/reglogparser.py`: call aux label generator after
+2. `preframr/reglogparser.py`: call aux label generator after
    `_add_voice_reg`, stash columns in df, persist in `*.0.parquet`.
 3. `preframr/train/regdataset.py`: load aux columns from parquet,
    build block-aligned aux arrays alongside inputs/targets, write
    `*.aux.npy`.
-4. `preframr/core/model.py`: `PreframrLM` gains `aux_heads` ModuleDict
+4. `preframr/model.py`: `PreframrLM` gains `aux_heads` ModuleDict
    and aux loss composition in `training_step` / `validation_step`.
-5. `preframr/core/train.py`: dataloader exposes aux tensors; passed
+5. `preframr/train.py`: dataloader exposes aux tensors; passed
    into model.
-6. `preframr/core/args.py`: `--aux-supervision-weight FLOAT`
+6. `preframr/args.py`: `--aux-supervision-weight FLOAT`
    (default 0.0 = disabled, backward compatible).
 7. `preframr_experiments/specs/aux_supervision_mini.py`: 3-arm
    A/B spec.
@@ -266,10 +274,11 @@ testing, 1 day for the mini A/B run + analysis. Mid-size project.
 
 - Per-class audit:
   `accuracy_push_prodlike_4x` audition findings in AGENTS.md
-- Refuted alternatives that motivate this:
-  `weighted_token_loss_design.md`, `learnable_class_loss_mini`
-- Adjacent encoder approach: `voice_trajectory_design.md`
-  (input-side annotation; this design is the output-side counterpart)
+- Refuted alternatives that motivate this: the `weighted_token_loss` /
+  `learnable_class_loss` class-weighting bets (refuted; design docs since removed,
+  evidence in `../../preframr_experiments/data/refuted/`)
+- Adjacent encoder approach: the voice-trajectory input-side annotation (design
+  doc since removed); this design is its output-side counterpart
 - Token-class accuracy infra: `profile/token_class_accuracy.py`
 - Audio fidelity guardrails: `audio_fidelity.py`
 - Constrained-decode landscape: `design/performance/orin_inference_optimization_design.md`

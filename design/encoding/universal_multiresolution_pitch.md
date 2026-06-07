@@ -1,7 +1,10 @@
 # Recovered-table pitch model — the learnable, lossless, transferable pitch model
 
-**Status:** Active design (2026-06-06, revised). Supersedes the per-tune-LUT and content-tier-residual fixes
-(`design/measurement/generator_measurement_readiness.md` §3). **Mechanism corrected (user-led):** a tracker plays note N as
+**Status:** Active design (foundation committed on `feat/universal-pitch-grid`; the `universal_pitch` flag is
+**default-OFF, pending the learnability triage** before any default flip). Supersedes the per-tune-LUT
+*interpretation* and the content-tier-residual fix
+(`design/measurement/generator_measurement_readiness.md` §3) — it **refines `generator_mdl_representation.md`'s
+pitch channel, not replaces the generator** (the two are complementary layers). **Mechanism corrected (user-led):** a tracker plays note N as
 an EXACT entry from its note→freq table, so the residual is not per-frame noise to quantize against a fixed grid
 (the earlier sub/LSB framing) — it is the table to **recover**. Validated on real corpus + the Cauldron II
 chorus. Default-OFF flag, byte-exact + residual-zero gated. Cross-ref `generator_mdl_representation.md` (the

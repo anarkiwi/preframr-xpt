@@ -1,11 +1,18 @@
 # Audio-equivalence normalization (parameter-space collapse)
 
 **Status:** Draft 2026-05-23. Tokenizer-side data normalization that
-collapses (op, reg, val) tuples producing perceptually-equivalent SID
+collapses (op, reg, val) tuples producing equivalent SID
 output to a single canonical representative, shrinking the content
 vocab and densifying per-token training statistics. Complements the
 existing macro-level normalization in `preframr_tokens.macros`
 (rule-based) by adding an emulation-grounded value-level pass.
+
+**Gate (revised):** "equivalent" means **register-log equivalence within the fidelity
+`freq_tol`** — verified by `cb_div_audit` (same regs/order/delay; FREQ/PW/filter within
+tolerance), NOT a perceptual/listening judgment. Same registers/order/delay ⟹ same output
+by construction, so there is no WAV render or audition step. This narrows the pass to
+collapses already within tolerance (see Risks) — it cannot collapse writes that merely
+"sound similar" but differ beyond `freq_tol`.
 
 **Learnability framing.** The vocab-size / data-density argument here serves learnability — but compare schemes by copy-fraction / per-frame h_k, not gzip-style compressibility ([`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md) Principle 2).
 
@@ -103,17 +110,18 @@ For each `(op, reg)` family present in the corpus:
    per class. Output:
    `data/audio_norm/<tokenizer_hash>/canonical_map.json` with shape
    `{(op, reg, raw_val): canon_val}`.
-5. Validation gates (per `(op, reg)` family):
-   - Within-class mean fingerprint pairwise distance < 0.5 × the
-     mean between-class distance (clean separation).
-   - No class has > 30% of `|V_or|` (no degenerate "everything
-     collapses here" class).
-   - Audio audition: render 3 random class members from the 5
-     largest classes and confirm they sound the same.
+5. Validation gate (per `(op, reg)` family):
+   - **Register-equivalence within `freq_tol`** — every member of a class must collapse to
+     its canonical value *within the fidelity contract's tolerance* (control regs exact;
+     FREQ/PW/filter within `freq_tol` cents), checked corpus-wide by `cb_div_audit` after
+     applying `canonical_map.json`. A class whose members diverge beyond `freq_tol` is
+     **invalid** and must be split — there is no human-listening/audition step.
+   - (Diagnostics, not the gate: within-class fingerprint distance < 0.5× between-class; no
+     class > 30% of `|V_or|`.)
 
 Pipeline cost: 40K fingerprints × ~50 ms / 72 cores ≈ 30 sec on
-fogbank. K-means is trivial. Validation audition is the human
-bottleneck (~30 min).
+fogbank. K-means is trivial. The gate is the automated `cb_div_audit` register check — no
+human listening.
 
 ### Tokenizer integration
 
@@ -149,23 +157,16 @@ canonical values; the rendered output uses them as-is — the
 canonical class members are equivalent to the originals by
 construction).
 
-### Round-trip audio audit (new test)
+### Round-trip register audit (new test)
 
-`tests/test_audio_canon_round_trip.py` (or
-`profile/audit_audio_canon_fidelity.py`): for a sample of 100
-random dump.parquets, render both the original and the
-canonicalized dump (using `preframr_audio.audio_driver.render_to_samples`),
-compare via `preframr_audio.fidelity.compare_renders` with
-`max_frame_drift=2` (canonicalization may slightly shift
-timing-sensitive macro decisions) AND `feature_diff_fn=mel_distance`
-with `feature_diff_tolerance=<TBD from Phase 0 audition>`. Test
-asserts ≥ 95% of samples pass.
-
-Both `max_frame_drift` and `feature_diff_fn` are the preframr-audio
-v0.3.x additions queued in the cluster-head design doc
-(`cluster_conditional_content_head_design.md` "preframr-audio
-enhancements" section). This audit is the second consumer that
-promotes those API additions out of "deferred until needed" status.
+`tests/test_audio_canon_round_trip.py`: for a sample of dump.parquets, apply
+`canonical_map.json` and assert the decoded register stream still matches the original
+under the fidelity oracle — `PREFRAMR_PARSE_AUDIT=raise` per tune / `cb_div_audit.py`
+corpus-wide (control regs exact in input order + nominal `_MIN_DIFF` delay; FREQ/PW/filter
+within `freq_tol`). **No rendering** — same registers/order/delay ⟹ same output by
+construction ([`../references/sid_render_fidelity_contract.md`](../references/sid_render_fidelity_contract.md)).
+A canonicalization that pushes any member beyond `freq_tol` fails the gate and the class is
+split; there is no mel-distance / WAV-comparison step.
 
 ## Comparison to other interventions
 
@@ -188,8 +189,8 @@ it stacks on whatever other architectural choice wins.
 
 | Phase | Scope | Pass gate |
 |---|---|---|
-| 0. Calibrate | Build `canonical_map.json` for the prodlike tokenizer corpus. Validation per (op, reg) gates above; audition spot-checks on the 5 largest classes. | within/between class distance ratio < 0.5 in all families with `K_or > 8`; audition: human can't tell class members apart |
-| 1. Mini A/B | `audio_canon_mini_body_large` spec: 2 arms (baseline plain CE; baseline + `--audio-canon`), mini body=large, 3 seeds. Run round-trip audit on the produced ckpts. | (1) val_acc ≥ baseline within 1σ; (2) content vocab size shrunk ≥ 30%; (3) round-trip audit ≥ 95% pass; (4) **no diversity_ratio regression at T=0.5** (this caught the cluster head + mask probes; load-bearing for any architecture-side win to stack) |
+| 0. Calibrate | Build `canonical_map.json` for the prodlike tokenizer corpus. Validation per (op, reg) gate above; corpus register-equivalence check (`cb_div_audit`). | every class member within `freq_tol` under `cb_div_audit` after applying the map (diagnostic: within/between class distance ratio < 0.5 in all families with `K_or > 8`) |
+| 1. Mini A/B | `audio_canon_mini_body_large` spec: 2 arms (baseline plain CE; baseline + `--audio-canon`), mini body=large, 3 seeds. Run the round-trip register audit on the canonicalized corpus. | (1) val_acc ≥ baseline within 1σ; (2) content vocab size shrunk ≥ 30%; (3) round-trip register audit (`cb_div_audit`) clean within `freq_tol`; (4) **no diversity_ratio regression at T=0.5** (this caught the cluster head + mask probes; load-bearing for any architecture-side win to stack) |
 | 2. Canonical A/B | 901 SIDs, same gate at canonical scale | val_acc ≥ baseline + 0.003; rest unchanged |
 | 3. Prodlike | Prodlike single seed, same gate; pair with the best surviving content-head (currently diffusion if Phase 3 PASSES, else plain CE) | val_acc on eval_a ≥ baseline + 0.005 AND diversity_ratio ≥ baseline AND content vocab reduction holds |
 
@@ -198,7 +199,8 @@ it stacks on whatever other architectural choice wins.
 - **Are register-family K_or counts right?** The proposed K_ors are
   educated guesses from SID-engineering experience. Phase 0
   silhouette + within/between distance ratios validate; if FREQ_LO
-  K_or = 16 is too coarse, audition catches it.
+  K_or = 16 is too coarse, the register-equivalence gate (`cb_div_audit`)
+  catches it — a too-coarse class diverges beyond `freq_tol`.
 - **Sequence-level equivalences not handled.** E.g., two consecutive
   writes to the same reg with values v1, v2 where the first is
   overwritten before any clock advances. Macro pass already handles
@@ -214,9 +216,12 @@ it stacks on whatever other architectural choice wins.
   tokenizer's `(op, reg)` set. Adding new transforms changes the
   vocab → map needs rebuild. Mitigation: cache the map by tokenizer
   hash (same pattern as `data/content_clusters/<hash>/`).
-- **Audition is the soft gate.** Automated within/between distance
-  ratio is necessary but not sufficient. A human listening pass on
-  the 5 largest classes is the Phase 0 commitment.
+- **The register-equivalence gate is the hard gate.** A collapse is admissible iff every
+  class member's decoded registers stay within the contract's `freq_tol` (`cb_div_audit`).
+  The within/between distance ratio is only a clustering diagnostic. **Consequence:** this
+  constrains the design to collapses that are *already* register-equivalent within tolerance —
+  any "sounds the same but writes different registers beyond `freq_tol`" collapse is invalid,
+  which substantially narrows what this pass can do versus the original perceptual ambition.
 
 ## Why this might land where the model-side interventions didn't
 

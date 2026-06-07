@@ -1,9 +1,11 @@
 # `GENERALIZE_MIN_VAL_ACC` floor — calibration design
 
+**Status:** Pending impl — calibration procedure only; the env hook exists (`GENERALIZE_MIN_VAL_ACC`, default 0/off). Sets the floor once 2-3 canonical baselines settle.
+
 Pipeline coverage hole from AGENTS.md §Pipeline coverage holes:
 the `generalize` spec ships in **calibration mode** (`MIN_VAL_ACC=0`)
 because no canonical baseline was settled when the spec landed. The
-infrastructure exists (`experiments/generalize.py:_generalize_gate`
+infrastructure exists (`preframr_experiments/specs/generalize.py:_generalize_gate`
 reads `GENERALIZE_MIN_VAL_ACC` from env); only the value to set is
 missing.
 
@@ -15,7 +17,7 @@ env-var default or hard-coding the floor in the spec.
 
 ## Status today
 
-`experiments/generalize.py:35`:
+`preframr_experiments/specs/generalize.py:35`:
 
 ```python
 floor = float(os.environ.get("GENERALIZE_MIN_VAL_ACC", "0"))
@@ -36,7 +38,7 @@ catching regressions before they propagate downstream.
 
 The "2/3 of median" choice protects against:
 
-- **Seed σ** at canonical tier (TBD; per DESIGN.md §5 mini σ is
+- **Seed σ** at canonical tier (TBD; per preframr_experiments/DESIGN.md §5 mini σ is
   0.0009; canonical σ is expected larger but not yet measured).
   Floor at 2/3-median is well below the noise floor of the canonical
   distribution.
@@ -99,7 +101,7 @@ Three placement options:
 ### Option A — env-var default at spec level
 
 ```python
-# experiments/generalize.py
+# preframr_experiments/specs/generalize.py
 DEFAULT_MIN_VAL_ACC = 0.045   # set by calibration
 
 def _generalize_gate(art):
@@ -158,7 +160,7 @@ re-evaluate (likely promotes to Option B or C).
    recent canonical-tier runs that haven't regressed). Capture
    `val_acc_at_best_loss` from each (arm, seed).
 2. Compute median + 2/3-median per §Procedure.
-3. Land a single-line PR in `experiments/generalize.py`:
+3. Land a single-line PR in `preframr_experiments/specs/generalize.py`:
    `DEFAULT_MIN_VAL_ACC = <value>`. Update the docstring with the
    basis (commit shas, N seeds, median, σ if known).
 4. AGENTS.md update: move §Pipeline coverage hole entry to
@@ -220,7 +222,7 @@ trivial design + implementation effort.
 - **Per-Eval-B floors** — Eval-B subsets are smaller (~16 SIDs);
   noise floor is too wide to support a hard val_acc gate. Use
   Eval-A floor only.
-- **val_loss floor.** val_loss is secondary KPI; per DESIGN.md §5
+- **val_loss floor.** val_loss is secondary KPI; per preframr_experiments/DESIGN.md §5
   it's a tie-breaker, not a winner metric. Floor would conflate
   the two.
 - **Per-composer floors.** Premature; per-composer eval is gated

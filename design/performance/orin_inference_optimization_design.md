@@ -104,7 +104,7 @@ aggressive option pending the confirmatory re-train.
 ## Decode-loop GPU-resident rewrite (item 3)
 
 The blocker on items 2 and 6 is the Python-side state machine in
-`preframr/core/constrained_decode.py::StreamState`. It enforces:
+`preframr_tokens.constrained_decode` (torch-free numpy; see the Update above). It enforces:
 
 1. Frame-budget invariant (sval ≤ irq per frame).
 2. Voice-block atomicity (a frame's voice-reg group is contiguous).
@@ -643,10 +643,9 @@ ends so this isn't re-explored.
 
 ## Cross-reference
 
-- Vocab shrink details: see `accuracy_push_prodlike_4x` AGENTS.md
-  block + this doc's "Vocab shrink interaction" section.
+- Vocab shrink details: this doc's "Vocab shrink interaction" section (the original
+  `accuracy_push_prodlike_4x` audition that sourced the baseline is since retired).
 - Streaming-unembed-CE (training-side): existing design at
-  `design/model/streaming_unembed_ce_design.md`.
-- The atom-vs-merge tokenizer-ID analysis: produced 2026-05-19
-  during accuracy_push_prodlike_4x audition; data in
-  `/scratch/tmp/preframr_experiments/results/accuracy_push_prodlike_4x/apush4x/seed0/tkmodel.json`.
+  `design/performance/streaming_unembed_ce_design.md`.
+- The atom-vs-merge tokenizer-ID analysis: produced 2026-05-19 during that audition
+  (raw `tkmodel.json` lived under a since-cleared `/scratch/tmp/...` results dir).

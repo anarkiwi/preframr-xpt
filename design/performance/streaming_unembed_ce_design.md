@@ -1,21 +1,24 @@
 # streaming unembed-CE — design note
 
-Architectural fix that would recover the 2x wallclock cost paid in
-commit 231ba88 (batch_size 4→2 to fit the prodlike body in 24 GiB).
-Interleaves the unembed projection with per-chunk CE inside a single
-gradient checkpoint so the 8.6 GiB list of unembed chunks never
-materialises during forward.
+**Status:** Deferred — likely unnecessary at the current `tkvocab=32768`. The
+original premise (an 8.6 GiB unembed slab forcing `batch_size 4→2`) assumed the old
+`V=131072` default; recomputed at 32768 the slab is ~2.0 GiB and the batch=4
+training-step peak (~14.6 GiB est.) already fits the 24 GiB RTX 4090, so the batch=2
+wallclock regression this targets shouldn't occur. Keep as a back-pocket optimization
+for if vocab grows (frontier tier) or batch/seq-len scale up. All figures below
+recomputed for V=32768 (old V=131072 numbers were ~4× larger).
 
-**Blocked on `loop_lookahead_prodlike` completion** — touches
-`preframr/model.py`, which the AGENTS.md mid-run-edit rule forbids
-while an orchestrator is in flight. Design only this commit.
+Architectural fix that interleaves the unembed projection with per-chunk CE inside a
+single gradient checkpoint so the unembed-chunk slab never fully materialises during
+forward. (Originally written to recover the 2× wallclock paid in commit 231ba88 —
+`batch_size 4→2` to fit the prodlike body in 24 GiB — under the old V=131072 default.)
 
 ## Motivation
 
-At prodlike scale (`B=4`, `S=8192`, `V=131072`, bf16) the unembed
+At prodlike scale (`B=4`, `S=8192`, `V=32768`, bf16) the unembed
 output is:
 
-    B * S * V * 2 bytes = 4 * 8192 * 131072 * 2 = 8.6 GiB
+    B * S * V * 2 bytes = 4 * 8192 * 32768 * 2 = 2.0 GiB
 
 `torchtune.modules.TransformerDecoder.chunked_output` chunks the seq
 dim into `num_output_chunks=8` slabs and returns them as a Python
@@ -31,24 +34,24 @@ def chunked_output(self, last_hidden_state):
 ```
 
 The list comprehension materialises **all 8 chunks concurrently**.
-Total: 8 * (4, 1024, 131072) bf16 = 8.6 GiB — the same as the
+Total: 8 * (4, 1024, 32768) bf16 = 2.0 GiB — the same as the
 unchunked output. The current chunked-CE only saves the fp32
 log_softmax intermediate (recomputed per-chunk in backward via
 `_torch_checkpoint.checkpoint`), not the unembed output itself.
 
-Empirical: at batch=4 the training_step peak is ~22.7 GiB (8.6 GiB
-unembed chunks + 1.6 GiB transformer activations + 0.8 GiB params +
-3.2 GiB Adam state + 2 GiB CE upcast workspace + misc). OOMs the 24
-GiB RTX 4090. At batch=2 the unembed slab is 4.3 GiB and training_step
-peak is ~18 GiB — fits with ~5.5 GiB headroom. Wallclock doubles
-because we now run 2x micro-batches per optimiser step.
+Empirical (recomputed for V=32768): at batch=4 the training_step peak is ~14.6 GiB
+(2.0 GiB unembed chunks + 1.6 GiB transformer activations + 0.8 GiB params +
+3.2 GiB Adam state + 0.5 GiB CE upcast workspace + ~6.5 GiB grads/workspace/
+fragmentation). **Fits the 24 GiB RTX 4090 with ~9 GiB headroom — so at this vocab
+batch=4 does NOT OOM and no batch=2 regression is needed.** (Under the old V=131072
+default the slab was 8.6 GiB and the upcast ~2 GiB, pushing the peak to ~22.7 GiB and
+forcing batch=2 — the situation this doc was originally written for.)
 
-**Streaming the unembed-CE coupling eliminates the 8.6 GiB slab.**
-At any moment, at most one chunk's unembed output is alive (~1 GiB);
-backward recomputes via checkpoint from the small hidden-state input
-(48 MiB per chunk). Peak drops from ~22.7 GiB to ~14-15 GiB at
-batch=4 (estimate; needs validation). Restores batch=4 →
-accumulate_grad_batches=8 → ~36-66 hr wallclock for prodlike.
+**Streaming the unembed-CE coupling shrinks the slab further** — at any moment at most
+one chunk's unembed output is alive (~0.25 GiB); backward recomputes via checkpoint
+from the small hidden-state input (48 MiB per chunk). Peak drops to ~8.6 GiB at
+batch=4 (estimate) — useful headroom for batch=8 or a larger frontier vocab, but not
+required for the current prodlike envelope.
 
 ## Method
 
@@ -118,9 +121,9 @@ Memory savings during forward:
 
 | Path | Peak unembed slab |
 |---|---|
-| Today (list of N chunks) | N * 1 GiB = 8 GiB |
-| Streaming (1 chunk alive at a time) | 1 GiB |
-| Saved | 7 GiB |
+| Today (list of 8 chunks) | 8 * 0.25 GiB = 2.0 GiB |
+| Streaming (1 chunk alive at a time) | 0.25 GiB |
+| Saved | ~1.75 GiB |
 
 Backward (with checkpoint):
 - saved-for-backward per chunk: `h_chunk` = (B, S/N, E) bf16 = 48 MiB
@@ -128,18 +131,18 @@ Backward (with checkpoint):
 - recomputation cost: each chunk re-runs the unembed + fp32 upcast
   during backward → roughly 2x compute for the unembed step alone.
 
-Net training step peak estimate at batch=4:
+Net training step peak estimate at batch=4 (V=32768):
 - params 0.8 GiB
 - activations 1.6 GiB (transformer)
 - saved h_chunks 0.4 GiB
-- per-chunk live: unembed output 1 GiB + fp32 upcast 2 GiB = 3 GiB
+- per-chunk live: unembed output 0.25 GiB + fp32 upcast 0.5 GiB = 0.75 GiB
 - grad of params 0.8 GiB
 - Adam state 3.2 GiB
 - workspace ~1 GiB
-- **total ~11 GiB peak (down from 22.7 GiB at batch=4)**
+- **total ~8.6 GiB peak (down from the ~14.6 GiB non-streaming batch=4 at V=32768)**
 
-Fits in 24 GiB with ~13 GiB headroom. Could even raise batch_size to 8
-if the prodlike runtime needs faster wallclock.
+Comfortably within 24 GiB. The headroom only becomes load-bearing if vocab grows
+(frontier tier) or batch_size/seq_len scale beyond the current prodlike envelope.
 
 ## Wiring: `_forward_no_unembed`
 
@@ -258,9 +261,9 @@ Layered, in order:
   path within seed σ (deterministic seed; same data, same model
   init).
 
-**L4 — full mini-tier `loop_lookahead` re-run:**
+**L4 — full mini-tier A/B re-run:**
 - 2 arms × 2 seeds, mini tier (~12-20 min/arm).
-- Assert Δval_acc within seed σ of the reference 2026-05-11 result.
+- Assert Δval_acc within seed σ of a current-tier reference result.
 - Confirms no training-dynamics drift.
 
 Pre-A/B gate: L0-L4 all green before flipping prodlike to streaming.
@@ -274,7 +277,8 @@ Pre-A/B gate: L0-L4 all green before flipping prodlike to streaming.
 - L0-L2 tests: **~0.5 day.**
 - L3-L4 validation runs: **~1 day (mini-tier wallclock).**
 
-Total: **~3 days.** Lands after `loop_lookahead_prodlike` completes.
+Total: **~3 days.** Deferred — only worth building if the vocab/batch/seq growth
+above reintroduces the memory wall.
 
 ## Order of operations
 
@@ -287,8 +291,8 @@ Total: **~3 days.** Lands after `loop_lookahead_prodlike` completes.
    `--streaming-unembed`.
 5. L3-L4 validation runs; fold result into AGENTS.md Resolved.
 6. If green: flip `prodlike_train_args` to `batch_size=4` +
-   `accumulate_grad_batches=8` (the pre-2026-05-12 config); rebuild
-   the loop_lookahead_prodlike result on the recovered wallclock.
+   `accumulate_grad_batches=8` (the pre-2026-05-12 config) and re-baseline
+   wallclock on the recovered config.
 
 ## Out of scope
 

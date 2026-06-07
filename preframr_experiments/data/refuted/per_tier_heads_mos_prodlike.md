@@ -88,7 +88,7 @@ absolute and pass on ratio.
    re-derived against the prodlike-baseline measurement, not re-used
    from the mini design.
 4. **Promote queue item 1: router-entropy retest at mini.** Trigger
-   condition (per `model_loss_queue.md`) is satisfied: "Phase 3
+   condition (per the retired model-side loss/head queue) is satisfied: "Phase 3
    prodlike mos4 refutes AND the audit shows router saturation as
    the dominant failure mode." The diversity_ratio collapse to ~1.0
    is the router-saturation signature. Single-arm `mos4 +
@@ -101,7 +101,7 @@ absolute and pass on ratio.
   *at mini*?** If yes, escalate to prodlike. If no, the failure mode
   is deeper than router saturation (mixture collapse or softmax
   bottleneck) — escalate to queue item 2 (cluster-conditional content
-  head, `model_loss_queue.md`).
+  head; the model-side loss/head queue, now retired).
 - **Does lambda 0.01 cost any content-acc lift?** Entropy regulariser
   spreads the router posterior; that may dilute the tier-specialisation
   win that gave the +1.80× val_acc at mini. Phase 2 gate should track
@@ -119,5 +119,5 @@ absolute and pass on ratio.
 - Design doc: `design/refuted/per_tier_heads_design.md`
   (main repo).
 - Phase 3 spec: `../../specs/per_tier_heads_prodlike.py`.
-- Queue: `design/model/model_loss_queue.md`
-  (main repo) item 1.
+- Queue: the model-side loss/head queue, item 1 (retired; anti-queue folded
+  into `design/refuted/multi_modal_objective_design.md`).

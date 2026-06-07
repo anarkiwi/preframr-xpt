@@ -1,5 +1,7 @@
 # `--start-seq` rotation semantics audit + fix — design note
 
+**Status:** Pending impl. Fix = a `preframr/train/regdataset.py` edit.
+
 Pipeline coverage hole from AGENTS.md §Pipeline coverage holes:
 `RegDataset.predict_load` (`preframr/train/regdataset.py`) selects
 the predict target by `--start-seq` index into a df-map filtered by
@@ -11,8 +13,7 @@ For `MAX_PERM > 1` (e.g. prodlike `max_perm=2`, mini `max_perm=2`),
 half (or more) of the rotations on disk are unreachable via
 predict.
 
-Docs-only this commit. Implementation = `preframr/train/regdataset.py`
-edit, blocked on prodlike completion.
+Implementation = a `preframr/train/regdataset.py` edit.
 
 ## Symptom evidence
 
@@ -220,8 +221,7 @@ need updating.
   audition harnesses): **~0.2 day**.
 - AGENTS.md + args.py help-text update: **~0.1 day**.
 
-Total: **~1.5 days**. Lands after `loop_lookahead_prodlike`
-completes (touches `preframr/*`).
+Total: **~1.5 days** (touches `preframr/*`).
 
 ## Order of operations
 

@@ -12,6 +12,7 @@ historical context; consult git log for the actual commits.
 | [`preframr_tokens_corpus_class_design.md`](preframr_tokens_corpus_class_design.md) | `preframr_tokens.corpus.Corpus` (~560 LoC extracted from RegDataset). |
 | [`constrained_decode_torch_free_design.md`](constrained_decode_torch_free_design.md) | `preframr_tokens.constrained_decode` numpy-mask + boundary `masked_fill`. |
 | [`experiments_extraction_design.md`](experiments_extraction_design.md) | `preframr-experiments` sibling repo (runner + specs + tier lists + refuted registry) at `/scratch/anarkiwi/preframr-xpt`. |
+| [`repo_focus_cleanup_scope.md`](repo_focus_cleanup_scope.md) | Scope/plan for the above split (what stays in `preframr` core vs moves to `preframr-xpt`); largely executed. |
 | [`model_regdataset_decomposition_design.md`](model_regdataset_decomposition_design.md) | `preframr/train/model/` subpackage + `regdataset.py` slimmed to ~210 LoC adapter. |
 | [`train_inference_split_design.md`](train_inference_split_design.md) | `preframr/train/` vs `preframr/inference/` bind-mount split; `Dockerfile.predict` slim eval image. |
 

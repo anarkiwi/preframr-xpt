@@ -4,13 +4,15 @@
 `origin/main`** (PR #62/#64/#65/#66/#67/#68): `generator_pass` is the deployed default in
 `REGISTERED_MACROS`, the per-pass macro zoo (`skeleton`/`freq_trajectory`/`sweep`/`gradient`/`global_osc`/
 `preset`/`stamp`/`wavetable`/`per_reg_burst`/`note_off`/`init`) is **deleted**, ops `GEN_TRI=83`/
-`GEN_TUNING=84`/`GEN_TABLE_{DEF=85,STEP=86,END=87,REF=88}` + reused `SWEEP_OP=64` are live. It is **NOT yet
-released to PyPI** — latest is `preframr-tokens 0.44.0`; the generator landing is held on `main` to bundle
-whole-chip-zero into one breaking **0.45.0** (memory `tokens-0.45.0-release-pending`,
-`cross-repo-release-ordering`).
+`GEN_TUNING=84`/`GEN_TABLE_{DEF=85,STEP=86,END=87,REF=88}` + reused `SWEEP_OP=64` are live. **Released:**
+the generator landing shipped in **tokens 0.45.0** and the line has since advanced (0.45.1 op-tiering fix →
+**0.46.x** on PyPI; xpt BASE bumped accordingly). The decisive run is therefore **no longer release-blocked** —
+the release gate below is satisfied; what remains is to rebuild the image on the current tokens, re-cut the
+dataset, and launch.
 
-This doc is the readiness register: which measurements are runnable **now** (cheap, against local `main`
-source) vs **gated on the 0.45.0 release + image rebuild + dataset re-cut** (the decisive training run). It
+This doc is the readiness register: which measurements are runnable **now** (cheap, against local source) vs
+**were gated on the release + image rebuild + dataset re-cut** (the decisive training run; the release half is
+now done). It
 makes concrete the "NEXT" block in `AGENTS.md`. Cross-ref `learnability_token_ordering_theory.md` (why
 copy-fraction is the lever), `generator_mdl_representation.md` (the encoding under test),
 `verification_and_audits.md` (correctness gates — orthogonal to learnability).
@@ -22,7 +24,7 @@ copy-fraction is the lever), `generator_mdl_representation.md` (the encoding und
 | **Static learnability triage** (the cheap go/no-go) | local `main` source on `PYTHONPATH` | **YES** |
 | **Op-distribution / content-tier wiring** | local `main` source + `op_name_by_id()` | **YES** (op→tier map) / training output (the report) |
 | **Residual-in-key refragmentation** | local `main` source | **YES** |
-| **Canonical-tier learnability A/B** (decisive) | 0.45.0 on PyPI → xpt floor + image rebuild → dataset re-cut | **NO — release-gated** |
+| **Canonical-tier learnability A/B** (decisive) | tokens released (done) → image rebuild on current tokens → dataset re-cut | **release-gate satisfied; image rebuild + re-cut + launch remain** |
 | **Generalization metric automation** | the canonical run's checkpoints | **NO — follows the run** |
 
 The cheap reads run against **local tokens `main`** with `PYTHONPATH=/scratch/anarkiwi/preframr-tokens`
@@ -108,14 +110,14 @@ exact-recurrence rates the design claimed (instrument program 98% exact-recurren
 the residual belongs in a separate low-order channel, not the codebook key. This is a static corpus pass
 (no training); fold it into the same triage sweep.
 
-## 4. Canonical-tier learnability A/B — the decisive run (RELEASE-GATED)
+## 4. Canonical-tier learnability A/B — the decisive run (release gate satisfied)
 
 Mini collapses regardless of vocab (`loop_collapse_rate` ~1.0); only canonical/prodlike settles whether the
-generator vocab's **payload** learns. This is the real verdict and it is **not queued** — it waits on the
-0.45.0 release.
+generator vocab's **payload** learns. This is the real verdict. The release it waited on has shipped (tokens
+0.45.0 → 0.46.x); what remains is the image rebuild + dataset re-cut + launch.
 
 **Arms** (target first, baseline last — `AGENTS.md` ordering):
-1. **generator** — `Arm(macro_config="full_macros")` on released 0.45.0 (= the generator encoding).
+1. **generator** — `Arm(macro_config="full_macros")` on released tokens (= the generator encoding).
 2. **atomic baseline** — `Arm(baseline=True)` (all passes OFF; survives the release, always available).
 3. **pinned old-full_macros** (optional A/B reference) — the pre-generator encoding. **This must be preserved
    by a git pin BEFORE relying on it**: the zoo is deleted on `main`, so reproducing the old encoding needs a
@@ -128,9 +130,10 @@ generator vocab's **payload** learns. This is the real verdict and it is **not q
 **Prediction:** generator's provenance-invariant DEF→REF + LUT pitch lift content-tier accuracy over atomic.
 
 **Pre-run sequence (the release chain, all on fogbank per `release_build_cache.md`):**
-1. Release tokens **0.45.0** to PyPI (`vX` tag → OIDC `release.yml`) — **only after** the 12-SID WAV audition
-   gate passes (non-negotiable before flipping a default + re-cutting data).
-2. Re-floor `preframr-tokens>=0.45.0` in **all** xpt req files; rebuild the xpt image on it.
+1. ~~Release tokens to PyPI~~ **DONE** — shipped 0.45.0 → 0.46.x (gated, as required, on the corpus
+   register-log equivalence check `cb_div_audit.py`: decoded registers match the source dumps — same
+   regs/order/delay, within `freq_tol`).
+2. Re-floor `preframr-tokens` to the current release in **all** xpt req files; rebuild the xpt image on it.
 3. Re-cut datasets (`PREFRAMR_DATASET_CACHE_DISABLE=1` not needed — but the op set shifted, so the dataset
    cache key changes; let it re-tokenize). parse+tokenize ~25 min/prodlike uncached.
 4. Launch the canonical A/B (`nohup`+`disown`, `ScheduleWakeup` to check — don't poll). canonical
@@ -163,5 +166,6 @@ failure.
 3. **op→tier coverage** (§2): confirm every `GEN_*`/`SWEEP_OP` resolves in `tier_map.build_op_map`; grep xpt
    for dead retired `*_OP` references.
 
-Everything in §4–§5 is **release-gated** and starts only after tokens 0.45.0 + the 12-SID audition + the image
-rebuild.
+§4–§5's release gate is now **satisfied** (tokens released; the corpus register-log equivalence
+gate `cb_div_audit` passed) — what remains before they start is the image rebuild on the current
+tokens + the dataset re-cut.

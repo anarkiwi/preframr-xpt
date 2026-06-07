@@ -1,10 +1,14 @@
 # repo focus cleanup — scope (2026-05-25)
 
+**Status:** Largely executed (archived). The split shipped — orchestration, specs,
+tier lists, audits, refuted registry, and design docs now live in `preframr-xpt`
+(see [`experiments_extraction_design.md`](experiments_extraction_design.md)). Kept
+as the historical scoping record.
+
 **Goal:** keep `preframr` (main repo) to the **core framework** — the trainable/
 inferable package + its unit tests + build. Move experiment orchestration,
 dataset/corpus curation ("pickers"), research audits, and experiment data to the
-sibling `preframr-xpt`. This is scope only; execution deferred (see Sequencing —
-do not disrupt the in-flight re-arc).
+sibling `preframr-xpt`.
 
 ## Current weight (tracked files)
 `integration_tests/` = **293** files vs `preframr/` 25, `tests/` 31. So the

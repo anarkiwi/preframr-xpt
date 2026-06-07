@@ -153,3 +153,32 @@ Wired into `Model.training_step` as `loss = ce_loss + lambda * contrastive_loss`
 ## Acceptance criteria for advancing from this design
 
 Reviewer (user) approves Approach B as the first bet. Stage 1 implementation lands behind a CLI flag (default OFF). Stage 2 micro_mini A/B runs unattended in < 30 min with auto-abort gates active. Stage 2 verdict determines escalation.
+
+## Anti-queue — model-side bets NOT to re-attempt
+
+Salvaged from the retired `model_loss_queue.md` decision tree. The model-side
+arc is **closed** — the content win came tokenizer-side (`full_macros` / FREQ_TRAJ),
+not from any of these. Detailed refutations live in
+`../../preframr_experiments/data/refuted/`.
+
+- **Plain InfoNCE with random distractors** (Approach B) — refuted. Re-open ONLY
+  with cross-composer *targeted* negatives (distractors sampled from content tokens
+  at similar structural-context fingerprints in OTHER composers), and only if the
+  dominant signal is the eval_b-vs-eval_a cross-composer gap.
+- **Per-tier heads / MoS + router-entropy** (Approach C) — refuted at prodlike
+  (router saturates); [`per_tier_heads_design.md`](per_tier_heads_design.md).
+- **Discrete diffusion content head** (Approach A) — refuted (sampling-side, no CE
+  change); [`content_diffusion_design.md`](content_diffusion_design.md).
+- **Cluster-conditional content head** — refuted (same ceiling, diversity ~1.0–1.2);
+  [`cluster_conditional_content_head_design.md`](cluster_conditional_content_head_design.md).
+- **Static class-weighted CE** (`weighted_token_loss` / `learnable_class_loss`) —
+  refuted; don't add another tier-weight knob.
+- **Approach D (DPO / energy sequence ranking)** — refuted in design (weak per-step
+  gradient, expensive inference); re-open only with a fresh decoding-time story.
+- **Per-voice auxiliary supervision** (forcing musical state into hidden activations)
+  — same model-side content-intervention class; never beat the ceiling.
+  [`per_voice_aux_supervision_design.md`](per_voice_aux_supervision_design.md).
+
+Remaining non-model lever if every bet refutes: **data-scale via melody-transfer
+augmentation** (`preframr-aug:design/melody_transfer_augmentation_design.md`),
+favoured *below* tracker-authoring priors per AGENTS.md priority order.

@@ -1,5 +1,7 @@
 # flag stage routing — design note
 
+**Status:** Pending impl. Touches `preframr_experiments/base.py`.
+
 Framework follow-up from AGENTS.md §Framework follow-ups:
 `run_arm` (`preframr_experiments/base.py:786`) forwards
 `arm.extra_cargs` and `cargs` to every stage (parse, tokenize,
@@ -11,13 +13,10 @@ it has no effect. The cost is conceptual (operators must remember
 which flags do something per-stage) and forward-compatibility
 (new stage-specific flags could collide if not partitioned).
 
-Cloud-rental prereq adjacent: `auto_early_abort` + `--resume` +
-`--max-parallel-arms` all assume a clean spec contract. Stage-clear
-routing reduces the surface for "this flag had no effect because
-the stage doesn't read it" debugging.
-
-**Implementation blocked on `loop_lookahead_prodlike` completion**
-(touches `preframr_experiments/base.py`). Design only this commit.
+Cloud-rental prereq adjacent: the `cloud_rental_runner_design.md` features
+(`--resume` / auto early-abort / `--max-parallel-arms`) all assume a clean spec
+contract. Stage-clear routing reduces the surface for "this flag had no effect
+because the stage doesn't read it" debugging.
 
 ## Current state
 
@@ -245,8 +244,7 @@ spec construction raises `ValueError`.
 - L0-L3 tests: **~0.5 day**.
 - AGENTS.md note + docstring updates: **~0.1 day**.
 
-Total: **~1.5 days**. Lands after `loop_lookahead_prodlike`
-completes.
+Total: **~1.5 days**.
 
 ## Phased delivery
 
@@ -281,9 +279,8 @@ Land Phase 1 first; soak for a session or two; then Phase 2.
 ## Order of operations
 
 1. Land this design (reviewer pass).
-2. **Wait for `loop_lookahead_prodlike` to complete.**
-3. Phase 1: registry + tests.
-4. Phase 2: enforcement.
+2. Phase 1: registry + tests.
+3. Phase 2: enforcement.
 5. AGENTS.md update: move §Framework follow-up entry to Resolved.
 
 ## Connection to cloud-rental prereqs

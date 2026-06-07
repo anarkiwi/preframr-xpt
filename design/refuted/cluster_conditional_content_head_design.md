@@ -354,7 +354,7 @@ use first.
 
 ## References
 
-- Origin: `model_loss_queue.md` item 2.
+- Origin: the model-side loss/head queue, item 2 (queue retired; anti-queue folded into [`multi_modal_objective_design.md`](multi_modal_objective_design.md)).
 - Approach C refute trail: `refuted/per_tier_heads_mos_prodlike.md`,
   `refuted/mask_structural_loss.md`, the v11 + v12 commits.
 - Template: `content_diffusion_design.md` (this directory).

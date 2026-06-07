@@ -53,10 +53,11 @@ scored, arbitrated Claim and the architecture falls out.
 ## The objective (how "most appropriate" is decided)
 
 Lexicographic per region, then summed:
-1. **Fidelity (hard gate).** The accepted cover must reproduce the source **byte-exact** (the existing
-   per-frame oracle + emulator round-trip). `RESID`/raw is the always-valid, lowest-fidelity-score
-   fallback that guarantees coverage. *Lossy* claims (audition-gated, P8) are allowed only with an
-   explicit fidelity penalty and an audition flag.
+1. **Fidelity (hard gate).** The accepted cover must reproduce the source registers — same regs, same
+   input order, same delay — under the existing per-frame oracle (`parse_audit`/`cb_div_audit`). `RESID`/raw
+   is the always-valid, lowest-fidelity-score fallback that guarantees coverage. *Lossy* claims (P8) are
+   allowed only if they still land **within the contract's `freq_tol`** (so they pass the same register
+   gate), with an explicit fidelity penalty; a claim that diverges beyond tolerance is rejected.
 2. **Learnability.** Reward low-entropy, transferable structure: codebook **reuse** (a stamp/patch
    referenced N times), **rhythmic-grid** regularity, **Unigram-compressibility** (claims laid out as
    clusterable atoms), separability/no-multiplexing (`encoding_principles`). This is what makes a drum
@@ -107,13 +108,13 @@ No global order decided it — the **score per region** did.
 
 - **Scoring calibration** — the learnability term must be validated against real tunes (same
   discipline as the plausibility judge): a higher-"learnability" cover must not hurt the per-frame
-  oracle or the audition.
+  register oracle.
 - **Arbiter complexity vs optimality** — greedy vs DP vs ILP; where do real claim overlaps actually
   nest (probably per-voice intervals → DP suffices)?
 - **Cross-region coupling** — patch `PATCH_SET`/mutations and the global filter span regions; the
   arbiter must handle claims with non-local state (active patch, held filter) — likely a two-level
   arbiter (per-note claims under per-voice/global mode claims).
-- **Lossy claims** — how the audition-gated lossy tier (P8) enters scoring without letting lossy beat
-  lossless silently (explicit penalty + audition flag).
+- **Lossy claims** — how the within-`freq_tol` lossy tier (P8) enters scoring without letting lossy beat
+  lossless silently (explicit penalty; rejected outright if it diverges beyond tolerance).
 - **Determinism vs search** — keep the arbiter deterministic; speculation is bounded enumeration, not
   stochastic search.

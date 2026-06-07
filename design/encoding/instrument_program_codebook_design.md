@@ -150,10 +150,11 @@ escape, but structurally drained, not heuristically chased.
 
 ## 7. Migration / gates / release
 
-- New flag `instrument_program` (default OFF, out of `REGISTERED_MACROS` until the audition gate); it
-  changes the encoding ⇒ new vocab ⇒ re-tokenize.
+- New flag `instrument_program` (default OFF, out of `REGISTERED_MACROS` until the register-equivalence
+  gate passes); it changes the encoding ⇒ new vocab ⇒ re-tokenize.
 - **Acceptance:** `residual_set_census --step 10 reparse=True` == 0 corpus-wide (digi-excluded) +
-  reject-claim audit clean + 12-SID WAV audio-equivalence audition before any default flip + per-op
+  reject-claim audit clean + corpus register-log equivalence (`cb_div_audit`: decoded regs == source,
+  same order/delay, within `freq_tol`) before any default flip + per-op
   accuracy unaffected. Validate on the **corpus**, never a sample (the 57-tune sample hid the id
   collision; the census reparse-cache bug hid the true tail — both this session).
 - Ship as **tokens 0.45.0** (retires the 0.44.0 nibble/ctrl_wt ops + the deleted passes' ops). Cross-repo
@@ -164,6 +165,6 @@ escape, but structurally drained, not heuristically chased.
 
 1. Land segmentation + `InstrumentProgramPass` behind the flag; prove residual==0 + byte-exact corpus-wide
    alongside the existing passes (both paths present).
-2. Audio-equivalence audition; flip default.
+2. Corpus register-equivalence check (`cb_div_audit`, within `freq_tol`); flip default.
 3. Delete the ten subsumed passes + their ops/decoders/flags in one release once the unified path is the
    default and green.
