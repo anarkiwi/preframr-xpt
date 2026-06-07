@@ -225,4 +225,4 @@ trivial design + implementation effort.
   the two.
 - **Per-composer floors.** Premature; per-composer eval is gated
   on the `_stage_dumps` composer-breadcrumb fix
-  (`design/stage_dumps_basename_fix_design.md`).
+  (`design/landed/stage_dumps_basename_fix_design.md`).

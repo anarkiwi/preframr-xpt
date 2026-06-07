@@ -113,7 +113,7 @@ Used by the ``prodlike`` tier of the experiment runner. Body /
 train regime: see ``base.prodlike_train_args()`` (~50M body, 60
 epochs, looser early-stop than canonical). Per-arm wallclock
 estimate: 6-11 hr (canonical scaling factor ~5.5x). Design
-rationale: ``integration_tests/design/prodlike_tier_design.md``.
+rationale: ``design/landed/prodlike_tier_design.md``.
 
 ## Re-pin procedure
 

@@ -7,7 +7,7 @@
 localised the cause: the onset line is highly predictable (cond. entropy 2.2 bits, trigram 0.79)
 yet the model predicts the **V0 onset exactly 0.000** — because V0 is **absolute pitch**, so motifs
 don't transfer across keys. **Fix implemented:** interval-coded freq V0 (tokens PR #19, framework
-PR #139, opt-in `--freq-v0-interval`) — see `design/freq_v0_interval.md` + "Top lever" below. The
+PR #139, opt-in `--freq-v0-interval`) — see `design/landed/freq_v0_interval.md` + "Top lever" below. The
 absolute-encoding prodlike A/B was **stopped** (its melody result is predictable). Impl spec:
 [`preframr-tokens/design/freq_trajectory_anchoring.md`](../../preframr-tokens/design/freq_trajectory_anchoring.md).
 This doc is the research-level framing + why it gates the program.
@@ -206,7 +206,7 @@ to a prodlike interval-vs-absolute arbiter.
    the SET content win hold at scale?) folds into the **interval-vs-absolute prodlike** below,
    which carries an absolute baseline arm. Spec retained; relaunchable.
 
-## Top lever: interval-coded freq V0 → `design/freq_v0_interval.md`
+## Top lever: interval-coded freq V0 → `design/landed/freq_v0_interval.md`
 The V0 onset is **absolute pitch**, so the same motif at a different key is a different token
 sequence and melodic structure can't transfer across songs — the cause of V0 acc 0 despite
 trigram 0.79. **Fix implemented** (tokens PR #19, framework PR #139, opt-in `--freq-v0-interval`,

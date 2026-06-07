@@ -1,8 +1,8 @@
 # FREQ_ONSET — route all TRAJ_REG writes into the onset channel, clean SET
 
 **Status:** Design, ready to implement (preframr-tokens; opt-in `--freq-onset-pass`, default OFF;
-byte-exact round-trip). Cross-ref: `preframr-xpt/design/trajectory_anchoring.md` (melody arc) +
-`design/freq_v0_interval.md`.
+byte-exact round-trip). Cross-ref: `design/landed/trajectory_anchoring.md` (melody arc) +
+`design/landed/freq_v0_interval.md`.
 
 ## Problem (measured)
 

@@ -9,7 +9,7 @@ re-tested on the new tokenizer in the 2026-05 re-arc; triage reproduces the
 refutations (see `../AGENTS.md` STAGE 1 progress). Each entry is a thumbnail;
 promote on approval.
 
-**Learnability framing.** These are model-side (loss/head) items; the refutations confirm the lever is tokenizer-side representation learnability ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)) — keep model-side bets ranked below tokenizer-side ones.
+**Learnability framing.** These are model-side (loss/head) items; the refutations confirm the lever is tokenizer-side representation learnability ([`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md)) — keep model-side bets ranked below tokenizer-side ones.
 
 ## Why this doc
 

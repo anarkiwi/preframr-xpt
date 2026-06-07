@@ -9,10 +9,10 @@ Equivalence is asserted the sanctioned way: parse the rendered log with ``parse_
 the deployed default (``full_macros`` = ``generator_pass`` + kept passes). The parser fires the
 fidelity oracle after EVERY pass (EXACT_REGS byte-exact in input order, FREQ within cent tolerance on
 audible frames, frame-aligned), so completing the parse == byte-exact / same output. We never hand-roll
-a ``register_state`` diff -- see ``design/verification_and_audits.md`` "THE TRAP".
+a ``register_state`` diff -- see ``design/references/verification_and_audits.md`` "THE TRAP".
 
 STAGED OUTSIDE preframr-tokens (see this dir's README). The REVERSE half of the loop
-(log -> SWM -> log, the recompiler in ``design/log_to_swm_recompiler_design.md``) is not built; it is a
+(log -> SWM -> log, the recompiler in ``design/encoding/log_to_swm_recompiler_design.md``) is not built; it is a
 documented xfail placeholder below so this file describes the full intended loop.
 
 Run in place (from the xpt tree), on fogbank in the xpt image, with a tokens-main checkout on PYTHONPATH::
@@ -103,7 +103,7 @@ def test_defmon_forward_round_trip(src, tmp_path):
     _assert_round_trip("defmon", src, tmp_path)
 
 
-@pytest.mark.xfail(reason="log->SWM recompiler not built (design/log_to_swm_recompiler_design.md); the full SWM->log->SWM->log loop is the unbuilt reverse half", strict=True)
+@pytest.mark.xfail(reason="log->SWM recompiler not built (design/encoding/log_to_swm_recompiler_design.md); the full SWM->log->SWM->log loop is the unbuilt reverse half", strict=True)
 def test_reverse_recompile_swm_full_loop():
     """Placeholder for the FULL loop: render -> log -> recompile to SWM -> render again -> identical log.
     Requires the register-log -> SWM recompiler (designed, not implemented). Marked strict-xfail so it

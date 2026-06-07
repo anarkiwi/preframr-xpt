@@ -73,7 +73,7 @@ remaining candidate cause is **the pitch isn't a separable target** — it's hid
 compound vocab classes the model nails as shapes. De-merging directly tests that. If V0-onset
 moves off 0 at mini, the merge-hiding diagnosis is correct and the lever is real (sweep at
 prodlike). If it stays flat — the structural-blocker story is wrong and we pivot the success
-metric (distributional / perceptual; `music_llm_landscape_and_fail_fast_plan.md`).
+metric (distributional / perceptual).
 
 ## A/B
 

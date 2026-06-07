@@ -5,8 +5,8 @@ model of every SID write, derived as an MDL problem and proven lossless with **z
 on 1580 corpus tunes + every historically-hard engine + SID-Wizard's own player output. Prototype:
 `/scratch/tmp/decompose5.py` (fitter), `measure_lut.py` (pitch-LUT payoff), `swm_test.py` (SWM
 compatibility). Supersedes the per-pass macro zoo and the semitone-ornament/RESID framing for the
-*representation* question. Cross-ref [`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md),
-[`digi_detection_reference.md`](digi_detection_reference.md), [`encoding_principles.md`](encoding_principles.md),
+*representation* question. Cross-ref [`sid_driver_ornament_reference.md`](../references/sid_driver_ornament_reference.md),
+[`digi_detection_reference.md`](../references/digi_detection_reference.md), [`encoding_principles.md`](../references/encoding_principles.md),
 memory `generator-model-prototype`. **This doc supersedes the prior per-pass pitch/ornament/melody stack**
 (unified-pitch-encoding, ornament-transfer, sweep-oscillation, the melody-channel/skeleton designs, the
 residual-SET workorders, and the macro-zoo triage) — all removed 2026-06-05; the generator model subsumes them.

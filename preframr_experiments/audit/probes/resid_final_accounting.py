@@ -1,7 +1,7 @@
 """FINAL RESID=0 accounting across the corpus. Apply the FULL designed mechanism stack to every
 RESID note and report what (if anything) remains UNACCOUNTED -- the true RESID>0:
   1. STAMP    -- the note's exact (fn,ctrl) write-series RECURS >=MINREP in the tune (drum/effect
-                 codebook; lossless define+backref).  [design/percussion_stamp_encoding.md]
+                 codebook; lossless define+backref).
   2. ARP      -- pitched-offset cycle (held-arp: RLE-collapse + minimal period; covers wave-delay
                  holds & period>8).                    [iter-1 landed + held-arp irregular-duration]
   3. SLIDE    -- pitched freq is a linear ramp (semitone uniform-rate OR freq-domain constant delta;

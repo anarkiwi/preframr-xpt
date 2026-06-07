@@ -4,7 +4,7 @@
 *static* per-voice `(waveform,AD,SR)` state and was withdrawn as "not needed for correctness"). Prompted
 by: "revisit the driver doc — there is more complexity here than is actually in the drivers; some
 operations/sequences are associated with notes, some are not." Grounds in
-[`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md). Direction chosen: **design first,
+[`sid_driver_ornament_reference.md`](../references/sid_driver_ornament_reference.md). Direction chosen: **design first,
 sign-off before code.**
 
 ## 1. The driver's actual representation (what we're matching)
@@ -157,7 +157,7 @@ escape, but structurally drained, not heuristically chased.
   accuracy unaffected. Validate on the **corpus**, never a sample (the 57-tune sample hid the id
   collision; the census reparse-cache bug hid the true tail — both this session).
 - Ship as **tokens 0.45.0** (retires the 0.44.0 nibble/ctrl_wt ops + the deleted passes' ops). Cross-repo
-  per [`release_build_cache.md`](release_build_cache.md): tokens `vX`→PyPI → preframr floors → Docker →
+  per [`release_build_cache.md`](../references/release_build_cache.md): tokens `vX`→PyPI → preframr floors → Docker →
   xpt rebake.
 
 ## 8. Phasing (always-green, even though design-first)

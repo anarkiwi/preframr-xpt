@@ -1,7 +1,7 @@
 # Recovered-table pitch model — the learnable, lossless, transferable pitch model
 
 **Status:** Active design (2026-06-06, revised). Supersedes the per-tune-LUT and content-tier-residual fixes
-(`design/generator_measurement_readiness.md` §3). **Mechanism corrected (user-led):** a tracker plays note N as
+(`design/measurement/generator_measurement_readiness.md` §3). **Mechanism corrected (user-led):** a tracker plays note N as
 an EXACT entry from its note→freq table, so the residual is not per-frame noise to quantize against a fixed grid
 (the earlier sub/LSB framing) — it is the table to **recover**. Validated on real corpus + the Cauldron II
 chorus. Default-OFF flag, byte-exact + residual-zero gated. Cross-ref `generator_mdl_representation.md` (the
@@ -133,4 +133,4 @@ byte-exact, **default-OFF `universal_pitch`** flag (NOT in `REGISTERED_MACROS`) 
 - Residual is per-NOTE deterministic (the table), not per-frame noise — 62% static / 2% within ±1 of the *universal* grid (why a fixed grid fails; the table fixes it): `/scratch/tmp/measure_lut_hypothesis.py` (44-tune).
 - §3 refragmentation (1.55× DEF collapse, 97.7% residuals nonzero): `/scratch/tmp/measure_refrag.py`.
 - Chorus = per-voice detune content (Cauldron II, voices 1-2 ~12c/90%): `/scratch/tmp/chorus_detune.py`.
-- Block-scale triage (current encoding: copy 0.916 ≤ baseline 0.930, alphabet 3.7×): `design/generator_measurement_readiness.md` §1.
+- Block-scale triage (current encoding: copy 0.916 ≤ baseline 0.930, alphabet 3.7×): `design/measurement/generator_measurement_readiness.md` §1.

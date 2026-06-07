@@ -7,7 +7,7 @@ mos4+entropy baseline). Was the "Approach A" fallback; superseded that bullet
 in `multi_modal_objective_design.md`. Reused the per-tier head + router
 infrastructure from `per_tier_heads_design.md`.
 
-**Learnability framing.** Another REFUTED model-side content bet (a sampling-side objective): the content win came TOKENIZER-side (`full_macros`), not from any output objective — the lever is representation learnability ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)).
+**Learnability framing.** Another REFUTED model-side content bet (a sampling-side objective): the content win came TOKENIZER-side (`full_macros`), not from any output objective — the lever is representation learnability ([`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md)).
 
 ## Problem (re-anchored after Approach C)
 

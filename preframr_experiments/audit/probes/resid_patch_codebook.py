@@ -1,5 +1,5 @@
-"""PROTOTYPE of the melodic-PATCH preamble (the non-drum twin of the drum stamp codebook;
-design/patch_preamble_encoding.md). A melodic note's PITCH is the skeleton+ornament; its TIMBRE is a
+"""PROTOTYPE of the melodic-PATCH preamble (the non-drum twin of the drum stamp
+codebook). A melodic note's PITCH is the skeleton+ornament; its TIMBRE is a
 reusable INSTRUMENT PATCH = the pitch-invariant non-pitch footprint: ADSR + the control-register
 ARTICULATION sequence (HR/test -> attack waveform -> sustain -> release) + PW. Define the patch once
 as a preamble, reference it per note; then a new melodic note = patch-ref + skeleton + ornament.

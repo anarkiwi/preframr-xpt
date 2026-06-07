@@ -3,9 +3,8 @@
 **Status (2026-05-24):** reference/positioning doc. Critically compares
 preframr's register-event + macro Unigram tokenization with the
 dominant music-LLM token paradigms — what is genuinely different, and
-where it is theoretically better or worse. Companion to
-`music_llm_landscape_and_fail_fast_plan.md` (which ranks *ideas to
-borrow*); this doc argues the *scheme itself*.
+where it is theoretically better or worse. This doc argues the *scheme
+itself* (positioning vs the literature lives in [`related_work.md`](related_work.md)).
 
 **Learnability framing.** The "ceiling is the tokenization, not the model" conclusion is exactly [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)'s thesis (the architecture is already exonerated); compare schemes by copy-fraction / per-frame h_k, not gzip-style compressibility.
 
@@ -140,8 +139,7 @@ External: Huang+ '18 (Music Transformer); Huang+Yang '20 / Hsiao+ '21
 MT); Défossez+ '22 (EnCodec); Copet+ '23 (MusicGen); Agostinelli+ '23
 (MusicLM); Dhariwal+ '20 (Jukebox).
 
-Internal: `music_llm_landscape_and_fail_fast_plan.md`,
-`compound_token_tokenizer_design.md`,
+Internal: `compound_token_design.md`,
 `audio_equivalence_normalization_design.md`,
 `preframr-aug:design/melody_transfer_augmentation_design.md`,
 `preframr-tokens:TOKEN_IMPROVEMENTS.md`.

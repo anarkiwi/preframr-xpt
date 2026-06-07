@@ -5,9 +5,8 @@
 in every facet, but no single work matches preframr's core choice — generatively modeling the RAW per-frame
 SID register-write stream — and no work unites its defining combination.** Use this to position the project,
 cite prior art, and avoid reinventing. Cross-ref [`tokenization_vs_music_llms.md`](tokenization_vs_music_llms.md),
-[`music_llm_landscape_and_fail_fast_plan.md`](music_llm_landscape_and_fail_fast_plan.md),
 [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md),
-[`generator_mdl_representation.md`](generator_mdl_representation.md).
+[`generator_mdl_representation.md`](../encoding/generator_mdl_representation.md).
 
 ## The one-paragraph placement
 Each facet is well-precedented; the **integration is not**. The closest chiptune-ML precedents capture the

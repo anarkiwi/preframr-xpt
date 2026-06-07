@@ -73,8 +73,7 @@ the FREQ_TRAJ rework roughly halved the alphabet and the used set:
   atom-level macros, not Unigram merges). This light-merge regime is
   load-bearing for the motif pass: because Unigram barely merges at
   deployment scale, a motif dictionary is NOT redundant with it
-  (measured ~11.4% fewer tokens at vocab 8192; see
-  `motif_pass_design.md`). The mini dry-run's 0.6% was an over-merged
+  (measured ~11.4% fewer tokens at vocab 8192). The mini dry-run's 0.6% was an over-merged
   small-corpus regime, not this one.
 - **Correction to the pre-rework "all used IDs < 8,192" claim:** the
   used IDs now span the *whole* range (max used id **32,766**); only
@@ -647,7 +646,7 @@ ends so this isn't re-explored.
 - Vocab shrink details: see `accuracy_push_prodlike_4x` AGENTS.md
   block + this doc's "Vocab shrink interaction" section.
 - Streaming-unembed-CE (training-side): existing design at
-  `design/streaming_unembed_ce_design.md`.
+  `design/model/streaming_unembed_ce_design.md`.
 - The atom-vs-merge tokenizer-ID analysis: produced 2026-05-19
   during accuracy_push_prodlike_4x audition; data in
   `/scratch/tmp/preframr_experiments/results/accuracy_push_prodlike_4x/apush4x/seed0/tkmodel.json`.

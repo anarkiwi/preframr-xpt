@@ -7,7 +7,7 @@ divergence it was meant to close — the gap is dominated by genuine sub-frame
 render proof (below), no model A/B needed. Do-not-revisit stub:
 `preframr_experiments/data/refuted/sequence_order_normalization.md`. The
 sequence-level sibling of
-[`audio_equivalence_normalization_design.md`](audio_equivalence_normalization_design.md)
+[`audio_equivalence_normalization_design.md`](../encoding/audio_equivalence_normalization_design.md)
 (per-write `val` collapse, still open). Generalization axis / representation;
 see [[representation-thread]].
 
@@ -66,7 +66,7 @@ just isn't where the cross-engine divergence lives.
 - **Redundant same-value rewrite dedup** (the 16% dead-overwrite slice): a clean
   inaudible token-count reduction, but small and partly covered by `DedupSetPass`.
   Belongs with the redundant-writes note in
-  [`audio_equivalence_normalization_design.md`](audio_equivalence_normalization_design.md),
+  [`audio_equivalence_normalization_design.md`](../encoding/audio_equivalence_normalization_design.md),
   not as a standalone direction.
 - The audit stays as the **iterable instrument** — re-run on new tokenizer
   versions / corpora to confirm the order/multiplicity split holds before
@@ -76,6 +76,6 @@ just isn't where the cross-engine divergence lives.
 
 - Audit + render proof: `preframr_experiments/audit/audit_seq_order_norm.py`.
 - Per-write sibling (still open):
-  [`audio_equivalence_normalization_design.md`](audio_equivalence_normalization_design.md).
+  [`audio_equivalence_normalization_design.md`](../encoding/audio_equivalence_normalization_design.md).
 - Engine-divergence framing: `tokenization_vs_music_llms.md`, [[representation-thread]].
 - Reg constants: `preframr_tokens/stfconstants.py` (VOICE_REG=−126, CTRL 4/11/18).

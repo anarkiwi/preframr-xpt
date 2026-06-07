@@ -2,11 +2,11 @@
 
 **Status:** Refuted at mini sweep (single-seed lift within noise)
 and at prodlike epoch 8 (content acc 0.0000). Design replaced by
-`design/per_tier_heads_design.md` (Approach C).
+`design/refuted/per_tier_heads_design.md` (Approach C).
 
 ## Hypothesis
 
-Per `design/multi_modal_objective_design.md` Approach B: per-token
+Per `design/refuted/multi_modal_objective_design.md` Approach B: per-token
 CE cannot express the multi-modal target distribution on content
 positions. Add an InfoNCE-style auxiliary loss at each content
 position: GT vs K random distractors from the vocab, train the

@@ -3,11 +3,11 @@
 **Status:** QUEUED 2026-05-29, blocked on the ornament-codebook/parametric work landing
 (op-code churn must settle first). Three independent items: (#9) dead-wood removal,
 (#10) real-pipeline structural/balance tests, (#11) driver-truth RESID-completeness fixtures.
-Reference: [`tokens_architecture.md`](tokens_architecture.md) (the pass framework + parse
-pipeline) and [`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md) (driver
+Reference: [`tokens_architecture.md`](../references/tokens_architecture.md) (the pass framework + parse
+pipeline) and [`sid_driver_ornament_reference.md`](../references/sid_driver_ornament_reference.md) (driver
 mechanics). All paths below are under `/scratch/anarkiwi/preframr-tokens/`.
 
-**Learnability framing.** RESID-completeness is a learnability metric, not only coverage ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principle 3): each leaked mechanism the model must otherwise infer is an implicit per-frame counter / hidden state, and the provenance-invariance test (#11.4) is the induction-head case (same gesture → same tokens → one copyable pattern).
+**Learnability framing.** RESID-completeness is a learnability metric, not only coverage ([`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md) Principle 3): each leaked mechanism the model must otherwise infer is an implicit per-frame counter / hidden state, and the provenance-invariance test (#11.4) is the induction-head case (same gesture → same tokens → one copyable pattern).
 
 Shared docker gate — use the **baked cache image** `anarkiwi/preframr-tokens-test` (deps
 pre-installed; editable `--no-deps` is instant and picks up working-tree edits → ~6s/run vs

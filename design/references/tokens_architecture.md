@@ -41,7 +41,7 @@ Global: `21 FC_LO_REG` (filter cutoff lo), `22` FC hi, `23 FILTER_REG`
 The 16-bit **frequency** of voice `v` is `(reg[v*7+1] << 8) | reg[v*7]`. **Never
 read it from a single lo or hi write** — a lo write with a stale hi byte is a
 garbage pitch. Use the settled value (`combine_reg`, below). This was a real bug
-(read settled 16-bit freq, not raw bytes — see [`generator_mdl_representation.md`](generator_mdl_representation.md)).
+(read settled 16-bit freq, not raw bytes — see [`generator_mdl_representation.md`](../encoding/generator_mdl_representation.md)).
 
 ### Marker registers (negative `reg`, inserted by the parser)
 `FRAME_REG = -128` (one frame tick), `DELAY_REG = -127` (N empty frames, val=N),

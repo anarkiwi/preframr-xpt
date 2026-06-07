@@ -71,7 +71,7 @@ knob cannot get us past criterion 4.
    reading; v12 confirms the ceiling. Defaults stay at single-head
    plain CE for now.
 3. **Promote queue item 2 (cluster-conditional content head) to
-   in-flight.** Design at `integration_tests/design/cluster_conditional_content_head_design.md`.
+   in-flight.** Design at `design/refuted/cluster_conditional_content_head_design.md`.
    Phase 0 starts now (offline cluster index, ~1 hr fogbank).
 4. **Mini retest data retained as positive evidence** for the
    router-architecture framing (vs the gradient-dominance framing
@@ -97,5 +97,5 @@ knob cannot get us past criterion 4.
 - v10 (original Phase 3 refute): `per_tier_heads_mos_prodlike.md`
   (this directory).
 - mask_structural separator: `mask_structural_loss.md` (this directory).
-- Cluster-head design (in-flight): `../../../../preframr/integration_tests/design/cluster_conditional_content_head_design.md`.
+- Cluster-head design (in-flight): `design/refuted/cluster_conditional_content_head_design.md`.
 - Specs: `../../specs/per_tier_heads_entropy_{retest,sweep_mini,prodlike,prodlike_v12}.py`.

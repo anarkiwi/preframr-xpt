@@ -1,7 +1,7 @@
 # `palette_merge` — REFUTED (pre-2026-05-10, design phase)
 
 **Status:** two refuted variants from
-`integration_tests/design/palette_merge_design.md` Phase 1. Neither
+`palette_merge_design.md` (removed) Phase 1. Neither
 advanced to A/B; the design notes captured the refutation evidence
 ahead of implementation.
 
@@ -47,7 +47,7 @@ emit slightly-varying instruments per voice (Hubbard).
 
 ## Evidence
 
-`integration_tests/design/palette_merge_design.md` Phase 1 — both
+`palette_merge_design.md` (removed) Phase 1 — both
 variants analysed with corpus-wide cardinality estimates and
 collision projections; neither reached the A/B advancement gate.
 

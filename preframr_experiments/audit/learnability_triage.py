@@ -2,7 +2,7 @@
 """Training-free learnability triage for a tokenization/ordering -- ranks ENCODINGS by
 information-theoretic proxies for how cheaply a bounded (~TC0) transformer can represent
 the next-token map, WITHOUT training. Backing theory + reading guide:
-design/learnability_token_ordering_theory.md.
+design/references/learnability_token_ordering_theory.md.
 
 The proxies (all computed on the tokenized atom stream, contexts never crossing a tune
 boundary):

@@ -7,7 +7,7 @@ C (per-tier MoS + entropy), and A (discrete diffusion). The leverage proved to b
 objective. Retained as the umbrella framing; the live successor thread is the
 compound-token / motif representation work, not a new objective.
 
-**Learnability framing.** This umbrella's own conclusion IS the thesis of [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md): learnability is won on the REPRESENTATION side (tokenizer-side `full_macros`), not the loss/head side.
+**Learnability framing.** This umbrella's own conclusion IS the thesis of [`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md): learnability is won on the REPRESENTATION side (tokenizer-side `full_macros`), not the loss/head side.
 
 ## Problem
 

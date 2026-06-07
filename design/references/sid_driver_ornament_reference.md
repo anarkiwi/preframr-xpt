@@ -3,10 +3,10 @@
 **Status:** Reference (background). How C64 SID music drivers generate per-frame **ornamentation** —
 pitch (arpeggio / vibrato / portamento), **pulse-width**, and **filter** — at the register level.
 Distilled from a 2026-05-29 read of four drivers (References below). Other designs cite this rather
-than re-deriving it; see [`generator_mdl_representation.md`](generator_mdl_representation.md) (the current
+than re-deriving it; see [`generator_mdl_representation.md`](../encoding/generator_mdl_representation.md) (the current
 encoding that builds on this), [`encoding_principles.md`](encoding_principles.md),
-[`landed/trajectory_anchoring.md`](landed/trajectory_anchoring.md),
-[`landed/freq_v0_interval.md`](landed/freq_v0_interval.md),
+[`landed/trajectory_anchoring.md`](../landed/trajectory_anchoring.md),
+[`landed/freq_v0_interval.md`](../landed/freq_v0_interval.md),
 [`voice_encoding_reference.md`](voice_encoding_reference.md).
 
 ## The register targets
@@ -119,7 +119,7 @@ for these drivers, mis-reading held-gate note changes as "ornament."
 
 The robust note detector is an **intrinsic level-change** detector (sustained pitch-level changes),
 not the gate — exactly the landed `TrajectoryAnchorPass` **pass-1** origin detector
-([`landed/trajectory_anchoring.md`](landed/trajectory_anchoring.md)), with the gate as a complementary
+([`landed/trajectory_anchoring.md`](../landed/trajectory_anchoring.md)), with the gate as a complementary
 signal for re-struck same-pitch notes. (This is the mechanism behind the "gate-anchor refuted"
 melody-ladder finding: the inflating "ornament" was partly held-gate melody.) Note also that PW and
 filter sweeps are **not** note-aligned (they persist across notes), so they should not be segmented on

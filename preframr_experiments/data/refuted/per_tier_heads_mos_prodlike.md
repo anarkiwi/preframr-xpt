@@ -16,7 +16,7 @@ repeats.
 
 ## Gate result
 
-Criteria from `integration_tests/design/per_tier_heads_design.md`:
+Criteria from `design/refuted/per_tier_heads_design.md`:
 
 | # | Criterion | Verdict | Numbers |
 |---|---|---|---|
@@ -116,8 +116,8 @@ absolute and pass on ratio.
 
 - Original Phase 2 refute: `per_tier_heads_mos.md` (this directory).
 - Phase 2 re-open: `per_tier_heads_mos_revisited.md` (this directory).
-- Design doc: `../../../../preframr/integration_tests/design/per_tier_heads_design.md`
+- Design doc: `design/refuted/per_tier_heads_design.md`
   (main repo).
 - Phase 3 spec: `../../specs/per_tier_heads_prodlike.py`.
-- Queue: `../../../../preframr/integration_tests/design/model_loss_queue.md`
+- Queue: `design/model/model_loss_queue.md`
   (main repo) item 1.

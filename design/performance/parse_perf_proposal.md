@@ -1,8 +1,9 @@
 # Parse-perf proposal — prioritized, correctness-gated
 
-**Status:** Proposal (2026-06-03). Synthesizes the scoping in
-[`parse_perf_block_reencode.md`](parse_perf_block_reencode.md) and
-[`parse_decode_walker_profile.md`](parse_decode_walker_profile.md) into a ranked plan. Companion
+**Status:** Proposal (2026-06-03). Synthesizes the earlier parse-perf scoping
+(the cProfile profiling + the finding that the bottleneck is the arbiter's
+per-claim `validate=True` fallback decode, not the `register_state` memo) into a
+ranked plan. Companion
 deliverable: the preframr-tokens test gate now runs under pytest-xdist (`run_tests.sh -n auto
 --dist worksteal`), full pytest 69.6s -> 13.4s; that work is separate from and orthogonal to the
 parse-perf changes below.
@@ -185,7 +186,7 @@ Block path 21.6s → ~12.9s (~40%, dominated by `_smooth`); full pytest 69.6s �
 ## Macro-abstraction consolidation (separate analysis)
 The macro *mechanics* are essential complexity; the *registration/wiring* was fragmented across ~5
 surfaces glued by a checker. The generator-MDL pipeline
-([`generator_mdl_representation.md`](generator_mdl_representation.md)) collapses most of that zoo into one
+([`generator_mdl_representation.md`](../encoding/generator_mdl_representation.md)) collapses most of that zoo into one
 pass, which is the real consolidation; this is performance-NEUTRAL directly but de-risks the decode-core.
 
 ## Dead ends (recorded so they're not re-attempted)

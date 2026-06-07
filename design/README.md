@@ -1,6 +1,6 @@
 # Design notes index
 
-**Orientation:** [`architecture_overview.md`](architecture_overview.md) — which
+**Orientation:** [`architecture_overview.md`](references/architecture_overview.md) — which
 part lives in which repo (tokens / audio / framework / xpt / aug) and **why**, the
 dependency layering, and how to **derive the release process** (PyPI-tag vs
 image-VERSION; the public-PyPI-propagation gotcha). Read it before any cross-repo
@@ -8,15 +8,15 @@ change or release.
 
 **Per-repo architecture references** (all docs live here in preframr-xpt; the code
 they describe lives in the sibling repos under `/scratch/anarkiwi/`):
-- [`tokens_architecture.md`](tokens_architecture.md) — **the parsing reference**:
+- [`tokens_architecture.md`](references/tokens_architecture.md) — **the parsing reference**:
   preframr-tokens parse→pass→tokenize→decode pipeline, register/atom/op model,
   `combine_reg` settled-freq, the 3-layer pass-framework registration, fidelity,
   Corpus/blocks/df-map, and the invariants/gotchas. Consult before touching parsing.
-- [`audio_architecture.md`](audio_architecture.md) — preframr-audio render pipeline
+- [`audio_architecture.md`](references/audio_architecture.md) — preframr-audio render pipeline
   + fidelity oracle.
-- [`framework_architecture.md`](framework_architecture.md) — preframr train/predict/
+- [`framework_architecture.md`](references/framework_architecture.md) — preframr train/predict/
   model + data path + generation gotchas.
-- [`backlog_tokens_hardening.md`](backlog_tokens_hardening.md) — **precise file-level
+- [`backlog_tokens_hardening.md`](encoding/backlog_tokens_hardening.md) — **precise file-level
   implementation instructions** for the queued tokens hardening: dead-wood removal,
   real-pipeline structural/balance tests (catch the synthetic-df false-green class), and
   driver-truth fixtures with RESID≈0 as the completeness metric.
@@ -28,7 +28,7 @@ bounded (~TC⁰) autoregressive transformer can *cheaply represent its next-toke
 minimize causal-state size + dependency horizon, prefer induction-head-expressible
 (DEF→REF copy) structure over implicit per-frame counters, order tokens by the driver's
 causal DAG. The lens doc — read before proposing any representation/encoding work — is
-[`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) (theory +
+[`learnability_token_ordering_theory.md`](references/learnability_token_ordering_theory.md) (theory +
 the training-free triage `audit/learnability_triage.py` that ranks encodings *without a
 run*). **Everything else is subordinate:** correctness/byte-exactness is the *gate* that
 lets re-encoding happen; compression/token-budget and parse-perf/runner/deploy are *infra*
@@ -39,52 +39,78 @@ refuted at a ~0.13 ceiling that tokenizer-side `full_macros` then lifted** — l
 is won on the *representation* side, and the architecture is already exonerated
 (`framework_arch_test`).
 
-Organized by **research axis** (the project's priority order), not by lifecycle:
-status is a per-row column so refuted/landed work sits next to the live work in
-the same thread. Refuted hypotheses also have one-paragraph stubs at
-`preframr_experiments/data/refuted/<exp>.md` (this repo) — read those before
-reopening a rejected direction.
+This north-star **priority order** (learnability → correctness → efficiency → infra) is
+the *lens* for deciding what to work on next. It is **orthogonal to the physical layout
+below**, which groups docs by *subject* so the directory is browsable. Each doc still
+carries a one-line `**Status:**` header so live / refuted / landed state is visible
+in-thread. Refuted hypotheses also have one-paragraph stubs at
+`preframr_experiments/data/refuted/<exp>.md` — read those before reopening a rejected
+direction.
 
 ## How this index is organized (read before adding a doc)
 
-**Five axes** (top-level grouping — mirrors AGENTS.md "Project goal" + priority).
-Add a new doc under its **primary** axis; cross-link a secondary axis in prose if
-it spans two:
+Files live in **seven subject-theme subdirs** — the top-level grouping. Add a new doc
+under its **primary** theme; cross-link a secondary theme in prose if it spans two.
 
-1. **Generalization** (primary goal) — predicting unseen continuations across
-   composers/engines: the content objective, representation/tokenization, the
-   metrics that detect it.
-2. **Correctness & fidelity** — round-trip/decode exactness, audio equivalence,
-   eval-leak + version gates, coverage bugs.
-3. **Efficiency & deploy envelope** — token budget, training memory/wallclock,
-   predict-host (Orin) throughput.
-4. **Runner / experiment infra & process** — the docker runner, resume/abort/
-   parallelism, repo scope.
-5. **Data & corpus** — tier definitions, engine-fingerprint eval sets,
-   augmentation, dataset coverage.
+1. **[`references/`](references/)** — orientation maps + domain/literature background.
+   Stable, "read-first" docs (architecture, the SID/driver/render references, the
+   learnability lens, positioning surveys, the release/build playbook).
+2. **[`encoding/`](encoding/)** — tokenization & representation research. The core
+   thread: the generator-MDL encoding, the pitch model, melody/voice/role layers,
+   the arbitration pipeline, codebooks.
+3. **[`model/`](model/)** — model architecture, output heads, losses, auxiliary
+   supervision, the loss-experiment queue.
+4. **[`measurement/`](measurement/)** — generalization metrics, measurement plans,
+   the val-acc gate calibration.
+5. **[`performance/`](performance/)** — parse/tokenize throughput + predict-host
+   (Orin) inference envelope.
+6. **[`infra/`](infra/)** — the experiment runner, resume/abort/parallelism, flag
+   routing, release/repo process.
+7. **[`refuted/`](refuted/)** — hypotheses tested and rejected; kept in place for the
+   record (status `Refuted`, with the evidence stub under `data/refuted/`).
 
-**Status column + lifecycle.** Every doc starts with a one-line `**Status:**`
-header, and edits update it before the body. Lifecycle:
+Plus **[`landed/`](landed/)** — archived docs whose implementation is in HEAD, indexed
+by *kind* in [`landed/README.md`](landed/README.md).
+
+**Cross-doc links are relative** within `design/` (e.g. `../theme/doc.md`). When you
+move a doc between themes, fix the inbound links (and any `design/<theme>/<doc>.md`
+references from specs/tests/AGENTS.md).
+
+**Status header + lifecycle.** Every doc starts with a one-line `**Status:**` header,
+updated before the body. Lifecycle:
 
 - **Draft** / **Scoping** → **Pending impl** / **Drafted, pending trigger** →
   **In flight** (spec + impl shipped; running/awaiting verdict) →
 - **Landed**: move the file to [`landed/`](landed/) and add a row to
-  [`landed/README.md`](landed/README.md) (archive is grouped by *kind*). The
-  axis table keeps an inline `Landed` row pointing at `landed/…` so the thread
-  stays whole.
-- **Refuted**: keep the doc in place, set status to `Refuted`, and add a "do not
-  revisit without …" stub at `preframr_experiments/data/refuted/<exp>.md`.
+  [`landed/README.md`](landed/README.md).
+- **Refuted**: move the file to [`refuted/`](refuted/), set status to `Refuted`, and add
+  a "do not revisit without …" stub at `preframr_experiments/data/refuted/<exp>.md`.
 - **Deferred**: reviewed but parked on an external condition (e.g. cloud rental).
 - **Reference**: positioning/strategy docs with no single impl.
 
-Directory stays **flat** (no per-axis subdirs — docs span axes and moves break
-the relative `[..](..)` / `../data/refuted/` links). Grouping lives here, in the
-index.
+## references/ — orientation & domain background
 
-## 1. Generalization (primary goal)
+| Doc | Summary | Status |
+|---|---|---|
+| [`architecture_overview.md`](references/architecture_overview.md) | The map for deciding *which repo a change belongs in* and *deriving the release process* from the dependency layering. Read before any cross-repo change. | Reference |
+| [`tokens_architecture.md`](references/tokens_architecture.md) | The torch-free parser + tokenizer: parse→pass→tokenize→decode, register/atom/op model, `combine_reg`, the 3-layer pass framework, Corpus/blocks/df-map, byte-exact decode, invariants/gotchas. | Reference |
+| [`audio_architecture.md`](references/audio_architecture.md) | preframr-audio render pipeline (parsed DataFrame → PCM via resid-fp) + the fidelity-comparison oracle + fingerprinting. | Reference |
+| [`framework_architecture.md`](references/framework_architecture.md) | The torch layer: train/predict/model wrapping tokens (parse+tokenize) and audio (render) with a torchtune body + lightning; the `anarkiwi/preframr` image. | Reference |
+| [`learnability_token_ordering_theory.md`](references/learnability_token_ordering_theory.md) | **The north-star lens** (read before any representation work): theory of cheap next-token representability + the training-free `learnability_triage` that ranks encodings *without a run* (mini mode-collapses regardless of vocab, so it cannot pick direction). | Reference + tool |
+| [`encoding_principles.md`](references/encoding_principles.md) | The orienting rubric for SID stream encoding: **fidelity × context-efficiency × learnability** (priority order), the learnability sub-principles (separability / locality / no-multiplexing / alphabet≠learnability / right-yardstick), and a per-change checklist. Other encoding designs check against this. | Reference |
+| [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) | **Cite, don't re-derive:** the SID render-timing + canonical-order + losslessness contract, each fact CITING the preframr-audio unit test that proves it. The renderer clocks ~`_MIN_DIFF` cycles after EACH write → intra-frame write ORDER and timing ARE audible; the ADSR bug makes envelope order-dependent (keep each voice's writes in input order); `register_state` (settled snapshot) is NOT a sufficient fidelity oracle. | Reference |
+| [`verification_and_audits.md`](references/verification_and_audits.md) | **THE how-to-verify reference.** Two properties, one tool each: **byte-exact losslessness** → `PREFRAMR_PARSE_AUDIT=raise` → `cb_div_audit.py`; **residual-zero** → `test_whole_chip_no_singleton_set` + `wholechip_census.py`. Documents THE TRAP (never hand-roll a `register_state` diff). Deployed default = 197/197 byte-exact. | Reference (authoritative) |
+| [`voice_encoding_reference.md`](references/voice_encoding_reference.md) | How the 3 SID voices are carried in the token stream: voice is **packed into the FRAME (−128) val** (low 6 bits, base-4 digits = voice+1), NOT in the VOICE (−126) token. `_add_voice_reg` canonicalises reg + emits VOICE delimiters; `remove_voice_reg` inverts. Melody onsets are multiplexed across voices by this header. | Reference |
+| [`sid_driver_ornament_reference.md`](references/sid_driver_ornament_reference.md) | **Background reference:** how C64 SID drivers generate per-frame ornament across pitch, pulse-width, and filter. Two mechanisms: (A) note-index semitone-offset cycles = arps (codebook); (B) parametric/table sweeps = vibrato/portamento/PW/filter. Filter is global; PW/filter sweeps persist across notes; gate-on ≠ note boundary. Sources: defMON, SID Wizard, Hubbard, Galway, C=Hacking #5. | Reference |
+| [`digi_detection_reference.md`](references/digi_detection_reference.md) | Digi techniques + detection (C=Hacking #20; Mahoney's *Musik Run/Stop*), written to refine `dump_meta.is_digi` (which misses PWM digis) and correct a row-count exclusion process error. | Reference |
+| [`release_build_cache.md`](references/release_build_cache.md) | **The one place** for release/build/test/cache: which host runs what (fogbank for non-GPU work; defroster for training), the proxpi cache + how to bust it after a PyPI release, per-repo release procedure (PyPI `v*` tag vs Docker VERSION/base bump), and the build-locally-in-parallel rule. | Reference (authoritative) |
+| [`related_work.md`](references/related_work.md) | **Related-work survey** (deep-research, adversarially verified): close cousins per facet (NES-MDB/LakhNES, YM2413-MDB, desidulate, OctupleMIDI/CP/MMT/MMM, Meredith COSIATEC/MDL, GTTM, interval pitch) but the combination — generative LM over the RAW register stream + MDL DEF→REF codebook + learnability-theory ordering — is unaddressed; facet 3 (chip control-stream LM) is the thin gap. | Reference (positioning) |
+| [`tokenization_vs_music_llms.md`](references/tokenization_vs_music_llms.md) | preframr's register-event + macro Unigram tokenization vs symbolic/MIDI, audio-codec, VQ; argues the content ceiling is tokenization-induced. | Reference (positioning) |
+
+## encoding/ — tokenization & representation
 
 **THE current direction — the generator-MDL pipeline.**
-[`generator_mdl_representation.md`](generator_mdl_representation.md) is the canonical encoding and
+[`generator_mdl_representation.md`](encoding/generator_mdl_representation.md) is the canonical encoding and
 **supersedes the former per-pass pitch/ornament/melody/residual-SET stack** (unified-pitch-encoding,
 ornament-transfer, sweep-oscillation, the melody-channel/skeleton/gap-ladder/learnability designs, the
 macro-zoo triage+review+consolidation, the residual-SET workorders, and the voice/role-lane designs — **all
@@ -99,126 +125,130 @@ ceiling); **layer 3 = de-multiplex AND causally order the lanes** — the *domin
 accompaniment roles before the melody role** (so melody is predicted with its harmony in-context, P4) — which
 makes ROLE identification the mechanism, not a follow-up; plain physical voice-lanes can backfire. **Layer 4
 (deferred hypothesis):** surface rhythmic/harmonic determinants + scale-degree anchoring (lossy; open only if
-layer 3 plateaus). The self-directing work order [`melody_skeleton_impl.md`](melody_skeleton_impl.md) builds
+layer 3 plateaus). The self-directing work order [`melody_skeleton_impl.md`](encoding/melody_skeleton_impl.md) builds
 **layers 2 AND 3** (BLOCKED on the generator pipeline). Layer-3 designs:
-[`superframe_voice_lane_design.md`](superframe_voice_lane_design.md) (lane mechanics) +
-[`role_lane_factorization.md`](role_lane_factorization.md) (role/causal-order mechanism). Layer 3 is
+[`superframe_voice_lane_design.md`](encoding/superframe_voice_lane_design.md) (lane mechanics) +
+[`role_lane_factorization.md`](encoding/role_lane_factorization.md) (role/causal-order mechanism). Layer 3 is
 theory+measurement-motivated but **untested at deployment** → triage (lane-order variants + no other-content
 regression) + one canonical run gate it.
 
 | Doc | Summary | Status |
 |---|---|---|
-| [`generator_mdl_representation.md`](generator_mdl_representation.md) | THE encoding (above): `{HOLD,ACCUM,SWEEP,TABLE}` generators over all channels + per-tune pitch LUT + DEF→REF bank. Byte-exact + residual-zero on 1580 corpus tunes, every historically-hard engine, and SID-Wizard (91) + defMON (9) player output. Two of three ops already exist (`SWEEP_OP`=ACCUM, the osc-cycle=TABLE); only the triangle SWEEP + tuning/codebook are new. | **LANDED on tokens `main` 2026-06-06 (deployed default; zoo deleted); unreleased — 0.45.0 held. Measurement: `generator_measurement_readiness.md`** |
-| [`universal_multiresolution_pitch.md`](universal_multiresolution_pitch.md) | **The learnable+lossless+universal pitch model** (supersedes per-tune-LUT / content-tier-residual). Shared NOTE INDEX (semitone grid, note 49≈C5 everywhere — the universal prediction target) + **per-voice recovered note→freq TABLE** (the exact tracker entries, ~20/voice, a small codebook). Static notes are PURE (**83% of frames**, validated); residual is nonzero ONLY for genuine modulation (~17%, as SWEEP/TRI/TABLE trajectories). Plus **per-voice tuning** (chorus/Galway detune) + **modulation in CENTS** (tuning-invariant effects) + **intervals Δnote** (transposition-invariant base-pitch transfer, the `MELODY_INTERVAL` op). **EXACT validation (not within-cents):** SWM/defMON/Hubbard recover the trackers' literal pitches + notes bit-exactly (note-index == the trackers' `FREQTBL`/`NOTE_PITCH` table index, 40/40 SWM 100%); Galway too. Foundation on `feat/universal-pitch-grid` (`pitch_grid.py` + tests). Active wiring = the gated default-OFF `universal_pitch` flag (per-voice tuning + interval-on-universal-index + role→lane causal ordering); this session owns it post-takeover. Default-OFF, byte-exact gated. | **Active — validated exact on 4 trackers; gated wiring in progress** |
-| [`generator_measurement_readiness.md`](generator_measurement_readiness.md) | **THE active measurement plan.** Generator pipeline LANDED on tokens `main` (unreleased; 0.45.0 held). What to run **now** vs **release-gated**: §1 static learnability triage (`learnability_triage --configs baseline,full_macros --mode blocks --seq-len 8192` — generator induction-copy vs historical 0.718 = the cheap go/no-go); §2 op→tier wiring; §3 residual-in-key refragmentation; §4 the decisive canonical generator-vs-atomic A/B (needs 0.45.0 → image rebuild → re-cut + the 12-SID audition); §5 generalization-metric automation; §6 the melody caveat (does NOT come free). | **Active — cheap reads runnable now; canonical run release-gated** |
-| [`melody_skeleton_impl.md`](melody_skeleton_impl.md) | NEXT layer on the generator freq channel: note segmentation (level-change∪gate) + **interval-from-previous** onset encoding (key-invariant, low-cardinality) + within-note ornament as note-relative generator atoms. The melody-learnability fix (generator de-ornaments but leaves absolute pitch unlearnable); measured held-out next-interval 0.52 > cross-tune ceiling 0.41. Lossless re-keying; scored distributionally (P6). **Now also builds LAYER 3** (`voice_lane` de-mux into contiguous lanes — the dominant lever). **SELF-DIRECTING** (§A start-gate: the next agent polls tokens `origin/main`, waits for `generator_pass` to be the default, then executes in tokens autonomously). | **Pending impl — executable handed to `preframr-tokens/AGENT_TASK_melody_skeleton.md`; auto-gated on the generator pipeline landing** |
-| [`superframe_voice_lane_design.md`](superframe_voice_lane_design.md) | LAYER 3 (voice form): reorder the frame-major stream into voice-major lanes so the melody line is contiguous (short horizon, P3). Lossless permutation w/ byte-exact render-order inverse. Folded into `melody_skeleton_impl.md`. | **Reinstated — live (was wrongly deleted); untested at deployment, triage-gated** |
-| [`role_lane_factorization.md`](role_lane_factorization.md) | LAYER 3 (role form — the truer target): roles HOP voices, so factor by musical role not physical voice (voice-lanes can split a melodic line). Harder follow-up after voice-lanes. | **Reinstated — live (was wrongly deleted); follow-up to voice-lanes** |
-| [`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md) | **Background reference** (cite, don't re-derive): how C64 SID drivers generate per-frame ornament across **pitch, pulse-width, and filter**. Two mechanisms: (A) note-index semitone offset cycles = arps (codebook); (B) parametric/table sweeps in the value domain = vibrato/portamento/PW/filter. Filter is **global** (one controller voice + per-voice routing); PW/filter sweeps persist across notes (not note-aligned); gate-on ≠ note boundary for held-gate/legato drivers (use intrinsic level-change); Hubbard arp is octave-only. Sources: defMON, SID Wizard, Hubbard *Commando* + **C=Hacking #5**, Galway Ocean drivers. | Reference |
-| [`speculative_encoding_pipeline.md`](speculative_encoding_pipeline.md) | **PROPOSAL** (architecture): replace the strict-order DESTRUCTIVE macro-pass chain with **claims + arbitration** — passes are non-destructive PROPOSERS reading an immutable source, emitting scored `Claim`s (writes consumed, replacement tokens, fidelity/learnability/budget score); an **arbiter** picks a lossless PARTITION maximizing the objective, per region AND per tune. Fixes one-pass-destroys-another (the `_df_sink` workaround proves it) + lets drum/skeleton/sweep/patch COMPETE so the best encoding wins (RESID becomes the true floor, not a pass-order artifact). Speculative = overlapping/alternative claims; per-tune mode selection = "most appropriate encoding for a tune". Migration generalizes the existing `drop_idx`/`new_rows` splice. | **Proposal — architecture, not built** |
-| [`encoding_principles.md`](encoding_principles.md) | The orienting rubric for SID stream encoding: **fidelity × context-efficiency × learnability** (priority order), the learnability sub-principles (separability / locality / no-multiplexing / alphabet≠learnability / right-yardstick), and a per-change checklist. Distilled from the melody-onset arc (de-merge win + voice/op48/semitone results). Other encoding designs check against this. | Reference |
-| [`voice_encoding_reference.md`](voice_encoding_reference.md) | How the 3 SID voices are carried in the token stream: voice is **packed into the FRAME (−128) val** (low 6 bits, base-4 digits = voice+1, one slot per FRAME/VOICE marker), NOT in the VOICE (−126) token (whose val is zeroed in the trained stream). `_add_voice_reg` canonicalises reg to 0–6 + emits VOICE delimiters; `remove_voice_reg` inverts. Melody onsets are multiplexed across voices by this header — the model must read it to attribute writes. | Reference |
-| [`landed/trajectory_anchoring.md`](landed/trajectory_anchoring.md) | Gate/sweep-anchored FREQ_TRAJ origins (the original encoding hypothesis + full mini-A/B history). | Landed (tokens 0.25.0, preframr 0.2.6) |
-| [`landed/onset_loss_prioritization.md`](landed/onset_loss_prioritization.md) | `--onset-loss-weight`: up-weight rare FREQ V0-onset in CE to force capacity onto the rare-and-ignored melodic onset. | Landed (preframr 0.2.8; W=10 mini nudge 0→0.002, no all-tier cost) |
-| [`landed/freq_trajectory_anchoring_impl.md`](landed/freq_trajectory_anchoring_impl.md) | Tokens-side impl spec for `TrajectoryAnchorPass` (the two-pass intrinsic anchor detector + segment-boundary integration). | Landed (tokens 0.25.0) |
-| [`landed/freq_v0_interval.md`](landed/freq_v0_interval.md) | Tokens-side impl spec for `--freq-v0-interval`: encode V0 as a signed interval from the previous voice onset. | Landed (tokens 0.26.0) |
-| [`landed/freq_onset_channel.md`](landed/freq_onset_channel.md) | Tokens-side impl spec for `--freq-onset-pass` (FREQ_ONSET op48): re-tag residual op0 SET on TRAJ_REGS → 1-token onset; SET only carries control/ADSR/routing. | Landed (tokens 0.27.0) |
-| [`landed/melody_merge_split.md`](landed/melody_merge_split.md) | Tokens-side impl spec for `--melody-merge-split`: post-Unigram-encode pass that splits cross-melody-boundary merges so pitch is a separable target. | Landed (tokens 0.28.0); `melody_merge_split_mini` in flight |
-| [`motif_pass_design.md`](motif_pass_design.md) | Corpus-mined, per-block, lossless motif pass (tokens 0.20.0): collapses cross-composer motifs into loss-tier-zero `MOTIF_OP` atoms. ~11.4% fewer tokens at deployment vocab; the A/B tests **learnability**. | **Refuted 2026-05-27** (content-tier neutral-to-negative vs no-motif full_macros; `data/refuted/motif_pass.md`) |
-| [`compound_token_design.md`](compound_token_design.md) | Approach D: compound-token tokenizer + parallel-attribute heads (CompoundWord / OctupleMIDI). Multi-attribute-per-token reorganization. Also an efficiency bet (token budget). | Draft, design review pending |
-| [`motif_templates_v2_impl_design.md`](motif_templates_v2_impl_design.md) | Implementation design for value-slotted motif templates (MotifDict v2): template token + content slot(s), shape-keyed mining, lossless expand. De-fragments the motif vocab (~10 templates vs 6260 (shape,value) variants) and exposes motif-carried content to the content tier. Tokenizer-only Phases 0–2 (no model change); P3 = compound tokens. | **Refuted 2026-05-27** (built + A/B'd; content-tier did not beat no-motif; `data/refuted/motif_pass.md`) |
-| [`audio_equivalence_normalization_design.md`](audio_equivalence_normalization_design.md) | Tokenizer-side normalization collapsing `(op, reg, val)` tuples that render perceptually-equivalent SID output into canonical forms. | Draft 2026-05-23 |
-| [`sequence_order_normalization_design.md`](sequence_order_normalization_design.md) | Sequence-level sibling of the above: collapse the per-frame write-order DoF that is audio-safe to canonicalise. Audit decomposed the +0.169 SET→TUPLE gap into −0.123 **multiplicity** + −0.046 order; audio-safe (voice-respecting) reorder recovers only +0.009 (~5%), and 84% of repeated writes are genuine sub-frame modulation content. NOTE: only the CANONICAL voice-respecting reg-ascending reorder is inaudible (render corr 1.0) — it is the order the dumps already use, so it is a near-no-op; an ARBITRARY intra-frame reorder (e.g. a gate written before its freq) IS audible under the renderer's real per-write timing (see [`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md)). The lever is low-value either way. Audit `audit/audit_seq_order_norm.py` kept as instrument. | **Refuted as a lever 2026-05-27** (stub `data/refuted/sequence_order_normalization.md`) |
-| [`per_voice_aux_supervision_design.md`](per_voice_aux_supervision_design.md) | Per-voice auxiliary classification heads on the body's hidden state. | Scoping |
-| [`generalize_min_val_acc_floor_design.md`](generalize_min_val_acc_floor_design.md) | Calibrate `GENERALIZE_MIN_VAL_ACC` as 2/3 × median val_acc once 2-3 canonical baselines run (the generalization gate). | Pending impl (env hook exists, default 0/off) |
-| [`model_loss_queue.md`](model_loss_queue.md) | Back-pocket queue + decision tree for picking the next content bet from audit evidence. | Reference |
-| [`related_work.md`](related_work.md) | **Related-work survey** (deep-research, adversarially verified): close cousins per facet (NES-MDB/LakhNES, YM2413-MDB, desidulate [same author, register-log analysis], OctupleMIDI/CP/MMT/MMM, Meredith COSIATEC/MDL, GTTM, Liu-et-al automata, interval pitch) but the combination — generative LM over the RAW register stream + MDL DEF→REF codebook + learnability-theory ordering — is unaddressed; facet 3 (chip control-stream LM) is the thin gap. | Reference (positioning) |
-| [`tokenization_vs_music_llms.md`](tokenization_vs_music_llms.md) | preframr's register-event + macro Unigram tokenization vs symbolic/MIDI, audio-codec, VQ; argues the content ceiling is tokenization-induced. | Reference (positioning) |
-| [`music_llm_landscape_and_fail_fast_plan.md`](music_llm_landscape_and_fail_fast_plan.md) | Cross-LLM idea survey + ranked cheap fail-fast probes. | Reference (strategy) |
-| [`landed/unified_oscillation_primitive_design.md`](landed/unified_oscillation_primitive_design.md) | Unified `FREQ_TRAJ` op + `FREQ_NUDGE` — the representation win; now the live deployment tokenizer. | Landed (tokens 0.16/0.17) |
-| [`multi_modal_objective_design.md`](multi_modal_objective_design.md) | Umbrella framing of the per-token CE bottleneck on the multi-modal content tier. | Refuted (B/C/A all rejected) |
-| [`per_tier_heads_design.md`](per_tier_heads_design.md) | Shared body + 4 tier heads + router; MoS-NLL content head (Approach C). | Refuted at prodlike (router saturates) |
-| [`content_diffusion_design.md`](content_diffusion_design.md) | D3PM absorbing-state discrete-diffusion content head (Approach A). | Refuted (sampling-side; no CE change) |
-| [`cluster_conditional_content_head_design.md`](cluster_conditional_content_head_design.md) | Cluster-conditional content head (queue item 2). | Refuted (same ceiling, diversity ~1.0–1.2) |
+| [`generator_mdl_representation.md`](encoding/generator_mdl_representation.md) | THE encoding (above): `{HOLD,ACCUM,SWEEP,TABLE}` generators over all channels + per-tune pitch LUT + DEF→REF bank. Byte-exact + residual-zero on 1580 corpus tunes, every historically-hard engine, and SID-Wizard (91) + defMON (9) player output. Two of three ops already exist (`SWEEP_OP`=ACCUM, the osc-cycle=TABLE); only the triangle SWEEP + tuning/codebook are new. | **LANDED on tokens `main` 2026-06-06 (deployed default; zoo deleted); unreleased — 0.45.0 held. Measurement: `measurement/generator_measurement_readiness.md`** |
+| [`universal_multiresolution_pitch.md`](encoding/universal_multiresolution_pitch.md) | **The learnable+lossless+universal pitch model** (supersedes per-tune-LUT / content-tier-residual). Shared NOTE INDEX (semitone grid, note 49≈C5 — the universal prediction target) + **per-voice recovered note→freq TABLE** (~20/voice). Static notes are PURE (**83% of frames**); residual is nonzero ONLY for genuine modulation (~17%). Plus per-voice tuning + modulation in CENTS + intervals Δnote (`MELODY_INTERVAL`). EXACT validation on SWM/defMON/Hubbard/Galway. Foundation on `feat/universal-pitch-grid`; active wiring = the gated default-OFF `universal_pitch` flag. | **Active — validated exact on 4 trackers; gated wiring in progress** |
+| [`melody_skeleton_impl.md`](encoding/melody_skeleton_impl.md) | NEXT layer on the generator freq channel: note segmentation (level-change∪gate) + **interval-from-previous** onset encoding (key-invariant) + within-note ornament as note-relative generator atoms. Held-out next-interval 0.52 > cross-tune ceiling 0.41. **Now also builds LAYER 3** (`voice_lane` de-mux into contiguous lanes). **SELF-DIRECTING** (§A start-gate polls tokens `origin/main`). | **Pending impl — executable handed to `preframr-tokens/AGENT_TASK_melody_skeleton.md`; auto-gated on the generator pipeline landing** |
+| [`superframe_voice_lane_design.md`](encoding/superframe_voice_lane_design.md) | LAYER 3 (voice form): reorder the frame-major stream into voice-major lanes so the melody line is contiguous (short horizon, P3). Lossless permutation w/ byte-exact render-order inverse. Folded into `melody_skeleton_impl.md`. | **Reinstated — live (was wrongly deleted); untested at deployment, triage-gated** |
+| [`role_lane_factorization.md`](encoding/role_lane_factorization.md) | LAYER 3 (role form — the truer target): roles HOP voices, so factor by musical role not physical voice (voice-lanes can split a melodic line). Harder follow-up after voice-lanes. | **Reinstated — live (was wrongly deleted); follow-up to voice-lanes** |
+| [`speculative_encoding_pipeline.md`](encoding/speculative_encoding_pipeline.md) | **PROPOSAL** (architecture): replace the strict-order DESTRUCTIVE macro-pass chain with **claims + arbitration** — passes are non-destructive PROPOSERS emitting scored `Claim`s; an **arbiter** picks a lossless PARTITION maximizing the objective, per region AND per tune. Fixes one-pass-destroys-another + lets drum/skeleton/sweep/patch COMPETE so the best encoding wins (RESID becomes the true floor). | **Proposal — architecture, not built** |
+| [`compound_token_design.md`](encoding/compound_token_design.md) | Approach D: compound-token tokenizer + parallel-attribute heads (CompoundWord / OctupleMIDI). Multi-attribute-per-token reorganization. Also an efficiency bet (token budget). | Draft, design review pending |
+| [`instrument_program_codebook_design.md`](encoding/instrument_program_codebook_design.md) | Instrument-program codebook: collapse the note-associated macro cluster (the per-note `(waveform,AD,SR)` program) into codebook references; distinguishes note-associated vs not-note-associated driver operations. Supersedes the older instrument-state-codebook. | Design 2026-06-04 |
+| [`log_to_swm_recompiler_design.md`](encoding/log_to_swm_recompiler_design.md) | A tool (does NOT exist yet) compiling a preframr **register log → SID-Wizard SWM** that re-renders to the SAME output (lossless = re-render-equivalence). Reuses the generator-MDL IR; pysidwizard `build_swm`; the player is the verifier. Path A brute-force wavetable → Path B structured/editable; reports the SID-Wizard-inexpressible residue. Makes generated tunes editable in a real tracker. | Design 2026-06-06 |
+| [`audio_equivalence_normalization_design.md`](encoding/audio_equivalence_normalization_design.md) | Tokenizer-side normalization collapsing `(op, reg, val)` tuples that render perceptually-equivalent SID output into canonical forms. | Draft 2026-05-23 |
+| [`backlog_tokens_hardening.md`](encoding/backlog_tokens_hardening.md) | Precise file-level impl for the queued tokens hardening (blocked until op-code churn settles): (#9) dead-wood removal, (#10) real-pipeline structural/balance tests, (#11) driver-truth RESID-completeness fixtures. | QUEUED 2026-05-29 |
 
-## 2. Correctness & fidelity
+## model/ — architecture, heads & losses
 
 | Doc | Summary | Status |
 |---|---|---|
-| [`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md) | **Reference (cite, don't re-derive):** the SID render-timing + canonical-order + losslessness contract, each fact CITING the preframr-audio unit test that proves it (the single reproducible source of truth). The renderer clocks ~`_MIN_DIFF` cycles after EACH write (writes sequential, not simultaneous) → intra-frame write ORDER and timing ARE audible. The SID **ADSR bug** (prescaler equality-compare) makes envelope behaviour order/value-dependent, so each voice's writes must be kept in **input order** (gate in place vs the AD/SR around it) — NOT reg-sorted; `_norm_pr_order` must preserve emit order. Test-bit-frame freq is discardable to a NEARBY value but **PW is audible** (not discardable). `register_state` (settled snapshot) is order/timing-blind → NOT a sufficient fidelity oracle; the gate is register-level (ordered CTRL/AD/SR byte-exact in input order + nominal `_MIN_DIFF` timing; freq/PW/filter quantization-relaxed). | **Reference** |
-| [`verification_and_audits.md`](verification_and_audits.md) | **THE how-to-verify reference (converges the tools).** Two distinct properties, one tool each: **byte-exact losslessness** → `PREFRAMR_PARSE_AUDIT=raise` (one tune/tests) → `cb_div_audit.py` (corpus); **residual-zero** → `test_whole_chip_no_singleton_set` + `wholechip_census.py`. Documents THE TRAP (never hand-roll a `register_state` diff — a baseline control falsely 'diverged' 65% under external `diff_dump_vs_pipeline`, but is 197/197 clean under parse_audit). Deployed default = 197/197 byte-exact. | **Reference (authoritative)** |
-| [`log_to_swm_recompiler_design.md`](log_to_swm_recompiler_design.md) | A tool (does NOT exist yet) compiling a preframr **register log → SID-Wizard SWM** that re-renders to the SAME output (lossless = re-render-equivalence, not byte-identical SWM). Reuses the generator-MDL IR; pysidwizard `build_swm` backend; the player is the verifier. Path A brute-force wavetable (universal, lossless on the expressible subset) → Path B structured/editable mapping; reports the SID-Wizard-inexpressible residue (mid-note ADSR/HR-timing/sub-frame). Implements the §7B reverse round-trip; makes generated tunes editable in a real tracker. | Design 2026-06-06 |
-| [`start_seq_rotation_audit_design.md`](start_seq_rotation_audit_design.md) | `predict_load` hard-codes rotation 0; ≥50% of rotations unreachable at `max_perm>1`. Flat-indexing fix + coverage probe. | Pending impl |
-| [`audio_driver_split_design.md`](audio_driver_split_design.md) | preframr-audio: split the 1499-LoC `audio_driver.py` into a `render.py` core (what fidelity/fingerprint/batch import) vs `live.py` (alsa/ASID/MIDI/CLI). | Drafted, pending review |
-| [`landed/tokenizer_profiling_tooling_design.md`](landed/tokenizer_profiling_tooling_design.md) | Torch-free tokenizer profiling (`tokenizer_profile` + `audit_primitives` reductions). | Landed (tokens 0.20.0) |
-| `preframr-tokens:pipeline_trace.py` | Torch-free pass-by-pass pipeline tracer (no design doc): given a pipeline spec + a dump parquet, runs the real `RegLogParser` encode path with every `MacroPass` + parser stage instrumented and reports, per stage, which flag gated it, whether it fired, and the op-mix delta. `--isolate FLAG` re-runs with the flag off for a counterfactual proof of its effect; warns loudly on unrecognized spec names (the silent `slope`→`freq_trajectory` no-op class). Test what a spec does / verify a flag took effect without trusting docs. `python3 -m preframr_tokens.pipeline_trace`. | In flight (PR #17 → tokens 0.24.0) |
+| [`per_voice_aux_supervision_design.md`](model/per_voice_aux_supervision_design.md) | Per-voice auxiliary classification heads on the body's hidden state. | Scoping |
+| [`streaming_unembed_ce_design.md`](model/streaming_unembed_ce_design.md) | Stream `output(chunk) + ce_chunk` in one checkpoint; eliminates the 8.6 GiB chunk slab, restores `batch_size=4` + prodlike wallclock. | Pending impl |
+| [`model_loss_queue.md`](model/model_loss_queue.md) | Back-pocket queue + decision tree for picking the next content bet from audit evidence. | Reference |
+
+## measurement/ — metrics & generalization
+
+| Doc | Summary | Status |
+|---|---|---|
+| [`generator_measurement_readiness.md`](measurement/generator_measurement_readiness.md) | **THE active measurement plan.** Generator pipeline LANDED (unreleased; 0.45.0 held). What to run **now** vs **release-gated**: §1 static learnability triage (the cheap go/no-go); §2 op→tier wiring; §3 residual-in-key refragmentation; §4 the decisive canonical generator-vs-atomic A/B; §5 generalization-metric automation; §6 the melody caveat. | **Active — cheap reads runnable now; canonical run release-gated** |
+| [`generalization_metric_tracking_design.md`](measurement/generalization_metric_tracking_design.md) | Make the decisive content-tier `per_class` audit a runner stage (not run by hand), add a generalization scorecard to the report, and a tokenizer-hash-keyed cross-run ledger that auto-flags confounded comparisons. Reuses existing audits + the metric registry. | Drafted, pending impl (tokenizer-health metrics landed) |
+| [`generalize_min_val_acc_floor_design.md`](measurement/generalize_min_val_acc_floor_design.md) | Calibrate `GENERALIZE_MIN_VAL_ACC` as 2/3 × median val_acc once 2-3 canonical baselines run (the generalization gate). | Pending impl (env hook exists, default 0/off) |
+
+## performance/ — parse-perf & deploy envelope
+
+| Doc | Summary | Status |
+|---|---|---|
+| [`parse_perf_proposal.md`](performance/parse_perf_proposal.md) | The parse-perf plan: synthesizes the cProfile scoping (parsing ~8.7 s/song; the bottleneck is the arbiter's per-claim `validate=True` fallback decode, not the `register_state` memo) into a prioritized, correctness-gated plan. Companion deliverable: the tokens test gate now runs under pytest-xdist. | Proposal 2026-06-03 |
+| [`orin_inference_optimization_design.md`](performance/orin_inference_optimization_design.md) | Predict-host throughput: vocab shrink + GPU-resident constrained-decode (Orin ~4% GPU util at predict). | Pending impl |
+
+Vocab shrink (tkvocab ~8× to 4096) is queued under AGENTS.md "Predict-host
+envelope" (deferred). [`compound_token_design.md`](encoding/compound_token_design.md) is
+also a token-budget bet (primary in encoding/).
+
+## infra/ — runner, process & deploy
+
+| Doc | Summary | Status |
+|---|---|---|
+| [`runner_iteration_efficiency_design.md`](infra/runner_iteration_efficiency_design.md) | Per-run overhead: (1) cache key on parse/tokenize cargs — **landed**; (2) symlink-farm + RO dump mount (no 2.7 GB copy) — **landed**; (3) drop the post-step chown container — pending. | #1+#2 landed; #3 pending |
+| [`flag_stage_routing_design.md`](infra/flag_stage_routing_design.md) | `FLAG_STAGES` registry + `add_stage_args` for stage-aware flag forwarding (parse/tokenize/train). | Pending impl |
+| [`start_seq_rotation_audit_design.md`](infra/start_seq_rotation_audit_design.md) | `predict_load` hard-codes rotation 0; ≥50% of rotations unreachable at `max_perm>1`. Flat-indexing fix + coverage probe. | Pending impl |
+| [`audio_driver_split_design.md`](infra/audio_driver_split_design.md) | preframr-audio: split the 1499-LoC `audio_driver.py` into a `render.py` core (what fidelity/fingerprint/batch import) vs `live.py` (alsa/ASID/MIDI/CLI). | Drafted, pending review |
+| [`auto_early_abort_design.md`](infra/auto_early_abort_design.md) | Spec-declared `decision_rule` evaluated after each (arm, seed); writes a refutation stub on falsification. | Deferred (cloud-rental prereq) |
+| [`max_parallel_arms_design.md`](infra/max_parallel_arms_design.md) | `concurrent.futures` slot allocator with flock; refuses N>1 on single-GPU hosts. | Deferred (cloud-rental prereq) |
+| [`resume_design.md`](infra/resume_design.md) | Per-stage `_resume.json` manifest for partial-run recovery (dataset cache already covers parse+tokenize). | Deferred (partial coverage landed) |
+| [`repo_focus_cleanup_scope.md`](infra/repo_focus_cleanup_scope.md) | Plan to keep `preframr` (main) = core framework, moving orchestration + audits + tier data + design docs to `preframr-xpt`. | Largely executed (see [`landed/experiments_extraction_design.md`](landed/experiments_extraction_design.md)) |
+
+## refuted/ — tested & rejected
+
+Kept for the record; detailed evidence + the "do not revisit without …" condition
+live in `preframr_experiments/data/refuted/<exp>.md`.
+
+| Doc | Summary | Status |
+|---|---|---|
+| [`multi_modal_objective_design.md`](refuted/multi_modal_objective_design.md) | Umbrella framing of the per-token CE bottleneck on the multi-modal content tier. | Refuted (B/C/A all rejected) |
+| [`per_tier_heads_design.md`](refuted/per_tier_heads_design.md) | Shared body + 4 tier heads + router; MoS-NLL content head (Approach C). | Refuted at prodlike (router saturates) |
+| [`content_diffusion_design.md`](refuted/content_diffusion_design.md) | D3PM absorbing-state discrete-diffusion content head (Approach A). | Refuted (sampling-side; no CE change) |
+| [`cluster_conditional_content_head_design.md`](refuted/cluster_conditional_content_head_design.md) | Cluster-conditional content head (queue item 2). | Refuted (same ceiling, diversity ~1.0–1.2) |
+| [`motif_templates_v2_impl_design.md`](refuted/motif_templates_v2_impl_design.md) | Value-slotted motif templates (MotifDict v2): template token + content slot(s), shape-keyed mining, lossless expand. De-fragments the motif vocab and exposes motif-carried content to the content tier. (The corpus-mined motif-pass v1 design was deleted; this v2 doc is the surviving record of the refuted motif direction.) | **Refuted 2026-05-27** (built + A/B'd; content-tier did not beat no-motif; `data/refuted/motif_pass.md`) |
+| [`sequence_order_normalization_design.md`](refuted/sequence_order_normalization_design.md) | Collapse the per-frame write-order DoF that is audio-safe to canonicalise. Audit: only the canonical voice-respecting reorder is inaudible (it is the order dumps already use — a near-no-op); 84% of repeated writes are genuine sub-frame modulation content. Audit `audit/audit_seq_order_norm.py` kept as instrument. | **Refuted as a lever 2026-05-27** (`data/refuted/sequence_order_normalization.md`) |
+
+## landed/ — archived (impl in HEAD)
+
+Reference docs whose implementations shipped, indexed by *kind* in
+[`landed/README.md`](landed/README.md): library extractions, data tiers +
+infrastructure, audit + validation tooling, tokenizer/encoding (FREQ_TRAJ +
+profiling), and bug fixes. Notable threads:
+
+| Doc | Summary | Status |
+|---|---|---|
+| [`landed/unified_oscillation_primitive_design.md`](landed/unified_oscillation_primitive_design.md) | Unified `FREQ_TRAJ` op + `FREQ_NUDGE` — the representation win; the live deployment tokenizer before the generator pipeline. | Landed (tokens 0.16/0.17) |
+| [`landed/trajectory_anchoring.md`](landed/trajectory_anchoring.md) | Gate/sweep-anchored FREQ_TRAJ origins (the original encoding hypothesis + full mini-A/B history). | Landed (tokens 0.25.0, preframr 0.2.6) |
+| [`landed/freq_trajectory_anchoring_impl.md`](landed/freq_trajectory_anchoring_impl.md) | Tokens-side impl spec for `TrajectoryAnchorPass`. | Landed (tokens 0.25.0) |
+| [`landed/freq_v0_interval.md`](landed/freq_v0_interval.md) | `--freq-v0-interval`: encode V0 as a signed interval from the previous voice onset. | Landed (tokens 0.26.0) |
+| [`landed/freq_onset_channel.md`](landed/freq_onset_channel.md) | `--freq-onset-pass` (FREQ_ONSET op48): re-tag residual op0 SET on TRAJ_REGS → 1-token onset. | Landed (tokens 0.27.0) |
+| [`landed/melody_merge_split.md`](landed/melody_merge_split.md) | `--melody-merge-split`: split cross-melody-boundary merges so pitch is a separable target. | Landed (tokens 0.28.0) |
+| [`landed/onset_loss_prioritization.md`](landed/onset_loss_prioritization.md) | `--onset-loss-weight`: up-weight rare FREQ V0-onset in CE. | Landed (preframr 0.2.8) |
+| [`landed/tokenizer_profiling_tooling_design.md`](landed/tokenizer_profiling_tooling_design.md) | Torch-free tokenizer profiling (`tokenizer_profile` + `audit_primitives`). | Landed (tokens 0.20.0) |
 | [`landed/audio_fidelity_helper_design.md`](landed/audio_fidelity_helper_design.md) | Shared render-and-compare helper (`compare_renders`). | Landed (preframr-audio `fidelity.py`) |
 | [`landed/tokenizer_alphabet_coverage_bug.md`](landed/tokenizer_alphabet_coverage_bug.md) | RegTokenizer alphabet-coverage bug. | Landed |
 | [`landed/hvsc_version_pinning_design.md`](landed/hvsc_version_pinning_design.md) | Runner HVSC-version check wired into preflight. | Landed |
+| [`landed/prodlike_tier_design.md`](landed/prodlike_tier_design.md) | Prodlike data tier (~4.4K train + 385 Eval-A + 8 Eval-B families). | Landed |
+| [`landed/engine_fingerprint_evalb_design.md`](landed/engine_fingerprint_evalb_design.md) | 8 cross-engine Eval-B families + engine-family map. | Landed |
+| [`landed/corpus_structural_index_design.md`](landed/corpus_structural_index_design.md) | One-shot CPU structural index of full HVSC. | Landed |
+| [`landed/stage_dumps_basename_fix_design.md`](landed/stage_dumps_basename_fix_design.md) | Composer-subdir staging; recovers 50 prodlike dumps lost to basename collisions. | Landed |
+
+The container split + extraction landings (experiments / tokens / audio extraction,
+train/inference split, regdataset decomposition) are archived in
+[`landed/README.md`](landed/README.md) under "Library extractions".
+
+**Elsewhere (not in this repo):**
+- `preframr-tokens:pipeline_trace.py` — torch-free pass-by-pass pipeline tracer (no
+  design doc): runs the real encode path with every `MacroPass` + parser stage
+  instrumented and reports, per stage, which flag gated it, whether it fired, and the
+  op-mix delta; `--isolate FLAG` for a counterfactual. (In flight → tokens 0.24.0.)
+- `preframr-aug:design/melody_transfer_augmentation_design.md` — offline corpus
+  expansion (inaudible perturbation, voice permutation, cross-song transfer). Moved
+  to preframr-aug.
 
 Open (not a design doc): the **~100-song round-trip audio CI gate** (≥95% within
 tolerance) — see AGENTS.md "Land any time" (`compare_renders` helper + unit tests
 landed; corpus-scale gate pending).
 
-## 3. Efficiency & deploy envelope
-
-| Doc | Summary | Status |
-|---|---|---|
-| [`streaming_unembed_ce_design.md`](streaming_unembed_ce_design.md) | Stream `output(chunk) + ce_chunk` in one checkpoint; eliminates the 8.6 GiB chunk slab, restores `batch_size=4` + prodlike wallclock. | Pending impl |
-| [`orin_inference_optimization_design.md`](orin_inference_optimization_design.md) | Predict-host throughput: vocab shrink + GPU-resident constrained-decode (Orin ~4% GPU util at predict). | Pending impl |
-| [`parse_decode_walker_profile.md`](parse_decode_walker_profile.md) | Why parsing is slow (cProfile, 8.7 s/song): the pure-Python `FrameWalker` decode runs **~24×/song** (59% of time) — passes that decode-with-state + the arbiter's `validate=True` re-decoding source AND candidate per register-exact pass (`register_state` 12×/song, 33%). Low-risk fixes ranked: thread decoded state through `arbitrate` (return `(out, out_state)`) to kill redundant re-decodes; trim per-row allocation in the walk loop; build pass outputs column-wise not via per-row dict boxing. | Scoping — profiled 2026-06-03, unbuilt |
-
-Cross-axis: [`compound_token_design.md`](compound_token_design.md) (token budget;
-primary in Generalization). Vocab shrink (tkvocab ~8× to 4096) is queued under
-AGENTS.md "Predict-host envelope" (deferred).
-
-## 4. Runner / experiment infra & process
-
-Serves the Generalization axis: `generalization_metric_tracking_design.md` wires
-the decisive content-tier audit + scorecard + cross-run ledger.
-
-| Doc | Summary | Status |
-|---|---|---|
-| [`release_build_cache.md`](release_build_cache.md) | **The one place** for release/build/test/cache. Which host runs what (**fogbank** for all non-GPU work — builds/parse/audits/pytest/lint; defroster for training only), the proxpi pip cache + how to bust it after a PyPI release (`bust_release.sh` / `curl -X DELETE`), per-repo release procedure (PyPI-lib `v*` tag → OIDC vs Docker-app VERSION/base bump → main-push), local build/test commands, and the standing rule to **build a Docker app's image locally in parallel with the push** (never wait on CI + image pull). `architecture_overview.md` + the `AGENTS.md`s point here. | Reference — authoritative |
-| [`generalization_metric_tracking_design.md`](generalization_metric_tracking_design.md) | Make the decisive content-tier `per_class` audit a runner stage (not run by hand), add a generalization scorecard (per-eval_b-family content acc + spread + loop/prompt) to the report, and a tokenizer-hash-keyed cross-run ledger that auto-flags confounded comparisons. Reuses existing audits + the metric registry. | Drafted, pending impl (land with no run in flight; tokenizer-health metrics landed) |
-| [`runner_iteration_efficiency_design.md`](runner_iteration_efficiency_design.md) | Per-run overhead: (1) cache key on parse/tokenize cargs — **landed**; (2) symlink-farm + RO dump mount (no 2.7 GB copy) — **landed**; (3) drop the post-step chown container — pending. | #1+#2 landed; #3 pending |
-| [`flag_stage_routing_design.md`](flag_stage_routing_design.md) | `FLAG_STAGES` registry + `add_stage_args` for stage-aware flag forwarding (parse/tokenize/train). | Pending impl |
-| [`auto_early_abort_design.md`](auto_early_abort_design.md) | Spec-declared `decision_rule` evaluated after each (arm, seed); writes a refutation stub on falsification. | Deferred (cloud-rental prereq) |
-| [`max_parallel_arms_design.md`](max_parallel_arms_design.md) | `concurrent.futures` slot allocator with flock; refuses N>1 on single-GPU hosts. | Deferred (cloud-rental prereq) |
-| [`resume_design.md`](resume_design.md) | Per-stage `_resume.json` manifest for partial-run recovery (dataset cache already covers parse+tokenize). | Deferred (partial coverage landed) |
-| [`repo_focus_cleanup_scope.md`](repo_focus_cleanup_scope.md) | Plan to keep `preframr` (main) = core framework, moving orchestration + audits + tier data + design docs to `preframr-xpt`. | Largely executed (see [`landed/experiments_extraction_design.md`](landed/experiments_extraction_design.md)) |
-
-The container split + extraction landings (experiments / tokens / audio
-extraction, train/inference split, regdataset decomposition) are archived in
-[`landed/README.md`](landed/README.md) under "Library extractions".
-
-## 5. Data & corpus
-
-Active work here is currently in specs/audits, not design docs; the design record
-is archived. New tier / eval-set / augmentation / dataset-coverage docs go here.
-
-| Doc | Summary | Status |
-|---|---|---|
-| [`landed/prodlike_tier_design.md`](landed/prodlike_tier_design.md) | Prodlike data tier (~4.4K train + 385 Eval-A + 8 Eval-B families). | Landed |
-| [`landed/engine_fingerprint_evalb_design.md`](landed/engine_fingerprint_evalb_design.md) | 8 cross-engine Eval-B families + engine-family map. | Landed |
-| [`landed/corpus_structural_index_design.md`](landed/corpus_structural_index_design.md) | One-shot CPU structural index of full HVSC. | Landed |
-| [`landed/stage_dumps_basename_fix_design.md`](landed/stage_dumps_basename_fix_design.md) | Composer-subdir staging; recovers 50 prodlike dumps lost to basename collisions. | Landed |
-| `preframr-aug:design/melody_transfer_augmentation_design.md` | Offline corpus-expansion (inaudible perturbation, voice permutation, cross-song transfer). | Moved to preframr-aug |
-
-## Landed (archived)
-
-Reference docs whose implementations are in HEAD, indexed by *kind* (not axis) in
-[`landed/README.md`](landed/README.md): library extractions, data tiers +
-infrastructure, audit + validation tooling, tokenizer/encoding (FREQ_TRAJ +
-profiling), and bug fixes.
-
 ## Decision rules
 
-- **Status header.** One-line status bullet on every doc; update it before the
-  body.
+- **Status header.** One-line status bullet on every doc; update it before the body.
 - **Promotion thresholds.** 3σ-on-val_acc to flip a default; capacity-attenuation
-  refuses if prodlike Δ < ¼ × mini Δ; per-Eval-B-* breakouts confirm
-  cross-composer transfer.
-- **Refuted alternatives.** Detailed evidence + a "do not revisit without …"
-  condition go in `preframr_experiments/data/refuted/<exp>.md`; the design doc
-  retains only the `Refuted` status header pointing there.
+  refuses if prodlike Δ < ¼ × mini Δ; per-Eval-B-* breakouts confirm cross-composer
+  transfer.
+- **Refuted alternatives.** Move the doc to [`refuted/`](refuted/); detailed evidence +
+  a "do not revisit without …" condition go in
+  `preframr_experiments/data/refuted/<exp>.md`; the design doc retains only the
+  `Refuted` status header pointing there.

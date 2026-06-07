@@ -7,8 +7,8 @@ the **same register output**. **Does not exist today:** `pysidwizard` has `build
 hard front half). This is the constructive **reverse** of the generator pipeline, and the implementation of the
 "reverse round-trip" the generator work order's §7B asserts. Cross-ref
 [`generator_mdl_representation.md`](generator_mdl_representation.md) (the IR this reuses),
-[`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md) (what "same output" means),
-[`sid_driver_ornament_reference.md`](sid_driver_ornament_reference.md) (SID-Wizard's player model).
+[`sid_render_fidelity_contract.md`](../references/sid_render_fidelity_contract.md) (what "same output" means),
+[`sid_driver_ornament_reference.md`](../references/sid_driver_ornament_reference.md) (SID-Wizard's player model).
 
 ## 1. What "lossless" means here (the load-bearing definition)
 **NOT byte-identical SWM** — the inversion is many-to-one (many different SWMs render to the same registers),

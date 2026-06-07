@@ -1,5 +1,5 @@
 """End-to-end PROTOTYPE of footprint-mining + consistency-attribution for the percussion stamp
-codebook (design/percussion_stamp_encoding.md), non-emitting -- measures the codebook economics
+codebook, non-emitting -- measures the codebook economics
 before building the tokenizer. Per tune:
   - mine recurring EXACT stamps (abs (fn,ctrl) series, >=MINREP) per voice  = the inline DEFS
   - cluster exact variants by SHAPE sig (freq-contour + ctrl)               = DRUMS (a drum redefined

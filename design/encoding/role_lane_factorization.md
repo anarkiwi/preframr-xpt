@@ -10,7 +10,7 @@ accompaniment roles BEFORE the melody role** (so the melody is predicted with it
 P4), which is impossible without knowing which lane is which. Voice-lanes are the byte-exact substrate; the
 role/causal-order is what turns contiguity into a melody win (plain physical lanes can backfire by pushing the
 harmonic determinant out of locality). Learnability-framed by
-[`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md); grounded in
+[`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md); grounded in
 [[control-aware-encoding]] (the ctrl reg already tags per-frame role). (Was wrongly deleted in the 2026-06-05
 consolidation; restored — it is complementary to the generator-MDL, not superseded by it.)
 

@@ -3,7 +3,7 @@
 **Status:** Reference. Documents the shipped encoding (preframr-tokens `RegLogParser`)
 so the FRAME-val voice-order packing doesn't get re-derived. Not an experiment.
 
-**Learnability framing.** The FRAME-val voice multiplex is the cross-voice causal-state the de-mux lever targets — see [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) and the generator-MDL pipeline [`generator_mdl_representation.md`](generator_mdl_representation.md).
+**Learnability framing.** The FRAME-val voice multiplex is the cross-voice causal-state the de-mux lever targets — see [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) and the generator-MDL pipeline [`generator_mdl_representation.md`](../encoding/generator_mdl_representation.md).
 
 ## The trap (read this first)
 

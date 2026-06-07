@@ -92,5 +92,5 @@ Mini A/B `freq_v0_interval` on top of anchoring (anchored+interval vs anchored-a
 `audit.content_tier_report` **split to the V0-onset subreg** (the decisive number is V0-onset
 acc, not aggregate op45) + `audit.melody_predictability` (the interval onset line should now be
 low-entropy AND the model should finally capture it). Escalate to a prodlike interval-vs-absolute
-A/B if the onset acc moves. See `preframr-xpt/design/trajectory_anchoring.md` for why this is the
+A/B if the onset acc moves. See `design/landed/trajectory_anchoring.md` for why this is the
 top lever.

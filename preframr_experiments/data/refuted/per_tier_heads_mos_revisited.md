@@ -125,7 +125,7 @@ re-validation evidence should include:
 ## References
 
 - Original refute: `per_tier_heads_mos.md` (this directory).
-- Design doc: `../../design/per_tier_heads_design.md`.
+- Design doc: `../../design/refuted/per_tier_heads_design.md`.
 - Phase 2 + T-sweep audits:
   `../audit/per_tier_heads_phase2/loop_detection_*.json`,
   `../audit/per_tier_heads_phase2/prompt_conditioning_*.json`.

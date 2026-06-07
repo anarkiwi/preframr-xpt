@@ -5,8 +5,8 @@ recurring atom runs into dedicated tokens) gives the model a better content/melo
 representation than Unigram's likelihood-greedy chunking — a learnability win, not a
 compression win. Two variants: **v1** exact-match BPE over `(op,reg,subreg,val,diff)`
 atoms (motif tokens are loss-tier zero); **v2** value-slotted shape templates
-(`MOTIF_OP` shape + `MOTIF_ARG` content slot, the slot tiered as content). Designs:
-`design/motif_pass_design.md`, `design/motif_templates_v2_impl_design.md`.
+(`MOTIF_OP` shape + `MOTIF_ARG` content slot, the slot tiered as content). Design:
+`design/refuted/motif_templates_v2_impl_design.md` (v1 design since removed).
 
 **Decided by the content-tier per_class audit** (the decisive gate; all-tier is
 confounded because each arm tokenizes differently). v2 audited in xpt `:0.2.4`

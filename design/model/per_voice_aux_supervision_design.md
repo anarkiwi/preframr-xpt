@@ -5,7 +5,7 @@ exhaustion of token-form interventions (`weighted_token_loss_mini`
 refuted, `learnable_class_loss_mini` refuted, `set_to_diff_mini`
 refuted via alphabet inflation +90% on motion-reg DIFF expansion).
 
-**Learnability framing (caution).** This is a model-side content intervention — the class refuted against the ~0.13 ceiling that tokenizer-side `full_macros` later lifted. Forcing musical state into hidden activations is not a substitute for exposing it in the token stream as induction-head-expressible DEF→REF; prefer the tokenizer-side residual-SET / codebook program before spending a run here ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)).
+**Learnability framing (caution).** This is a model-side content intervention — the class refuted against the ~0.13 ceiling that tokenizer-side `full_macros` later lifted. Forcing musical state into hidden activations is not a substitute for exposing it in the token stream as induction-head-expressible DEF→REF; prefer the tokenizer-side residual-SET / codebook program before spending a run here ([`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md)).
 
 ## The problem
 
@@ -272,7 +272,7 @@ testing, 1 day for the mini A/B run + analysis. Mid-size project.
   (input-side annotation; this design is the output-side counterpart)
 - Token-class accuracy infra: `profile/token_class_accuracy.py`
 - Audio fidelity guardrails: `audio_fidelity.py`
-- Constrained-decode landscape: `design/orin_inference_optimization_design.md`
+- Constrained-decode landscape: `design/performance/orin_inference_optimization_design.md`
 
 ## Out of scope (v1)
 

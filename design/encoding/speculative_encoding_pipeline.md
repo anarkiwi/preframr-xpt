@@ -2,7 +2,7 @@
 
 **Status:** Proposal (architecture). Motivated by the RESID=0 program. Not built.
 
-**Learnability framing.** Make the Objective's "learnability" term concrete via [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md): score a claim by its per-frame entropy-rate contribution + induction-copy reuse and penalize implicit-counter structure (`audit/learnability_triage.py` deltas) — so a higher-learnability cover is measured, not asserted.
+**Learnability framing.** Make the Objective's "learnability" term concrete via [`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md): score a claim by its per-frame entropy-rate contribution + induction-copy reuse and penalize implicit-counter structure (`audit/learnability_triage.py` deltas) — so a higher-learnability cover is measured, not asserted.
 
 ## The problem: strict-order destructive passes
 

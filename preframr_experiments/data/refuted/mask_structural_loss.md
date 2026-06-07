@@ -101,5 +101,5 @@ has no place-in-song reference and can't differentiate prompts.
 - Open-questions origin:
   `per_tier_heads_mos_revisited.md` "Open questions".
 - Design doc:
-  `../../../../preframr/integration_tests/design/per_tier_heads_design.md`
+  `design/refuted/per_tier_heads_design.md`
   (main repo).

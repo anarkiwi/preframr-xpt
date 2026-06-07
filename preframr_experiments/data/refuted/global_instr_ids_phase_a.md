@@ -46,7 +46,7 @@ narrower subset of slots while losing on the long tail.
   — rerun A/B numbers.
 - `/scratch/tmp/preframr_experiments/results/global_instr_ids_phase_a/rerun.log`
   — 2026-05-16 20:44 → 23:30 wallclock.
-- `integration_tests/design/global_instr_ids_phase_a_verdict.md`
+- `global_instr_ids_phase_a_verdict.md` (removed)
   — verdict template (first-run interpretation with
   canonical-palette silently no-op'd).
 - `1a35031` bit-budget audit — Phase B+ would need ≥13-bit

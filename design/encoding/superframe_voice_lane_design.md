@@ -14,7 +14,7 @@ This captures the layout + rationale the existing `super_frame` scaffold left bl
 do not implement until the current melody-stream diagnosis lands and the two open
 prereqs below are answered.
 
-**Learnability framing.** Voice-major lanes shorten the dependency horizon and make the same-voice predecessor positionally local ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) Principles 1+4) — the structural realization of the de-mux lever; gate it on per-frame h_k, not only V0-onset accuracy.
+**Learnability framing.** Voice-major lanes shorten the dependency horizon and make the same-voice predecessor positionally local ([`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md) Principles 1+4) — the structural realization of the de-mux lever; gate it on per-frame h_k, not only V0-onset accuracy.
 
 ## What already exists
 
@@ -46,7 +46,7 @@ reserved. What's missing is the **intra-superframe byte layout** and the **why**
 ## The problem (grounded in the current stream)
 
 Today the stream is **frame-major**: each frame writes all active voices, in an order
-the FRAME token's val encodes (see [`voice_encoding_reference.md`](voice_encoding_reference.md)).
+the FRAME token's val encodes (see [`voice_encoding_reference.md`](../references/voice_encoding_reference.md)).
 This interleave taxes melody learning:
 
 1. **Melodic fragmentation with position-shifting gaps.** A voice's line is one chunk
@@ -132,5 +132,5 @@ that wrecks harmony is caught), with the round-trip oracle green and seq-length 
 
 - `preframr_tokens/macros/transforms_superframe.py` — the scaffold to build on.
 - `preframr_tokens/stfconstants.py` `SUPER_FRAME_REG`.
-- [`voice_encoding_reference.md`](voice_encoding_reference.md) — the current frame-major
+- [`voice_encoding_reference.md`](../references/voice_encoding_reference.md) — the current frame-major
   voice encoding this would replace within the superframe.

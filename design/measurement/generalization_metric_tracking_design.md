@@ -4,7 +4,7 @@
 only when no run is in flight, per AGENTS.md mid-run-edit rule). Reuses existing
 audit modules + the metric registry; this is **wiring, not new audits**.
 
-**Learnability framing.** The content-tier scorecard should also carry the training-free triage outputs (per-frame h_k, MI-decay, induction-copy from [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)) so representation A/Bs are ranked *before* a run, not only after.
+**Learnability framing.** The content-tier scorecard should also carry the training-free triage outputs (per-frame h_k, MI-decay, induction-copy from [`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md)) so representation A/Bs are ranked *before* a run, not only after.
 
 ## Problem
 

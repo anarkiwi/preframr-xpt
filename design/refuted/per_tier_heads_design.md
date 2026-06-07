@@ -8,7 +8,7 @@ saturates, outputs ignore prompt content; see
 all-tier acc, content unverified). Superseded `multi_modal_objective_design.md`
 Approach C bullet after `contrastive_infonce_auxiliary` refuted.
 
-**Learnability framing.** A REFUTED model-side content bet: the ~0.13 content ceiling it targeted was lifted TOKENIZER-side (`full_macros`), not by any output head. The lever is representation learnability — see [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md).
+**Learnability framing.** A REFUTED model-side content bet: the ~0.13 content ceiling it targeted was lifted TOKENIZER-side (`full_macros`), not by any output head. The lever is representation learnability — see [`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md).
 
 ## Problem (re-anchored)
 

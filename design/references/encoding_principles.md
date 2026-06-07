@@ -49,7 +49,7 @@ fidelity-neutral is *not* learnability-neutral.
   Locality helps only where there is cross-song-predictable structure being separated; it can't
   manufacture predictability for a multi-modal target (→ P5/P6). Cross-voice de-multiplexing remains a
   separate lever (now subsumed into the generator-MDL pipeline,
-  [`generator_mdl_representation.md`](generator_mdl_representation.md)), *not* for the magnitude.
+  [`generator_mdl_representation.md`](../encoding/generator_mdl_representation.md)), *not* for the magnitude.
 - **P3 — Don't multiplex the target.** Interleaving independent streams (voices) into the
   next-token position dilutes any one stream's signal. *Evidence:* melody is three voices
   multiplexed by the frame header; the per-voice line is the actual prediction target.
@@ -116,7 +116,7 @@ fidelity-neutral is *not* learnability-neutral.
 1. **Fidelity:** byte-exact round-trip? If lossy, is it content-tier and audition-gated?
 2. **Separability:** does any single token fuse multiple independent content decisions
    (esp. via Unigram merges crossing content boundaries)? If so, split them
-   ([`melody_merge_split.md`](landed/melody_merge_split.md)).
+   ([`melody_merge_split.md`](../landed/melody_merge_split.md)).
 3. **Locality:** for the decision you care about, how many tokens separate it from the context
    that predicts it? Can that distance be reduced without breaking fidelity?
 4. **Multiplexing:** is the prediction target one coherent stream, or several interleaved?

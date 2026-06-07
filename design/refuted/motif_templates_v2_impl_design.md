@@ -3,12 +3,12 @@
 **Status:** **REFUTED 2026-05-27** — built (tokens 0.21.0–0.23.0) and A/B'd. v2
 de-fragmented + content-exposed the slot and recovered most of v1's regression, but
 content-tier did not beat no-motif full_macros (v2 0.036 vs baseline 0.045). See
-`data/refuted/motif_pass.md`. Was: Drafted impl design. Implements the "Proposed fix" in
-`motif_pass_design.md`; tokenizer-side (preframr-tokens) + an xpt A/B. **No model
+`data/refuted/motif_pass.md`. Was: Drafted impl design. Implements the "Proposed fix"
+from the corpus-mined motif pass (v1, since removed); tokenizer-side (preframr-tokens) + an xpt A/B. **No model
 change in Phases 0–2** (the win is tested with the existing single-head model);
 the field-factorized variant is Phase 3 = `compound_token_design.md`.
 
-**Learnability framing.** The "one template per shape" consistency win is the copy-fraction lever (one stable token per idiom = induction-head-able); its refutation means the residual lives elsewhere — re-rank with the training-free triage ([`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md)) before another motif variant.
+**Learnability framing.** The "one template per shape" consistency win is the copy-fraction lever (one stable token per idiom = induction-head-able); its refutation means the residual lives elsewhere — re-rank with the training-free triage ([`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md)) before another motif variant.
 
 ## Goal + honest scope (corrects the proposal's compression framing)
 
@@ -155,7 +155,6 @@ slot inference (unit) + the per-frame oracle. 6. preframr-xpt:
 
 ## Cross-references
 
-- `motif_pass_design.md` — v1 + the findings that motivate this.
 - `compound_token_design.md` — the P3 field-factorized model; v2 P0–P2 is the
   tokenizer half, model-change-free.
 - `audio_equivalence_normalization_design.md` — an orthogonal lossy knob to
