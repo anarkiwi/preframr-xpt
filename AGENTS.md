@@ -101,7 +101,16 @@ voice-lane marker sentinel), framework **0.2.25** floors 0.46.3 → image `anark
 **Relaunched** `pitch_resid_isolated_prodlike` (3-arm) on 0.2.25, runner pid 266042, root
 `/scratch/tmp/preframr_experiments/pitch_resid_isolated_v2`, started 16:08. Reliability milestone to confirm:
 all 3 arms clear parse→tokenize→train-start cleanly (esp. tokenize now succeeds for pitch_resid + full_macros).
-Status: pitch_resid parse in progress. Await user signal for the generator-fix upgrade + restart.
+**Status (17:53):** pitch_resid arm parse SOFT-HANGS on a pathological universal_pitch tune (tune 4942/4946):
+container busy (CPU 500%, stable 10.9G mem, no leak) but parse.log frozen >21min on one tune. This is the
+arbiter per-claim re-decode pathology (`parse-slow-decode-walker`, O(claims×df)), super-linear and amplified
+by universal_pitch's extra claims — the 0.46.2 fix made the overflow FINITE but did NOT fix this perf cost.
+**Likely a downstream symptom of the generator repeated-pattern bug**: if repeats are emitted as many redundant
+GEN_TABLE claims instead of being compressed, heavy-repetition tunes get a huge claim count → re-decode
+explodes. It blocks the whole run (seed-major: pitch_resid first), so the tokenize milestone (diff-fix
+validation) is stuck behind it. The diff-fix tokenize could instead be validated cheaply via a full_macros-only
+arm (no universal_pitch → fast parse). Await user decision (keep grinding / kill / validate via full_macros) +
+the generator-fix upgrade + restart.
 
 **THE CANONICAL RUN is live.** `preframr_experiments/specs/pitch_resid_prodlike.py`: prodlike A/B, target =
 `full_macros + universal_pitch + table_resid_split` (per-voice universal note-index for melody onsets AND
