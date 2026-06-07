@@ -109,8 +109,13 @@ by universal_pitch's extra claims — the 0.46.2 fix made the overflow FINITE bu
 GEN_TABLE claims instead of being compressed, heavy-repetition tunes get a huge claim count → re-decode
 explodes. It blocks the whole run (seed-major: pitch_resid first), so the tokenize milestone (diff-fix
 validation) is stuck behind it. The diff-fix tokenize could instead be validated cheaply via a full_macros-only
-arm (no universal_pitch → fast parse). Await user decision (keep grinding / kill / validate via full_macros) +
-the generator-fix upgrade + restart.
+arm (no universal_pitch → fast parse). **PAUSED 17:54 (user choice "kill + pause"):** killed runner 266042 +
+containers; results were throwaway anyway. Validated this session: tokens 0.46.2 (note-overflow → finite parse),
+0.46.3 (diff-dtype → macro block-build no longer crashes; verified via the full_macros tok_investigate repro +
+pinpoint), 0.2.25 image; chunked-reader on tokens main (1690cd6, unreleased). STILL UNVALIDATED on a live run:
+macro-arm tokenize→train end-to-end (the unigram step was never reached). OPEN reliability item: the arbiter
+re-decode soft-hang on heavy-claim universal_pitch tunes — expected to ease once the generator compresses
+repeats. **Awaiting the user's generator-fix tokens upgrade + clean restart.**
 
 **THE CANONICAL RUN is live.** `preframr_experiments/specs/pitch_resid_prodlike.py`: prodlike A/B, target =
 `full_macros + universal_pitch + table_resid_split` (per-voice universal note-index for melody onsets AND
