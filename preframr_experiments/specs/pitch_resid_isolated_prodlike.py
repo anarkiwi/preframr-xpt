@@ -1,4 +1,4 @@
-"""Pitch-model ISOLATION prodlike A/B/C (tokens 0.46.1) -- identifies the *marginal* generalization effect of
+"""Pitch-model ISOLATION prodlike A/B/C (tokens 0.46.2) -- identifies the *marginal* generalization effect of
 the universal pitch model, which pitch_resid_prodlike's 2-arm (target vs atomic) design cannot.
 
 The problem with pitch_resid_prodlike: target = full_macros + universal_pitch + table_resid_split, baseline =
@@ -15,7 +15,7 @@ This spec adds the missing isolating arm. Three arms, decisive comparison = arm0
                                                                         contextualizes the pitch delta's size)
 The decisive pair (pitch_resid, full_macros) runs first under the seed-major runner, so the 1-seed marginal is
 available before the atomic floor finishes. 1 seed, canonical body (tkvocab 32768, seq_len 8192, 60 epochs),
-on anarkiwi/preframr:0.2.23.
+on anarkiwi/preframr:0.2.24.
 
 Reads: PRIMARY for the generalization claim = eval_b_* held-out composer families (pitch_resid vs full_macros);
 the universal pitch model's claim IS cross-composer transfer. SECONDARY/diagnostic = audit.content_tier_report
@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from preframr_experiments.base import Arm, ExperimentSpec, prodlike_train_args
 
-_IMAGE = "anarkiwi/preframr:0.2.23"
+_IMAGE = "anarkiwi/preframr:0.2.24"
 
 
 spec = ExperimentSpec(
@@ -39,7 +39,7 @@ spec = ExperimentSpec(
     doc=(
         "Prodlike A/B/C isolating the universal pitch model's marginal effect: "
         "full_macros + universal_pitch + table_resid_split (target) vs full_macros "
-        "(isolating reference) vs atomic (floor baseline), on preframr-tokens 0.46.1. "
+        "(isolating reference) vs atomic (floor baseline), on preframr-tokens 0.46.2. "
         "1 seed, canonical body (tkvocab 32768, seq_len 8192, 60 epochs). Decisive = "
         "pitch_resid vs full_macros; PRIMARY read = eval_b_* held-out composer "
         "generalization; SECONDARY = content_tier_report (per-tier "
