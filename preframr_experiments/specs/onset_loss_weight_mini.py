@@ -1,6 +1,6 @@
 """Mini 2-arm A/B for onset loss prioritization (preframr 0.2.8 --onset-loss-weight): does
 up-weighting the rare FREQ V0-onset in the CE loss force the model to learn it? Converged
-diagnosis (design/onset_loss_prioritization.md + trajectory_anchoring.md): across four mini
+diagnosis (design/landed/onset_loss_prioritization.md + trajectory_anchoring.md): across four mini
 conditions the model's V0-onset acc is 0.000 despite the onset line being trigram-0.82
 predictable and the model having ample mini capacity (freq_core lifted SET to 0.42) -- the
 onset is rare and the model won't spend capacity on it.

@@ -1,7 +1,7 @@
 # `adsr_equivalence` (static ADSR / CTRL canonicalisation) — REFUTED
 
 **Status:** static-equivalence canonicalisation refuted via the audit
-in `integration_tests/design/adsr_equivalence_report.md`. No A/B run;
+in `adsr_equivalence_report.md` (removed). No A/B run;
 the report demonstrated the canonicalisation is unsafe before
 implementation.
 
@@ -36,7 +36,7 @@ encoding (per-byte SET preserved verbatim) is correct.
 
 ## Evidence
 
-`integration_tests/design/adsr_equivalence_report.md` — full audit
+`adsr_equivalence_report.md` (removed) — full audit
 with per-field observability matrix and per-corpus byte
 distribution.
 

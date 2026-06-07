@@ -1,9 +1,9 @@
-"""Generator-era canonical prodlike A/B (tokens 0.46.0) -- the decisive cross-tune generalization read.
+"""Generator-era canonical prodlike A/B (tokens 0.46.1) -- the decisive cross-tune generalization read.
 
 Target = the most-learnable-by-construction encoding: full_macros + universal_pitch + table_resid_split
 (the per-voice universal note-index for melody onsets AND for GEN_TABLE arps via the NOTE_UNIV residual-
 split / item #4 keying). Baseline = the atomic control (all passes OFF). 1 seed, canonical body, on
-anarkiwi/preframr:0.2.22 (preframr-tokens 0.46.0).
+anarkiwi/preframr:0.2.23 (preframr-tokens 0.46.1).
 
 WHY THIS A/B, not within-block triage: the within-block induction-copy triage is exhausted -- it is FLAT
 across every generator encoding (atomic copy 0.930 beats the generator family ~0.916; measured for 0.45.1,
@@ -11,7 +11,7 @@ universal_pitch, universal_freq, table_resid_split, and the full item #4). The t
 to the lever these encodings target -- cross-tune transfer (universal_pitch lifts absolute transfer +67%,
 0.094->0.157, measured separately). Only training settles whether that transfer translates to
 generalization. Decisive read = audit.content_tier_report (per-tier content_over_structural + per-op
-op_acc, on the corrected 0.46.0 tier map); secondary = eval_b_* held-out composer families.
+op_acc, on the corrected 0.46.1 tier map); secondary = eval_b_* held-out composer families.
 
 Replaces melody_skeleton_prodlike.py (0.45.1 / no residual-split). Launch:
   preframr-experiments-run pitch_resid_prodlike   # on the GPU host (defroster, RTX 4090 -- NOT fogbank)
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from preframr_experiments.base import Arm, ExperimentSpec, prodlike_train_args
 
-_IMAGE = "anarkiwi/preframr:0.2.22"
+_IMAGE = "anarkiwi/preframr:0.2.23"
 
 
 spec = ExperimentSpec(
@@ -29,7 +29,7 @@ spec = ExperimentSpec(
     doc=(
         "Prodlike A/B: full_macros + universal_pitch + table_resid_split (per-voice "
         "note-index + GEN_TABLE NOTE_UNIV residual-split, item #4) vs the atomic "
-        "baseline, on preframr-tokens 0.46.0. 1 seed, canonical body (tkvocab 32768, "
+        "baseline, on preframr-tokens 0.46.1. 1 seed, canonical body (tkvocab 32768, "
         "seq_len 8192, 60 epochs). Decisive gate = content_tier_report (per-tier "
         "content_over_structural + per-op op_acc); secondary = eval_b_* held-out "
         "composer generalization. Target arm first; baseline last."

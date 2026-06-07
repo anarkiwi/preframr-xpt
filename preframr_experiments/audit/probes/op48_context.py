@@ -13,13 +13,16 @@ TRAJ_OP, ONSET_OP, SET_OP = 45, 48, 0
 
 
 def main():
-    files = sorted(glob.glob(
-        "/scratch/tmp/preframr_no_unigram_clean/results/melody_no_unigram_mini/"
-        "no_unigram/seed0/eval/*/*.0.parquet"))
-    gap_prev = Counter()      # frames since previous freq event on same reg
-    neighbor = Counter()      # op of nearest freq neighbor on same reg
-    frame_multi = Counter()   # how many freq writes share the op48's frame on that reg
-    singleton = Counter()     # is the op48 the only freq event within +/-2 frames?
+    files = sorted(
+        glob.glob(
+            "/scratch/tmp/preframr_no_unigram_clean/results/melody_no_unigram_mini/"
+            "no_unigram/seed0/eval/*/*.0.parquet"
+        )
+    )
+    gap_prev = Counter()  # frames since previous freq event on same reg
+    neighbor = Counter()  # op of nearest freq neighbor on same reg
+    frame_multi = Counter()  # how many freq writes share the op48's frame on that reg
+    singleton = Counter()  # is the op48 the only freq event within +/-2 frames?
     total = 0
     for f in files:
         df = pd.read_parquet(f)
@@ -64,7 +67,11 @@ def main():
                 cand.append((gn, next_same[1]))
             if cand:
                 cand.sort()
-                neighbor[{45: "op45_traj", 48: "op48_onset", 0: "op0_set"}.get(cand[0][1], cand[0][1])] += 1
+                neighbor[
+                    {45: "op45_traj", 48: "op48_onset", 0: "op0_set"}.get(
+                        cand[0][1], cand[0][1]
+                    )
+                ] += 1
             else:
                 neighbor["alone_on_reg"] += 1
             # isolated within +/-2 frames (no other freq event on reg)?
@@ -77,7 +84,9 @@ def main():
     print("\nnearest same-reg freq neighbor op:")
     for k, v in neighbor.most_common():
         print(f"  {k:>12}: {v:5d} ({100*v/total:.0f}%)")
-    print("\nfreq writes sharing the op48's frame on that reg (sub-frame multiplicity):")
+    print(
+        "\nfreq writes sharing the op48's frame on that reg (sub-frame multiplicity):"
+    )
     for k, v in sorted(frame_multi.items()):
         print(f"  {k}: {v:5d} ({100*v/total:.0f}%)")
     print("\nisolation within +/-2 frames:")

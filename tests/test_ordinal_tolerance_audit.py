@@ -59,7 +59,7 @@ def test_load_vocab(tmp_path):
         w.writeheader()
         for o, r, s, v in _VOCAB:
             w.writerow({"op": o, "reg": r, "subreg": s, "val": v, "count": 0, "n": 0})
-    op, reg, subreg, val = ota.load_vocab(p)
+    op, reg, _subreg, val = ota.load_vocab(p)
     assert op == [45, 45, 45, 10]
     assert reg == [0, 0, 1, 1]
     assert val == [100, 102, 100, 21]

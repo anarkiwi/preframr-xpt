@@ -9,7 +9,7 @@ the new verdict.
 **Original status (kept for history):** Refuted at Phase 2 mini A/B
 (`per_tier_heads_mini_body_large`, 3 seeds, 2026-05-21). Criteria 1
 and 5 pass; criteria 3 and 4 fail at T=0 greedy. Per
-`design/per_tier_heads_design.md`: "Refute if any of (1)–(4) fail."
+`design/refuted/per_tier_heads_design.md`: "Refute if any of (1)–(4) fail."
 
 Revisit gate (now satisfied): re-open if **sample-time mitigations**
 close the greedy collapse gap without sacrificing the teacher-forced
@@ -17,7 +17,7 @@ lift documented below.
 
 ## Hypothesis
 
-Per `design/per_tier_heads_design.md` (Approach C): replace the
+Per `design/refuted/per_tier_heads_design.md` (Approach C): replace the
 single softmax head with four tier-specific heads (structural / mid /
 content / zero) + a router that selects the tier. The content head
 uses Mixture-of-Softmaxes (K=4) to express multi-modal continuations.
@@ -156,7 +156,7 @@ mitigations above succeed at mini.
 
 ## References
 
-- Design: `../design/per_tier_heads_design.md`.
+- Design: `../design/refuted/per_tier_heads_design.md`.
 - Phase 0 audits (framing): `../data/audit/loop_detection_real.json`,
   `../data/audit/prompt_conditioning_sample.json`.
 - Phase 2 data: `../data/audit/per_tier_heads_phase2/` (per-class

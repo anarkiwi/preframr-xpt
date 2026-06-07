@@ -20,7 +20,7 @@ repo yet.
 - `test_tracker_round_trip.py` parses that log under the deployed default (`full_macros` = `generator_pass`
   + kept passes) with **`parse_audit='raise'`**. The parser fires the fidelity oracle after every pass, so
   completing the parse **is** the byte-exact / same-output guarantee. We never hand-roll a `register_state`
-  diff — see `design/verification_and_audits.md` "THE TRAP".
+  diff — see `design/references/verification_and_audits.md` "THE TRAP".
 
 Equivalence = **same output** (the user's definition), enforced by the project's own byte-exact oracle.
 
@@ -29,7 +29,7 @@ Equivalence = **same output** (the user's definition), enforced by the project's
 `11 passed, 1 skipped, 1 xfailed` — 6 SWM + 5 defMON forward round-trips lossless. The skip is a
 `$0801` BASIC-stub `.prg` the defMON player can't load (fixture provenance, not a round-trip failure).
 The xfail is the **reverse** half: `log → SWM → log` (the recompiler in
-`design/log_to_swm_recompiler_design.md`) is designed but **not built** — `strict=True` so it flips to a
+`design/encoding/log_to_swm_recompiler_design.md`) is designed but **not built** — `strict=True` so it flips to a
 hard failure the moment the recompiler exists.
 
 ## Run it (in place, from the xpt tree)

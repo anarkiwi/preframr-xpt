@@ -36,7 +36,6 @@ from pathlib import Path
 
 from preframr_experiments.audit.melody_features import FEATURES, analyze
 
-
 _SILENCE_THRESHOLD = 1.0  # pitched_gates_per_sec below this = silent
 _EXTREME_Z = 4.0
 _MULTI_AXIS_NEG_Z = -3.0
@@ -66,14 +65,15 @@ def collapse_failures(features: dict, z_by_feature: dict[str, float]) -> list[st
     if pg is None or pg < _SILENCE_THRESHOLD:
         fails.append(f"pitched_gates_per_sec={pg} < {_SILENCE_THRESHOLD} (silent)")
     severely_low = [
-        (f, z) for f, z in z_by_feature.items()
+        (f, z)
+        for f, z in z_by_feature.items()
         if z is not None and z < _MULTI_AXIS_NEG_Z
     ]
     if len(severely_low) >= _MULTI_AXIS_MIN_COUNT:
         fails.append(
             f"multi-axis collapse: {len(severely_low)} features with z < "
-            f"{_MULTI_AXIS_NEG_Z}: " +
-            ", ".join(f"{f}({z:+.1f})" for f, z in severely_low)
+            f"{_MULTI_AXIS_NEG_Z}: "
+            + ", ".join(f"{f}({z:+.1f})" for f, z in severely_low)
         )
     return fails
 
@@ -102,8 +102,16 @@ def score_one(path: str, scaler: dict, ref_summary: dict) -> dict:
             n_missing += 1
         if z is not None and abs(z) > _EXTREME_Z:
             extreme_outlier_features.append((c, z))
-        rows.append({"feature": c, "value": v, "ref_mean": mean, "ref_std": std,
-                     "z": z, "verdict": verdict})
+        rows.append(
+            {
+                "feature": c,
+                "value": v,
+                "ref_mean": mean,
+                "ref_std": std,
+                "z": z,
+                "verdict": verdict,
+            }
+        )
     collapse = collapse_failures(features, z_by_feature)
     n_scored = max(1, n_pass + n_warn + n_fail)
     headline = n_pass / n_scored

@@ -1,7 +1,7 @@
 """FINAL RESID=0 accounting across the corpus. Apply the FULL designed mechanism stack to every
 RESID note and report what (if anything) remains UNACCOUNTED -- the true RESID>0:
   1. STAMP    -- the note's exact (fn,ctrl) write-series RECURS >=MINREP in the tune (drum/effect
-                 codebook; lossless define+backref).  [design/percussion_stamp_encoding.md]
+                 codebook; lossless define+backref).
   2. ARP      -- pitched-offset cycle (held-arp: RLE-collapse + minimal period; covers wave-delay
                  holds & period>8).                    [iter-1 landed + held-arp irregular-duration]
   3. SLIDE    -- pitched freq is a linear ramp (semitone uniform-rate OR freq-domain constant delta;
@@ -10,10 +10,16 @@ RESID note and report what (if anything) remains UNACCOUNTED -- the true RESID>0
   5. UNACCOUNTED -> the residual the program must drive to 0; reported with examples + composers.
 
 Usage:  resid_final_accounting.py <N|full> [procs] [minrep]   (1500 = the 10x rung)"""
+
 import os
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import sys, glob, random, traceback  # noqa: E401,E402
 from collections import defaultdict, Counter  # noqa: E402
@@ -49,7 +55,8 @@ def _period(xs, cap):
 
 def _const_delta(xs, jitter=2):
     """xs is a ~constant-delta ramp (>=3, real slope, allowing small quantisation jitter) -> the
-    delta, else None. Engines sweep the raw freq register by a fixed step (SoundMonitor/DMC)."""
+    delta, else None. Engines sweep the raw freq register by a fixed step (SoundMonitor/DMC).
+    """
     if len(xs) < 3:
         return None
     d = [b - a for a, b in zip(xs, xs[1:])]
@@ -71,7 +78,10 @@ def _sweep(fns):
         return True
     n = len(fns)
     for p in range(3, n // 2 + 1):  # looping sweep: a const-delta run that repeats
-        if all(abs(fns[i] - fns[i % p]) <= 2 for i in range(n)) and _const_delta(fns[:p]) is not None:
+        if (
+            all(abs(fns[i] - fns[i % p]) <= 2 for i in range(n))
+            and _const_delta(fns[:p]) is not None
+        ):
             return True
     return False
 
@@ -81,16 +91,20 @@ def _arp_cycle(offs, cap=16):
     is_pitched -- the engine's offset table drives any waveform incl. noise)."""
     for strip in (0, 1, 2, 3):
         s = offs[strip:]
-        if len(s) >= 6 and (_period(s, cap) is not None or _period(_rle(s), 8) is not None):
+        if len(s) >= 6 and (
+            _period(s, cap) is not None or _period(_rle(s), 8) is not None
+        ):
             return True
     return False
 
 
 def _wildsig(rec):
     """Note-relative signature with WIDE (|offset|>24) / NOISE frames replaced by a wildcard 'W' --
-    the reused gesture with its varying element masked (engine reuses the table, element drifts)."""
-    return tuple("W" if ((c & 0x80) or abs(o) > 24) else (o, c)
-                 for o, c, _m, _fn in rec)
+    the reused gesture with its varying element masked (engine reuses the table, element drifts).
+    """
+    return tuple(
+        "W" if ((c & 0x80) or abs(o) > 24) else (o, c) for o, c, _m, _fn in rec
+    )
 
 
 def _glide(fns):
@@ -113,7 +127,9 @@ def _arp_accent(rec):
     """ARP with a PERIODIC non-pitched accent interleaved (System6581 gate-off/noise-tik): the cycle
     is clean once the accent frames are carried -- detect over the pitched core too."""
     poff = [o for o, _c, m, _fn in rec if m]
-    return len(poff) >= 4 and (_period(poff, 8) is not None or _period(_rle(poff), 8) is not None)
+    return len(poff) >= 4 and (
+        _period(poff, 8) is not None or _period(_rle(poff), 8) is not None
+    )
 
 
 def classify(rec):
@@ -179,10 +195,17 @@ def analyze(paths, minrep):
     parsed_ok = 0
     a = _args()
     for p in paths:
-        comp = p.split("/MUSICIANS/", 1)[-1].split("/")[1] if "/MUSICIANS/" in p else "?"
+        comp = (
+            p.split("/MUSICIANS/", 1)[-1].split("/")[1] if "/MUSICIANS/" in p else "?"
+        )
         SkeletonPass._resid_diag = []
         try:
-            parsed = next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
+            parsed = next(
+                RegLogParser(args=a).parse(
+                    p, max_perm=1, require_pq=False, reparse=True
+                ),
+                None,
+            )
         except Exception:
             SkeletonPass._resid_diag = None
             continue
@@ -224,8 +247,13 @@ def analyze(paths, minrep):
                 acct["UNACCOUNTED"] += 1
                 by_comp_unacct[comp] += 1
                 if len(examples) < 60:
-                    examples.append((comp, [o for o, _c, _m, _fn in rec][:14],
-                                     [hex(c) for _o, c, _m, _fn in rec][:14]))
+                    examples.append(
+                        (
+                            comp,
+                            [o for o, _c, _m, _fn in rec][:14],
+                            [hex(c) for _o, c, _m, _fn in rec][:14],
+                        )
+                    )
     return acct, by_comp_unacct, examples, parsed_ok
 
 
@@ -255,8 +283,11 @@ if __name__ == "__main__":
         sample = [random.choice(v) for v in by_dir.values()]
         random.shuffle(sample)
         sample = sample[: int(spec)]
-    print(f"final RESID accounting across {len(sample)} dumps (minrep={minrep})",
-          file=sys.stderr, flush=True)
+    print(
+        f"final RESID accounting across {len(sample)} dumps (minrep={minrep})",
+        file=sys.stderr,
+        flush=True,
+    )
     shards = [(sample[i::procs], minrep) for i in range(procs)]
     shards = [s for s in shards if s[0]]
     with mp.Pool(len(shards)) as pool:
@@ -273,14 +304,29 @@ if __name__ == "__main__":
             examples.extend(ex[: 60 - len(examples)])
 
     total = sum(acct.values())
-    print(f"\n=== FINAL RESID ACCOUNTING: {ok}/{len(sample)} dumps, {total} RESID notes ===")
-    for mech in ("STAMP_abs", "STAMP_rel", "STAMP_wild", "ARP", "ARP_accent", "SWEEP", "PERC",
-                 "SEGMENT_fit", "SEGMENT", "DECOMP", "UNACCOUNTED"):
+    print(
+        f"\n=== FINAL RESID ACCOUNTING: {ok}/{len(sample)} dumps, {total} RESID notes ==="
+    )
+    for mech in (
+        "STAMP_abs",
+        "STAMP_rel",
+        "STAMP_wild",
+        "ARP",
+        "ARP_accent",
+        "SWEEP",
+        "PERC",
+        "SEGMENT_fit",
+        "SEGMENT",
+        "DECOMP",
+        "UNACCOUNTED",
+    ):
         n = acct[mech]
         print(f"   {mech:12s} {n:8d}  ({100*n/max(total,1):.2f}%)")
     un = acct["UNACCOUNTED"]
-    print(f"\n   >>> RESID > 0 (unaccounted): {un} notes ({100*un/max(total,1):.3f}% of RESID, "
-          f"{100*un/max(total,1):.4f}%) <<<")
+    print(
+        f"\n   >>> RESID > 0 (unaccounted): {un} notes ({100*un/max(total,1):.3f}% of RESID, "
+        f"{100*un/max(total,1):.4f}%) <<<"
+    )
     print("\n=== worst composers by UNACCOUNTED count ===")
     for comp, n in by_comp.most_common(20):
         print(f"   {n:6d}  {comp}")

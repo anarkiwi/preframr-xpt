@@ -1,7 +1,7 @@
 # `head_row_class` — REFUTED (pre-2026-05-10, design phase)
 
 **Status:** Experiment E1 in
-`integration_tests/design/head_row_class_design.md` refuted the
+`head_row_class_design.md` (removed) refuted the
 arms-vs-baseline alphabet/atom tradeoff. No implementation landed.
 
 ## Hypothesis
@@ -29,7 +29,7 @@ sequence-length axis without any net gain on either.
 
 ## Evidence
 
-`integration_tests/design/head_row_class_design.md` §E1 — atom
+`head_row_class_design.md` (removed) §E1 — atom
 counts, alphabet sizes, per-track breakouts.
 
 ## Do not revisit without

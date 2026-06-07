@@ -125,9 +125,16 @@ def build_corpus(condition, P, motif_len, n_shared, n_held, n_train, n_val, seed
 
 def build_model(vocab, seq_len, layers, heads, kv_heads, embed, device):
     args = argparse.Namespace(
-        layers=layers, heads=heads, kv_heads=kv_heads, embed=embed,
-        max_seq_len=seq_len, attn_dropout=0.1, norm_eps=1e-5,
-        rope_base=500000, rope_scale=1.0, tie_word_embeddings=False,
+        layers=layers,
+        heads=heads,
+        kv_heads=kv_heads,
+        embed=embed,
+        max_seq_len=seq_len,
+        attn_dropout=0.1,
+        norm_eps=1e-5,
+        rope_base=500000,
+        rope_scale=1.0,
+        tie_word_embeddings=False,
     )
     return get_llama3_2(vocab, args).to(device)
 
@@ -154,12 +161,25 @@ def _onset_acc(model, x, om, bm, vocab, device, bs=32):
 
 def run(condition, cfg, device):
     x, om, bm, vx, vom, vbm, vocab = build_corpus(
-        condition, cfg["P"], cfg["motif_len"], cfg["n_shared"], cfg["n_held"],
-        cfg["n_train"], cfg["n_val"], cfg["seed"],
+        condition,
+        cfg["P"],
+        cfg["motif_len"],
+        cfg["n_shared"],
+        cfg["n_held"],
+        cfg["n_train"],
+        cfg["n_val"],
+        cfg["seed"],
     )
     seq_len = x.shape[1]
-    model = build_model(vocab, seq_len, cfg["layers"], cfg["heads"],
-                        cfg["kv_heads"], cfg["embed"], device)
+    model = build_model(
+        vocab,
+        seq_len,
+        cfg["layers"],
+        cfg["heads"],
+        cfg["kv_heads"],
+        cfg["embed"],
+        device,
+    )
     opt = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=0.01)
     rng = np.random.default_rng(0)
     for _ in range(cfg["epochs"]):
@@ -186,27 +206,52 @@ def main():
     cli = ap.parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     cfg = dict(
-        P=64, motif_len=8, n_shared=6, n_held=2, n_train=1024, n_val=256,
-        layers=6, heads=8, kv_heads=4, embed=288, epochs=20,
-        batch_size=32, seed=0,
+        P=64,
+        motif_len=8,
+        n_shared=6,
+        n_held=2,
+        n_train=1024,
+        n_val=256,
+        layers=6,
+        heads=8,
+        kv_heads=4,
+        embed=288,
+        epochs=20,
+        batch_size=32,
+        seed=0,
     )
     if cli.quick:
-        cfg.update(P=16, motif_len=4, n_shared=3, n_held=1, n_train=128,
-                  n_val=64, layers=2, heads=4, kv_heads=2, embed=64, epochs=3)
+        cfg.update(
+            P=16,
+            motif_len=4,
+            n_shared=3,
+            n_held=1,
+            n_train=128,
+            n_val=64,
+            layers=2,
+            heads=4,
+            kv_heads=2,
+            embed=64,
+            epochs=3,
+        )
     print(f"device={device}")
     res = {}
     for cond in ("flat", "real"):
         vocab, seq_len, tr, va = run(cond, cfg, device)
         res[cond] = va
-        print(f"[{cond:>4}] vocab={vocab} seq_len={seq_len} "
-              f"train_onset_acc={tr:.3f} HELDOUT_onset_acc={va:.3f}")
+        print(
+            f"[{cond:>4}] vocab={vocab} seq_len={seq_len} "
+            f"train_onset_acc={tr:.3f} HELDOUT_onset_acc={va:.3f}"
+        )
     thr = 0.0 if cli.quick else 0.80
     verdict = (
         "ENCODING SUFFICIENT (real generalizes the rule)"
         if res["real"] >= thr and res["flat"] >= thr
-        else "ENCODING DEFICIENT (flat generalizes, real does not)"
-        if res["flat"] >= thr > res["real"]
-        else "INCONCLUSIVE (flat itself did not generalize)"
+        else (
+            "ENCODING DEFICIENT (flat generalizes, real does not)"
+            if res["flat"] >= thr > res["real"]
+            else "INCONCLUSIVE (flat itself did not generalize)"
+        )
     )
     print(f"VERDICT: {verdict}")
     return 0 if cli.quick or res["real"] >= thr else 1

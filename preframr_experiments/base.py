@@ -527,13 +527,15 @@ def _docker_run(
     name: Optional[str] = None,
     role: str = "train",
 ) -> int:
-    """Single ``docker run --rm`` invocation. Streams stdout+stderr to ``log_path``; returns the container exit code. By default the container runs the baked image code. When ``_src_bind_enabled()``, ``role`` selects which side of the working-tree preframr/ tree is bind-mounted over the bake: ``"train"`` mounts ``preframr/train/`` only; ``"inference"`` mounts ``preframr/inference/`` only. See ``design/train_inference_split_design.md``."""
+    """Single ``docker run --rm`` invocation. Streams stdout+stderr to ``log_path``; returns the container exit code. By default the container runs the baked image code. When ``_src_bind_enabled()``, ``role`` selects which side of the working-tree preframr/ tree is bind-mounted over the bake: ``"train"`` mounts ``preframr/train/`` only; ``"inference"`` mounts ``preframr/inference/`` only. See ``design/landed/train_inference_split_design.md``."""
     cmd = [
         "docker",
         "run",
         "--rm",
         f"--memory={memory}",
         f"--memory-swap={memory}",
+        "--ulimit",
+        "nofile=1048576:1048576",
         "-v",
         f"{bind_root}:/scratch/preframr",
     ]

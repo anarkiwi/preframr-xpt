@@ -8,7 +8,6 @@ import warnings
 from pathlib import Path
 from typing import Optional
 
-import pytest
 
 from preframr_experiments.audit import content_tier_report as ctr
 
@@ -136,8 +135,12 @@ def test_vocab_atom_overrides_row_index_proxy(tmp_path):
 
 
 def test_fallback_warns_when_vocab_atom_missing(tmp_path):
-    _write_arm(tmp_path, "anchored", op45_hits=30, set_hits=100, famx=0.30, vocab_atom=None)
-    _write_arm(tmp_path, "unanchored", op45_hits=5, set_hits=100, famx=0.20, vocab_atom=None)
+    _write_arm(
+        tmp_path, "anchored", op45_hits=30, set_hits=100, famx=0.30, vocab_atom=None
+    )
+    _write_arm(
+        tmp_path, "unanchored", op45_hits=5, set_hits=100, famx=0.20, vocab_atom=None
+    )
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         ctr.compare(tmp_path)

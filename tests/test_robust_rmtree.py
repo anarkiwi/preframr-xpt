@@ -94,12 +94,15 @@ class TestRobustRmtree(unittest.TestCase):
             target = Path(tmp) / "victim"
             target.mkdir()
             (target / "x").write_text("y")
-            with mock.patch(
-                "preframr_experiments.base.shutil.rmtree",
-                side_effect=flaky_rmtree,
-            ), mock.patch(
-                "preframr_experiments.base._stop_preframr_tb",
-                side_effect=lambda: stop_calls.append(1),
+            with (
+                mock.patch(
+                    "preframr_experiments.base.shutil.rmtree",
+                    side_effect=flaky_rmtree,
+                ),
+                mock.patch(
+                    "preframr_experiments.base._stop_preframr_tb",
+                    side_effect=lambda: stop_calls.append(1),
+                ),
             ):
                 _robust_rmtree(target, attempts=5, base_delay=0.001)
         self.assertEqual(len(calls), n_to_fail + 1)

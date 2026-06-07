@@ -28,4 +28,4 @@ jobs:
       # the log, runs even on a build-layer cache hit, and covers the host-side
       # test_src_bind_gate (pure unit, subprocess mocked) the Dockerfile skips.
       - name: Run tests in image
-        run: docker run --rm anarkiwi/preframr-xpt:ci python3 -m pytest tests -q
+        run: docker run --rm anarkiwi/preframr-xpt:ci python3 -m pytest tests -q -n auto --dist worksteal

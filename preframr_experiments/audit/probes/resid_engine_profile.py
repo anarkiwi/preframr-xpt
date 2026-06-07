@@ -16,10 +16,16 @@ Model library (driver-native, waveform/pitch-domain aware):
   UNRESOLVED  -- no fitter matched (a genuinely new technique -> add a fitter)
 
 Usage:  resid_engine_profile.py <N|paths> [procs] [min_notes]"""
+
 import os
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import sys, glob, random, subprocess  # noqa: E401,E402
 from collections import defaultdict, Counter  # noqa: E402
@@ -35,8 +41,14 @@ SIDID_CFG = "/scratch/anarkiwi/sidid/sidid.cfg"
 
 
 def _args():
-    return parse_args(skeleton_pass=True, trajectory_anchor_pass=True,
-                      stamp_pass=True, sweep_pass=True, patch_pass=True, held_arp=True)
+    return parse_args(
+        skeleton_pass=True,
+        trajectory_anchor_pass=True,
+        stamp_pass=True,
+        sweep_pass=True,
+        patch_pass=True,
+        held_arp=True,
+    )
 
 
 def _const_delta(xs, tol=1):
@@ -114,12 +126,13 @@ def driver_map(dirs):
     """Engine label per (dir, tune) from the prebuilt sidid cache (sidid_cache.py).
     No per-run sidid subprocess -- the cache is one recursive pass, built once."""
     import sidid_cache
+
     full = sidid_cache.by_dir()
     return {d: full.get(d, {}) for d in set(dirs)}
 
 
 def analyze(paths, dmap):
-    prof = defaultdict(Counter)          # engine -> mechanism -> count
+    prof = defaultdict(Counter)  # engine -> mechanism -> count
     ex = defaultdict(lambda: defaultdict(list))  # engine -> mech -> param examples
     a = _args()
     for p in paths:
@@ -127,7 +140,12 @@ def analyze(paths, dmap):
         drv = dmap.get(os.path.dirname(p), {}).get(tune.lower(), "?")
         SkeletonPass._resid_diag = []
         try:
-            parsed = next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
+            parsed = next(
+                RegLogParser(args=a).parse(
+                    p, max_perm=1, require_pq=False, reparse=True
+                ),
+                None,
+            )
         except Exception:
             SkeletonPass._resid_diag = None
             continue

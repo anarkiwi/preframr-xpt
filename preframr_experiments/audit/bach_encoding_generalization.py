@@ -39,7 +39,11 @@ from preframr.train.model.bodies import get_llama3_2
 
 IRQ = 19656
 PAL_CLOCK = 985248
-VOICES = [(0x41, 0), (0x11, 7), (0x11, 14)]  # (waveform|gate, base reg) S=pulse, A/B=triangle
+VOICES = [
+    (0x41, 0),
+    (0x11, 7),
+    (0x11, 14),
+]  # (waveform|gate, base reg) S=pulse, A/B=triangle
 AD, SR = 0x09, 0xF0
 
 
@@ -82,7 +86,9 @@ def transcode(chorales, m2bin):
                 p = int(pitch[t, vi])
                 if p > 0 and onset[t, vi]:
                     b = m2bin.get(p, 0)
-                    is_b = not seen[vi]  # first onset of this voice = unpredictable start
+                    is_b = not seen[
+                        vi
+                    ]  # first onset of this voice = unpredictable start
                     seen[vi] = True
                     push((45, base, 0, 2))  # FLAGS
                     push((45, base, 1, (b >> 8) & 0xFF))  # V0_HI (0 for this range)
@@ -141,10 +147,18 @@ def ngram_ceiling(tunes_pitch, k=2):
 
 
 def build_model(vocab, seq_len, c, device):
-    a = argparse.Namespace(layers=c["layers"], heads=c["heads"], kv_heads=c["kv_heads"],
-                          embed=c["embed"], max_seq_len=seq_len, attn_dropout=0.1,
-                          norm_eps=1e-5, rope_base=500000, rope_scale=1.0,
-                          tie_word_embeddings=False)
+    a = argparse.Namespace(
+        layers=c["layers"],
+        heads=c["heads"],
+        kv_heads=c["kv_heads"],
+        embed=c["embed"],
+        max_seq_len=seq_len,
+        attn_dropout=0.1,
+        norm_eps=1e-5,
+        rope_base=500000,
+        rope_scale=1.0,
+        tie_word_embeddings=False,
+    )
     return get_llama3_2(vocab, a).to(device)
 
 
@@ -169,7 +183,9 @@ def onset_acc(model, x, om, bm, device, bs=8):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--data", type=Path, default=Path("/scratch/tmp/bach_chorales.json"))
+    ap.add_argument(
+        "--data", type=Path, default=Path("/scratch/tmp/bach_chorales.json")
+    )
     ap.add_argument("--out", type=Path, default=Path("/scratch/tmp/enc_audition"))
     ap.add_argument("--quick", action="store_true")
     cli = ap.parse_args()
@@ -214,31 +230,39 @@ def main():
     tr = onset_acc(model, x, om, bm, device)
     va = onset_acc(model, vx, vom, vbm, device)
     distinct_bins = len({m2bin[m] for m in range(36, 89)})
-    print(f"Bach chorales: {len(tunes)} ({len(tunes)-n_val} train / {n_val} val), "
-          f"vocab={vocab} seq_len={L} distinct_pitch_bins~{distinct_bins}")
-    print(f"  cross-chorale 2-gram pitch ceiling = {base2:.3f}  (chance ~ {1/max(distinct_bins,1):.3f})")
+    print(
+        f"Bach chorales: {len(tunes)} ({len(tunes)-n_val} train / {n_val} val), "
+        f"vocab={vocab} seq_len={L} distinct_pitch_bins~{distinct_bins}"
+    )
+    print(
+        f"  cross-chorale 2-gram pitch ceiling = {base2:.3f}  (chance ~ {1/max(distinct_bins,1):.3f})"
+    )
     print(f"  MODEL train_onset_acc={tr:.3f}  HELDOUT_onset_acc={va:.3f}")
-    verdict = ("ENCODING SUFFICIENT FOR MUSIC (generalizes Bach)"
-               if va > 2.0 / max(distinct_bins, 1) and va > 0.5 * base2
-               else "weak — see numbers")
+    verdict = (
+        "ENCODING SUFFICIENT FOR MUSIC (generalizes Bach)"
+        if va > 2.0 / max(distinct_bins, 1) and va > 0.5 * base2
+        else "weak — see numbers"
+    )
     print(f"VERDICT: {verdict}")
 
     # audition: continue a held-out chorale from its first third, render bins->freq
     try:
         from preframr_audio.fidelity import render_df_to_wav
         from preframr_tokens.tokenizer_config import named_config
+
         bin2fn = {b: fn for fn, b in fm.fi_map.items()}  # representative Fn per bin
         seq = vx[0]
         nz = int((seq != 0).sum())
         ids = seq[: nz // 3].tolist()
         with torch.inference_mode():
             while len(ids) < nz:
-                ids.append(int(_fwd(model, torch.tensor([ids], device=device))[0, -1].argmax()))
+                ids.append(
+                    int(_fwd(model, torch.tensor([ids], device=device))[0, -1].argmax())
+                )
 
         def render(idseq, path):
             rows = []
             cur = 0
-            pend = {}
             for tid in idseq:
                 a = inv[int(tid)]
                 if a == ("PAD",):
@@ -247,20 +271,64 @@ def main():
                 if (op, reg, sr) == (0, -126, -1):
                     cur = val
                 if reg == -128:
-                    rows.append(dict(op=0, reg=-128, subreg=-1, val=0, diff=IRQ, irq=IRQ, description=0))
+                    rows.append(
+                        dict(
+                            op=0,
+                            reg=-128,
+                            subreg=-1,
+                            val=0,
+                            diff=IRQ,
+                            irq=IRQ,
+                            description=0,
+                        )
+                    )
                 elif op == 45 and sr == 2:  # V0_LO bin -> Fn -> freq writes
                     base = VOICES[cur][1]
                     fn = int(bin2fn.get(val, 2000))
-                    rows.append(dict(op=0, reg=base + 0, subreg=-1, val=fn & 0xFF, diff=0, irq=IRQ, description=0))
-                    rows.append(dict(op=0, reg=base + 1, subreg=-1, val=(fn >> 8) & 0xFF, diff=0, irq=IRQ, description=0))
+                    rows.append(
+                        dict(
+                            op=0,
+                            reg=base + 0,
+                            subreg=-1,
+                            val=fn & 0xFF,
+                            diff=0,
+                            irq=IRQ,
+                            description=0,
+                        )
+                    )
+                    rows.append(
+                        dict(
+                            op=0,
+                            reg=base + 1,
+                            subreg=-1,
+                            val=(fn >> 8) & 0xFF,
+                            diff=0,
+                            irq=IRQ,
+                            description=0,
+                        )
+                    )
                 elif op == 0 and reg >= 0 and sr == -1 and reg not in (-128, -126):
-                    rows.append(dict(op=0, reg=reg, subreg=-1, val=val, diff=0, irq=IRQ, description=0))
-            return render_df_to_wav(pd.DataFrame(rows), IRQ, named_config("baseline"), Path(path))[0]
+                    rows.append(
+                        dict(
+                            op=0,
+                            reg=reg,
+                            subreg=-1,
+                            val=val,
+                            diff=0,
+                            irq=IRQ,
+                            description=0,
+                        )
+                    )
+            return render_df_to_wav(
+                pd.DataFrame(rows), IRQ, named_config("baseline"), Path(path)
+            )[0]
 
         ng = render(ids, cli.out / "bach_prediction.wav")
         ngt = render(seq[:nz].tolist(), cli.out / "bach_ground_truth.wav")
-        print(f"audition: {cli.out}/bach_prediction.wav ({ng} samp), "
-              f"{cli.out}/bach_ground_truth.wav ({ngt} samp)")
+        print(
+            f"audition: {cli.out}/bach_prediction.wav ({ng} samp), "
+            f"{cli.out}/bach_ground_truth.wav ({ngt} samp)"
+        )
     except Exception as e:
         print("audition skipped:", repr(e))
     return 0

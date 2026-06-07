@@ -5,7 +5,7 @@ confirmed full_macros content win is SET register scaffolding, NOT melody -- FRE
 discards the gate/sweep anchor, so the note-onset pitch reaches the model as un-anchored
 noise. TrajectoryAnchorPass recovers the per-register origin (sustained-departure ∪ gate
 retrigger, with ramp/oscillator collapse) and forces FreqTrajectoryPass to start each
-trajectory there. See design/trajectory_anchoring.md (research framing) +
+trajectory there. See design/landed/trajectory_anchoring.md (research framing) +
 preframr-tokens/design/freq_trajectory_anchoring.md (impl).
 
 Target arm `anchored`: full_macros + --trajectory-anchor-pass (the pass is opt-in,

@@ -56,7 +56,7 @@ Move:
   `build_prodlike_4x_list.py`, `digi_audit.py`, `encodability_metric.py`,
   `experimental_parser.py`, `hvsc_version_check.py`, `irq_audit.py`,
   `macros.py`, `parse.py`, `seq_budget_coverage.py`. (~11 files)
-- `design/corpus_structural_index_design.md`,
+- `design/landed/corpus_structural_index_design.md`,
   `hvsc_version_pinning_design.md`, `prodlike_tier_design.md`,
   `engine_fingerprint_evalb_design.md` — the parsing/tokenizer-side
   design docs.
@@ -66,7 +66,7 @@ Stay (model/train-side):
 - `profile/audit_checkpoint_per_class.py`, `loop_detection_audit.py`,
   `per_class_acc_audit.py`, `prompt_conditioning_audit.py`,
   `predict.py`, `train_preflight_smoke.py`, `train_prodlike_oom_smoke.py`
-- `design/multi_modal_objective_design.md`, `audio_fidelity_helper_design.md`,
+- `design/refuted/multi_modal_objective_design.md`, `audio_fidelity_helper_design.md`,
   framework follow-ups (`auto_early_abort`, `flag_stage_routing`, etc.)
 
 ## What stays in main `preframr` repo

@@ -19,7 +19,7 @@ by the encoder, so its voice stays in the adjacent FRAME.val low bits. FRAME als
 redundantly carries the full order (decode reads it). The fully-clean version
 (FRAME -> pure tick, explicit per-voice markers incl. slot 0, decode-from-VOICE.val)
 needs a decode rewrite and is the follow-up if this shows signal. See
-design/voice_encoding_reference.md.
+design/references/voice_encoding_reference.md.
 
 Arms (only the voice flag differs):
 - voice_id: clean substrate + freq stack + --tkvocab 0 + --voice-id-on-marker

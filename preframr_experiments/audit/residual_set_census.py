@@ -44,7 +44,8 @@ def _init(timeout):
 
 def _admit(path, max_rows):
     """Footer-only gate: drop is_digi and over-row dumps (the straggler tail -- 7% of dumps over
-    120k rows are ~58% of all parse work, mostly PWM digis is_digi misses) before any full read."""
+    120k rows are ~58% of all parse work, mostly PWM digis is_digi misses) before any full read.
+    """
     if _is_digi(path):
         return None
     try:
@@ -52,6 +53,7 @@ def _admit(path, max_rows):
     except Exception:  # noqa: BLE001
         return None
     return None if (n <= 0 or n > max_rows) else n
+
 
 # The residual arm (mirror preframr-tokens residual_mechanism.py _BASE + _CODEBOOK). Kept here
 # so the census is self-contained; if residual_mechanism.py's arm changes, update this list.
@@ -178,7 +180,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--glob", default="/scratch/preframr/hvsc/**/*.dump.parquet")
     ap.add_argument("--step", type=int, default=20, help="sample 1/step of the corpus")
-    ap.add_argument("--max-rows", type=int, default=120000, help="skip dumps over this many rows")
+    ap.add_argument(
+        "--max-rows", type=int, default=120000, help="skip dumps over this many rows"
+    )
     ap.add_argument("--timeout", type=int, default=120)
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 4) - 4))
     ap.add_argument(

@@ -282,7 +282,7 @@ the pin commit lands).
   a separate engine-fingerprint review to confirm structural
   diversity (otherwise Eval-B is a less-strong cross-distribution
   test than it appears). Tracked in
-  `integration_tests/design/engine_fingerprint_evalb_design.md`;
+  `design/landed/engine_fingerprint_evalb_design.md`;
   gates a re-pin with expanded Eval-B subsets after the first
   loop_lookahead_prodlike run lands.
 - **Wallclock variance at scale.** A 6-11 hr per-arm estimate is

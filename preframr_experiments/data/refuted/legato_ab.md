@@ -6,13 +6,13 @@ validate_branches entry removed.
 
 **Status (2026-05-16):** original single-rule refutation FLIPPED
 on 4 of 6 mini clusters by the per-cluster re-probe
-(`08597a1`, `design/legato_layer0_per_cluster_verdict.md`).
+(`08597a1`, `legato_layer0_per_cluster_verdict.md` (removed)).
 Clusters 2 (Mibri), 3 (Whittaker), 4 (Jammer), 7 (Hubbard) PASS at
 fire-rate 16-29% + entropy Δ +0.6 to +1.1 bits. Cluster 1
 (DRAX/Crisps) PARTIAL (high fire-rate, +0.020 bits). Cluster 6
 (Galway) confirmed REFUTE — Galway's sub-100-cycle CTRL bursts are
 hard-restart pairs, not legato (`8090987`,
-`design/galway_sustain_hold_probe_verdict.md`).
+`galway_sustain_hold_probe_verdict.md` (removed)).
 
 The single-rule refutation below was aggregated over a smoke
 corpus dominated by cluster 7 (Hubbard, where it WOULD have
@@ -51,7 +51,7 @@ engineering.
 
 ## Evidence
 
-- `integration_tests/design/legato_ab_design.md` §Layer-0 — full
+- `legato_ab_design.md` (removed) §Layer-0 — full
   probe writeup with histograms.
 - `integration_tests/profile/legato_entropy.py` — reproducible
   probe script.

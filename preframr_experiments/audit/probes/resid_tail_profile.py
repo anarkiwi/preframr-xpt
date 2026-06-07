@@ -10,11 +10,17 @@ for RESID=0. Survivor classes (offset-only, since the ORN atom stores note-relat
   FLAT    -- unique, non-periodic, no loop body          (genuine flat one-shot: needs inline emit)
 
 Usage: resid_tail_profile.py <N|paths> [procs]"""
+
 import os
 import sys
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import glob  # noqa: E402
 import random  # noqa: E402
@@ -27,37 +33,63 @@ from preframr_tokens.reglogparser import RegLogParser  # noqa: E402
 from preframr_tokens.audit_primitives import register_state  # noqa: E402
 from preframr_tokens.macros.wavetable import factorise  # noqa: E402
 from preframr_tokens.stfconstants import (  # noqa: E402
-    ORN_OP, ORN_SUBREG_TYPE, ORN_SUBREG_P1, ORN_SUBREG_P2, ORN_TYPE_RESID,
-    WAVETABLE_DEF_OP, WAVETABLE_REF_OP, FREQ_TRAJ_REGS,
+    ORN_OP,
+    ORN_SUBREG_TYPE,
+    ORN_SUBREG_P1,
+    ORN_SUBREG_P2,
+    ORN_TYPE_RESID,
+    WAVETABLE_DEF_OP,
+    WAVETABLE_REF_OP,
+    FREQ_TRAJ_REGS,
 )
 from parse_probes import parse_args  # noqa: E402
 import sidid_cache  # noqa: E402
 import numpy as np  # noqa: E402
 
 CORPUS = "/scratch/preframr/hvsc"
-BASE = dict(skeleton_pass=True, trajectory_anchor_pass=True,
-            stamp_pass=True, sweep_pass=True, patch_pass=True, held_arp=True)
+BASE = dict(
+    skeleton_pass=True,
+    trajectory_anchor_pass=True,
+    stamp_pass=True,
+    sweep_pass=True,
+    patch_pass=True,
+    held_arp=True,
+)
 _FREQ = {int(r) for r in FREQ_TRAJ_REGS}
 
 
 def parse_df(dump, **flags):
     a = parse_args(**{**BASE, **flags})
-    return next(RegLogParser(args=a).parse(dump, max_perm=1, require_pq=False, reparse=True), None)
+    return next(
+        RegLogParser(args=a).parse(dump, max_perm=1, require_pq=False, reparse=True),
+        None,
+    )
 
 
 def resid_offsets(df):
     """Each surviving ORN-RESID note's note-relative offset tuple from a parsed df."""
     if df is None or "op" not in getattr(df, "columns", []):
         return []
-    op = df["op"].to_numpy(); reg = df["reg"].to_numpy()
-    sub = df["subreg"].to_numpy(); val = df["val"].to_numpy()
-    n = len(df); out = []; i = 0
+    op = df["op"].to_numpy()
+    reg = df["reg"].to_numpy()
+    sub = df["subreg"].to_numpy()
+    val = df["val"].to_numpy()
+    n = len(df)
+    out = []
+    i = 0
     while i < n:
-        if not (op[i] == ORN_OP and sub[i] == ORN_SUBREG_TYPE
-                and val[i] == ORN_TYPE_RESID and int(reg[i]) in _FREQ):
+        if not (
+            op[i] == ORN_OP
+            and sub[i] == ORN_SUBREG_TYPE
+            and val[i] == ORN_TYPE_RESID
+            and int(reg[i]) in _FREQ
+        ):
             i += 1
             continue
-        r = int(reg[i]); offs = []; length = None; j = i + 1
+        r = int(reg[i])
+        offs = []
+        length = None
+        j = i + 1
         while j < n and op[j] == ORN_OP and int(reg[j]) == r:
             if sub[j] == ORN_SUBREG_P2:
                 length = int(val[j]) & 0xFFFF
@@ -139,6 +171,7 @@ def _worker(a):
 
 def main():
     import multiprocessing as mp
+
     spec = sys.argv[1] if len(sys.argv) > 1 else "150"
     procs = int(sys.argv[2]) if len(sys.argv) > 2 else 16
     random.seed(13)
@@ -153,6 +186,7 @@ def main():
         sample = sample[: int(spec)]
     print(f"tail-profiling {len(sample)} dumps", file=sys.stderr, flush=True)
     import sidid_cache as sc
+
     full = sc.by_dir()
     dmap = {os.path.dirname(p): full.get(os.path.dirname(p), {}) for p in sample}
     shards = [(sample[i::procs], dmap) for i in range(procs)]
@@ -170,8 +204,9 @@ def main():
 
     print("\n=== WAVETABLE DRAIN + RESID TAIL (wavetable_pass ON) ===")
     classes = ["RECUR", "STRUCT", "PERIOD", "SWEEP", "SHORT", "FLAT"]
-    hdr = f"{'engine':26s} {'off':>6} {'on':>6} {'drain%':>6} {'bad':>4}  " + \
-          " ".join(f"{c:>6}" for c in classes)
+    hdr = f"{'engine':26s} {'off':>6} {'on':>6} {'drain%':>6} {'bad':>4}  " + " ".join(
+        f"{c:>6}" for c in classes
+    )
     print(hdr)
     goff = gon = gbad = 0
     for e in sorted(drain, key=lambda e: -drain[e]["off"]):
@@ -181,7 +216,9 @@ def main():
         dr = 100 * (d["off"] - d["on"]) // max(d["off"], 1)
         cells = " ".join(f"{tail[e].get(c, 0):>6}" for c in classes)
         print(f"{e:26s} {d['off']:>6} {d['on']:>6} {dr:>5}% {d['bad']:>4}  {cells}")
-        goff += d["off"]; gon += d["on"]; gbad += d["bad"]
+        goff += d["off"]
+        gon += d["on"]
+        gbad += d["bad"]
     gd = 100 * (goff - gon) // max(goff, 1)
     allt = Counter()
     for t in tail.values():

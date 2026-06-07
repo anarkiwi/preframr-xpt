@@ -28,7 +28,9 @@ FREQ_TRAJ_OP = 45
 _BASELINE_HINTS = ("baseline", "unanchored", "full", "control", "off")
 
 
-def vocab_atom_from_audit(audit_json: dict) -> Optional[dict[int, tuple[int, int, int]]]:
+def vocab_atom_from_audit(
+    audit_json: dict,
+) -> Optional[dict[int, tuple[int, int, int]]]:
     """Authoritative uid -> (op, reg, subreg) read straight from the audit JSON's
     ``vocab_atom`` field (emitted by ``audit_checkpoint_per_class``). Returns
     None on older dumps that don't carry it; callers fall back to the legacy

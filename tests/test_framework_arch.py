@@ -37,7 +37,9 @@ def test_corpus_motif_partition():
     assert len(held_in_val_only) <= cfg.n_held_motifs
     for motif in train_motifs:
         for i in range(1, cfg.motif_len):
-            assert int(motif[i]) == int(motif[0]) + i, "within-motif rule broken in train"
+            assert (
+                int(motif[i]) == int(motif[0]) + i
+            ), "within-motif rule broken in train"
     for motif in val_motifs:
         for i in range(1, cfg.motif_len):
             assert int(motif[i]) == int(motif[0]) + i, "within-motif rule broken in val"
@@ -49,6 +51,7 @@ def test_inside_motif_accuracy_helper_is_correct(seed):
     accuracy helper should return 1.0 over inside-motif positions."""
     import numpy as np
     import torch
+
     cfg = fat.Config.quick()
     rng = np.random.default_rng(seed)
     motifs = fat._make_motifs(cfg, rng)
@@ -61,4 +64,6 @@ def test_inside_motif_accuracy_helper_is_correct(seed):
     logits = torch.from_numpy(one_hot)
     hits, denom = fat._inside_motif_acc(logits, x, b)
     assert denom > 0
-    assert hits == denom, f"perfect logits should hit all inside positions ({hits}/{denom})"
+    assert (
+        hits == denom
+    ), f"perfect logits should hit all inside positions ({hits}/{denom})"

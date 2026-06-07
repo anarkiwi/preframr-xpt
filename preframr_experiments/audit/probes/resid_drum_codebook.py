@@ -1,5 +1,5 @@
 """End-to-end PROTOTYPE of footprint-mining + consistency-attribution for the percussion stamp
-codebook (design/percussion_stamp_encoding.md), non-emitting -- measures the codebook economics
+codebook, non-emitting -- measures the codebook economics
 before building the tokenizer. Per tune:
   - mine recurring EXACT stamps (abs (fn,ctrl) series, >=MINREP) per voice  = the inline DEFS
   - cluster exact variants by SHAPE sig (freq-contour + ctrl)               = DRUMS (a drum redefined
@@ -11,10 +11,16 @@ Reports coverage (RESID notes/frames drained), codebook size (defs/tune), drums/
 drum-scoped-filter rate, folded-aux rate, and the character distribution -- across a big rung.
 
 Usage:  resid_drum_codebook.py <fixtures|N|paths> [procs] [minrep]"""
+
 import os
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import sys, glob, random, statistics  # noqa: E401,E402
 from collections import defaultdict, Counter  # noqa: E402
@@ -22,7 +28,10 @@ from collections import defaultdict, Counter  # noqa: E402
 sys.path.insert(0, "/scratch/anarkiwi/preframr-tokens/tests")
 sys.path.insert(0, "/scratch/anarkiwi/preframr-tokens")
 from preframr_tokens.reglogparser import RegLogParser  # noqa: E402
-from preframr_tokens.macros.skeleton_pass import SkeletonPass, fn_to_note_resid  # noqa: E402
+from preframr_tokens.macros.skeleton_pass import (
+    SkeletonPass,
+    fn_to_note_resid,
+)  # noqa: E402
 from preframr_tokens.stfconstants import SET_OP  # noqa: E402
 from parse_probes import parse_args  # noqa: E402
 
@@ -81,7 +90,12 @@ def analyze(paths, minrep):
         SkeletonPass._resid_diag = []
         SkeletonPass._df_sink = []
         try:
-            next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
+            next(
+                RegLogParser(args=a).parse(
+                    p, max_perm=1, require_pq=False, reparse=True
+                ),
+                None,
+            )
         except Exception:
             SkeletonPass._resid_diag = SkeletonPass._df_sink = None
             continue
@@ -93,7 +107,9 @@ def analyze(paths, minrep):
         df = dfs[0]
         sets = df[df["op"] == SET_OP]
         byfr = defaultdict(list)
-        for f, r, v in zip(sets["_fr"].to_numpy(), sets["reg"].to_numpy(), sets["val"].to_numpy()):
+        for f, r, v in zip(
+            sets["_fr"].to_numpy(), sets["reg"].to_numpy(), sets["val"].to_numpy()
+        ):
             byfr[int(f)].append((int(r), int(v)))
 
         resid_notes = sum(1 for _r, isr, _n, _o, rec in recs if isr and rec)
@@ -139,9 +155,24 @@ def analyze(paths, minrep):
             if any(ffilt) and len(set(ffilt)) == 1:
                 drum_scoped_filt += 1
         drums = len(clusters)
-        redefs = sum(len(v) - 1 for v in clusters.values())  # extra exact variants per drum
-        rows.append((tune, resid_notes, resid_frames, cov_notes, cov_frames, defs, drums,
-                     redefs, drum_scoped_filt, folded_aux, dict(chars)))
+        redefs = sum(
+            len(v) - 1 for v in clusters.values()
+        )  # extra exact variants per drum
+        rows.append(
+            (
+                tune,
+                resid_notes,
+                resid_frames,
+                cov_notes,
+                cov_frames,
+                defs,
+                drums,
+                redefs,
+                drum_scoped_filt,
+                folded_aux,
+                dict(chars),
+            )
+        )
     return rows
 
 
@@ -169,8 +200,11 @@ if __name__ == "__main__":
         sample = [random.choice(v) for v in by_dir.values()]
         random.shuffle(sample)
         sample = sample[: int(spec)]
-    print(f"mining drum codebook across {len(sample)} dumps (minrep={minrep})",
-          file=sys.stderr, flush=True)
+    print(
+        f"mining drum codebook across {len(sample)} dumps (minrep={minrep})",
+        file=sys.stderr,
+        flush=True,
+    )
     shards = [(sample[i::procs], minrep) for i in range(procs)]
     shards = [s for s in shards if s[0]]
     with mp.Pool(len(shards)) as pool:
@@ -181,7 +215,7 @@ if __name__ == "__main__":
     chars = Counter()
     defs_per_tune, drums_per_tune, redef_per_drum, covpct = [], [], [], []
     tunes_with_drums = 0
-    for (tune, rn, rf, cn, cf, defs, drums, redefs, dsf, fa, ch) in allrows:
+    for tune, rn, rf, cn, cf, defs, drums, redefs, dsf, fa, ch in allrows:
         tot["resid_notes"] += rn
         tot["resid_frames"] += rf
         tot["cov_notes"] += cn
@@ -206,23 +240,39 @@ if __name__ == "__main__":
         xs = sorted(xs)
         return f"median {statistics.median(xs):.1f}  p90 {xs[min(len(xs)-1, int(0.9*len(xs)))]:.1f}  max {max(xs):.1f}"
 
-    print(f"\n=== DRUM CODEBOOK PROTOTYPE: {len(allrows)} tunes parsed, "
-          f"{tunes_with_drums} with recurring stamps ===")
-    print(f"RESID drained: {tot['cov_notes']}/{tot['resid_notes']} notes "
-          f"({100*tot['cov_notes']//max(tot['resid_notes'],1)}%) | "
-          f"{tot['cov_frames']}/{tot['resid_frames']} frames "
-          f"({100*tot['cov_frames']//max(tot['resid_frames'],1)}%)")
-    print(f"codebook size (DEFS/tune):     {_stats(defs_per_tune)}   total {tot['defs']}")
-    print(f"distinct DRUMS/tune (clusters):{_stats(drums_per_tune)}   total {tot['drums']}")
-    print(f"REDEFINITIONS per drum:        {_stats(redef_per_drum)}   total {tot['redefs']}")
+    print(
+        f"\n=== DRUM CODEBOOK PROTOTYPE: {len(allrows)} tunes parsed, "
+        f"{tunes_with_drums} with recurring stamps ==="
+    )
+    print(
+        f"RESID drained: {tot['cov_notes']}/{tot['resid_notes']} notes "
+        f"({100*tot['cov_notes']//max(tot['resid_notes'],1)}%) | "
+        f"{tot['cov_frames']}/{tot['resid_frames']} frames "
+        f"({100*tot['cov_frames']//max(tot['resid_frames'],1)}%)"
+    )
+    print(
+        f"codebook size (DEFS/tune):     {_stats(defs_per_tune)}   total {tot['defs']}"
+    )
+    print(
+        f"distinct DRUMS/tune (clusters):{_stats(drums_per_tune)}   total {tot['drums']}"
+    )
+    print(
+        f"REDEFINITIONS per drum:        {_stats(redef_per_drum)}   total {tot['redefs']}"
+    )
     print(f"per-tune coverage %% of RESID notes: {_stats(covpct)}")
-    print(f"folded PW/ADSR (consistent): {tot['folded_aux']}/{tot['defs']} defs "
-          f"({100*tot['folded_aux']//max(tot['defs'],1)}%)")
-    print(f"drum-scoped FILTER: {tot['drum_scoped_filt']}/{tot['defs']} defs "
-          f"({100*tot['drum_scoped_filt']//max(tot['defs'],1)}%)")
+    print(
+        f"folded PW/ADSR (consistent): {tot['folded_aux']}/{tot['defs']} defs "
+        f"({100*tot['folded_aux']//max(tot['defs'],1)}%)"
+    )
+    print(
+        f"drum-scoped FILTER: {tot['drum_scoped_filt']}/{tot['defs']} defs "
+        f"({100*tot['drum_scoped_filt']//max(tot['defs'],1)}%)"
+    )
     print("\n=== drum CHARACTER distribution (of defs) ===")
     for c, n in chars.most_common():
         print(f"   {n:5d} ({100*n//max(tot['defs'],1):2d}%)  {c}")
     perc = sum(n for c, n in chars.items() if c not in ("PITCH_FX", "OTHER"))
-    print(f"   -> percussion-character defs: {perc}/{tot['defs']} "
-          f"({100*perc//max(tot['defs'],1)}%); rest are repeated tonal/other stamps")
+    print(
+        f"   -> percussion-character defs: {perc}/{tot['defs']} "
+        f"({100*perc//max(tot['defs'],1)}%); rest are repeated tonal/other stamps"
+    )

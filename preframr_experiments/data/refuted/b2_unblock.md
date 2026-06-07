@@ -8,7 +8,7 @@ unblock implementation is NOT scheduled.
 `GateMacroPass` swallows the universal SID hard-restart 2-CTRL-
 write pair into a single `GATE_REPLAY_OP` token before
 `HardRestartPass` can collapse it into `HARD_RESTART_OP`. The
-proposed fix (`design/hard_restart_ab_unblock_design.md`, Path B2)
+proposed fix (`hard_restart_ab_unblock_design.md` (removed), Path B2)
 adds a new `GATE_REPLAY_NOCTRL_OP`: when `GateMacroPass` detects
 an HR-pair frame, it drops only the AD/SR portion of the bundle
 and leaves the CTRL pair literal for `HardRestartPass` to
@@ -55,7 +55,7 @@ frame; recalibrated projection 4.27% (SOFT, expect Hold-not-Flip).
 
 ## Evidence
 
-- `integration_tests/design/b2_unblock_prototype_verdict.md` — full
+- `b2_unblock_prototype_verdict.md` (removed) — full
   prototype verdict.
 - `integration_tests/profile/b2_unblock_prototype.py` — re-runnable
   prototype (kept around as a diagnostic).

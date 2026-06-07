@@ -10,6 +10,7 @@ for the worst-residue engines, what fraction of RESID notes share an exact offse
 sequence with another note (in the same tune), and how big is the per-tune codebook.
 
 Usage: resid_wavetable_recurrence.py <engine> [n_tunes]"""
+
 import os
 import sys
 from collections import Counter, defaultdict
@@ -26,8 +27,14 @@ CORPUS = "/scratch/preframr/hvsc"
 
 
 def _args():
-    return parse_args(skeleton_pass=True, trajectory_anchor_pass=True,
-                      stamp_pass=True, sweep_pass=True, patch_pass=True, held_arp=True)
+    return parse_args(
+        skeleton_pass=True,
+        trajectory_anchor_pass=True,
+        stamp_pass=True,
+        sweep_pass=True,
+        patch_pass=True,
+        held_arp=True,
+    )
 
 
 def tunes_for_engine(engine, limit):
@@ -46,7 +53,12 @@ def tunes_for_engine(engine, limit):
 def resid_seqs(dump, a):
     SkeletonPass._resid_diag = []
     try:
-        next(RegLogParser(args=a).parse(dump, max_perm=1, require_pq=False, reparse=True), None)
+        next(
+            RegLogParser(args=a).parse(
+                dump, max_perm=1, require_pq=False, reparse=True
+            ),
+            None,
+        )
     except Exception:
         SkeletonPass._resid_diag = None
         return []
@@ -83,8 +95,12 @@ def main():
     codebook_sizes.sort()
     med_cb = codebook_sizes[len(codebook_sizes) // 2] if codebook_sizes else 0
     print(f"=== {engine} ({len(codebook_sizes)} tunes, {tot_notes} RESID notes) ===")
-    print(f"  RECUR>=2 (codebook-able): {100*tot_recurring//tot_notes}%  ({tot_recurring}/{tot_notes})")
-    print(f"  distinct sequences/tune (codebook size): median {med_cb}, range {codebook_sizes[0]}-{codebook_sizes[-1]}")
+    print(
+        f"  RECUR>=2 (codebook-able): {100*tot_recurring//tot_notes}%  ({tot_recurring}/{tot_notes})"
+    )
+    print(
+        f"  distinct sequences/tune (codebook size): median {med_cb}, range {codebook_sizes[0]}-{codebook_sizes[-1]}"
+    )
     print(f"  top-8 sequences cover (per tune): {sorted(cover_top8)}")
 
 

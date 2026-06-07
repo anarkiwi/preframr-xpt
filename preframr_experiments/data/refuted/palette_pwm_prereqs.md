@@ -28,7 +28,7 @@ would need its own PW-handling logic.
 ## Refutation
 
 Prototype probe `597822f`
-(`design/palette_pwm_prereq_ab_prototype_verdict.md`) implemented
+(`palette_pwm_prereq_ab_prototype_verdict.md` (removed)) implemented
 both prereqs behind throwaway flags and measured the resulting
 alphabet + atoms/song deltas on mini train.
 
@@ -42,7 +42,7 @@ The prereqs add complexity but don't even break even on the
 alphabet-shrink-only axis they were supposed to enable.
 
 A separate root-cause investigation
-(`design/parser_pw_drop_investigation.md`, `6643aba`) showed the
+(`parser_pw_drop_investigation.md` (removed), `6643aba`) showed the
 99.6% PW-drop signal that motivated the `palette_pwm` prereq
 framing was a **measurement artifact** of `_simplify_pcm` zeroing
 pulse-off PW writes (audio-correct: SID ignores PW when pulse
@@ -56,9 +56,9 @@ level problem.
 
 ## Evidence
 
-- `integration_tests/design/palette_pwm_prereq_ab_prototype_verdict.md`
+- `palette_pwm_prereq_ab_prototype_verdict.md` (removed)
   — full prototype results.
-- `integration_tests/design/parser_pw_drop_investigation.md` — root
+- `parser_pw_drop_investigation.md` (removed) — root
   cause of the original PW-drop motivation.
 - `6580026` — gate re-cal recommendation: switch PW fidelity
   metric to `audio_fidelity.compare_renders` or mask pulse-off

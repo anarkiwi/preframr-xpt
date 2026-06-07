@@ -3,7 +3,7 @@ melodic onset as a transposition-invariant interval (instead of absolute pitch) 
 the V0 onset learnable? Motivated by trajectory_anchor_mini: the onset line is trigram-0.79
 predictable yet the model gets V0-onset acc 0.000 -- because absolute-pitch onsets don't
 transfer across keys. Interval-coding (--freq-v0-interval) makes the same motif identical
-tokens at any pitch. See design/trajectory_anchoring.md + preframr-tokens/design/freq_v0_interval.md.
+tokens at any pitch. See design/landed/trajectory_anchoring.md + preframr-tokens/design/freq_v0_interval.md.
 
 Both arms run full_macros + trajectory anchoring; the ONLY difference is --freq-v0-interval,
 toggled per-arm via extra_cargs (opt-in flag, not clobbered by apply_pipeline_spec_to_args;

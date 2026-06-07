@@ -7,10 +7,16 @@ Reports how often a change is a 1-field tweak (a single ADSR nibble / PW) -> the
 payoff, and which fields mutate most.
 
 Usage:  resid_patch_mutation.py <fixtures|N|paths> [procs]"""
+
 import os
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import sys, glob, random, bisect  # noqa: E401,E402
 from collections import defaultdict, Counter  # noqa: E402
@@ -59,7 +65,12 @@ def analyze(paths):
         SkeletonPass._resid_diag = []
         SkeletonPass._df_sink = []
         try:
-            next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
+            next(
+                RegLogParser(args=a).parse(
+                    p, max_perm=1, require_pq=False, reparse=True
+                ),
+                None,
+            )
         except Exception:
             SkeletonPass._resid_diag = SkeletonPass._df_sink = None
             continue
@@ -73,7 +84,9 @@ def analyze(paths):
         # per-reg sorted (frame,val) for ffill; ctrl writes per frame
         reg_series = defaultdict(list)
         ctrl_byfr = defaultdict(lambda: defaultdict(list))  # reg -> frame -> [vals]
-        for f, r, v in zip(sets["_fr"].to_numpy(), sets["reg"].to_numpy(), sets["val"].to_numpy()):
+        for f, r, v in zip(
+            sets["_fr"].to_numpy(), sets["reg"].to_numpy(), sets["val"].to_numpy()
+        ):
             reg_series[int(r)].append((int(f), int(v)))
             ctrl_byfr[int(r)][int(f)].append(int(v))
         for r in reg_series:
@@ -153,7 +166,11 @@ if __name__ == "__main__":
         sample = [random.choice(v) for v in by_dir.values()]
         random.shuffle(sample)
         sample = sample[: int(spec)]
-    print(f"measuring patch mutation granularity across {len(sample)} dumps", file=sys.stderr, flush=True)
+    print(
+        f"measuring patch mutation granularity across {len(sample)} dumps",
+        file=sys.stderr,
+        flush=True,
+    )
     shards = [sample[i::procs] for i in range(procs)]
     shards = [s for s in shards if s]
     with mp.Pool(len(shards)) as pool:
@@ -167,20 +184,38 @@ if __name__ == "__main__":
     t = max(out["transitions"], 1)
     adsr_changes = out["adsr_1nibble"] + out["adsr_2nibble"] + out["adsr_3plus"]
     ac = max(adsr_changes, 1)
-    print(f"\n=== PATCH MUTATION GRANULARITY: {out['transitions']} note->note transitions "
-          f"(same voice) ===")
+    print(
+        f"\n=== PATCH MUTATION GRANULARITY: {out['transitions']} note->note transitions "
+        f"(same voice) ==="
+    )
     print("  -- ADSR (the stable patch core) change size:")
-    print(f"  ADSR unchanged:        {out['adsr_same']:8d} ({100*out['adsr_same']//t}% of transitions)")
-    print(f"  ADSR 1-nibble MUT:     {out['adsr_1nibble']:8d} ({100*out['adsr_1nibble']//ac}% of ADSR changes)")
-    print(f"  ADSR 2-nibble MUT:     {out['adsr_2nibble']:8d} ({100*out['adsr_2nibble']//ac}%)")
-    print(f"  ADSR 3-4 nibble (redef):{out['adsr_3plus']:8d} ({100*out['adsr_3plus']//ac}%)")
-    print(f"  => ADSR changes with WAVEFORM STABLE (pure param tweak): "
-          f"{out['adsr_change_wf_stable']}/{adsr_changes} "
-          f"({100*out['adsr_change_wf_stable']//ac}%)")
-    print(f"  => 1-nibble ADSR + waveform stable (ideal MUT primitive): {out['adsr_1nibble_wf_stable']}")
+    print(
+        f"  ADSR unchanged:        {out['adsr_same']:8d} ({100*out['adsr_same']//t}% of transitions)"
+    )
+    print(
+        f"  ADSR 1-nibble MUT:     {out['adsr_1nibble']:8d} ({100*out['adsr_1nibble']//ac}% of ADSR changes)"
+    )
+    print(
+        f"  ADSR 2-nibble MUT:     {out['adsr_2nibble']:8d} ({100*out['adsr_2nibble']//ac}%)"
+    )
+    print(
+        f"  ADSR 3-4 nibble (redef):{out['adsr_3plus']:8d} ({100*out['adsr_3plus']//ac}%)"
+    )
+    print(
+        f"  => ADSR changes with WAVEFORM STABLE (pure param tweak): "
+        f"{out['adsr_change_wf_stable']}/{adsr_changes} "
+        f"({100*out['adsr_change_wf_stable']//ac}%)"
+    )
+    print(
+        f"  => 1-nibble ADSR + waveform stable (ideal MUT primitive): {out['adsr_1nibble_wf_stable']}"
+    )
     print("\n  -- separate continuous channels (NOT patch identity):")
-    print(f"  waveform-progression changed: {out['wf_changed']:8d} ({100*out['wf_changed']//t}% of transitions)")
-    print(f"  PW changed:                   {out['pw_changed']:8d} ({100*out['pw_changed']//t}%)")
+    print(
+        f"  waveform-progression changed: {out['wf_changed']:8d} ({100*out['wf_changed']//t}% of transitions)"
+    )
+    print(
+        f"  PW changed:                   {out['pw_changed']:8d} ({100*out['pw_changed']//t}%)"
+    )
     print("\n=== which ADSR nibble mutates (1+2-nibble) ===")
     for f, n in field_hits.most_common():
         print(f"   {n:8d}  {f}")

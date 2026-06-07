@@ -11,10 +11,16 @@ filter 21-24), across its occurrences:
   - tune-wide: fraction of filter writes INSIDE any drum span vs OUTSIDE -> global vs drum
 
 Usage:  resid_drum_footprint.py <fixtures|N|paths> [procs] [minrep]"""
+
 import os
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import sys, glob, random, subprocess  # noqa: E401,E402
 from collections import defaultdict, Counter  # noqa: E402
@@ -48,7 +54,12 @@ def analyze(paths):
         SkeletonPass._resid_diag = []
         SkeletonPass._df_sink = []
         try:
-            next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
+            next(
+                RegLogParser(args=a).parse(
+                    p, max_perm=1, require_pq=False, reparse=True
+                ),
+                None,
+            )
         except Exception:
             SkeletonPass._resid_diag = SkeletonPass._df_sink = None
             continue
@@ -108,8 +119,19 @@ def analyze(paths):
                     filt_inspan_consistent += 1
             if len(examples) < 4 and (any(foot_voice) or any(foot_filt)):
                 examples.append((reg, len(occ), foot_voice[0][:6], foot_filt[0][:6]))
-        out.append((tune, stamps, filt_total, filt_in, pwadsr_present, pwadsr_consistent,
-                    filt_inspan_present, filt_inspan_consistent, examples))
+        out.append(
+            (
+                tune,
+                stamps,
+                filt_total,
+                filt_in,
+                pwadsr_present,
+                pwadsr_consistent,
+                filt_inspan_present,
+                filt_inspan_consistent,
+                examples,
+            )
+        )
     return out
 
 
@@ -137,22 +159,29 @@ if __name__ == "__main__":
         random.shuffle(sample)
         sample = sample[: int(spec)]
     globals()["MINREP"] = MINREP
-    print(f"footprint+filter-attribution on {len(sample)} dumps (minrep={MINREP})",
-          file=sys.stderr, flush=True)
+    print(
+        f"footprint+filter-attribution on {len(sample)} dumps (minrep={MINREP})",
+        file=sys.stderr,
+        flush=True,
+    )
     shards = [sample[i::procs] for i in range(procs)]
     shards = [s for s in shards if s]
     with mp.Pool(len(shards)) as pool:
         results = pool.map(_worker, shards)
 
     print("\n=== per-tune: drum footprint + filter attribution ===")
-    print(f"{'tune':22s} {'stamps':>6} {'filtTot':>7} {'filtIn':>6} {'filtIn%':>7} "
-          f"{'pwadsr(cons/pres)':>17} {'filtSpan(cons/pres)':>19}")
+    print(
+        f"{'tune':22s} {'stamps':>6} {'filtTot':>7} {'filtIn':>6} {'filtIn%':>7} "
+        f"{'pwadsr(cons/pres)':>17} {'filtSpan(cons/pres)':>19}"
+    )
     agg = Counter()
     for res in results:
-        for (tune, st, ft, fin, pp, pc, fp, fc, ex) in res:
+        for tune, st, ft, fin, pp, pc, fp, fc, ex in res:
             pct = (100 * fin // ft) if ft else 0
-            print(f"{tune[:22]:22s} {st:6d} {ft:7d} {fin:6d} {pct:6d}% "
-                  f"{pc:>8}/{pp:<8} {fc:>9}/{fp:<9}")
+            print(
+                f"{tune[:22]:22s} {st:6d} {ft:7d} {fin:6d} {pct:6d}% "
+                f"{pc:>8}/{pp:<8} {fc:>9}/{fp:<9}"
+            )
             agg["filt_total"] += ft
             agg["filt_in"] += fin
             agg["pw_pres"] += pp
@@ -160,14 +189,18 @@ if __name__ == "__main__":
             agg["filt_span_pres"] += fp
             agg["filt_span_cons"] += fc
             agg["stamps"] += st
-            for (reg, n, fv, ff) in ex:
+            for reg, n, fv, ff in ex:
                 if agg["ex_shown"] < 12:
                     agg["ex_shown"] += 1
-                    print(f"      e.g. stamp reg={reg} x{n}  voice(pw/adsr)[:6]={list(fv)}  "
-                          f"filt[:6]={list(ff)}")
+                    print(
+                        f"      e.g. stamp reg={reg} x{n}  voice(pw/adsr)[:6]={list(fv)}  "
+                        f"filt[:6]={list(ff)}"
+                    )
     ft = agg["filt_total"]
-    print(f"\n=== TOTALS: {agg['stamps']} stamps | filter writes={ft}, "
-          f"{agg['filt_in']} inside drum spans ({100*agg['filt_in']//max(ft,1)}%) -> "
-          f"{'mostly TUNE-GLOBAL' if ft and agg['filt_in']*2 < ft else 'check drum-scoped'} | "
-          f"pw/adsr consistent-in-stamp {agg['pw_cons']}/{agg['pw_pres']} | "
-          f"filter-in-span consistent {agg['filt_span_cons']}/{agg['filt_span_pres']} ===")
+    print(
+        f"\n=== TOTALS: {agg['stamps']} stamps | filter writes={ft}, "
+        f"{agg['filt_in']} inside drum spans ({100*agg['filt_in']//max(ft,1)}%) -> "
+        f"{'mostly TUNE-GLOBAL' if ft and agg['filt_in']*2 < ft else 'check drum-scoped'} | "
+        f"pw/adsr consistent-in-stamp {agg['pw_cons']}/{agg['pw_pres']} | "
+        f"filter-in-span consistent {agg['filt_span_cons']}/{agg['filt_span_pres']} ==="
+    )

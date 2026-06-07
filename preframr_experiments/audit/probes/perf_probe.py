@@ -3,6 +3,7 @@
 (XPU when /dev/dri is present, else CPU). Bypasses the corpus dataset: the
 constrained decoder generates structurally-valid tokens from scratch, so we
 self-generate a prompt, then time steady-state per-token decode."""
+
 import argparse
 import logging
 import time
@@ -59,7 +60,9 @@ def main():
         elif device.type == "cuda":
             torch.cuda.synchronize()
 
-    logger.info("generating %d-token prompt (also compile warmup)...", args.probe_prompt)
+    logger.info(
+        "generating %d-token prompt (also compile warmup)...", args.probe_prompt
+    )
     t0 = time.perf_counter()
     pg = predictor.predict(seed, n=args.probe_prompt, temperature=0.1, top_k=1, irq=irq)
     sync()
@@ -67,7 +70,9 @@ def main():
     prompt = torch.cat([seed.squeeze(0), pg]).unsqueeze(0)
     model.model.reset_caches()
 
-    _ = predictor.predict(prompt, n=args.probe_warmup, temperature=0.1, top_k=1, irq=irq)
+    _ = predictor.predict(
+        prompt, n=args.probe_warmup, temperature=0.1, top_k=1, irq=irq
+    )
     sync()
     model.model.reset_caches()
 
@@ -88,7 +93,9 @@ def main():
         try:
             print(prof.key_averages().table(sort_by=key, row_limit=20))
         except Exception:
-            print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=20))
+            print(
+                prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=20)
+            )
 
     t0 = time.perf_counter()
     _ = predictor.predict(prompt, n=args.probe_steps, temperature=0.1, top_k=1, irq=irq)

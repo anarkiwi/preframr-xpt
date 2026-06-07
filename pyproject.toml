@@ -12,6 +12,15 @@ license = { file = "LICENSE" }
 authors = [{ name = "Josh Bailey" }]
 dependencies = []
 
+# Test tooling (pytest/pylint/black come from the anarkiwi/preframr base image
+# in Docker). Declared here for local runs: `pip install -e .[dev]`. The Docker
+# build installs pytest-xdist explicitly because the pinned base predates it.
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "pytest-xdist>=3.5",
+]
+
 [project.scripts]
 preframr-experiments-run = "preframr_experiments.run:main"
 preframr-experiments-hvsc-check = "preframr_experiments.hvsc_version_check:main"
@@ -28,3 +37,7 @@ include = ["preframr_experiments*"]
     "data/refuted/*.md",
     "preflight/*.py",
 ]
+
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312"]

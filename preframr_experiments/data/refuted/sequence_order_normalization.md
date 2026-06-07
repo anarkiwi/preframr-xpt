@@ -4,7 +4,7 @@
 but diverge on per-frame write ORDER; canonicalizing the inaudible write-order
 degree of freedom would make engines look alike in the training token stream,
 freeing sequence-modeling capacity for content (a representation/generalization
-lever). Design: `design/sequence_order_normalization_design.md`.
+lever). Design: `design/refuted/sequence_order_normalization_design.md`.
 
 **Decided by CPU audit + render proof, no model A/B** (`audit/audit_seq_order_norm.py`,
 8 eval_b engines, post-full_macros, image `anarkiwi/preframr:0.2.3`).
@@ -48,5 +48,5 @@ honest decomposition reorders whole voice-block units / sorts within a voice run
 
 The 16% dead same-value rewrites are a small, clean, inaudible token-count
 reduction — folded into the redundant-writes note in
-`design/audio_equivalence_normalization_design.md` (the still-open per-write
+`design/encoding/audio_equivalence_normalization_design.md` (the still-open per-write
 sibling), not a standalone direction. The audit stays as a reusable instrument.

@@ -1,7 +1,7 @@
 # `macro_coarsening` (simple-coarsening alphabet shrink) — REFUTED
 
 **Status:** Experiment E1 in
-`integration_tests/design/macro_coarsening_research.md` refuted the
+`macro_coarsening_research.md` (removed) refuted the
 alphabet-row tradeoff. `coarsen_pass` retained as a tracker-export
 tool (post-encoder transform for human-readable output), NOT as an
 encoder pass.
@@ -47,7 +47,7 @@ encoder pipeline ingests un-coarsened bytes.
 
 ## Evidence
 
-`integration_tests/design/macro_coarsening_research.md` §E1 —
+`macro_coarsening_research.md` (removed) §E1 —
 per-L alphabet/row/val_acc table.
 
 ## Do not revisit without

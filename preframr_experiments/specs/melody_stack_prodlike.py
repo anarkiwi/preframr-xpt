@@ -9,7 +9,7 @@ Dual-purpose A/B (the same data answers two questions):
 1. **Melody:** does the unified V0-onset acc (op45 V0 + op48 FREQ_ONSET + op47 NUDGE pitch)
    rise above the absolute baseline's 0.067 -> the stack works, sweep W + augmentation
    re-opens. Flat -> the encoding axis is exhausted; pivot to a distributional/perceptual
-   melody metric (music_llm_landscape_and_fail_fast_plan.md territory).
+   melody metric (distributional/perceptual territory).
 2. **Content (SET) scale-confirmation:** freq_onset_channel_mini gave a massive SET-cleanup
    lift (content-tier 0.076->0.249, op0 SET 0.154->0.831). Prodlike confirms whether this
    holds at scale -- a deployment win regardless of the melody read.

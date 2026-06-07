@@ -52,6 +52,7 @@ CTRL_REGS = {4, 11, 18}
 
 # ---- shared reorder rule -------------------------------------------------
 
+
 def _is_anchor(reg):
     return reg < 0 or reg in CTRL_REGS
 
@@ -138,19 +139,44 @@ def voice_canonical(body, voice_reg, reg_of, sub_of):
 # ---- fidelity mode (raw writes, renderable) ------------------------------
 
 _FID_BASE = dict(
-    cents=50, exclude_list=None, min_irq=int(1.5e4), max_irq=int(2.5e4),
-    min_song_tokens=256, diffq=4, loop_lookahead=3, coarsen_min_len=16,
-    voice_trajectory_window=8, macro_flags="", meta_exclude_digi=False,
-    meta_irq_lo=0, meta_irq_hi=0, meta_require=False,
+    cents=50,
+    exclude_list=None,
+    min_irq=int(1.5e4),
+    max_irq=int(2.5e4),
+    min_song_tokens=256,
+    diffq=4,
+    loop_lookahead=3,
+    coarsen_min_len=16,
+    voice_trajectory_window=8,
+    macro_flags="",
+    meta_exclude_digi=False,
+    meta_irq_lo=0,
+    meta_irq_hi=0,
+    meta_require=False,
 )
 _FID_MACROS = (
-    "freq_trajectory_pass", "preset_pass", "hard_restart_pass", "legato_pass_c2",
-    "legato_pass_c3", "legato_pass_c4", "legato_pass_c7",
-    "voice_canonical_block_order", "ctrl_bigram_pass", "loop_pass",
-    "loop_transposed", "fuzzy_loop_pass", "fuzzy_fp_adsr", "coarsen_pass",
-    "mode_vol_flip_pass", "voice_trajectory_pass",
-    "voice_trajectory_distributed_pass", "set_to_diff_pass", "freq_nudge_pass",
-    "release_update_pass", "ctrl_triple_pass", "lonely_catch_all",
+    "freq_trajectory_pass",
+    "preset_pass",
+    "hard_restart_pass",
+    "legato_pass_c2",
+    "legato_pass_c3",
+    "legato_pass_c4",
+    "legato_pass_c7",
+    "voice_canonical_block_order",
+    "ctrl_bigram_pass",
+    "loop_pass",
+    "loop_transposed",
+    "fuzzy_loop_pass",
+    "fuzzy_fp_adsr",
+    "coarsen_pass",
+    "mode_vol_flip_pass",
+    "voice_trajectory_pass",
+    "voice_trajectory_distributed_pass",
+    "set_to_diff_pass",
+    "freq_nudge_pass",
+    "release_update_pass",
+    "ctrl_triple_pass",
+    "lonely_catch_all",
 )
 
 
@@ -203,6 +229,7 @@ def _reorder_adf(adf, how, rng=None, move_ctrl=False):
         out.extend(block)
         i = j
     import pandas as pd
+
     nd = pd.DataFrame(out, columns=cols).astype(adf.dtypes)
     nd["diff"] = diffs  # positional diff => identical frame timing
     return nd
@@ -211,6 +238,7 @@ def _reorder_adf(adf, how, rng=None, move_ctrl=False):
 def _render(adf, rw, irq):
     from preframr_audio.audio_driver import render_to_wav
     import scipy.io.wavfile as wav
+
     fd, path = tempfile.mkstemp(suffix=".wav")
     os.close(fd)
     try:
@@ -238,16 +266,20 @@ def _cmp(a, b):
 def _fidelity(dumps, seed):
     from preframr_audio.sidwav import sidq
     from preframr_tokens import RegLogParser, prepare_df_for_audio, read_initial_irq
+
     args = _raw_args()
     rng = np.random.default_rng(seed)
-    print("fidelity (raw writes): reg-state must be IDENTICAL under reorder; "
-          "render diff shows audibility of intra-frame order.\n")
-    print(f"  {'dump':<26} {'frames':>6} {'reordered%':>10}  "
-          f"{'state==':>7}  {'variant':<10} {'maxabs':>8} {'rms':>8} {'corr':>9}")
+    print(
+        "fidelity (raw writes): reg-state must be IDENTICAL under reorder; "
+        "render diff shows audibility of intra-frame order.\n"
+    )
+    print(
+        f"  {'dump':<26} {'frames':>6} {'reordered%':>10}  "
+        f"{'state==':>7}  {'variant':<10} {'maxabs':>8} {'rms':>8} {'corr':>9}"
+    )
     for dump in dumps:
         parser = RegLogParser(args=args)
-        df = next(parser.parse(dump, max_perm=1, require_pq=False, reparse=True),
-                  None)
+        df = next(parser.parse(dump, max_perm=1, require_pq=False, reparse=True), None)
         if df is None or len(df) == 0:
             print(f"  {os.path.basename(dump):<26} (empty)")
             continue
@@ -263,25 +295,33 @@ def _fidelity(dumps, seed):
         ok = all(np.array_equal(s0, _reg_state(v)) for v in (canon, shuf, shufc))
         base = _render(adf, rw, irq)
         name = os.path.basename(dump)[:26]
-        for tag, v in (("canonical", canon), ("shuffle", shuf),
-                       ("shuf+ctrl", shufc)):
+        for tag, v in (("canonical", canon), ("shuffle", shuf), ("shuf+ctrl", shufc)):
             _n, ma, rms, corr = _cmp(base, _render(v, rw, irq))
-            head = f"  {name:<26} {nf:>6} {pct:>9.1f}%  {str(ok):>7}  " \
-                if tag == "canonical" else " " * 56
+            head = (
+                f"  {name:<26} {nf:>6} {pct:>9.1f}%  {str(ok):>7}  "
+                if tag == "canonical"
+                else " " * 56
+            )
             print(f"{head}{tag:<10} {ma:>8.5f} {rms:>8.5f} {corr:>9.6f}")
-    print("\n  read: canonical/shuffle ~ original (corr~1, maxabs~0) => "
-          "value-latch intra-frame order is inaudible. shuf+ctrl worse => "
-          "CTRL must stay anchored (it is, in canonical).")
+    print(
+        "\n  read: canonical/shuffle ~ original (corr~1, maxabs~0) => "
+        "value-latch intra-frame order is inaudible. shuf+ctrl worse => "
+        "CTRL must stay anchored (it is, in canonical)."
+    )
 
 
 # ---- divergence mode (full_macros atoms) ---------------------------------
 
 _CAP = {}
+
+
 def _capture(streams, composers, **kw):
     _CAP.setdefault("s", []).extend(streams)
+
     class _D:
         def __len__(self):
             return 0
+
     return _D()
 
 
@@ -294,8 +334,11 @@ def _cos(a, b):
 
 
 def _mean_off(h, fams):
-    s = [_cos(h[fams[i]], h[fams[j]]) for i in range(len(fams))
-         for j in range(i + 1, len(fams))]
+    s = [
+        _cos(h[fams[i]], h[fams[j]])
+        for i in range(len(fams))
+        for j in range(i + 1, len(fams))
+    ]
     s = [x for x in s if x == x]
     return (sum(s) / len(s), min(s), max(s)) if s else (float("nan"),) * 3
 
@@ -318,10 +361,11 @@ def _divergence(work, fams):
     from preframr.utils import get_logger
     import preframr_tokens.motif_mine as MM
     from preframr_tokens.stfconstants import FRAME_REG, VOICE_REG
+
     MM.mine_motifs = _capture
     base = add_args(argparse.ArgumentParser()).parse_args(
-        ["--no-require-pq", "--macro-config", "full_macros",
-         "--max-files", "999999"])
+        ["--no-require-pq", "--macro-config", "full_macros", "--max-files", "999999"]
+    )
     apply_macro_flags_to_args(base)
     reg_of = lambda a: a[1]
     sub_of = lambda a: a[2]
@@ -331,12 +375,21 @@ def _divergence(work, fams):
         _CAP["s"] = []
         try:
             MM.mine_dict_from_dumps(
-                base, f"{work}/eval_b_{fam}/*/*.dump.parquet", max_files=999999,
-                k=1, min_count=1, min_composers=1, logger=get_logger("ERROR"))
+                base,
+                f"{work}/eval_b_{fam}/*/*.dump.parquet",
+                max_files=999999,
+                k=1,
+                min_count=1,
+                min_composers=1,
+                logger=get_logger("ERROR"),
+            )
         except ValueError:
             continue
-        bodies[fam] = [blk[1:] for stream in _CAP["s"]
-                       for blk in _atom_blocks(list(stream), FRAME_REG)]
+        bodies[fam] = [
+            blk[1:]
+            for stream in _CAP["s"]
+            for blk in _atom_blocks(list(stream), FRAME_REG)
+        ]
     present = [f for f in fams if f in bodies]
 
     def cosine(keyfn, label):
@@ -350,14 +403,20 @@ def _divergence(work, fams):
 
     print("cross-engine cosine -- composition vs multiplicity vs order:")
     s = cosine(lambda b: frozenset(a[1] for a in b), "SET (composition only)")
-    ms = cosine(lambda b: tuple(sorted(Counter(a[1] for a in b).items())),
-                "MULTISET (+ multiplicity)")
+    ms = cosine(
+        lambda b: tuple(sorted(Counter(a[1] for a in b).items())),
+        "MULTISET (+ multiplicity)",
+    )
     t = cosine(lambda b: tuple(a[1] for a in b), "TUPLE (+ order)")
-    c = cosine(lambda b: tuple(a[1] for a in voice_canonical(
-        b, VOICE_REG, reg_of, sub_of)), "TUPLE voice-canonicalized (legal)")
-    print(f"\n  multiplicity gap (SET-MULTISET): {s-ms:+.3f}   "
-          f"order gap (MULTISET-TUPLE): {ms-t:+.3f}   "
-          f"reorder recovers: {c-t:+.3f}")
+    c = cosine(
+        lambda b: tuple(a[1] for a in voice_canonical(b, VOICE_REG, reg_of, sub_of)),
+        "TUPLE voice-canonicalized (legal)",
+    )
+    print(
+        f"\n  multiplicity gap (SET-MULTISET): {s-ms:+.3f}   "
+        f"order gap (MULTISET-TUPLE): {ms-t:+.3f}   "
+        f"reorder recovers: {c-t:+.3f}"
+    )
 
     same = diff = 0
     for f in present:
@@ -371,25 +430,38 @@ def _divergence(work, fams):
                     same += vals[k] == vals[k - 1]
                     diff += vals[k] != vals[k - 1]
     tot = same + diff
-    print(f"  repeated intra-frame writes: {tot}  same-value (redundant) "
-          f"{100*same/max(tot,1):.0f}%  distinct-value (modulation=content) "
-          f"{100*diff/max(tot,1):.0f}%")
+    print(
+        f"  repeated intra-frame writes: {tot}  same-value (redundant) "
+        f"{100*same/max(tot,1):.0f}%  distinct-value (modulation=content) "
+        f"{100*diff/max(tot,1):.0f}%"
+    )
 
 
 # ---- cli -----------------------------------------------------------------
 
+
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--mode", choices=["divergence", "fidelity"],
-                    default="fidelity")
-    ap.add_argument("--work", default="/work",
-                    help="divergence: dir with eval_b_<fam>/ staged dumps")
+    ap.add_argument("--mode", choices=["divergence", "fidelity"], default="fidelity")
+    ap.add_argument(
+        "--work",
+        default="/work",
+        help="divergence: dir with eval_b_<fam>/ staged dumps",
+    )
     ap.add_argument("--dumps", nargs="*", help="fidelity: dump.parquet paths")
     ap.add_argument("--seed", type=int, default=0)
     cli = ap.parse_args(argv)
     if cli.mode == "divergence":
-        fams = ["crisps", "daglish", "dobek", "follin", "marquis", "mibri",
-                "wilson", "winterberg"]
+        fams = [
+            "crisps",
+            "daglish",
+            "dobek",
+            "follin",
+            "marquis",
+            "mibri",
+            "wilson",
+            "winterberg",
+        ]
         _divergence(cli.work, fams)
     else:
         _fidelity(cli.dumps or [], cli.seed)

@@ -3,7 +3,7 @@ does forcing Unigram NOT to merge melody-pitch with non-melody atoms finally sur
 as a learnable target at mini? freq_onset_channel_mini showed the FREQ_ONSET re-tag let
 Unigram absorb most freq-pitch into merged compounds (merged share 33%->54%) -- the model
 nails the compound shapes (content +0.173) but never has to predict pitch as a separable
-class, so V0-onset stayed 0. The bet (per design/melody_learnability.md): if mini has
+class, so V0-onset stayed 0. The bet: if mini has
 capacity (proven: SET 0.83 in onset_chan) and pitch is predictable (trigram 0.82), the
 remaining cause for V0-onset=0 is that pitch is hidden inside compound vocab classes.
 De-merging directly tests that.
@@ -17,7 +17,7 @@ Decisive gate: `content_tier_report --onset` on the unified `melodic_onset_bucke
 + op48 FREQ_ONSET + op47 NUDGE pitch on freq regs 0/7/14). Does V0-onset acc move off
 0.000 at mini? If yes -> the merge-hiding diagnosis is correct, sweep at prodlike. If no
 -> the structural-blocker story is wrong; pivot the melody success metric (distributional/
-perceptual; music_llm_landscape_and_fail_fast_plan.md territory)."""
+perceptual territory)."""
 
 from __future__ import annotations
 

@@ -13,10 +13,16 @@ Signature variants tested (which definition of 'same drum' best covers RESID):
   ctrl  = ctrl byte series only                -- the gate/waveform rhythm envelope
 
 Usage:  resid_percussion.py <fixtures|N|paths> [procs] [minrep]"""
+
 import os
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import sys, glob, random, statistics, subprocess  # noqa: E401,E402
 from collections import Counter, defaultdict  # noqa: E402
@@ -63,7 +69,8 @@ def signatures(rec):
 
 def grid_score(onsets):
     """How rhythmic are these onsets? Returns (median_IOI, frac_on_grid). frac_on_grid = share of
-    inter-onset intervals that are near-integer multiples of the smallest common pulse."""
+    inter-onset intervals that are near-integer multiples of the smallest common pulse.
+    """
     if len(onsets) < 3:
         return (0, 0.0)
     ois = sorted(onsets)
@@ -82,8 +89,13 @@ def driver_map(dirs):
     for d in sorted(set(dirs)):
         m = {}
         try:
-            r = subprocess.run(["sidid", d], capture_output=True, text=True, timeout=120,
-                               env={**os.environ, "SIDIDCFG": SIDID_CFG})
+            r = subprocess.run(
+                ["sidid", d],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                env={**os.environ, "SIDIDCFG": SIDID_CFG},
+            )
             for ln in r.stdout.splitlines():
                 parts = ln.split()
                 if len(parts) >= 2 and parts[0].lower().endswith(".sid"):
@@ -97,7 +109,7 @@ def driver_map(dirs):
 def scan(paths, dmap):
     # per (dump, reg, sigtype) -> sig -> list of (onset_fr, nframes)
     groups = defaultdict(lambda: defaultdict(list))
-    resid_notes = defaultdict(int)   # driver -> count
+    resid_notes = defaultdict(int)  # driver -> count
     resid_frames = defaultdict(int)
     a = _args()
     for p in paths:
@@ -105,7 +117,12 @@ def scan(paths, dmap):
         drv = dmap.get(os.path.dirname(p), {}).get(tune.lower(), "?")
         SkeletonPass._resid_diag = []
         try:
-            parsed = next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
+            parsed = next(
+                RegLogParser(args=a).parse(
+                    p, max_perm=1, require_pq=False, reparse=True
+                ),
+                None,
+            )
         except Exception:
             SkeletonPass._resid_diag = None
             continue
@@ -124,7 +141,11 @@ def scan(paths, dmap):
                 # so occurrences on different voices MERGE; carry reg to count distinct voices.
                 groups[(drv, p, st)][sig].append((onset_fr, len(rec), int(reg)))
     # plain picklable dicts (defaultdict(lambda) can't cross the mp.Pool boundary)
-    return ({k: dict(v) for k, v in groups.items()}, dict(resid_notes), dict(resid_frames))
+    return (
+        {k: dict(v) for k, v in groups.items()},
+        dict(resid_notes),
+        dict(resid_frames),
+    )
 
 
 def _worker(args):
@@ -151,8 +172,11 @@ if __name__ == "__main__":
         sample = [random.choice(v) for v in by_dir.values()]
         random.shuffle(sample)
         sample = sample[: int(spec)]
-    print(f"scanning {len(sample)} dumps for recurring percussion stamps (minrep={minrep})",
-          file=sys.stderr, flush=True)
+    print(
+        f"scanning {len(sample)} dumps for recurring percussion stamps (minrep={minrep})",
+        file=sys.stderr,
+        flush=True,
+    )
     dmap = driver_map([os.path.dirname(p) for p in sample])
     shards = [sample[i::procs] for i in range(procs)]
     shards = [(s, dmap) for s in shards if s]
@@ -168,11 +192,17 @@ if __name__ == "__main__":
                 groups[key][sig].extend(occ)
 
     # Coverage per signature type: RESID notes/frames in a sig recurring >= minrep, per driver.
-    print(f"\n=== RESID totals: {sum(resid_notes.values())} notes / "
-          f"{sum(resid_frames.values())} frames ===")
-    cover = defaultdict(lambda: defaultdict(lambda: [0, 0]))  # sigtype -> driver -> [notes, frames]
+    print(
+        f"\n=== RESID totals: {sum(resid_notes.values())} notes / "
+        f"{sum(resid_frames.values())} frames ==="
+    )
+    cover = defaultdict(
+        lambda: defaultdict(lambda: [0, 0])
+    )  # sigtype -> driver -> [notes, frames]
     grids = defaultdict(list)  # sigtype -> [frac_on_grid for recurring stamps]
-    multivoice = defaultdict(lambda: [0, 0])  # sigtype -> [stamps_on_>1_voice, notes_on_them]
+    multivoice = defaultdict(
+        lambda: [0, 0]
+    )  # sigtype -> [stamps_on_>1_voice, notes_on_them]
     stamp_examples = defaultdict(list)
     for (drv, _p, st), sigmap in groups.items():
         for sig, occ in sigmap.items():
@@ -194,15 +224,21 @@ if __name__ == "__main__":
         gl = grids[st]
         gridded = (sum(1 for f in gl if f >= 0.6) / len(gl)) if gl else 0
         mv = multivoice[st]
-        print(f"\n--- signature='{st}' : recurring(>= {minrep}) covers "
-              f"{tn} notes ({100*tn//max(sum(resid_notes.values()),1)}%) / "
-              f"{tf} frames ({100*tf//max(sum(resid_frames.values()),1)}%) | "
-              f"{len(gl)} stamps, {100*gridded:.0f}% gridded | "
-              f"multi-voice: {mv[0]} stamps / {mv[1]} notes ---")
+        print(
+            f"\n--- signature='{st}' : recurring(>= {minrep}) covers "
+            f"{tn} notes ({100*tn//max(sum(resid_notes.values()),1)}%) / "
+            f"{tf} frames ({100*tf//max(sum(resid_frames.values()),1)}%) | "
+            f"{len(gl)} stamps, {100*gridded:.0f}% gridded | "
+            f"multi-voice: {mv[0]} stamps / {mv[1]} notes ---"
+        )
         for drv, c in sorted(cover[st].items(), key=lambda x: -x[1][0]):
             print(f"      {drv}: {c[0]} notes / {c[1]} frames")
 
     print("\n=== example recurring stamps (signature='abs', exact writes) ===")
-    for drv, n, med, frac, nv, sig in sorted(stamp_examples["abs"], key=lambda x: -x[1])[:10]:
-        print(f"  {drv}  x{n}  voices={nv}  IOI~{med}f grid={frac:.2f}  "
-              f"(fn,ctrl)[:8]={list(sig[:8])}")
+    for drv, n, med, frac, nv, sig in sorted(
+        stamp_examples["abs"], key=lambda x: -x[1]
+    )[:10]:
+        print(
+            f"  {drv}  x{n}  voices={nv}  IOI~{med}f grid={frac:.2f}  "
+            f"(fn,ctrl)[:8]={list(sig[:8])}"
+        )

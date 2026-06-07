@@ -7,7 +7,6 @@ docker build."""
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +23,7 @@ def test_dump_to_notes_extracts_gated_notes_per_voice():
         PAL_CLOCK,
         dump_to_notes,
     )
+
     # V0 plays one note: gate on at clock=1000 freq=4000 (~MIDI 60), gate off at 2000.
     rows = [
         (500, 0, 0, 0, 0xA0),  # freq_lo
@@ -47,11 +47,14 @@ def test_dump_to_notes_handles_audio_df_format_via_diff():
         PHI2_TO_MASTER,
         _ensure_clock,
     )
-    df = pd.DataFrame({
-        "reg": [0, 1, 4, 4],
-        "val": [0xA0, 0x0F, 0x41, 0x40],
-        "diff": [100, 100, 1000, 5000],
-    })
+
+    df = pd.DataFrame(
+        {
+            "reg": [0, 1, 4, 4],
+            "val": [0xA0, 0x0F, 0x41, 0x40],
+            "diff": [100, 100, 1000, 5000],
+        }
+    )
     out = _ensure_clock(df)
     assert "clock" in out.columns
     expected = np.array([100, 200, 1200, 6200]) * PHI2_TO_MASTER
@@ -62,6 +65,7 @@ def test_dump_to_notes_skips_filter_and_pw_writes():
     """Filter regs (21/22/23) and PW regs (2/3/9/10/16/17) must not produce
     notes -- they're not voice-control writes."""
     from preframr_experiments.audit.melody_features import dump_to_notes
+
     rows = [
         (100, 0, 0, 21, 0xFF),  # FC_LO write
         (200, 0, 0, 22, 0xFF),  # FC_HI
@@ -76,6 +80,7 @@ def test_dump_to_notes_skips_filter_and_pw_writes():
 
 def test_features_from_notes_handles_empty_input():
     from preframr_experiments.audit.melody_features import features_from_notes
+
     feats = features_from_notes([], total_seconds=1.0)
     assert feats["gates_per_sec"] == 0.0
     assert feats["pitched_gates_per_sec"] == 0.0
@@ -86,14 +91,28 @@ def test_score_collapse_on_silent_output(tmp_path):
     from preframr_experiments.audit.melody_score_generation import (
         score_one,
     )
-    scaler = {f: {"mean": 0.0, "std": 1.0} for f in [
-        "pitch_class_entropy", "scale_consistency", "pitch_in_scale_rate",
-        "pitch_range", "n_pitches_used", "n_pitch_classes_used",
-        "polyphony", "polyphony_rate", "groove_consistency",
-        "empty_beat_rate", "gates_per_sec", "pitched_gates_per_sec",
-        "unpitched_gate_rate", "median_note_frames", "top_interval_share",
-        "interval_repeat_share",
-    ]}
+
+    scaler = {
+        f: {"mean": 0.0, "std": 1.0}
+        for f in [
+            "pitch_class_entropy",
+            "scale_consistency",
+            "pitch_in_scale_rate",
+            "pitch_range",
+            "n_pitches_used",
+            "n_pitch_classes_used",
+            "polyphony",
+            "polyphony_rate",
+            "groove_consistency",
+            "empty_beat_rate",
+            "gates_per_sec",
+            "pitched_gates_per_sec",
+            "unpitched_gate_rate",
+            "median_note_frames",
+            "top_interval_share",
+            "interval_repeat_share",
+        ]
+    }
     silent = _fake_dump([(100, 0, 0, 24, 15)])  # one mode/vol write, no gates
     silent_path = tmp_path / "silent.dump.parquet"
     silent.to_parquet(silent_path)
@@ -107,6 +126,7 @@ def test_score_pass_on_in_distribution_synthetic():
     from preframr_experiments.audit.melody_score_generation import (
         score_one,
     )
+
     scaler = {
         "pitch_class_entropy": {"mean": 2.5, "std": 0.5},
         "scale_consistency": {"mean": 0.9, "std": 0.1},
@@ -131,17 +151,21 @@ def test_score_pass_on_in_distribution_synthetic():
     df.to_parquet(path)
     rep = score_one(str(path), scaler, {})
     # Don't require PASS verdict (depends on muspy), but require no collapse.
-    assert rep["verdict"] != "COLLAPSE", (
-        f"synthetic walk-up should not collapse: {rep['collapse_reasons']}"
-    )
+    assert (
+        rep["verdict"] != "COLLAPSE"
+    ), f"synthetic walk-up should not collapse: {rep['collapse_reasons']}"
 
 
-@pytest.mark.parametrize("ok_feature_value,bad_feature_value", [
-    ((2.5, 0.5), (10.0, 0.5)),  # huge z on pitch_class_entropy -> FAIL
-])
+@pytest.mark.parametrize(
+    "ok_feature_value,bad_feature_value",
+    [
+        ((2.5, 0.5), (10.0, 0.5)),  # huge z on pitch_class_entropy -> FAIL
+    ],
+)
 def test_extreme_outlier_triggers_fail(ok_feature_value, bad_feature_value, tmp_path):
     """A single feature with |z| > 4 should yield FAIL verdict."""
     from preframr_experiments.audit.melody_score_generation import _verdict_for_z
+
     assert _verdict_for_z(5.0) == "FAIL"
     assert _verdict_for_z(-5.0) == "FAIL"
     assert _verdict_for_z(2.5) == "WARN"
@@ -152,8 +176,9 @@ def test_extreme_outlier_triggers_fail(ok_feature_value, bad_feature_value, tmp_
 def test_muspy_available_in_image_for_real_analysis(tmp_path):
     """When muspy is installed, the analyzer should produce its
     pitch_class_entropy + scale_consistency features. Skipped on lite envs."""
-    muspy = pytest.importorskip("muspy")
+    pytest.importorskip("muspy")
     from preframr_experiments.audit.melody_features import analyze
+
     # Build a tiny ascending scale dump (12 notes), then analyze.
     rows = []
     clock = 0

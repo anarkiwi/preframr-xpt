@@ -4,14 +4,15 @@ fast modulation (vibrato/arp). Recover the base by a median filter (suppresses
 vibrato), take changepoints as intrinsic note anchors, and VALIDATE against gate-on
 (corroboration, not mechanism): overlap = it found real onsets; anchors away from
 gate-on = legato/slide changes gate would miss. Also report base-pitch entropy."""
+
 import sys, math
 from collections import Counter
 import numpy as np
 import pandas as pd
 
 VB = {0: 0, 1: 7, 2: 14}
-MEDIAN_W = 7          # frames; > vibrato period, < note duration
-STEP = 1              # semitone level-change threshold
+MEDIAN_W = 7  # frames; > vibrato period, < note duration
+STEP = 1  # semitone level-change threshold
 
 
 def per_frame(df, base):
@@ -27,13 +28,16 @@ def per_frame(df, base):
             order.append(irq)
         f = frames[irq]
         if reg == flo:
-            lo = val; f[0] = lo
+            lo = val
+            f[0] = lo
         elif reg == fhi:
-            hi = val; f[1] = hi
+            hi = val
+            f[1] = hi
         else:
             g = val & 1
             f[3] = bool(g and not gate)  # gate-on this frame
-            gate = g; f[2] = gate
+            gate = g
+            f[2] = gate
     out = []
     for irq in order:
         lo_, hi_, g_, gon = frames[irq]
@@ -59,10 +63,12 @@ def analyze(path):
         # forward-fill NaN for filtering
         idx = np.where(valid)[0]
         s = np.interp(np.arange(len(s)), idx, sem[idx])
-        med = np.array([
-            np.median(s[max(0, i - MEDIAN_W // 2): i + MEDIAN_W // 2 + 1])
-            for i in range(len(s))
-        ])
+        med = np.array(
+            [
+                np.median(s[max(0, i - MEDIAN_W // 2) : i + MEDIAN_W // 2 + 1])
+                for i in range(len(s))
+            ]
+        )
         # hysteresis level tracker: a new base level must be HELD >= MIN_HOLD frames
         # within BAND, else it's vibrato/arp/slide modulation, not a note anchor.
         BAND, MIN_HOLD = 1.5, 4
@@ -79,7 +85,7 @@ def analyze(path):
             else:
                 cand_run += 1
             if cand_run >= MIN_HOLD:
-                level = round(np.median(med[cand_start: t + 1]))
+                level = round(np.median(med[cand_start : t + 1]))
                 anchor_frames.append(cand_start)
                 anchor_vals.append(int(level))
                 cand = None
@@ -92,16 +98,24 @@ def analyze(path):
         near = lambda fr: any((fr + d) in gset for d in (-1, 0, 1))
         anch_at_gate = sum(near(fr) for fr in anchor_frames)
         gate_with_anchor = sum(
-            any(abs(int(fr) - int(a)) <= 1 for a in anchor_frames) for fr in gate_on_frames
+            any(abs(int(fr) - int(a)) <= 1 for a in anchor_frames)
+            for fr in gate_on_frames
         )
         # entropy of intrinsic base-pitch sequence (at anchors)
-        c = Counter(anchor_vals); n = sum(c.values())
+        c = Counter(anchor_vals)
+        n = sum(c.values())
         H = -sum((x / n) * math.log2(x / n) for x in c.values())
-        print(f"  voice {v}: intrinsic anchors={len(anchor_frames)}  gate-on={len(gate_on_frames)}")
-        print(f"    corroboration: {100*anch_at_gate/len(anchor_frames):.0f}% of intrinsic anchors are at a gate-on  "
-              f"| {100*gate_with_anchor/len(gate_on_frames):.0f}% of gate-ons have an intrinsic anchor")
-        print(f"    legato (intrinsic anchor, NO gate retrigger): {len(anchor_frames)-anch_at_gate} "
-              f"({100*(len(anchor_frames)-anch_at_gate)/len(anchor_frames):.0f}%)")
+        print(
+            f"  voice {v}: intrinsic anchors={len(anchor_frames)}  gate-on={len(gate_on_frames)}"
+        )
+        print(
+            f"    corroboration: {100*anch_at_gate/len(anchor_frames):.0f}% of intrinsic anchors are at a gate-on  "
+            f"| {100*gate_with_anchor/len(gate_on_frames):.0f}% of gate-ons have an intrinsic anchor"
+        )
+        print(
+            f"    legato (intrinsic anchor, NO gate retrigger): {len(anchor_frames)-anch_at_gate} "
+            f"({100*(len(anchor_frames)-anch_at_gate)/len(anchor_frames):.0f}%)"
+        )
         print(f"    base-pitch entropy {H:.2f}b ({len(c)} pitches)")
 
 

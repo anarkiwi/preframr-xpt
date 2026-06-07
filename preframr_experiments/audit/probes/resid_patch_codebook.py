@@ -1,5 +1,5 @@
-"""PROTOTYPE of the melodic-PATCH preamble (the non-drum twin of the drum stamp codebook;
-design/patch_preamble_encoding.md). A melodic note's PITCH is the skeleton+ornament; its TIMBRE is a
+"""PROTOTYPE of the melodic-PATCH preamble (the non-drum twin of the drum stamp
+codebook). A melodic note's PITCH is the skeleton+ornament; its TIMBRE is a
 reusable INSTRUMENT PATCH = the pitch-invariant non-pitch footprint: ADSR + the control-register
 ARTICULATION sequence (HR/test -> attack waveform -> sustain -> release) + PW. Define the patch once
 as a preamble, reference it per note; then a new melodic note = patch-ref + skeleton + ornament.
@@ -11,10 +11,16 @@ patches/tune, note coverage, reuse, and how much an exact codebook collapses und
 (ctrl-progression + ADSR only) -- the Unigram-clusterability proxy.
 
 Usage:  resid_patch_codebook.py <fixtures|N|paths> [procs] [minrep]"""
+
 import os
 
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+for _v in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+):
     os.environ.setdefault(_v, "1")
 import sys, glob, random, statistics  # noqa: E401,E402
 from collections import defaultdict, Counter  # noqa: E402
@@ -73,7 +79,12 @@ def analyze(paths, minrep):
         SkeletonPass._resid_diag = []
         SkeletonPass._df_sink = []
         try:
-            next(RegLogParser(args=a).parse(p, max_perm=1, require_pq=False, reparse=True), None)
+            next(
+                RegLogParser(args=a).parse(
+                    p, max_perm=1, require_pq=False, reparse=True
+                ),
+                None,
+            )
         except Exception:
             SkeletonPass._resid_diag = SkeletonPass._df_sink = None
             continue
@@ -85,7 +96,9 @@ def analyze(paths, minrep):
         df = dfs[0]
         sets = df[df["op"] == SET_OP]
         byfr = defaultdict(list)
-        for f, r, v in zip(sets["_fr"].to_numpy(), sets["reg"].to_numpy(), sets["val"].to_numpy()):
+        for f, r, v in zip(
+            sets["_fr"].to_numpy(), sets["reg"].to_numpy(), sets["val"].to_numpy()
+        ):
             byfr[int(f)].append((int(r), int(v)))
 
         # all claimed note onsets per voice reg
@@ -93,8 +106,10 @@ def analyze(paths, minrep):
         for reg, _isr, _n, onset, _rec in recs:
             onsets[int(reg)].append(int(onset))
         notes = 0
-        exact = Counter()      # full patch sig -> count
-        near = Counter()       # (ctrl_prog, AD, SR) -> count  (PW-invariant = Unigram cluster proxy)
+        exact = Counter()  # full patch sig -> count
+        near = (
+            Counter()
+        )  # (ctrl_prog, AD, SR) -> count  (PW-invariant = Unigram cluster proxy)
         examples = {}
         for reg, ons in onsets.items():
             ons = sorted(ons)
@@ -142,7 +157,11 @@ if __name__ == "__main__":
         sample = [random.choice(v) for v in by_dir.values()]
         random.shuffle(sample)
         sample = sample[: int(spec)]
-    print(f"mining melodic patch codebook across {len(sample)} dumps", file=sys.stderr, flush=True)
+    print(
+        f"mining melodic patch codebook across {len(sample)} dumps",
+        file=sys.stderr,
+        flush=True,
+    )
     shards = [(sample[i::procs], minrep) for i in range(procs)]
     shards = [s for s in shards if s[0]]
     with mp.Pool(len(shards)) as pool:
@@ -152,7 +171,7 @@ if __name__ == "__main__":
     tot = Counter()
     exact_per_tune, near_per_tune, cov_top8, reuse = [], [], [], []
     all_near = Counter()
-    for (tune, notes, exact, near, examples) in allrows:
+    for tune, notes, exact, near, examples in allrows:
         tot["notes"] += notes
         tot["exact"] += len(exact)
         tot["near"] += len(near)
@@ -164,12 +183,20 @@ if __name__ == "__main__":
             cov_top8.append(100 * top8 / notes)
             reuse.append(notes / max(len(near), 1))
 
-    print(f"\n=== MELODIC PATCH CODEBOOK PROTOTYPE: {len(allrows)} tunes, "
-          f"{tot['notes']} claimed notes ===")
-    print(f"EXACT patches (ctrl-prog+ADSR+PW)/tune:   {_stats(exact_per_tune)}   total {tot['exact']}")
-    print(f"NEAR patches  (ctrl-prog+ADSR, PW-free)/tune: {_stats(near_per_tune)}   total {tot['near']}")
-    print(f"collapse exact->near (Unigram-cluster proxy): "
-          f"{tot['exact']} -> {tot['near']} ({100*(tot['exact']-tot['near'])//max(tot['exact'],1)}% fewer)")
+    print(
+        f"\n=== MELODIC PATCH CODEBOOK PROTOTYPE: {len(allrows)} tunes, "
+        f"{tot['notes']} claimed notes ==="
+    )
+    print(
+        f"EXACT patches (ctrl-prog+ADSR+PW)/tune:   {_stats(exact_per_tune)}   total {tot['exact']}"
+    )
+    print(
+        f"NEAR patches  (ctrl-prog+ADSR, PW-free)/tune: {_stats(near_per_tune)}   total {tot['near']}"
+    )
+    print(
+        f"collapse exact->near (Unigram-cluster proxy): "
+        f"{tot['exact']} -> {tot['near']} ({100*(tot['exact']-tot['near'])//max(tot['exact'],1)}% fewer)"
+    )
     print(f"top-8 patches cover %% of a tune's notes: {_stats(cov_top8)}")
     print(f"reuse (notes per near-patch): {_stats(reuse)}")
     print("\n=== most common NEAR patches corpus-wide (ctrl-progression | AD | SR) ===")
