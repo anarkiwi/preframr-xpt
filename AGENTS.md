@@ -6,19 +6,22 @@ corpus live elsewhere.
 
 ## Packages
 
-- **`preframr` 0.2.21** — framework only (train / inference / model / args /
+- **`preframr` 0.2.23** — framework only (train / inference / model / args /
   parse / stftokenize / utils). Image `anarkiwi/preframr`. No PyPI; ships as the
-  docker image (`0.2.21` + `:latest` published on **`v*` tag via release.yml**, NOT
+  docker image (`0.2.23` + `:latest` published on **`v*` tag via release.yml**, NOT
   main-push — main-push docker.yml is `push:false`/test-only). Carries the
-  per-op-accuracy gate. Floors `preframr-tokens>=0.45.1` (only **one** req file —
+  per-op-accuracy gate. Floors `preframr-tokens>=0.46.1` (only **one** req file —
   `requirements.txt` — floors tokens; the "all 3 req files" lore was wrong).
   `tier_map.build_op_map` reads
   op→name from tokens' `op_name_by_id()`. **Macro passes are supplied as ONE
   validated list** — `apply_macro_flags_to_args` resolves `--macro-flags` /
   `--macro-config` off the tokens registry (default all-OFF); the old per-flag
   `--foo-pass` args + `_PIPELINE_NAME_TO_FLAG` + `--pipeline-spec` are gone.
-- **`preframr-tokens` 0.45.1** (PyPI) — torch-free parser/tokenizer + macros
-  + `render_play`. **0.45.1 (generator-op loss tiering):** the generator/codebook ops were
+- **`preframr-tokens` 0.46.1** (PyPI) — torch-free parser/tokenizer + macros
+  + `render_play`. **0.46.1 (universal pitch + table-resid-split):** merged the per-voice
+  universal note-index pitch model (PR #72) + GEN_TABLE NOTE_UNIV residual-split as default-OFF
+  macro flags (`universal_pitch` / `universal_freq` / `table_resid_split`); byte-exact; + a parse fix.
+  These ARE the `pitch_resid_prodlike` target arm. **0.45.1 (generator-op loss tiering):** the generator/codebook ops were
   MacroPass-emitted (no `Transform` class) so absent from `collect_op_loss_tiers` → all
   defaulted to `content`, biasing `content_over_structural`. Fixed via
   `op_contracts.MACRO_OP_LOSS_TIERS` (GEN_TABLE_DEF/END/REF + GEN_TUNING → structural;
@@ -86,33 +89,37 @@ prodlike-*scale* learnability read at mini-*cost* (static, minutes) — reserve 
 collapse→learning *threshold*. Model-side content interventions were refuted at the ~0.13 ceiling
 that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
 
-## Current arc — CANONICAL RUN readiness: 0.45.1 propagated end-to-end; the spec is authored, launch is the next step (2026-06-06)
+## Current arc — CANONICAL RUN LAUNCHED: `pitch_resid_prodlike` on defroster (2026-06-07)
 
-**Cross-repo propagation DONE (2026-06-06).** tokens **0.45.1 on PyPI** (#73 generator-op tiering) →
-framework floor `>=0.45.1` (#154 merged) → **`anarkiwi/preframr:0.2.21` published to Docker Hub** (`v0.2.21`
-tag → release.yml) → xpt `Dockerfile` BASE → `0.2.21` (#24 merged). Full chain ALSO built + validated locally
-(framework 239 + xpt 154 tests pass in-build). The deleted-zoo-macro breakage the generator landing caused was
-fixed in the framework tests (`is_freq_onset_atom` → local `MELODY_INTERVAL` successor; deleted-OP/flag test
-refs → live `melody_skeleton→generator_pass` chain). Detail: memory `tokens-0.45.0-release-pending`.
+**THE CANONICAL RUN is live.** `preframr_experiments/specs/pitch_resid_prodlike.py`: prodlike A/B, target =
+`full_macros + universal_pitch + table_resid_split` (per-voice universal note-index for melody onsets AND
+GEN_TABLE arps), baseline = the atomic control (all passes OFF), on `anarkiwi/preframr:0.2.23` (tokens 0.46.1,
+1 seed, tkvocab 32768, seq_len 8192, 60 epochs). Decisive gate = `audit.content_tier_report` (per-tier
+`content_over_structural` + per-op `op_acc`) on the corrected 0.46.1 tier map; secondary = `eval_b_*` held-out
+composer families. Launch: `preframr-experiments-run pitch_resid_prodlike --root <root>` on the GPU host
+(defroster, RTX 4090 — NOT fogbank). ~6–11h/(arm,seed) to a 1-seed cross-arm signal. It **replaces** the stale
+`melody_skeleton_prodlike` (0.45.1 / no residual-split) and the older zoo-macro prodlike specs (NONE run under
+0.46.1).
 
-**THE CANONICAL RUN — spec authored, ready to launch.** `preframr_experiments/specs/melody_skeleton_prodlike.py`
-(NEW): prodlike A/B, target = `full_macros + melody_skeleton`, baseline = plain `full_macros`, on
-`anarkiwi/preframr:0.2.21` (1 seed, tkvocab 32768, seq_len 8192, 60 epochs). Decisive gate =
-`audit.content_tier_report` (per-tier `content_over_structural` + per-op `op_acc`) — now read on the **corrected**
-0.45.1 tier map. **Replaces the stale prodlike specs** (`per_tier_heads_prodlike`, `melody_stack_prodlike`,
-`contrastive_prodlike`, `content_diffusion_prodlike`, `full_macros_prodlike`, …) — ALL pin deleted zoo macros
-and/or old images, so NONE run under 0.45.1. Launch: `preframr-experiments-run melody_skeleton_prodlike` on the
-GPU host (defroster, RTX 4090 — NOT fogbank). Validated: flags resolve + metrics valid in the 0.2.21 image.
+**Cross-repo propagation DONE.** tokens **0.46.1 on PyPI** (PR #72 universal-pitch merged + table_resid_split +
+#73 generator-op tiering) → framework floor `>=0.46.1` → **`anarkiwi/preframr:0.2.23`** → spec image.
 
-**Pitch model (`universal_pitch`/`universal_freq`) is NOT in 0.45.1.** The universal recovered-table pitch model
-(shared NOTE INDEX + per-voice recovered table + per-voice tuning + tuning-invariant cents, transfer via
-intervals; `design/encoding/universal_multiresolution_pitch.md`) lives on tokens **PR #72** (`feat/universal-pitch-grid`),
-default-OFF, byte-exact, **CI green but unmerged**. It adds `universal_pitch` (re-key melody onsets) +
-`universal_freq` (the bulk-freq probe: extend the re-keying to every sounding HOLD/ACCUM atom on melodic voices,
-4.5× more interval atoms, 30/30 byte-exact). Transfer audit (this session): melup vs mel lifted absolute transfer
-0.094→0.157 (+67%) by re-keying onsets alone; interval_transfer 0.40 sits below the 2-gram ceiling 0.53 (~0.13
-headroom). **To A/B it: merge #72 → cut tokens 0.46.0 → bump framework+xpt images → add a `+universal_pitch`
-arm.** Validated EXACT on SWM/defMON/Hubbard/Galway (recovered note-index == trackers' own FREQTBL/NOTE_PITCH).
+**NFS-hang recovery (2026-06-07).** A first launch died at 99.7% of parse when **fogbank (the `/scratch` NFS
+server) flaked under concurrent load** — a CPU transfer-audit running *on* fogbank + defroster's parse writing
+~34k files *to* it; defroster's `hard` mount turned the server stall into a D-state hang → reboot. Recovered:
+cleaned the partial run (no checkpoint existed — died in parse), relaunched. See NFS hygiene below + memory
+`nfs-hard-mount-hang`. The transfer-audit (`/scratch/tmp/transfer_audit_evalb.py`) was then parallelized
+(multiprocessing Pool, default min(48, nproc) workers) — capped to leave cores for `nfsd`.
+
+**Pitch model (`universal_pitch`/`universal_freq`/`table_resid_split`) IS in 0.46.1** (PR #72 merged). The universal
+recovered-table pitch model (shared NOTE INDEX + per-voice recovered table + per-voice tuning + tuning-invariant
+cents, transfer via intervals; `design/encoding/universal_multiresolution_pitch.md`) is the `pitch_resid_prodlike`
+TARGET arm. Default-OFF flags: `universal_pitch` (re-key melody onsets), `universal_freq` (the bulk-freq probe:
+re-key every sounding HOLD/ACCUM atom on melodic voices, 4.5× more interval atoms), `table_resid_split` (GEN_TABLE
+NOTE_UNIV residual-split). Transfer-audit signal: melup vs mel lifted absolute transfer 0.094→0.157 (+67%) by
+re-keying onsets alone; interval_transfer 0.40 sits below the 2-gram ceiling 0.53 (~0.13 headroom). The CPU mirror
+of `eval_b_*` is `transfer_audit_evalb.py` (now parallelized). Validated EXACT on SWM/defMON/Hubbard/Galway
+(recovered note-index == trackers' own FREQTBL/NOTE_PITCH).
 
 ### Why the within-tune triage is NOT the verdict
 - `learnability_triage --mode window` (`--mode blocks` chokes on `GEN_*`): the generator+melody family copy ~0.92
@@ -125,13 +132,12 @@ arm.** Validated EXACT on SWM/defMON/Hubbard/Galway (recovered note-index == tra
   ceiling that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
 
 ### NEXT
-1. **Launch the canonical run:** `preframr-experiments-run melody_skeleton_prodlike` on the GPU host. Read via
+1. **Canonical run is LAUNCHED** (`pitch_resid_prodlike` on defroster, recovered after the NFS-hang reboot). Read via
    `audit.content_tier_report` (per-tier `content_over_structural` + per-op `op_acc`); secondary = `eval_b_*`
-   held-out composer generalization. ~6–11h to a 1-seed cross-arm signal.
-2. **Commit the new spec** (`melody_skeleton_prodlike.py`, currently uncommitted in the working tree).
-3. **Pitch-model A/B (after the baseline run):** merge tokens #72 → cut 0.46.0 → rebuild framework+xpt images →
-   add a `melody_skeleton + universal_pitch` (and a `+universal_freq` bulk-freq) arm. The bulk-freq probe is the
-   real lever (re-keys the whole pitched-freq stream, not just sparse onsets); decide depth after the baseline.
+   held-out composer generalization. ~6–11h/(arm,seed) to a 1-seed cross-arm signal.
+2. **After the result:** if the pitch arm wins, decide whether to add a `+universal_freq` bulk-freq arm (re-keys the
+   whole pitched-freq stream, not just sparse onsets — the deeper lever) and/or a 3-seed confirm; if it loses,
+   reconcile against the within-block triage being flat (memory `within-block-triage-exhausted`).
 
 ### Prior arc (compacted; details in `design/landed/` + git log)
 **Architecture exonerated** — `framework_arch_test` (torchtune llama3_2, mini) gets val 0.903 on UNSEEN synthetic
@@ -181,8 +187,13 @@ the released encoding (`audit_checkpoint_per_class` → `content_tier_report`) p
 - **Background runs:** `nohup`+`disown`; don't poll, use `ScheduleWakeup`.
 - **Comments:** no session narration / dev-local paths / PR numbers;
   `tests/test_lint.py` rejects narrative `#` and >5-line docstrings.
-- **NFS hygiene:** no lingering `tail -f` on workdir files (silly-renames);
-  stop `preframr_tb` before deleting tb_logs subtrees.
+- **NFS hygiene:** **fogbank IS the `/scratch` NFS server**; defroster mounts it
+  `hard`, so heavy fogbank-local load (parallel audits / builds) overlapping a
+  defroster parse/stage can saturate `nfsd` → defroster D-state hang → reboot
+  (cost a 2026-06-07 reboot mid-parse, losing a 99.7%-done parse). Cap fogbank
+  pools to leave cores for `nfsd`; canary defroster with `stat -f /scratch`. No
+  lingering `tail -f` on workdir files (silly-renames); stop `preframr_tb`
+  before deleting tb_logs subtrees.
 - **Arm ordering:** target arm first in `spec.arms`, baseline last. Runner is
   seed-major (`for seed: for arm: run`) — 1-seed cross-arm comparison
   available as soon as seed0 finishes both arms.
