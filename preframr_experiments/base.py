@@ -22,7 +22,7 @@ PREFLIGHT_DIR = PACKAGE_DIR / "preflight"
 _PREFRAMR_SRC_ENV = "PREFRAMR_SRC_DIR"
 _PREFRAMR_SRC_DEFAULT = Path("/scratch/anarkiwi/preframr/preframr")
 _PREFRAMR_BIND_SRC_ENV = "PREFRAMR_BIND_SRC"
-_PREFRAMR_TOKENS_SRC = Path("/scratch/anarkiwi/preframr-tokens/preframr_tokens")
+_PREFRAMR_TOKENS_SRC = Path("/scratch/anarkiwi/gen2-preframr-tokens/preframr_tokens")
 _PREFRAMR_TOKENS_DST = "/root/.local/lib/python3.12/site-packages/preframr_tokens"
 
 

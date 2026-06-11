@@ -69,8 +69,8 @@ class TestDatasetCacheKey(_CacheKeyTestCase):
     def test_changes_with_macro_flags(self):
         spec = _toy_spec()
         layout = {"train": ["x"]}
-        a = _dataset_cache_key(spec, layout, "", ("freq_trajectory_pass",))
-        b = _dataset_cache_key(spec, layout, "", ("preset_pass",))
+        a = _dataset_cache_key(spec, layout, "", ("voice_lane",))
+        b = _dataset_cache_key(spec, layout, "", ("loop_pass",))
         self.assertNotEqual(a, b)
 
     def test_changes_with_macro_config(self):
