@@ -183,7 +183,6 @@ note-table findings now shipped as `NOTE_TABLE`/`TUNING`/`NI_*`),
 quality gate builds on).
 
 **Elsewhere (not in this repo):**
-- `preframr-tokens:pipeline_trace.py` — torch-free pass-by-pass pipeline tracer (parse-domain).
 - `preframr-aug:design/melody_transfer_augmentation_design.md` — offline corpus expansion. Its
   cross-song-transfer axis is superseded by
   [`transplant_augmentation_design.md`](generation/transplant_augmentation_design.md) (v3-native);
