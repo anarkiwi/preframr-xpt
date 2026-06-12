@@ -220,6 +220,16 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-12 (BPE refuted + encoding frontier)** — canonical run verdict: **unigram BPE (tkvocab 2048)
+  harms content generalization** ~6-11x vs atoms-only at matched maturity (`data/refuted/unigram_bpe_content_generalization.md`);
+  mechanism = merged tokens ~1% predictable (BPE welds content across event boundaries). Per-KIND map:
+  timbre (G_STEP/PW_RAMP) learnable 0.5-0.77, **melody (NI_STEP) intrinsically high-entropy 0.18-0.31**
+  (a KNOWN pitch-model property — score onsets by audition not argmax, per `universal_multiresolution_pitch.md`,
+  NOT a fixable gap). **Encoding-density frontier reached:** parametric ramps (MDL POLY/PERIOD gestures) +
+  per-voice note-table pitch are ALREADY shipped (tokens 0.16/0.17, 0.47.0); avg 6.42 atoms/event,
+  ~48% irreducible content digits, **only open structural lever = head-amortization (25.9% marker ceiling,
+  ~10-15% realistic)**. Density is NOT the context lever (real levers = seq_len/windowing + accept melody entropy).
+
 - **2026-06-12 (parallel block pass)** — **tokens 0.50.0**: `_encode_and_save_events` fans the per-dump
   `.0.blocks.npy` encode across a `ThreadPoolExecutor` (mirrors `train_tokenizer`'s uni-write pass — the
   shared tokenizer's Rust encode/decode + zstd cache reads + `np.save` release the GIL, so no tokenizer
