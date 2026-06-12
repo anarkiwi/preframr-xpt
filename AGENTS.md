@@ -4,48 +4,101 @@ This repo is the **experiment surface**: docker-driven runner + spec registry
 + audits + design docs + tier data + refuted registry. Framework, libraries,
 corpus live elsewhere.
 
+> **EVENT-MODEL (Option B → v3 canonical) TOKENS — BUILT, MEASURED, CHIP-VERIFIED; the
+> downstream train run is the open gate — branch `mdl-transition-staging`, release `>=0.47.0` assumed.**
+> The tokens encoding IS the event/tracker model now (`gen2-preframr-tokens/preframr_tokens/events/`,
+> design `REDESIGN_optionB.md` as corrected by `events/STATUS.md` — STATUS supersedes the design doc
+> where they disagree). The production swap is DONE and the encoding is **unconditional** (no macro
+> flags gate any of it): `stream.encode` is the tokenizer (`corpus.preload` → per-dump event blocks →
+> alphabet-agnostic `RegTokenizer`+BPE), `events/generate.py` decodes generated ids to render-ready
+> writes. **The v3 canonical fidelity contract (2026-06-11) replaced the §2.8 byte-order oracle**:
+> the oracle is `stream.canonical_writes(dump)` — settled freq/PW first per voice, globals last,
+> same-value rewrites dropped (chip latch no-ops, reSID-verified), **no NOTE OFF** (gate 1→0 always
+> derived at onset+duration), NOTE_ON owns the envelope lifecycle (onset AD/SR + hard-restart prep
+> pair + duration as NOTE_ON fields), and — measured against reSID this session — **gate-edge
+> crossings are content**: folded envelope writes re-emit on the *recorded side* of the gate edge
+> (driver conventions split; a fixed order is audibly wrong). `encode` self-verifies
+> `decode == canonical_writes` (fail loudly), and raw-vs-canonical **renders at the reSID noise
+> floor on all 5 drivers** (perceptual A/B). Chip semantics are pinned as a 24-test canonical
+> reference in preframr-audio (`test_gate_adsr_reference` / `test_adsr_write_liveness_matrix` /
+> `test_release_write_position`): the ADSR bug is compare-change associated (not gate associated),
+> the (phase × nibble) write-liveness matrix decides what is relocatable, raising sustain mid-note
+> kills the note. **Vocab = 127 fixed atoms** (32 BE-varint digits, 25 regs, 4 voices, 17
+> kinds/shapes, 48 typed value nibbles, KEYFRAME); 96 occur on the corpus sample, the <1% tail is
+> fully explained (headers bounded-by-construction, rare chip features, the proven-irreducible
+> mid-note S/D envelope events). **Measured (59-65 in-scope tunes + 5 drivers): atomic 1.71
+> tok/write, post-BPE 0.21–0.23 tok/write at ~1.8–2.0 bits/write order-0 — 7.8× (order-0) / 23×
+> (order-1) vs the 16-bit raw floor, past the §9 10–14× target.** Learnability layer is in: typed
+> value nibbles (timbre bits are single embeddings), big-endian varints, KEYFRAME chunk conditioning
+> (`dataset.encode_block_array` leads every training chunk with decoder state — mid-song prompts can
+> interpret durations/intervals). Scope: single-speed non-digi (~92% of corpus). ⚠️ **Wire format
+> changed twice on 2026-06-11** (NOTE_ON lifecycle fold; gate-edge side flags): ALL cached parses /
+> blocks / trained BPE merges from before then are stale — bust or disable the dataset cache.
+> Event kinds (actual names): `NOTE_ON`/`CTRL`/`AD`/`SR` (cas lane), `NI_STEP`/`NI_RAMP` (pitch
+> intervals), `FD_STEP`/`FD_RAMP` (freq residual), `PW_STEP`/`PW_RAMP`, `G_STEP`/`G_RAMP` (globals,
+> reg-tagged), `POLY`/`PERIOD` shapes, `TUNING`/`NOTE_TABLE`/`TICK` headers — the design doc's
+> `MOD_*` naming never shipped (§3.1 semantic labels remain cosmetic-open). RETIRED: the whole
+> (op,reg,subreg,val) substrate, ORDER descriptor, PRE primitive, literal/escape paths, gesture
+> codebook, arbiter/Claim, all dead-encoding flags. v1 factored codec remains in-tree as the
+> byte-exact measurement baseline only.
+> **Still open (the actual gate): the downstream model train/generate run on event tokens has never
+> been executed** (host has no torch — needs the image). Release tag 0.47.0 not yet cut; bump the
+> assumed floor in one place (`preframr/requirements.txt` + any spec `_IMAGE` pin) when known.
+
 ## Packages
 
-- **`preframr` 0.2.23** — framework only (train / inference / model / args /
-  parse / stftokenize / utils). Image `anarkiwi/preframr`. No PyPI; ships as the
-  docker image (`0.2.23` + `:latest` published on **`v*` tag via release.yml**, NOT
-  main-push — main-push docker.yml is `push:false`/test-only). Carries the
-  per-op-accuracy gate. Floors `preframr-tokens>=0.46.1` (only **one** req file —
-  `requirements.txt` — floors tokens; the "all 3 req files" lore was wrong).
-  `tier_map.build_op_map` reads
-  op→name from tokens' `op_name_by_id()`. **Macro passes are supplied as ONE
-  validated list** — `apply_macro_flags_to_args` resolves `--macro-flags` /
-  `--macro-config` off the tokens registry (default all-OFF); the old per-flag
-  `--foo-pass` args + `_PIPELINE_NAME_TO_FLAG` + `--pipeline-spec` are gone.
-- **`preframr-tokens` 0.46.1** (PyPI) — torch-free parser/tokenizer + macros
-  + `render_play`. **0.46.1 (universal pitch + table-resid-split):** merged the per-voice
-  universal note-index pitch model (PR #72) + GEN_TABLE NOTE_UNIV residual-split as default-OFF
-  macro flags (`universal_pitch` / `universal_freq` / `table_resid_split`); byte-exact; + a parse fix.
-  These ARE the `pitch_resid_prodlike` target arm. **0.45.1 (generator-op loss tiering):** the generator/codebook ops were
-  MacroPass-emitted (no `Transform` class) so absent from `collect_op_loss_tiers` → all
-  defaulted to `content`, biasing `content_over_structural`. Fixed via
-  `op_contracts.MACRO_OP_LOSS_TIERS` (GEN_TABLE_DEF/END/REF + GEN_TUNING → structural;
-  SWEEP/GEN_TRI/MELODY_INTERVAL/STEP → content). **0.45.0 (generator-MDL default):** the
-  generator pipeline (#62–#68) became the default, per-pass zoo deleted (`freq_trajectory_pass`/
-  `preset_pass`/`ctrl_bigram_pass`/`wavetable_pass`/`skeleton_pass`/… GONE), `GEN_*` ops +
-  reused `SWEEP_OP=64`, instrument-program collapse (#57/#58), melody layers 2 (`MELODY_INTERVAL`)
-  + 3 (`voice_lane`/`role_lane`, #69/#70) **default-OFF**. **Byte-exact** (corpus dirty ~8%→0; 1 known load-dependent
-  outlier `Ascension.1`, debug deferred); STAMP/PATCH/SWEEP/held-ARP/WAVETABLE
-  codebooks; toggleable parse audit (`PREFRAMR_PARSE_AUDIT`). **0.44.0 (residual-SET
-  drain):** raw `SET`s (unmodeled driver mechanisms) on the digi-excluded stride sample
-  drained to **0** — `onset_def` (define-on-first via CTRL_WT), `env_multiload` (AD/SR
-  hard-restart), `pre_gate_freq` (drop/relocate inaudible pre-gate freq — the first
-  AUDIO-exact atom, in `parse_audit._LOSSY_RESETS`), `nibble_wavetable` (CTRL_WT subreg
-  0/1 lanes). All default-OFF, OUT of `REGISTERED_MACROS`. **0.43.0:** codebook ids are
-  pure define→ref ordinals never value-snapped + a `register_state` decode memo (~6.6%
-  parse). 0.42 added PW/filter sweep mining + `op_name_by_id()`/`op_name_tiers()`.
-  0.42.1 fixed the `per_reg_burst` empty-cand+barrier crash + a `FrameWalker` parse speedup.
-- **`preframr-audio` 0.5.6** (PyPI) — SID audio rendering primitives.
+- **`preframr` 0.2.26** (staged; 0.2.25 is the live release) — framework only (train /
+  inference / model / args / parse / stftokenize / utils). Image `anarkiwi/preframr`.
+  No PyPI; ships as the docker image (`:VERSION` + `:latest` published on **`v*` tag via
+  release.yml**, NOT main-push — main-push docker.yml is `push:false`/test-only). Carries
+  the per-op-accuracy gate. **0.2.26 floors `preframr-tokens>=0.47.0`** (the event-model release;
+  only **one** req file — `requirements.txt` — floors tokens). Framework coupling is RESOLVED with
+  no framework source change: `corpus.preload` (tokens-side) still writes per-dump `.0.blocks.npy`
+  + `tokens.csv` + reg-widths and `iter_block_seqs` serves blocks unchanged; the event stream rides
+  the alphabet-agnostic `RegTokenizer`+BPE. Tier/op instrumentation is event-aware via the
+  tokens-side `events/dataset.events_alphabet()` (value-digit atoms → `content`, structural-marker
+  atoms → `structural`, no `FRAME_REG` re-triggering, frame-weights 1.0) and flows registry-driven
+  through `tier_map` → `audit_checkpoint_per_class` → `content_tier_report`, so the decisive
+  `content_over_structural` gate works on event tokens. Residual (minor): the by-op spotlight
+  defaults to FREQ_TRAJ op 45 (absent under events) — rely on the per-tier read until first-class
+  event op names land (gen2 §3.1). Two tests that hardcoded flag NAMES are rewritten
+  registry-driven (pick-or-skip on `macro_flag_names()`); macro passes remain ONE validated list
+  via `apply_macro_flags_to_args`, default all-OFF — but see the flag-surface warning under
+  Tests + runner.
+- **`preframr-tokens` >=0.47.0** (PyPI; staged target — gen2, design `REDESIGN_optionB.md`
+  corrected by `events/STATUS.md`) — torch-free parser/tokenizer + macros + `render_play`.
+  The event model: see banner for the full current state (v3 canonical contract, NOTE_ON
+  envelope lifecycle, recorded gate-edge sides, typed nibbles, KEYFRAME, 127-atom vocab,
+  measured collapse). Key invariants: escape-free complete-value fields over one fixed alphabet
+  (BPE IS the corpus-global dictionary — no DEF/REF, no per-tune bank, no literals); no note-off
+  (derived); mixed-radix `q·tick + r` durations (tempo-invariant; deliberately NOT applied to
+  event-gap DTs — measured harmful); voice-grouped frames (`[DT]([VOICE][events]*)*` — patches are
+  voice-portable for BPE); `encode` self-verifies against `canonical_writes`. Measured + rejected
+  (don't re-propose): §8.4 joint freq/note DP, §2.7 mixed-radix ORDER-DT, DT-in-ticks, POLY degree
+  cap, mid-note R-only fold into NOTE_ON (valid on-chip but buys 0.8% of AD/SR changes — the
+  standalone mid-note bucket is ~94% proven irreducible). Remaining pre-release items —
+  §7.1 generation-time grammar mask (decoder already validates; needed for clean *sampling*, not
+  for training/tier metrics), §3.1 semantic `MOD_*`/GLOBAL labels (cosmetic; unblocks by-op
+  spotlight), §4.1 span inheritance (optimization), dead-codebook code deletion (cosmetic) —
+  **none block the first training run.**
+  **Floor moves when 0.47.0 tags.** (History — gesture model 0.46.x, generator pipeline 0.45.x,
+  instrument collapse 0.44.x, byte-exact 0.41–0.43 — git log + `design/landed/`; superseded.)
+- **`preframr-audio` 0.5.6+** (PyPI) — SID audio rendering primitives + the **chip-semantics
+  canonical reference** (2026-06-11): `tests/test_gate_adsr_reference.py` (the ADSR bug exactly:
+  compare-change associated, write-only freezes in all phases, one-directional, internal handoffs
+  never stall, gate-edge position is content at single-write granularity),
+  `tests/test_adsr_write_liveness_matrix.py` (the (phase × nibble) relocation matrix; equality
+  sustain-hold: raising S mid-note kills the note), `tests/test_release_write_position.py`
+  (R-fold placement rules). Envelope/canonicalization questions are answered from these tests,
+  not by new ad-hoc probes; methodology notes inside (write-count-matched variants, ENV3 verdicts,
+  per-write clocking — collapsed-timing A/Bs MASK placement effects).
 - **`preframr-experiments`** (this repo; editable / PYTHONPATH, no PyPI) —
   runner + specs + `audit/` + tests. Pure orchestration on the host; audits
   import preframr/torch and run inside the **xpt image**.
 
-Sibling source repos: `/scratch/anarkiwi/preframr-{audio,tokens,xpt,aug}` and
+Sibling source repos: `/scratch/anarkiwi/preframr-{audio,tokens,xpt,aug}`,
+`/scratch/anarkiwi/gen2-preframr-tokens` (the event model — canonical
+`preframr-tokens` clone is stale; xpt `base.py` points here), and
 `/scratch/anarkiwi/preframr` (framework).
 
 ## Images
@@ -79,71 +132,61 @@ across engines (stretch) — inside:
 **Operational lens — LEARNABILITY** (`design/references/learnability_token_ordering_theory.md`, the
 design north-star): generalisation is won when the *encoding* lets a bounded (~TC⁰)
 transformer cheaply predict the next token — minimise causal-state + dependency horizon,
-prefer induction-head DEF→REF copy over implicit per-frame counters, order by the driver
-causal DAG. Correctness is the *gate*; compression / parse-perf / deploy are *infra*. A
+prefer induction-head copy over implicit per-frame counters, order by the driver
+causal DAG. Correctness is the *gate*; compression / parse-perf / deploy are *infra*. The event
+model is the direct product of this lens, and its learnability layer is already measured in
+(typed nibbles: H1 5.92→5.81 bits/write with each token more predictable; KEYFRAME gives every
+chunk its interpretive state — the mid-song-prompt goal, attacked at the encoding). A
 training-free triage (`audit/learnability_triage.py`) ranks encodings before a run — run it at
-**prodlike `seq_len=8192`** (the real block/predict scale), not mini. **Mini (4096) is not a
-research dimension**: it mode-collapses in training (`loop_collapse_rate` ~1.0) AND distorts the
-static read via its window size; it's plumbing/cost only. The triage's value is the
-prodlike-*scale* learnability read at mini-*cost* (static, minutes) — reserve training runs for the
-collapse→learning *threshold*. Model-side content interventions were refuted at the ~0.13 ceiling
-that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
+**prodlike `seq_len=8192`**, re-pointed at the event-token stream. **Mini (4096) is not a
+research dimension** (mode-collapses; window distorts the static read) — plumbing/cost only.
+Model-side content interventions were refuted at the ~0.13 ceiling that tokenizer-side
+representation then lifted — the lever is tokenizer-side, which is now the event model itself.
 
-## Current arc — CANONICAL RUN LAUNCHED: `pitch_resid_prodlike` on defroster (2026-06-07)
+## Current arc — FIRST EVENT-MODEL TRAINING RUN (the encoding is done; the run is not)
 
-**THE CANONICAL RUN is live.** `preframr_experiments/specs/pitch_resid_prodlike.py`: prodlike A/B, target =
-`full_macros + universal_pitch + table_resid_split` (per-voice universal note-index for melody onsets AND
-GEN_TABLE arps), baseline = the atomic control (all passes OFF), on `anarkiwi/preframr:0.2.23` (tokens 0.46.1,
-1 seed, tkvocab 32768, seq_len 8192, 60 epochs). Decisive gate = `audit.content_tier_report` (per-tier
-`content_over_structural` + per-op `op_acc`) on the corrected 0.46.1 tier map; secondary = `eval_b_*` held-out
-composer families. Launch: `preframr-experiments-run pitch_resid_prodlike --root <root>` on the GPU host
-(defroster, RTX 4090 — NOT fogbank). ~6–11h/(arm,seed) to a 1-seed cross-arm signal. It **replaces** the stale
-`melody_skeleton_prodlike` (0.45.1 / no residual-split) and the older zoo-macro prodlike specs (NONE run under
-0.46.1).
+The encoding rewrite that was this arc's subject is **complete and verified**: production swap
+done, v3 canonical contract settled and chip-verified (raw-vs-canonical at the reSID noise floor
+on all 5 drivers), corpus-scale collapse measured past target, tier split landed, distribution
+audited. The old reliability saga (arbiter soft-hang, generator mis-encode) is dissolved at the
+root — those mechanisms no longer exist. What has **never happened** is a model consuming event
+tokens: tokenize→train→generate end-to-end is the open gate, and it is operational, not
+scientific.
 
-**Cross-repo propagation DONE.** tokens **0.46.1 on PyPI** (PR #72 universal-pitch merged + table_resid_split +
-#73 generator-op tiering) → framework floor `>=0.46.1` → **`anarkiwi/preframr:0.2.23`** → spec image.
+### NEXT (concrete, in order)
+1. **Smoke the pipeline end-to-end (the gate).** On fogbank/defroster with the existing
+   `anarkiwi/preframr` image, run the `memorize` then `generalize` specs against the bind-mounted
+   gen2 source with the dataset cache disabled:
+   `PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. python3 -m preframr_experiments.run memorize --root <work>`
+   — cache-disable is **mandatory twice over**: the bind-mount doesn't bump the installed-dist
+   cache key, AND the 2026-06-11 wire-format changes (lifecycle fold + side flags) staled every
+   pre-existing parse/blocks/BPE artifact. Pass criteria: parse+tokenize completes (BPE trains on
+   event streams), training runs without loss anomalies, `memorize` reaches its usual
+   near-memorization bar, and generated ids decode through `events/generate.py` without grammar
+   rejections at a usable rate. Capture `audit_checkpoint_per_class` →
+   `content_tier_report` per arm-seed and sanity-check the per-tier numbers on event tokens
+   (ignore the by-op spotlight — event-irrelevant until §3.1).
+2. **Tag + release** `preframr-tokens` 0.47.0 from gen2 (the pre-release leftovers — §7.1 mask,
+   §3.1 labels, §4.1, dead-code — are post-tag work; they don't change the wire format), bump the
+   framework floor where assumed, rebuild `anarkiwi/preframr:0.2.26` + the xpt image so the
+   cache-key version bump fires and runs stop needing the bind-mount/cache-disable pair.
+3. **Triage, then design the canonical learnability run.** Re-point `learnability_triage` at the
+   event stream at seq_len 8192 for the static read, then write the new canonical spec. The
+   meaningful levers are: **BPE merge count / trained vocab size** (the 127-atom alphabet is
+   fixed; merges are the dictionary), **typed-nibble embedding treatment** (NIB_ENV may already
+   deliver what §5.2 perceptual ADSR-tying wanted — check before building it), and KEYFRAME
+   conditioning variants. NOT a macro-pass A/B (no flag surface exists). Gate on per-tier
+   `content_over_structural` + per-op acc over event KINDs + `eval_b_*` held-out composers.
 
-**NFS-hang recovery (2026-06-07).** A first launch died at 99.7% of parse when **fogbank (the `/scratch` NFS
-server) flaked under concurrent load** — a CPU transfer-audit running *on* fogbank + defroster's parse writing
-~34k files *to* it; defroster's `hard` mount turned the server stall into a D-state hang → reboot. Recovered:
-cleaned the partial run (no checkpoint existed — died in parse), relaunched. See NFS hygiene below + memory
-`nfs-hard-mount-hang`. The transfer-audit (`/scratch/tmp/transfer_audit_evalb.py`) was then parallelized
-(multiprocessing Pool, default min(48, nproc) workers) — capped to leave cores for `nfsd`.
-
-**Pitch model (`universal_pitch`/`universal_freq`/`table_resid_split`) IS in 0.46.1** (PR #72 merged). The universal
-recovered-table pitch model (shared NOTE INDEX + per-voice recovered table + per-voice tuning + tuning-invariant
-cents, transfer via intervals; `design/encoding/universal_multiresolution_pitch.md`) is the `pitch_resid_prodlike`
-TARGET arm. Default-OFF flags: `universal_pitch` (re-key melody onsets), `universal_freq` (the bulk-freq probe:
-re-key every sounding HOLD/ACCUM atom on melodic voices, 4.5× more interval atoms), `table_resid_split` (GEN_TABLE
-NOTE_UNIV residual-split). Transfer-audit signal: melup vs mel lifted absolute transfer 0.094→0.157 (+67%) by
-re-keying onsets alone; interval_transfer 0.40 sits below the 2-gram ceiling 0.53 (~0.13 headroom). The CPU mirror
-of `eval_b_*` is `transfer_audit_evalb.py` (now parallelized). Validated EXACT on SWM/defMON/Hubbard/Galway
-(recovered note-index == trackers' own FREQTBL/NOTE_PITCH).
-
-### Why the within-tune triage is NOT the verdict
-- `learnability_triage --mode window` (`--mode blocks` chokes on `GEN_*`): the generator+melody family copy ~0.92
-  ≤ atomic baseline 0.930 — but **within-tune copy is the wrong metric**. It credits trivial redundancy the
-  generator compresses and is blind to the **cross-tune transfer** the note/interval encoding is for
-  (interval transfer 0.40 ≫ absolute 0.09). The verdict is the canonical run, gated on per-tier
-  `content_over_structural` + per-op `op_acc` (all-tier val_acc is confounded across tokenizations).
-- The earlier per-substrate codebook-swap blowup (PW/filter +16/+19/+6pp) is **gone by construction** — PW/cut/
-  res/modevol are ordinary generator channels now. Model-side content interventions were refuted at the ~0.13
-  ceiling that tokenizer-side `full_macros` then lifted — the lever is tokenizer-side representation.
-
-### NEXT
-1. **Canonical run is LAUNCHED** (`pitch_resid_prodlike` on defroster, recovered after the NFS-hang reboot). Read via
-   `audit.content_tier_report` (per-tier `content_over_structural` + per-op `op_acc`); secondary = `eval_b_*`
-   held-out composer generalization. ~6–11h/(arm,seed) to a 1-seed cross-arm signal.
-2. **After the result:** if the pitch arm wins, decide whether to add a `+universal_freq` bulk-freq arm (re-keys the
-   whole pitched-freq stream, not just sparse onsets — the deeper lever) and/or a 3-seed confirm; if it loses,
-   reconcile against the within-block triage being flat (memory `within-block-triage-exhausted`).
-
-### Prior arc (compacted; details in `design/landed/` + git log)
-**Architecture exonerated** — `framework_arch_test` (torchtune llama3_2, mini) gets val 0.903 on UNSEEN synthetic
-motifs: the body generalizes, the SID failure is downstream/representational. Canonical content win confirmed
-×3 seeds (`full_macros` eval_a 0.324 vs 0.219). Mini is plumbing-only (mode-collapses). Op-distribution read on
-the released encoding (`audit_checkpoint_per_class` → `content_tier_report`) precedes the canonical run.
+### Carry-over context that survives
+- **Within-tune triage is NOT the verdict** (`--mode window` credited trivial redundancy, blind to
+  cross-tune transfer); the verdict is the canonical run on per-tier `content_over_structural`.
+  All-tier val_acc is confounded across tokenizations.
+- **Spec surface**: 30 specs were deleted in the staging cut (dead-flag threads + the degenerate
+  macro A/B); surviving runnable specs are `generalize` + `memorize` (infra/build-gate,
+  `baseline=True`, encoding-agnostic). The canonical event-model spec is written post-release.
+- **audits**: `audit/probes/resid_*` don't crash but the residual concept is dead (no residuals;
+  fidelity is the canonical-writes oracle) — historical, don't extend.
 
 ## Tests + runner
 
@@ -157,25 +200,27 @@ the released encoding (`audit_checkpoint_per_class` → `content_tier_report`) p
   One spec module per A/B under `preframr_experiments/specs/`; runner stages
   data → parse → tokenize → train per (arm, seed) in a `docker run` of
   `spec.image`. `nohup ... & disown` for long runs.
-- **Macro passes = one list.** An arm declares its tokenizer passes via
-  `Arm(macro_flags=(...), macro_config="full_macros"|"baseline")` — names from
-  `preframr_tokens.tokenizer_config.MACRO_FLAGS` (the `macro_flag_names()` registry).
-  The runner renders these to `--macro-flags`/`--macro-config`; `apply_macro_flags_to_args`
-  validates each name, adds deps + rejects conflicts (`resolve_flags`), and sets the
-  per-flag attrs. **Default = all passes OFF** (a bare/`baseline=True` arm is truly atomic);
-  `full_macros` = `REGISTERED_MACROS`. There is no more `pipeline_spec` / `--foo-pass`
-  surface (the old hand-maintained argparse flags + `_PIPELINE_NAME_TO_FLAG` map are gone).
+- **Macro passes = one list — and under the event model the list is empty in practice.** The
+  `Arm(macro_flags=..., macro_config=...)` machinery and `apply_macro_flags_to_args` validation
+  survive registry-driven, but the event encoding is **unconditional**: no optional passes gate
+  any primitive, `FLAG_REQUIRES`/`FLAG_CONFLICTS` are empty, and a `full_macros`-vs-`baseline`
+  A/B is **degenerate by construction** (same event stream). The experiment levers are BPE
+  vocab/merges and embedding/conditioning treatments, not macro flags. There is no
+  `pipeline_spec` / `--foo-pass` surface.
 - **Spec-dependent tokenization** (motif / cluster_content / voice_permutation /
   any `pre_run_hook` that mutates staged dumps or mines a per-spec artifact):
   launch with `PREFRAMR_DATASET_CACHE_DISABLE=1`.
-- **Content-tier audit (decisive gate):** per arm-seed, run
+- **Content-tier audit (decisive gate) — event-aware.** Per arm-seed, run
   `audit_checkpoint_per_class --ckpt ... --work-dir ... --out audit_per_class.json`
   in the xpt image (emits `vocab_atom`). Then host-side, torch-free:
   `python3 -m preframr_experiments.audit.content_tier_report --results-root <dir>`
   (+ `--onset` for V0-onset bucket). All-tier val_acc is CONFOUNDED across
-  tokenizations — the content-tier read settles representation A/Bs.
-  Tested readers indexed in `preframr_experiments/audit/README.md`; use them,
-  not bespoke `/scratch/tmp` scripts.
+  tokenizations — the content-tier read settles representation A/Bs. On event-model runs the
+  per-tier `content_over_structural` split is meaningful (value-digit atoms = content,
+  structural-marker atoms = structural, set tokens-side in `events_alphabet`). Caveat: the
+  **by-op spotlight** (default FREQ_TRAJ op 45) is event-irrelevant — per-tier read only,
+  until gen2 §3.1 lands first-class event op names. Tested readers indexed in
+  `preframr_experiments/audit/README.md`; use them, not bespoke `/scratch/tmp` scripts.
 - Outputs under `/scratch/tmp/preframr_experiments/` (or `--root`). Status:
   `check_overnight_batch.sh`; done marker `overnight_batch.done`.
 
@@ -184,9 +229,12 @@ the released encoding (`audit_checkpoint_per_class` → `content_tier_report`) p
 - **Code = frozen baked image by default.** Runs use baked `preframr/`; rebake
   to pick up edits. Working-tree bind-mount is opt-in (`run.py --bind-src` /
   `$PREFRAMR_BIND_SRC=1`) and runs un-gated code — don't use without asking.
+  Exception currently in force: event-model runs bind-mount gen2 until the
+  0.47.0 image rebuild (NEXT step 2), always with the cache disabled.
 - **Background runs:** `nohup`+`disown`; don't poll, use `ScheduleWakeup`.
 - **Comments:** no session narration / dev-local paths / PR numbers;
-  `tests/test_lint.py` rejects narrative `#` and >5-line docstrings.
+  `tests/test_lint.py` rejects narrative `#` and >5-line docstrings (gen2 enforces
+  the same gate — it cost a CI round on 2026-06-11).
 - **NFS hygiene:** **fogbank IS the `/scratch` NFS server**; defroster mounts it
   `hard`, so heavy fogbank-local load (parallel audits / builds) overlapping a
   defroster parse/stage can saturate `nfsd` → defroster D-state hang → reboot
@@ -207,39 +255,35 @@ the released encoding (`audit_checkpoint_per_class` → `content_tier_report`) p
 ### Wallclock anchors
 
 mini body=large ~12-20 min/arm · canonical 60-120 min/arm · prodlike ~6-11 hr
-per (arm, seed). parse+tokenize ~25 min/prodlike uncached.
+per (arm, seed). parse+tokenize ~25 min/prodlike uncached (pre-event numbers;
+re-anchor on the first event-model run).
 
 ## Forward-looking work
 
 ### Land any time
-- **FOLLOW-UP — move the staged tracker round-trip tests into `preframr-tokens/tests/`.**
-  `staging/tokens_tests/` (in THIS repo) holds **written + verified** SWM/defMON forward
-  round-trip tests (`module → register log → generator_pass → decode == player output`,
-  equivalence via `parse_audit='raise'`). These are the §7B Tier-1 / §7.2 tests the generator
-  work order specified but PRs #62–#68 shipped WITHOUT (the agent never wired pysidwizard/
-  pydefmon). Verified green on tokens `main` @ 632f498: **11 passed (6 SWM + 5 defMON), 1
-  skipped (non-`$1800` fixture), 1 xfail** (the unbuilt reverse `log → SWM → log` recompiler,
-  `design/encoding/log_to_swm_recompiler_design.md`). To land: add pysidwizard+pydefmon as **test-only**
-  deps, drop the `conftest.py` source-path shim, provision fixtures via
-  `pysidwizard.tests._swm_cache` + pydefmon's bundled `build/fixtures` (no SID binaries in git),
-  keep the reverse xfail as the recompiler's tracking test. See `staging/tokens_tests/README.md`.
-- **Profile + optimize preframr-tokens parsing** — correct but slow; big share
-  of uncached run setup. Keep the per-frame fidelity oracle green.
+- **FOLLOW-UP (port to event model) — staged tracker round-trip tests in `staging/tokens_tests/`.**
+  SWM/defMON forward round-trip: `module → register log → parse → decode == player output`. Under
+  v3 the target is `stream.canonical_writes` (the audibly-faithful canonical form), checked by
+  `stream.encode(verify=True)` — re-point the staged tests at the event encoder/decoder before
+  landing in tokens `tests/`. Provisioning unchanged (pysidwizard+pydefmon test-only deps, fixtures
+  from caches, no SID binaries in git). `staging/tokens_tests/README.md` generator-era claims stale.
+- **Profile + optimize event parsing/encode** — `encode(verify=True)` doubles work by design;
+  measure whether corpus builds need a verified-once-then-fast path. Keep the self-verify in tests.
 - **Recover control-write-rejected dumps** — characterize dumps rejected for
-  too many control writes; relax/absorb to grow the corpus.
-- **Register-log equivalence gate** — non-negotiable before flipping any
-  tokenizer default + re-cutting training data: the decoded register stream must match
-  the source dumps (same regs/order/delay; control regs exact, FREQ/PW/filter within
-  `freq_tol`) corpus-wide via `cb_div_audit.py`. Same registers/order/delay ⟹ same render
-  by construction — no WAV audition needed (see `design/references/verification_and_audits.md`).
-- **Corpus-scale register-equivalence CI** — run `cb_div_audit.py` over the corpus
-  (within-`freq_tol`), not a WAV `compare_renders` pass.
+  too many control writes; relax/absorb to grow the corpus. Also revisit the multi-speed (~5%)
+  and digi (~3%) exclusions once the single-speed model trains.
+- **Fidelity gate under v3** — superseded machinery: `parse_audit` / `cb_div_audit` /
+  residual-zero census belonged to the retired substrate. The v3 gates are (a) `encode`
+  self-verification (every encode, fail-loudly), (b) the events test suites (5 drivers + 200-tune
+  corpus roundtrip), (c) the chip-semantics reference suites in preframr-audio, (d) the
+  perceptual raw-vs-canonical A/B (tmp probe → worth productizing as a corpus-wide audit).
+  See the updated `design/references/verification_and_audits.md`.
 
 ### Predict-host envelope (queued, post-generalization)
-Lead with: **vocab shrink** (tkvocab ~8× to 4096 — ~91% dead) →
-GPU-resident constrained-decode → full-context audition. Orin is ~4% GPU
-util at predict. Re-open alongside the Multi-GPU rental decision (deferred
-until a generalising approach lands).
+The 127-atom fixed alphabet + chosen BPE vocab replaces the old "~91% dead tkvocab" problem —
+vocab size is now a dial, not a cleanup. Remaining: GPU-resident constrained decode (needs gen2
+§7.1 grammar mask) → full-context audition. Orin is ~4% GPU util at predict. Re-open alongside
+the Multi-GPU rental decision (deferred until a generalising approach lands).
 
 ### Framework follow-ups
 - Streaming unembed-CE — recovers prodlike 2× wall.
@@ -251,21 +295,18 @@ until a generalising approach lands).
   input dtype or per-position buffers stay fp32 and OOM at prodlike
   (pinned by `tests/train/test_per_tier_heads.py::test_bf16_input_preserves_*`).
 
-### Content tier deliberately lossy
-slope/preset/transpose are cent-binned (lossy by design; content-tier-OFF is
-byte-perfect vs raw). Lossless rework deferred.
-
-### Fixtures move-out pending
-SID songs must NOT be tracked here. Build a helper that creates + caches
-fixtures locally (untracked) from HVSC; use Goto80 (not Commando). A 116M
-`engine_fp_palettes.json` was removed from main's working tree; live copies
-are in `data/{canonical,mini}/`.
+### Content tier (v3: canonical-exact, no lossy band at all)
+Every field is a complete value over the fixed alphabet; there is no cent-binning, no
+`freq_tol` band, no escape path, and no residual concept. "Lossless" means **canonical**:
+within-frame settled freq/PW + ordered cas activity + derived gate-offs, with the
+sub-frame transients it canonicalizes away measured masked (−27 dB) and same-value writes
+chip-inert (reSID-verified). The old "content-tier deliberately lossy" caveat is gone.
 
 ## Refuted alternatives
 
 Registry: `preframr_experiments/data/refuted/<exp>.md`. Model-side
 interventions concentrated at the same ~0.13 eval_a content ceiling (since
-lifted by tokenizer-side `full_macros`):
+lifted by tokenizer-side representation):
 
 - `per_tier_heads_mos_prodlike`, `per_tier_heads_entropy_prodlike` — router
   saturates / lambda non-monotonic.
@@ -273,31 +314,43 @@ lifted by tokenizer-side `full_macros`):
   load-bearing.
 - `cluster_conditional_content_head`, `content_diffusion`,
   `contrastive_infonce_auxiliary` — same ceiling.
-- `motif_pass` (v1 exact + v2 templated) — content-tier neutral-to-negative
-  vs no-motif full_macros; no compression.
+- `motif_pass` (v1 exact + v2 templated) — content-tier neutral-to-negative.
 - Earlier nulls: `legato_ab`, `palette_merge`, `head_row_class`,
   `adsr_equivalence`, `macro_coarsening`, `b2_unblock`,
   `palette_pwm_prereqs`, `global_instr_ids_phase_a`, `weighted_token_loss`,
   `learnable_class_loss`, `voice_trajectory` (all variants), `set_to_diff`.
+- Tokens-side, measured + rejected in gen2 (see its STATUS): §8.4 joint freq/note DP,
+  §2.7 mixed-radix ORDER-DT, DT-in-ticks, POLY degree cap, mid-note R-only NOTE_ON fold.
 
 ## Deferred deploy-stage efficiency (post-generalization)
 
-~25% token-budget wins, both refute as generalization bets:
-- **FRAME subsumes VOICE** — header token encodes voice order + write counts.
-- **Drop VOICE_REG** — reg space already disambiguates voice.
+The old FRAME/VOICE_REG token-budget items are obsolete under the event model (no FRAME/VOICE_REG
+markers; voice tokens fell 18.2%→11.1% of the stream via voice-grouped frames). Revisit deploy
+token budget only from real event-model predict traces.
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
-- **2026-06-06** — generator pipeline (#62–#68) + melody layers 2+3 (#69/#70) + instrument collapse (#57/#58)
-  all landed on tokens `main` (unreleased, 0.45.0 held). This session: validated the universal recovered-table
-  pitch model exact on 4 trackers, wired `universal_pitch` (steps 1–3, default-OFF, byte-exact), took over the
-  stopped melody agent, ran the `--mode window` triage (generator family ≤ atomic baseline within-tune; verdict
-  deferred to the canonical run), started 0.45.0 release prep.
-- **2026-06-04** — instrument-program collapse shipped (tokens #56/#57/#58); residual-SET drain → 0 on the
-  sample; tokens 0.44.0 + framework 0.2.20 released. The ~10 note-associated passes collapsed into one
-  define-on-first instrument codebook (residual==0 by construction).
-- **2026-06-02** — byte-exactness DONE (corpus dirty ~8%→0, tokens 0.41.1); tokens 0.42.0 (PW/filter SweepPass,
-  `op_name_by_id`); framework 0.2.17 unified macro-flag surface (`--macro-flags`/`--macro-config`, default all-OFF).
-- **2026-05-21..28** — architecture exonerated (`framework_arch_test` val 0.903 on unseen motifs); substrate
-  ablation lifted FREQ_TRAJ 2.4×; entropy/cluster/diffusion threads refuted at prodlike; libs split to PyPI.
+- **2026-06-11** — **v3 canonical contract + chip-semantics verification + encoding conformance.**
+  The fidelity contract corrected to `canonical_writes` (canonical, not byte-order; PRE primitive
+  removed; NOTE_ON owns the envelope lifecycle; learnability layer measured in: typed nibbles, BE
+  varints, KEYFRAME; voice-grouped frames). The ADSR mechanism was fully characterized in
+  preframr-audio as a 24-test canonical reference (compare-change associated, not gate associated;
+  (phase × nibble) liveness matrix; equality sustain-hold) after a mid-note-AD/SR relocation
+  question escalated into measurement; the audit proved the standalone mid-note bucket ~94%
+  irreducible. The encoding was then made to match: gate-edge crossings are content → folded onset
+  envelope re-emits on the RECORDED side of the gate edge (driver conventions split — a fixed
+  canonical order was audibly wrong on grid_runner at 0.15% samples >500/max Δ 6722) + HR prep on
+  the gate=0 side; raw-vs-canonical now renders at the reSID noise floor on all 5 drivers.
+  Token distribution audited (96/127 atoms, tail explained, 1.706 tok/write atomic). Wire format
+  changed (cache-busting required). AGENTS.md + fidelity/encoding design references rewritten to v3.
+- **2026-06-08** — event-model (Option B) transition staged (branch `mdl-transition-staging`, both
+  repos): framework floor→0.47.0, VERSION→0.2.26, 2 flag-name tests registry-driven; xpt: 30 specs
+  deleted, `generalize`+`memorize` remain; `base.py` tokens source → gen2. Production swap done
+  tokens-side; event-aware tier split landed (`events_alphabet`). Canonical run deferred.
+- **2026-06-06** — generator pipeline + melody layers + instrument collapse landed on the retired
+  substrate (history); `--mode window` triage verdict deferred to canonical.
+- **2026-06-04** — instrument-program collapse shipped; tokens 0.44.0 + framework 0.2.20.
+- **2026-06-02** — byte-exactness DONE on the old substrate (tokens 0.41.1/0.42.0; framework 0.2.17).
+- **2026-05-21..28** — architecture exonerated (`framework_arch_test` val 0.903 on unseen motifs);
+  substrate ablation lifted FREQ_TRAJ 2.4×; libs split to PyPI.
 - **earlier** — see git log + `data/refuted/`.

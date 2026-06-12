@@ -1,84 +1,73 @@
 # Verification & audits — how to check the tokenizer, and the ONE tool for each property
 
-**Status:** Reference (authoritative, 2026-06-06). Written to end recurring confusion between several
-overlapping "is it correct?" checks. There are **two distinct properties** people conflate, each with **one
-canonical tool**. **Do not hand-roll register comparisons** — the trap is documented below (it produced four
-false "divergence" results in one session before the control caught it). Complements
-[`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md) (which *defines* what "same output"
-means); this doc says *how to check it* and *which tool*.
+**Status:** Reference (authoritative, rewritten 2026-06-11 for the v3 event-model canonical
+contract; the previous revision documented the retired (op,reg,subreg,val) substrate's tools —
+`parse_audit` / `cb_div_audit` / residual-zero census — which no longer exist as gates).
+Complements [`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md) (which *defines*
+what "same output" means); this doc says *how to check it* and *which tool*.
 
 ## The two properties (do not conflate)
 
 | property | question | canonical tool | what counts |
 |---|---|---|---|
-| **A. Byte-exact losslessness** | does `decode(parse(dump)) == dump` per-frame? | **`PREFRAMR_PARSE_AUDIT=raise`** (one tune / in tests) → **`cb_div_audit.py`** (corpus) | EXACT_REGS (CTRL/AD/SR/23/24) byte-exact in input order; FREQ within `freq_tol` cents on audible frames; frame-aligned (`best_offset`) + skip-init. |
-| **B. Residual-zero** | does any raw `SET` survive (any unmodeled write)? | **`tests/test_whole_chip_no_singleton_set.py`** (gate) → **`/scratch/tmp/wholechip_census.py`** (corpus census) | count of `op==SET` rows on non-FREQ (and now all) regs; target 0. |
+| **A. Canonical fidelity** | does `decode(encode(dump)) == canonical_writes(dump)` exactly? | **`stream.encode(ow, verify=True)`** (the default — every encode self-verifies, fail-loudly) → events test suites (5 drivers + 200-tune corpus roundtrip in gen2 `tests/test_events_stream.py` / `test_events_roundtrip.py`) | Exact list equality of ordered `(frame, reg, val)` triples vs the canonical form. Zero drops: canonical is an intra-frame permutation + derivation of the dump's writes. |
+| **B. Canonicalization soundness** | is `canonical_writes(dump)` audibly identical to the dump? | **the chip-semantics reference suites** (preframr-audio: `test_gate_adsr_reference`, `test_adsr_write_liveness_matrix`, `test_release_write_position`, `test_register_canonicalization`, `test_freq_write_audibility`, `test_sid_same_value_writes`) + the **perceptual raw-vs-canonical A/B render** (reSID, per-write clocking, `fidelity.perceptual_distance` + sample stats) | Every canonicalization rule cites a measured chip fact; the A/B renders at the reSID noise floor (max&nbsp;Δ ≤ the ±8 render-nondeterminism floor) on the driver fixtures. |
 
-A pipeline can be byte-exact but not residual-zero (a raw `SET` that decodes fine); residual-zero implies the
-modeling is byte-exact. **They are different metrics — name which one you mean.**
+Property A is mechanical and runs on every encode. Property B is where the science lives: each
+rule of the canonical form (settled freq/PW first, globals last, same-value drops, derived
+gate-offs, NOTE_ON envelope folds, recorded gate-edge sides) exists because a preframr-audio test
+measured it faithful — and the rules changed on 2026-06-11 when measurement falsified one
+(the fixed AD,SR-before-gate onset order; see the contract doc).
 
-## A. Byte-exactness — the ONE path, and why not to hand-roll
-The check is layered; **only the top two are user-facing — never call the bottom two directly for a
-verdict:**
-1. **`cb_div_audit.py`** (corpus runner, `/scratch/preframr/cb_div_audit.py`) — parses every Nth tune with
-   `parse_audit='raise'` in parallel and groups DIRTY by `(diverging-pass, reg)`. **This is THE corpus
-   byte-exact gate.** `python3 cb_div_audit.py <STEP> <WORKERS>` (run on fogbank, in the tokens-test image
-   with `PYTHONPATH` to the source under test).
-2. **`PREFRAMR_PARSE_AUDIT=raise`** (env) or `args.parse_audit='raise'` — the in-parse mechanism
-   (`parse_audit.py`/`make_pass_audit`). The parser fires it **after every pass** (`audit.after(df, pass)` in
-   `reglogparser.py`), so a raise names the *exact pass* that broke byte-exactness. **This is THE single-tune
-   / unit-test check.** A tune that parses without raising is byte-exact.
-3. *(primitive, do not use for a verdict)* `sid_frame_diff.diff_dump_vs_pipeline(path, xdf)` /
-   `diff_states(ref, test)` — the oracle: aligns by `best_offset`, EXACT_REGS exact, FREQ cent-tol on audible
-   frames. It is what `parse_audit` calls **at the right stage on the right df**.
-4. *(primitive)* `audit_primitives.register_state(xdf)` → `(F,25)` decoded per-frame state (expands loops);
-   `sid_frame_diff.dump_frame_state(path)` → raw-dump per-frame state.
+## A. Canonical fidelity — the ONE path
 
-**THE TRAP (do not repeat): never compute your own `register_state` diff for a verdict.** Calling
-`diff_dump_vs_pipeline(path, next(parser.parse(path)))` from outside the parser gives **false divergences** —
-`next()` returns only the first block, and the raw-dump-vs-decoded framing / skip-init / alignment is not what
-the in-parse audit applies. **Proof (2026-06-06):** a `baseline` parse (plain `SET`, lossless *by
-construction*) "diverged" on ~65% of tunes under that external usage, yet is **197/197 CLEAN** under
-`PREFRAMR_PARSE_AUDIT=raise`. The control is the tell — if your method flags baseline as dirty, your method is
-wrong. **Always use parse_audit / cb_div_audit; never a bespoke register_state comparison.**
+1. **`stream.encode(ow)`** self-verifies by default (`verify=True`): it decodes its own token
+   stream and asserts exact equality with `stream.canonical_writes(ow)`. A tune that encodes
+   without raising IS canonically faithful. This replaces the old `PREFRAMR_PARSE_AUDIT=raise`.
+2. **Corpus scale:** gen2 `tests/test_events_stream.py::test_corpus_sample_canonical_roundtrip`
+   (200-tune in-scope sample) + the per-driver roundtrip tests. This replaces `cb_div_audit.py`.
+3. *(primitive, not a verdict)* `stream.canonical_writes(ow)` and `events/oracle.ordered_writes(df)`
+   are the building blocks; comparing them by hand reintroduces the old framing/alignment trap —
+   use the self-verify.
 
-**WAV is never the fidelity gate.** Fidelity is entirely a register-level property: the same registers in the
-same input order with the same nominal `_MIN_DIFF` delay render *identically by construction*
-([`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md)). The tools above ARE the gate — for
-byte-exact changes AND for deliberately-lossy content-tier changes (the latter must still land within the
-contract's FREQ/PW/filter `freq_tol` tolerance, which `parse_audit`/`cb_div_audit` already apply). A change that
-diverges beyond that tolerance is invalid; there is no WAV render or listening step. (Rendering/listening only
-makes sense for judging *generated* model output — a separate quality question, not a fidelity check.)
+**Scope guard:** the contract covers single-speed non-digi tunes (`stream.single_speed`,
+`dump_meta.is_digi`). Corpus globs MUST filter; an out-of-scope tune failing the roundtrip is a
+scope bug, not a fidelity bug.
 
-### Related but narrower (keep for debugging, not for the verdict)
-- **`PREFRAMR_ARBITER_STRICT=1`** — raises if any *single pass's claim* changes `register_state` mid-arbitration.
-  A per-pass dev guard; subsumed by `parse_audit` for the end-to-end check. Use it to localize which claim a
-  specific pass mis-emits.
+**The residual-zero property is structural now.** The old "does any raw `SET` survive?" census is
+meaningless under v3: there is no literal/escape path in the grammar at all — every write value
+derives from modeled state by construction. Nothing to audit; the decoder's strict grammar
+(malformed streams raise) is the residue gate.
 
-## B. Residual-zero — the ONE path
-- **`tests/test_whole_chip_no_singleton_set.py`** (in `preframr-tokens`) — the gate: zero raw `SET` on the
-  deployed default. Lives with the code, runs in CI.
-- **`/scratch/tmp/wholechip_census.py`** — the corpus census (per register-class + per-mechanism). Always
-  `reparse=True` (stale `.pq` caches lie). Retire the other census variants (`residual_set_census`,
-  `residual_mechanism.py`) — they duplicate this.
+## B. Canonicalization soundness — measurement, not convention
 
-## Current status (2026-06-06)
-**Deployed default (`full_macros`, `generator_pass`) is byte-exact: 197/197 CLEAN, 0 DIRTY** under
-`PREFRAMR_PARSE_AUDIT=raise` (baseline control also 197/197). Residual-zero is gated by
-`test_whole_chip_no_singleton_set` (the 23/24 tail is drained by `generator_pass`; the gate was un-xfailed in
-PART D).
+The canonical form re-orders and derives writes. Each liberty is licensed by a pinned
+measurement; the authoritative set lives in **preframr-audio's test suites**, indexed in
+[`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md). The operating rules:
 
-## Convergence + cleanup actions
-1. **`cb_div_audit.py` is THE corpus byte-exact tool** — updated to parse under the **deployed default**
-   (`named_config("full_macros")`) instead of the stale hard-coded codebook flag set, so it audits what ships.
-2. **`wholechip_census.py` is THE residual-zero census** — the others are retired.
-3. **Deleted ad-hoc scratch verification scripts** (`/scratch/tmp/cmp_*.py` and the superseded one-offs) — they
-   were the "confusing duplication." Do not re-create them; use the two tools above.
-4. **Anyone adding a correctness check** uses `parse_audit`/`cb_div_audit` (byte-exact) or the whole-chip
-   gate/census (residual-zero). New bespoke `register_state` diffs are a smell — see THE TRAP.
+- **A new canonicalization needs a new measurement.** The method that works (2026-06-11):
+  write-count-matched A/B variants (same-value pads so chunk boundaries and write offsets are
+  identical), real per-write clocking (~32 cycles between writes — collapsed-timing A/Bs MASK
+  placement effects entirely), ENV3 reads for envelope-state verdicts, and the equivalence floor
+  calibrated to the measured ±8 resampler nondeterminism. See the methodology notes in
+  `test_adsr_write_liveness_matrix.py`.
+- **The end-to-end check is the perceptual A/B**: render the dump's raw writes and
+  `canonical_writes` under identical clocking and compare (`fidelity.perceptual_distance`
+  + max-|Δ| / %-samples-over-500). Currently a gen2 tmp probe (`tmp/order_fix_audibility.py`)
+  run on the 5 drivers; **productizing it as a corpus-wide audit is the open follow-up** —
+  it is the v3 successor to the old corpus byte-exact runner.
+  Caveat: `perceptual_distance` destabilizes on near-silent windows (dither dominates the
+  log-band features) — read it jointly with the sample-level stats, never alone.
+- **WAV/listening is still never the gate** for *encoding* changes — but the gate moved one level
+  up: from "same registers in input order ⟹ same render by construction" to "canonical form
+  measured render-equivalent, then exact equality to the canonical form." Rendering only judges
+  *generated* model output (a quality question).
 
-## Where these live (single-source)
-- Primitives + oracle + in-parse: `preframr-tokens/preframr_tokens/{audit_primitives,sid_frame_diff,parse_audit}.py`.
-- Corpus byte-exact runner: `/scratch/preframr/cb_div_audit.py` (loose script — candidate to move into
-  `preframr-tokens` as a `python3 -m preframr_tokens.cb_div_audit` CLI so it versions with the code it audits).
-- Residual-zero gate: `preframr-tokens/tests/test_whole_chip_no_singleton_set.py`; census `/scratch/tmp/wholechip_census.py`.
+## Historical note (the old substrate's tools)
+
+`parse_audit` / `cb_div_audit.py` / `PREFRAMR_ARBITER_STRICT` / the residual-zero census
+(`test_whole_chip_no_singleton_set`, `wholechip_census.py`) verified the retired
+(op,reg,subreg,val) + macro-pass pipeline and its byte-order oracle. They are not the gates for
+the event model and should not be revived for it; their documented trap (never hand-roll a
+`register_state` diff for a verdict) survives in spirit — under v3 the equivalent trap is
+hand-comparing raw vs canonical write lists without the self-verify's exact framing.
