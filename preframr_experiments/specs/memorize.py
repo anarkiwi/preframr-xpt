@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from preframr_experiments.base import Arm, ExperimentSpec
+from preframr_experiments.base import Arm, ExperimentSpec, event_decode_gate
 
 _TRAIN_ARGS = (
     "--model=llama3_2 "
@@ -34,4 +34,5 @@ spec = ExperimentSpec(
     block_stride=256,
     tkvocab=0,
     train_args=_TRAIN_ARGS,
+    predict_gate=event_decode_gate,
 )

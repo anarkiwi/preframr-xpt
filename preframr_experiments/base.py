@@ -22,7 +22,7 @@ PREFLIGHT_DIR = PACKAGE_DIR / "preflight"
 _PREFRAMR_SRC_ENV = "PREFRAMR_SRC_DIR"
 _PREFRAMR_SRC_DEFAULT = Path("/scratch/anarkiwi/preframr/preframr")
 _PREFRAMR_BIND_SRC_ENV = "PREFRAMR_BIND_SRC"
-_PREFRAMR_TOKENS_SRC = Path("/scratch/anarkiwi/gen2-preframr-tokens/preframr_tokens")
+_PREFRAMR_TOKENS_SRC = Path("/scratch/anarkiwi/preframr-tokens/preframr_tokens")
 _PREFRAMR_TOKENS_DST = "/root/.local/lib/python3.12/site-packages/preframr_tokens"
 
 
@@ -633,6 +633,72 @@ def _gpu_available() -> bool:
         ).returncode
         == 0
     )
+
+
+def event_decode_gate(artefacts) -> tuple[bool, str]:
+    """Event-model generate->decode smoke gate. Runs the baked event_gate.py in
+    the spec image (GPU + ``/dumps``): greedily reconstructs each self-contained
+    event block and decodes it via ``events/generate.py``. Pass = mean greedy
+    accuracy >= 0.2 and mean decoded-generation fraction >= 0.5. Parses the
+    ``EVENT_GATE_RESULT`` line; returns (passed, summary)."""
+    image = os.environ.get("PREFRAMR_GATE_IMAGE", "anarkiwi/preframr")
+    dumps = Path(
+        os.environ.get("PREFRAMR_DUMPS_ROOT", "/scratch/preframr/training-dumps")
+    )
+    work_dir = artefacts.work_dir
+    log_path = work_dir / "logs" / "event_gate.log"
+    gate_args = [
+        "/preframr/inference/event_gate.py",
+        "--tb-logs",
+        "/scratch/preframr/tb_logs",
+        "--token-csv",
+        "/scratch/preframr/tokens.csv",
+        "--df-map-csv",
+        "/scratch/preframr/df-map.csv",
+        "--reglogs",
+        "/scratch/preframr/train/**/*dump.parquet",
+        "--predict-set",
+        "train",
+        "--no-compile",
+        "--seq-len",
+        "1200",
+        "--max-seq-len",
+        "1200",
+        "--prompt-seq-len",
+        "128",
+        "--n-prompts",
+        "8",
+        "--gen-tokens",
+        "1100",
+        "--min-acc",
+        "0.2",
+        "--grammar-min",
+        "0.5",
+    ]
+    rc = _docker_run(
+        image,
+        gate_args,
+        bind_root=work_dir,
+        log_path=log_path,
+        gpus=_gpu_available(),
+        extra_volumes=[(dumps.resolve(), "/dumps:ro")],
+        role="inference",
+    )
+    text = log_path.read_text(errors="replace") if log_path.exists() else ""
+    line = next(
+        (ln for ln in text.splitlines() if ln.startswith("EVENT_GATE_RESULT ")), ""
+    )
+    if line:
+        try:
+            data = json.loads(line[len("EVENT_GATE_RESULT ") :])
+            summary = (
+                f"mean_greedy_acc={data.get('mean_greedy_acc'):.3f} "
+                f"mean_decoded_gen_frac={data.get('mean_decoded_gen_frac'):.3f}"
+            )
+            return rc == 0, summary
+        except (ValueError, TypeError):
+            pass
+    return rc == 0, f"event_gate rc={rc}; see {log_path}"
 
 
 def _hvsc_version_check(spec: ExperimentSpec, logger: logging.Logger) -> None:
