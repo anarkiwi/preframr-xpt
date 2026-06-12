@@ -1,0 +1,698 @@
+{
+ "eval_a": {
+  "mean_bits_per_atom_ATOMS": 1.9306930961856512,
+  "mean_bits_per_atom_BPE": 2.7126288536678693,
+  "n_tunes": 80,
+  "tot_atoms": 9290378,
+  "per_tune": [
+   {
+    "dump": "Clarencio_extended.1.dump.parquet",
+    "atoms": 76503,
+    "bpa_atoms": 2.158172017607617,
+    "bpa_bpe": 2.836065496176952
+   },
+   {
+    "dump": "Destroyer.1.dump.parquet",
+    "atoms": 31268,
+    "bpa_atoms": 1.9120267656364096,
+    "bpa_bpe": 2.7694483583619123
+   },
+   {
+    "dump": "Drax_Music.1.dump.parquet",
+    "atoms": 35267,
+    "bpa_atoms": 2.138734381591903,
+    "bpa_bpe": 2.845261696729843
+   },
+   {
+    "dump": "End_Sax.1.dump.parquet",
+    "atoms": 14836,
+    "bpa_atoms": 2.051111600450171,
+    "bpa_bpe": 2.878422403091206
+   },
+   {
+    "dump": "Exorcist.1.dump.parquet",
+    "atoms": 50914,
+    "bpa_atoms": 2.219859094151073,
+    "bpa_bpe": 3.1022532912687053
+   },
+   {
+    "dump": "Fashionable_Fusion.1.dump.parquet",
+    "atoms": 40853,
+    "bpa_atoms": 1.7872806561379484,
+    "bpa_bpe": 2.57652667394931
+   },
+   {
+    "dump": "Lethal_Christmas_tune_2.1.dump.parquet",
+    "atoms": 37988,
+    "bpa_atoms": 2.104388608277099,
+    "bpa_bpe": 2.865241379760701
+   },
+   {
+    "dump": "Scarlet.1.dump.parquet",
+    "atoms": 23985,
+    "bpa_atoms": 1.8882391756760861,
+    "bpa_bpe": 2.6306375412345786
+   },
+   {
+    "dump": "Solo_Mio.1.dump.parquet",
+    "atoms": 35163,
+    "bpa_atoms": 1.9549955510242951,
+    "bpa_bpe": 2.7375826947159934
+   },
+   {
+    "dump": "Square_Out.3.dump.parquet",
+    "atoms": 34580,
+    "bpa_atoms": 1.6941254225563571,
+    "bpa_bpe": 2.5573714166389943
+   },
+   {
+    "dump": "Unboxed_Koffein_6581.1.dump.parquet",
+    "atoms": 131894,
+    "bpa_atoms": 1.8718390887191672,
+    "bpa_bpe": 2.881993186755761
+   },
+   {
+    "dump": "02.1.dump.parquet",
+    "atoms": 11454,
+    "bpa_atoms": 2.149046653401236,
+    "bpa_bpe": 3.165040218772204
+   },
+   {
+    "dump": "24th_Amaranth_GP_2_channels_3.1.dump.parquet",
+    "atoms": 34941,
+    "bpa_atoms": 1.9097807024410967,
+    "bpa_bpe": 2.7110154965416204
+   },
+   {
+    "dump": "BONINTRO.1.dump.parquet",
+    "atoms": 184784,
+    "bpa_atoms": 2.1040462693402837,
+    "bpa_bpe": 2.8781727939904793
+   },
+   {
+    "dump": "EKE.1.dump.parquet",
+    "atoms": 21625,
+    "bpa_atoms": 1.8820359764900676,
+    "bpa_bpe": 2.6433170077006736
+   },
+   {
+    "dump": "GED4.1.dump.parquet",
+    "atoms": 20531,
+    "bpa_atoms": 2.1061635652129125,
+    "bpa_bpe": 2.9231224307710733
+   },
+   {
+    "dump": "Arkanoid.1.dump.parquet",
+    "atoms": 188595,
+    "bpa_atoms": 2.6584410643909027,
+    "bpa_bpe": 3.125394721072908
+   },
+   {
+    "dump": "Athena.1.dump.parquet",
+    "atoms": 24978,
+    "bpa_atoms": 1.3046637585370615,
+    "bpa_bpe": 2.890517062600607
+   },
+   {
+    "dump": "Comic_Bakery.2.dump.parquet",
+    "atoms": 7203,
+    "bpa_atoms": 2.12834775760015,
+    "bpa_bpe": 3.318002684550396
+   },
+   {
+    "dump": "Green_Beret.12.dump.parquet",
+    "atoms": 9867,
+    "bpa_atoms": 1.2533012720857473,
+    "bpa_bpe": 2.620679354120264
+   },
+   {
+    "dump": "Helikopter_Jagd.7.dump.parquet",
+    "atoms": 20125,
+    "bpa_atoms": 0.7945969168232192,
+    "bpa_bpe": 2.79417686392781
+   },
+   {
+    "dump": "Highlander.1.dump.parquet",
+    "atoms": 45172,
+    "bpa_atoms": 2.0207305617122007,
+    "bpa_bpe": 3.047825698856078
+   },
+   {
+    "dump": "Match_Day.1.dump.parquet",
+    "atoms": 21977,
+    "bpa_atoms": 2.1224276896861642,
+    "bpa_bpe": 3.0229218777055986
+   },
+   {
+    "dump": "MicroProse_Soccer_V1.6.dump.parquet",
+    "atoms": 19524,
+    "bpa_atoms": 2.329795630613178,
+    "bpa_bpe": 3.1412939521271754
+   },
+   {
+    "dump": "MicroProse_Soccer_intro.1.dump.parquet",
+    "atoms": 200038,
+    "bpa_atoms": 2.632470634252358,
+    "bpa_bpe": 3.1132001881449116
+   },
+   {
+    "dump": "Neverending_Story.1.dump.parquet",
+    "atoms": 80252,
+    "bpa_atoms": 1.7077518897798964,
+    "bpa_bpe": 2.6438177516630144
+   },
+   {
+    "dump": "Short_Circuit.5.dump.parquet",
+    "atoms": 63067,
+    "bpa_atoms": 2.4444471381124835,
+    "bpa_bpe": 3.300569711046473
+   },
+   {
+    "dump": "Street_Hawk.1.dump.parquet",
+    "atoms": 722592,
+    "bpa_atoms": 2.1632094537013455,
+    "bpa_bpe": 3.135445163471328
+   },
+   {
+    "dump": "Street_Hawk_Prototype.1.dump.parquet",
+    "atoms": 61446,
+    "bpa_atoms": 1.7537585772913935,
+    "bpa_bpe": 2.8922433109814873
+   },
+   {
+    "dump": "Times_of_Lore.4.dump.parquet",
+    "atoms": 68269,
+    "bpa_atoms": 2.185331259913569,
+    "bpa_bpe": 3.144291675068454
+   },
+   {
+    "dump": "Times_of_Lore.8.dump.parquet",
+    "atoms": 26133,
+    "bpa_atoms": 2.0896761820176737,
+    "bpa_bpe": 2.9899778749656027
+   },
+   {
+    "dump": "Wizball.9.dump.parquet",
+    "atoms": 169174,
+    "bpa_atoms": 2.2116629419602867,
+    "bpa_bpe": 2.9466948565966966
+   },
+   {
+    "dump": "Acidroos.1.dump.parquet",
+    "atoms": 74191,
+    "bpa_atoms": 1.912301532541986,
+    "bpa_bpe": 2.929829707631286
+   },
+   {
+    "dump": "Datagoaskit_2002.1.dump.parquet",
+    "atoms": 179810,
+    "bpa_atoms": 1.8366268462225737,
+    "bpa_bpe": 2.742101788186507
+   },
+   {
+    "dump": "Faxanadu.1.dump.parquet",
+    "atoms": 28112,
+    "bpa_atoms": 1.5199636443231348,
+    "bpa_bpe": 2.652260700825114
+   },
+   {
+    "dump": "Feddamys.1.dump.parquet",
+    "atoms": 123203,
+    "bpa_atoms": 1.8848066059172095,
+    "bpa_bpe": 2.7467568393484605
+   },
+   {
+    "dump": "Gopho.1.dump.parquet",
+    "atoms": 179446,
+    "bpa_atoms": 1.7140771436107596,
+    "bpa_bpe": 2.651442563505582
+   },
+   {
+    "dump": "Iceman.1.dump.parquet",
+    "atoms": 27742,
+    "bpa_atoms": 1.594948934322464,
+    "bpa_bpe": 2.707731560157593
+   },
+   {
+    "dump": "Italo_Megamix.1.dump.parquet",
+    "atoms": 126309,
+    "bpa_atoms": 1.9446050235355254,
+    "bpa_bpe": 2.8207556332949766
+   },
+   {
+    "dump": "King_Kong_3.1.dump.parquet",
+    "atoms": 126740,
+    "bpa_atoms": 1.947634014302167,
+    "bpa_bpe": 3.0616929258877854
+   },
+   {
+    "dump": "Kukrot.1.dump.parquet",
+    "atoms": 62164,
+    "bpa_atoms": 1.7801590337525297,
+    "bpa_bpe": 2.887559475207534
+   },
+   {
+    "dump": "Megademo_7_tune_1.1.dump.parquet",
+    "atoms": 35086,
+    "bpa_atoms": 2.13856894824406,
+    "bpa_bpe": 3.0142359954867946
+   },
+   {
+    "dump": "Ponky.1.dump.parquet",
+    "atoms": 55400,
+    "bpa_atoms": 2.4390546504826522,
+    "bpa_bpe": 3.3338682087853178
+   },
+   {
+    "dump": "Rent-A-Cop_Reloaded.8.dump.parquet",
+    "atoms": 13072,
+    "bpa_atoms": 2.2396684886082565,
+    "bpa_bpe": 3.0945497621136426
+   },
+   {
+    "dump": "Rent-A-Cop_Reloaded_preview.1.dump.parquet",
+    "atoms": 28428,
+    "bpa_atoms": 2.4054583463284795,
+    "bpa_bpe": 3.240124216452854
+   },
+   {
+    "dump": "Too_Much.1.dump.parquet",
+    "atoms": 42480,
+    "bpa_atoms": 1.4704871014649803,
+    "bpa_bpe": 2.277032300848071
+   },
+   {
+    "dump": "Truk_Prv.1.dump.parquet",
+    "atoms": 31711,
+    "bpa_atoms": 1.6131365595507177,
+    "bpa_bpe": 2.5137905672311303
+   },
+   {
+    "dump": "Tune_5.1.dump.parquet",
+    "atoms": 126254,
+    "bpa_atoms": 1.319811988506573,
+    "bpa_bpe": 2.2852720851610058
+   },
+   {
+    "dump": "Arcade_Classics.1.dump.parquet",
+    "atoms": 2140691,
+    "bpa_atoms": 1.6379931175292735,
+    "bpa_bpe": 2.201408770661336
+   },
+   {
+    "dump": "Commodore_64_Music_Examples.13.dump.parquet",
+    "atoms": 11823,
+    "bpa_atoms": 1.512868512104336,
+    "bpa_bpe": 2.618257355271977
+   },
+   {
+    "dump": "Confuzion.1.dump.parquet",
+    "atoms": 53678,
+    "bpa_atoms": 1.9915069072574596,
+    "bpa_bpe": 3.021127364890367
+   },
+   {
+    "dump": "Delta_Mix-E-Load_loader.12.dump.parquet",
+    "atoms": 54857,
+    "bpa_atoms": 1.2263505666310852,
+    "bpa_bpe": 1.854408505082101
+   },
+   {
+    "dump": "Delta_Mix-E-Load_loader.8.dump.parquet",
+    "atoms": 34510,
+    "bpa_atoms": 1.3297806703974537,
+    "bpa_bpe": 2.0749640349098772
+   },
+   {
+    "dump": "Dragons_Lair_Part_II.9.dump.parquet",
+    "atoms": 44720,
+    "bpa_atoms": 0.9757761736426842,
+    "bpa_bpe": 1.6324539445630089
+   },
+   {
+    "dump": "Flash_Gordon.7.dump.parquet",
+    "atoms": 2462,
+    "bpa_atoms": 2.887659342979696,
+    "bpa_bpe": 4.104884070146768
+   },
+   {
+    "dump": "Gerry_the_Germ.2.dump.parquet",
+    "atoms": 47297,
+    "bpa_atoms": 1.6668966213120673,
+    "bpa_bpe": 2.6170998997252095
+   },
+   {
+    "dump": "Hollywood_or_Bust.3.dump.parquet",
+    "atoms": 89992,
+    "bpa_atoms": 1.743004567156675,
+    "bpa_bpe": 2.840961895465659
+   },
+   {
+    "dump": "Human_Race.2.dump.parquet",
+    "atoms": 47523,
+    "bpa_atoms": 2.0517074225636627,
+    "bpa_bpe": 2.994901987050669
+   },
+   {
+    "dump": "Radio_ACE.1.dump.parquet",
+    "atoms": 212590,
+    "bpa_atoms": 2.164308384319957,
+    "bpa_bpe": 3.1388449158589857
+   },
+   {
+    "dump": "Ricochet.1.dump.parquet",
+    "atoms": 857469,
+    "bpa_atoms": 1.9330950113797727,
+    "bpa_bpe": 2.53060241728503
+   },
+   {
+    "dump": "Robs_Life.2.dump.parquet",
+    "atoms": 165035,
+    "bpa_atoms": 1.9993187320062773,
+    "bpa_bpe": 2.7832486684217406
+   },
+   {
+    "dump": "Star_Paws.2.dump.parquet",
+    "atoms": 25492,
+    "bpa_atoms": 2.1679222921824985,
+    "bpa_bpe": 3.0981995005305114
+   },
+   {
+    "dump": "Sun_Never_Shines.1.dump.parquet",
+    "atoms": 156411,
+    "bpa_atoms": 2.745518613813498,
+    "bpa_bpe": 3.619825554668905
+   },
+   {
+    "dump": "Thing_on_a_Spring.1.dump.parquet",
+    "atoms": 122033,
+    "bpa_atoms": 1.712909792084815,
+    "bpa_bpe": 2.769178085089269
+   },
+   {
+    "dump": "Afterburner.2.dump.parquet",
+    "atoms": 192913,
+    "bpa_atoms": 2.144487116136244,
+    "bpa_bpe": 2.9440023663995945
+   },
+   {
+    "dump": "Bad_Blood.20.dump.parquet",
+    "atoms": 5222,
+    "bpa_atoms": 1.9655434617432574,
+    "bpa_bpe": 2.9022270565664035
+   },
+   {
+    "dump": "G_I_Hero.2.dump.parquet",
+    "atoms": 23622,
+    "bpa_atoms": 2.108616222680764,
+    "bpa_bpe": 2.771565165906736
+   },
+   {
+    "dump": "Golden_Axe.8.dump.parquet",
+    "atoms": 12637,
+    "bpa_atoms": 2.0583104193716326,
+    "bpa_bpe": 2.8701703223095194
+   },
+   {
+    "dump": "Hawkeye_loader.2.dump.parquet",
+    "atoms": 17922,
+    "bpa_atoms": 1.8710825868546321,
+    "bpa_bpe": 2.4910078675413603
+   },
+   {
+    "dump": "Iets_van_JT.1.dump.parquet",
+    "atoms": 110128,
+    "bpa_atoms": 1.9004037172905253,
+    "bpa_bpe": 2.682553308983571
+   },
+   {
+    "dump": "Its_a_Sin.1.dump.parquet",
+    "atoms": 281241,
+    "bpa_atoms": 2.1416022998317503,
+    "bpa_bpe": 2.939392205825268
+   },
+   {
+    "dump": "Ladys_Own.1.dump.parquet",
+    "atoms": 59758,
+    "bpa_atoms": 1.8171473537049132,
+    "bpa_bpe": 2.666136346843825
+   },
+   {
+    "dump": "Lethal.1.dump.parquet",
+    "atoms": 310947,
+    "bpa_atoms": 2.108642299488325,
+    "bpa_bpe": 3.1989741377712324
+   },
+   {
+    "dump": "Nighthunter.3.dump.parquet",
+    "atoms": 78180,
+    "bpa_atoms": 1.934118409450132,
+    "bpa_bpe": 2.746172837466814
+   },
+   {
+    "dump": "Outrun_Europe_levels.1.dump.parquet",
+    "atoms": 103056,
+    "bpa_atoms": 1.7880643268432275,
+    "bpa_bpe": 2.5789577269353283
+   },
+   {
+    "dump": "Pal_sine_hoener_tune_1.1.dump.parquet",
+    "atoms": 50629,
+    "bpa_atoms": 1.8433337715241236,
+    "bpa_bpe": 2.611786329021492
+   },
+   {
+    "dump": "Poseidon_Planet_Eleven.2.dump.parquet",
+    "atoms": 20065,
+    "bpa_atoms": 1.9491704510746275,
+    "bpa_bpe": 2.7289319414035482
+   },
+   {
+    "dump": "Rubicon.6.dump.parquet",
+    "atoms": 48924,
+    "bpa_atoms": 2.045572432847408,
+    "bpa_bpe": 2.9044953424672038
+   },
+   {
+    "dump": "Turbo_Outrun.11.dump.parquet",
+    "atoms": 37030,
+    "bpa_atoms": 2.1557441976234304,
+    "bpa_bpe": 2.9873032624832776
+   },
+   {
+    "dump": "Viz.1.dump.parquet",
+    "atoms": 96375,
+    "bpa_atoms": 2.2005483974760627,
+    "bpa_bpe": 2.9941322848850356
+   }
+  ]
+ },
+ "eval_b_daglish": {
+  "mean_bits_per_atom_ATOMS": 2.0008428986861753,
+  "mean_bits_per_atom_BPE": 2.9723678088505467,
+  "n_tunes": 16,
+  "tot_atoms": 859965,
+  "per_tune": [
+   {
+    "dump": "Jack_the_Nipper.3.dump.parquet",
+    "atoms": 1606,
+    "bpa_atoms": 1.577486480769167,
+    "bpa_bpe": 2.4288599376254933
+   },
+   {
+    "dump": "Northstar.1.dump.parquet",
+    "atoms": 13884,
+    "bpa_atoms": 2.362743208032876,
+    "bpa_bpe": 3.254264257021246
+   },
+   {
+    "dump": "Biggles.3.dump.parquet",
+    "atoms": 27794,
+    "bpa_atoms": 1.7110804485230586,
+    "bpa_bpe": 2.9379647337663877
+   },
+   {
+    "dump": "Pac-Mania.3.dump.parquet",
+    "atoms": 27481,
+    "bpa_atoms": 2.0082536830260045,
+    "bpa_bpe": 2.9287755022773507
+   },
+   {
+    "dump": "We_M_U_S_I_C_1.4.dump.parquet",
+    "atoms": 35400,
+    "bpa_atoms": 1.8235350746148733,
+    "bpa_bpe": 2.9428562243527434
+   },
+   {
+    "dump": "Hades_Nebula.1.dump.parquet",
+    "atoms": 30762,
+    "bpa_atoms": 1.9870313605843393,
+    "bpa_bpe": 2.833554889279287
+   },
+   {
+    "dump": "Daglish_01.1.dump.parquet",
+    "atoms": 55243,
+    "bpa_atoms": 1.9206477927806065,
+    "bpa_bpe": 2.7834290430924917
+   },
+   {
+    "dump": "We_M_U_S_I_C_1.6.dump.parquet",
+    "atoms": 48098,
+    "bpa_atoms": 1.4516663887131898,
+    "bpa_bpe": 2.7933976304423114
+   },
+   {
+    "dump": "Biggles.2.dump.parquet",
+    "atoms": 63806,
+    "bpa_atoms": 1.7106568949421077,
+    "bpa_bpe": 2.7159535656896425
+   },
+   {
+    "dump": "TechnoCop.1.dump.parquet",
+    "atoms": 61755,
+    "bpa_atoms": 1.964665402948301,
+    "bpa_bpe": 2.8251430942355005
+   },
+   {
+    "dump": "Way_of_the_Tiger.1.dump.parquet",
+    "atoms": 122317,
+    "bpa_atoms": 2.040442508034804,
+    "bpa_bpe": 2.832203224477357
+   },
+   {
+    "dump": "DeathWish_III.1.dump.parquet",
+    "atoms": 60558,
+    "bpa_atoms": 2.003545945347461,
+    "bpa_bpe": 2.9923134165432725
+   },
+   {
+    "dump": "Rolling_Stoned.1.dump.parquet",
+    "atoms": 74042,
+    "bpa_atoms": 2.0728006841830795,
+    "bpa_bpe": 2.9333103706324626
+   },
+   {
+    "dump": "Wizard_Warz.1.dump.parquet",
+    "atoms": 66811,
+    "bpa_atoms": 2.268877218998821,
+    "bpa_bpe": 3.1652035056707533
+   },
+   {
+    "dump": "Greg_Normans_Ultimate_Golf.1.dump.parquet",
+    "atoms": 76295,
+    "bpa_atoms": 2.377992810968239,
+    "bpa_bpe": 3.552126509838977
+   },
+   {
+    "dump": "Last_Ninja.8.dump.parquet",
+    "atoms": 94113,
+    "bpa_atoms": 2.0516703806395356,
+    "bpa_bpe": 3.085408912802286
+   }
+  ]
+ },
+ "eval_b_follin": {
+  "mean_bits_per_atom_ATOMS": 2.221419212653898,
+  "mean_bits_per_atom_BPE": 3.0390362435283738,
+  "n_tunes": 16,
+  "tot_atoms": 560097,
+  "per_tune": [
+   {
+    "dump": "Test_Bits.4.dump.parquet",
+    "atoms": 1998,
+    "bpa_atoms": 2.174854213666652,
+    "bpa_bpe": 3.1613454760279835
+   },
+   {
+    "dump": "Music_Demo_Version_1.12.dump.parquet",
+    "atoms": 14485,
+    "bpa_atoms": 2.1011862958382936,
+    "bpa_bpe": 3.0333416453968796
+   },
+   {
+    "dump": "Sky_Shark.1.dump.parquet",
+    "atoms": 11715,
+    "bpa_atoms": 2.2167957168678716,
+    "bpa_bpe": 2.998666349333001
+   },
+   {
+    "dump": "Music_Demo_Version_1.24.dump.parquet",
+    "atoms": 19710,
+    "bpa_atoms": 2.1456804916207735,
+    "bpa_bpe": 3.0321582603900525
+   },
+   {
+    "dump": "Peter_Pack_Rat.1.dump.parquet",
+    "atoms": 145667,
+    "bpa_atoms": 2.2684700075304693,
+    "bpa_bpe": 2.8975401996881645
+   },
+   {
+    "dump": "Bionic_Commando.9.dump.parquet",
+    "atoms": 25337,
+    "bpa_atoms": 1.8948108204486216,
+    "bpa_bpe": 2.9120859105306733
+   },
+   {
+    "dump": "Bodyslam.4.dump.parquet",
+    "atoms": 28434,
+    "bpa_atoms": 2.402942926005912,
+    "bpa_bpe": 3.2925334575842986
+   },
+   {
+    "dump": "Bionic_Commando.6.dump.parquet",
+    "atoms": 28222,
+    "bpa_atoms": 2.1885064706930355,
+    "bpa_bpe": 3.142541625944777
+   },
+   {
+    "dump": "Sky_Shark.4.dump.parquet",
+    "atoms": 16010,
+    "bpa_atoms": 2.313958680940577,
+    "bpa_bpe": 3.257079696667324
+   },
+   {
+    "dump": "Ghouls_n_Ghosts.2.dump.parquet",
+    "atoms": 16985,
+    "bpa_atoms": 2.3079217922856943,
+    "bpa_bpe": 3.1434471404859505
+   },
+   {
+    "dump": "Music_Demo_Version_1.15.dump.parquet",
+    "atoms": 49051,
+    "bpa_atoms": 2.1987405249101846,
+    "bpa_bpe": 2.9817091639638136
+   },
+   {
+    "dump": "L_E_D_Storm_Alternate.1.dump.parquet",
+    "atoms": 49475,
+    "bpa_atoms": 2.3030812337203628,
+    "bpa_bpe": 3.241622738779695
+   },
+   {
+    "dump": "Music_Demo_Version_1.11.dump.parquet",
+    "atoms": 57321,
+    "bpa_atoms": 2.155896376144399,
+    "bpa_bpe": 3.098884069356269
+   },
+   {
+    "dump": "Music_Demo_Version_1.2.dump.parquet",
+    "atoms": 39731,
+    "bpa_atoms": 2.0627580641989915,
+    "bpa_bpe": 2.7523812214876306
+   },
+   {
+    "dump": "Music_Demo_Version_1.1.dump.parquet",
+    "atoms": 26790,
+    "bpa_atoms": 2.451490698411905,
+    "bpa_bpe": 3.259313432055038
+   },
+   {
+    "dump": "Ghouls_n_Ghosts.11.dump.parquet",
+    "atoms": 29166,
+    "bpa_atoms": 2.1730031824213807,
+    "bpa_bpe": 3.1668358532500354
+   }
+  ]
+ }
+}
