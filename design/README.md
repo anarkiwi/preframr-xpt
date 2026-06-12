@@ -6,16 +6,16 @@ dependency layering, and how to **derive the release process** (PyPI-tag vs
 image-VERSION; the public-PyPI-propagation gotcha). Read it before any cross-repo
 change or release.
 
-**Per-repo architecture references** (all docs live here in preframr-xpt; the code
-they describe lives in the sibling repos under `/scratch/anarkiwi/`):
-- [`tokens_architecture.md`](references/tokens_architecture.md) — **historical parsing
-  reference (superseded 2026-06-11)**: documents the retired (op,reg,subreg,val) substrate;
-  dump format + register map still correct. The current tokenizer is the event model — see
-  gen2 `events/STATUS.md` + the updated
-  [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) /
-  [`verification_and_audits.md`](references/verification_and_audits.md).
-- [`audio_architecture.md`](references/audio_architecture.md) — preframr-audio render pipeline
-  + fidelity oracle.
+**Per-repo architecture references**. The preframr-tokens and preframr-audio API
+references now live in those repos' READMEs (token alphabet / stream grammar /
+fidelity contract in [preframr-tokens](https://github.com/anarkiwi/preframr-tokens);
+render pipeline / fidelity gates / SID chip facts with their pinning tests in
+[preframr-audio](https://github.com/anarkiwi/preframr-audio)). The docs here are
+pointers plus the xpt-internal seams:
+- [`tokens_architecture.md`](references/tokens_architecture.md) — pointer; old
+  revisions (git history) document the retired (op,reg,subreg,val) substrate.
+- [`audio_architecture.md`](references/audio_architecture.md) — pointer + the
+  cross-repo render seam.
 - [`framework_architecture.md`](references/framework_architecture.md) — preframr train/predict/
   model + data path + generation gotchas.
 - [`backlog_tokens_hardening.md`](encoding/backlog_tokens_hardening.md) — the **testing
@@ -98,14 +98,14 @@ updated before the body. Lifecycle:
 | Doc | Summary | Status |
 |---|---|---|
 | [`architecture_overview.md`](references/architecture_overview.md) | The map for deciding *which repo a change belongs in* and *deriving the release process* from the dependency layering. Read before any cross-repo change. | Reference |
-| [`tokens_architecture.md`](references/tokens_architecture.md) | The retired (op,reg,subreg,val) parser + tokenizer: atom/op model, pass framework. Dump format + register map still valid; the shipped tokenizer is the event model (gen2 `events/STATUS.md`). | Reference (superseded 2026-06-11) |
-| [`audio_architecture.md`](references/audio_architecture.md) | preframr-audio render pipeline (parsed DataFrame → PCM via resid-fp) + the fidelity-comparison oracle + fingerprinting. | Reference |
+| [`tokens_architecture.md`](references/tokens_architecture.md) | Pointer → the [preframr-tokens README](https://github.com/anarkiwi/preframr-tokens) (dump format, register map, v3 event alphabet, stream grammar, fidelity contract, parse-domain schema). Old revisions (git history) document the retired (op,reg,subreg,val) substrate. | Pointer (2026-06-12) |
+| [`audio_architecture.md`](references/audio_architecture.md) | Pointer → the [preframr-audio README](https://github.com/anarkiwi/preframr-audio) (render pipeline, fidelity gates, fingerprinting, SID chip facts + pinning tests), plus the xpt cross-repo render seam. | Pointer (2026-06-12) |
 | [`framework_architecture.md`](references/framework_architecture.md) | The torch layer: train/predict/model wrapping tokens (parse+tokenize) and audio (render) with a torchtune body + lightning; the `anarkiwi/preframr` image. | Reference |
 | [`learnability_token_ordering_theory.md`](references/learnability_token_ordering_theory.md) | **The north-star lens** (read before any representation work): theory of cheap next-token representability + the training-free `learnability_triage` that ranks encodings *without a run* (mini mode-collapses regardless of vocab, so it cannot pick direction). | Reference + tool |
 | [`encoding_principles.md`](references/encoding_principles.md) | The orienting rubric for SID stream encoding: **fidelity × context-efficiency × learnability** (priority order), the learnability sub-principles (separability / locality / no-multiplexing / alphabet≠learnability / right-yardstick), and a per-change checklist. Other encoding designs check against this. | Reference |
-| [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) | **Cite, don't re-derive:** SID render timing + the complete envelope mechanism (the ADSR bug is compare-change associated; the (phase × nibble) write-liveness matrix; gate-edge position is content) + the v3 preserved-vs-canonicalized split, each fact citing its preframr-audio test (the 2026-06-11 canonical reference suites). Oracle = `stream.canonical_writes`. | Reference (updated 2026-06-11) |
-| [`verification_and_audits.md`](references/verification_and_audits.md) | **THE how-to-verify reference (v3).** Two properties: **canonical fidelity** → `stream.encode(verify=True)` self-check + events roundtrip suites; **canonicalization soundness** → the chip-semantics suites + the perceptual raw-vs-canonical A/B (productizing corpus-wide = open follow-up). Old `parse_audit`/`cb_div_audit`/residual-census = retired substrate. | Reference (authoritative, rewritten 2026-06-11) |
-| [`voice_encoding_reference.md`](references/voice_encoding_reference.md) | How the 3 SID voices are carried in the token stream: voice is **packed into the FRAME (−128) val** (low 6 bits, base-4 digits = voice+1), NOT in the VOICE (−126) token. `_add_voice_reg` canonicalises reg + emits VOICE delimiters; `remove_voice_reg` inverts. Melody onsets are multiplexed across voices by this header. | Reference |
+| [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) | Pointer: chip facts + pinning tests → [preframr-audio README](https://github.com/anarkiwi/preframr-audio); the v3 preserved-vs-canonicalized split + encode self-verify → [preframr-tokens README](https://github.com/anarkiwi/preframr-tokens). | Pointer (2026-06-12) |
+| [`verification_and_audits.md`](references/verification_and_audits.md) | **THE how-to-verify reference (v3).** Two properties: **canonical fidelity** → tokens README (`stream.encode(verify=True)` self-check + roundtrip suites); **canonicalization soundness** → audio README (chip-semantics suites). Keeps the xpt operating rules (new canonicalization needs new measurement; perceptual A/B = open follow-up) + the retired-substrate history. | Reference (pointerized 2026-06-12) |
+| [`voice_encoding_reference.md`](references/voice_encoding_reference.md) | Pointer → [preframr-tokens README](https://github.com/anarkiwi/preframr-tokens) for the FRAME-val voice-order packing mechanics; keeps the xpt modeling implications (melody is voice-multiplexed; FRAME is load-bearing for content). | Pointer (2026-06-12) |
 | [`sid_driver_ornament_reference.md`](references/sid_driver_ornament_reference.md) | **Background reference:** how C64 SID drivers generate per-frame ornament across pitch, pulse-width, and filter. Two mechanisms: (A) note-index semitone-offset cycles = arps (codebook); (B) parametric/table sweeps = vibrato/portamento/PW/filter. Filter is global; PW/filter sweeps persist across notes; gate-on ≠ note boundary. Sources: defMON, SID Wizard, Hubbard, Galway, C=Hacking #5. | Reference |
 | [`digi_detection_reference.md`](references/digi_detection_reference.md) | Digi techniques + detection (C=Hacking #20; Mahoney's *Musik Run/Stop*), written to refine `dump_meta.is_digi` (which misses PWM digis) and correct a row-count exclusion process error. | Reference |
 | [`release_build_cache.md`](references/release_build_cache.md) | **The one place** for release/build/test/cache: which host runs what (fogbank for non-GPU work; defroster for training), the proxpi cache + how to bust it after a PyPI release, per-repo release procedure (PyPI `v*` tag vs Docker VERSION/base bump), and the build-locally-in-parallel rule. | Reference (authoritative) |
