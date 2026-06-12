@@ -49,14 +49,16 @@ BPE-dictionary run CONCLUDED on the NOT-LEARNED branch (verdict + NEXT below). F
 - **Atoms-only `tkvocab=0` baseline DONE** (stopped epoch 99/100, val_acc 0.561). Content-tier
   (the decisive gate): eval_a **0.479**, eval_b_daglish **0.559**, eval_b_follin **0.416**;
   content/structural 0.72–0.88. ~3.7× the old **~0.13 eval_a content ceiling**, and held-out
-  composers track/beat in-distribution (daglish > eval_a) — **content is learnable and generalises
+  composers track in-distribution (the 24-block sample read daglish > eval_a; at full eval daglish ≈
+  eval_a, 0.516 vs 0.515 — frontier §1 baseline note) — **content is learnable and generalises
   in the event model, even at the no-dictionary floor.** Artifacts: `/scratch/tmp/v3c_final.ckpt`,
   `audit_per_class_{,2,3,final}.json`. (1 seed, 24-block sample; content-tier defn differs from the
   old substrate, so vs-0.13 is directional.)
 - **Live vocab ~98%** at unigram tkvocab=2048 (2015/2048 ids used; the 33 dead are rare base atoms
   absent from the single-speed corpus). Demolishes the old "~91% dead tkvocab" problem — vocab is a
-  **dial with near-full utilisation**. Tunes avg ~30k tokens; **82% exceed seq_len 8192** (mean 4.16
-  KEYFRAME-led windows/tune) — the model trains on self-contained windows, never whole tunes.
+  **dial with near-full utilisation**. Tunes avg ~30k **BPE tokens** (atoms: ~85k mean / ~50k median —
+  frontier §3/§7F); **82% exceed seq_len 8192** (mean 4.16 KEYFRAME-led **BPE** windows/tune;
+  atoms-only ~6 median) — the model trains on self-contained windows, never whole tunes.
 - **EARLY-STOP IS EFFECTIVELY DISABLED under schedule-free (load-bearing gotcha).** Optimizer is
   `AdamWScheduleFree` (no LR schedule/warmup); its averaged eval-iterate val_loss decreases steadily
   (~0.005/epoch) for 100+ epochs, so `EarlyStopping(min_delta=0.01, patience=5)` re-counts an
@@ -98,6 +100,10 @@ The **event-boundary-respecting dictionary is PROMOTED to a live lever** (fronti
 2. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
    stretch: cross-engine generalisation; Orin **offline** predict path (grammar-mask constrained
    decode; real-time is out of reach per `design/performance/orin_inference_optimization_design.md`).
+3. **(PROPOSED)** tokenizer-side: the **event-boundary-respecting dictionary** experiment —
+   `design/encoding/event_boundary_dictionary_proposal.md` (the frontier §6 promoted lever; ~2×
+   context density predicted at ≈parity bits/atom). **Its static triage (minutes) should run
+   BEFORE the #1 seq_len re-cut** — a winning dictionary changes the window math.
 
 Carry-over: **all-tier val_acc is CONFOUNDED** across tokenizations — and per frontier §1a
 **content-tier is too** (population + granularity): cross-tokenization comparisons only

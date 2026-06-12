@@ -96,6 +96,7 @@ git history). What remains open:
 
 | Doc | Summary | Status |
 |---|---|---|
+| [`event_boundary_dictionary_proposal.md`](encoding/event_boundary_dictionary_proposal.md) | Unigram dictionary with merges constrained to never cross event boundaries — implements the frontier §6 promoted lever; predicted ~2× context density at ≈parity bits/canonical-atom; deterministic byte-pack/head packs as fallback. | **PROPOSAL 2026-06-12** — triage-gated; run triage *before* the seq_len 16384 re-cut |
 | [`lane_demux_hypothesis.md`](encoding/lane_demux_hypothesis.md) | Cross-voice de-multiplexing (voice-form) + role/causal-DAG ordering (role-form, accompaniment-before-melody) of the event stream; sync/ring wiring constraints; tractability ladder. | Open hypothesis — **trigger only if canonical runs localize content failure to cross-voice interference**; triage-gated |
 | [`log_to_swm_recompiler_design.md`](encoding/log_to_swm_recompiler_design.md) | Register log → editable SID-Wizard SWM with re-render-equivalence gate (generated tunes become tracker-editable). | Design 2026-06-06 (IR retargeted 2026-06-12) |
 | [`backlog_tokens_hardening.md`](encoding/backlog_tokens_hardening.md) | tokens testing discipline: real-pipeline structural/balance tests through the event codec + the no-skip fixture policy. | Pending impl (retargeted to events 2026-06-12) |
