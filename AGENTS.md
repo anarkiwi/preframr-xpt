@@ -6,9 +6,9 @@ live elsewhere (sibling repos under `/scratch/anarkiwi/`).
 
 ## State (2026-06-12)
 
-The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens 0.48.0 / audio
-0.5.9 (PyPI), preframr 0.2.27 (Docker Hub `:0.2.27`+`:latest`, tag `v0.2.27`), xpt on
-`main` (`ARG BASE=anarkiwi/preframr:0.2.27`). The `memorize` build-gate runs train→generate→decode via event-native
+The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens 0.49.0 / audio
+0.5.9 (PyPI), preframr 0.2.28 (Docker Hub `:0.2.28`+`:latest`, tag `v0.2.28`), xpt on
+`main` (`ARG BASE=anarkiwi/preframr:0.2.28`). The `memorize` build-gate runs train→generate→decode via event-native
 `preframr/inference/event_gate.py` (decodes COMPLETE self-contained blocks, not
 truncated windows). The encoding **is** the event model now (`preframr_tokens/events/`;
 **the authoritative reference is the preframr-tokens README** — alphabet / stream grammar /
@@ -122,15 +122,20 @@ Within-tune `--mode window` triage credits trivial redundancy. Runnable specs: `
 
 ## Packages
 
-- **`preframr` 0.2.27** — framework (train/inference/model/args/parse). Docker image
+- **`preframr` 0.2.28** — framework (train/inference/model/args/parse). Docker image
   `anarkiwi/preframr` (no PyPI). **Release = merge to `main`** (`release.yml` fires on main-push
   AND `v*` tags, `push:true` → `:VERSION`+`:latest`); also `git tag -a vX.Y.Z` each release.
-  Floors `preframr-tokens>=0.48.0` + `preframr-audio>=0.5.9` (in `requirements.txt`,
+  Floors `preframr-tokens>=0.49.0` + `preframr-audio>=0.5.9` (in `requirements.txt`,
   `predict-requirements.txt`, `jetson/predict-requirements.txt`). Tier instrumentation is event-aware
   via tokens-side `events/dataset.events_alphabet()` (value-digit atoms→content, markers→structural).
-- **`preframr-tokens` 0.48.0** (PyPI; canonical repo `/scratch/anarkiwi/preframr-tokens`,
+- **`preframr-tokens` 0.49.0** (PyPI; canonical repo `/scratch/anarkiwi/preframr-tokens`,
   gen2 merged in) — torch-free parser/tokenizer. Event model per the banner. 0.48.0 = ~36%
-  faster warm parse + dead-wood removal (old generator/macro path trimmed; event API intact). Measured + rejected
+  faster warm parse + dead-wood removal; **0.49.0 = tkvocab-independent atom-stream cache**
+  (`events/dataset.dump_token_ids(df, df_file)` reuses a codec-version-keyed `.atoms.zst` sidecar
+  next to the dump, skipping `stream.encode` + its self-verify; bump `ATOM_CACHE_VERSION` on any
+  event-codec change). **NB the parse-stage `.{i}.parquet` sidecars are VESTIGIAL for the event
+  model** — the event tokenizer reads RAW dumps (`_read_dump`); sidecars serve only the old
+  (op,reg,subreg,val) substrate / `predict.py` / `require_pq=True`. Measured + rejected
   (don't re-propose): §8.4 joint freq/note DP, §2.7 mixed-radix ORDER-DT, DT-in-ticks, POLY degree
   cap, mid-note R-only NOTE_ON fold.
 - **`preframr-audio` 0.5.9** (PyPI) — SID rendering + chip-semantics canonical reference
@@ -166,7 +171,9 @@ direct product of this lens; the lever is tokenizer-side. Hub:
 - **Framework**: `./run_tests.sh` (black, pytest, pylint, pyright, coverage ≥77).
 - **xpt**: `pytest tests` at image build (`docker.yml`, push to main + PRs). Host CLI (no torch):
   `PYTHONPATH=. python3 -m preframr_experiments.run <spec> --root <work> [--tkvocab N ...]`.
-  One spec module per A/B under `specs/`; runner stages data → parse → tokenize → train per
+  One spec module per A/B under `specs/`; runner stages data → tokenize → train per (no separate
+  parse stage — the event tokenizer reads raw dumps + reuses the `.atoms.zst` encode cache; pre-encode
+  the corpus with `preframr_experiments/preencode_corpus.sh` on fogbank so vocab sweeps skip the encode)
   (arm, seed) in `docker run` of `spec.image` (via `_docker_run`, which now sets `RUST_MIN_STACK`).
   `nohup … & disown` for long runs.
 - **Macro passes = empty in practice.** The `Arm(macro_flags=…)` machinery survives registry-driven,
@@ -211,6 +218,15 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-12 (atom-stream cache)** — made vocab sweeps skip the encode. Traced the event tokenize:
+  `corpus.preload` reads RAW dumps and the ~33-min cost is the event encode (`dump_token_ids` =
+  `stream.encode` + self-verify, run twice — unigram-input `worker()` + serial `_encode_and_save_events`
+  block pass), tkvocab-INDEPENDENT; the parse-stage `.{i}.parquet` sidecars are unused by events. Built
+  **tokens 0.49.0** `.atoms.zst` atom-stream cache (in-place, realpath-resolved, codec-version-keyed,
+  best-effort write) → **preframr 0.2.28** (floor) → **xpt**: removed the vestigial parse stage from
+  `base.py _run_arm`; added `preframr_experiments/preencode_corpus.{py,sh}` (fault-tolerant, scope-filtered
+  in-place pre-encoder, run on fogbank, `--only-missing` for HVSC upgrades). Pre-encode the corpus once →
+  a tkvocab sweep reuses the encode and only retrains BPE.
 - **2026-06-12 (later)** — **release cascade + canonical 14M relaunch.** Stopped the `_v1`
   `generalize --tkvocab 2048` run; released **tokens 0.48.0** (~36% faster warm parse + dead-wood
   removal; tag `v0.48.0`) and **audio 0.5.9** (SID API-reference docs/tests; tag `v0.5.9`) to PyPI;

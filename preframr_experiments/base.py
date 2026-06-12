@@ -884,7 +884,10 @@ def run_arm(
     src_root: Path,
     logger: logging.Logger,
 ) -> ArmArtefacts:
-    """Stage data + run parse / tokenize / train for one (arm, seed)."""
+    """Stage data + run tokenize / train for one (arm, seed). The event tokenizer reads raw dumps
+    (reusing the in-place ``.atoms.zst`` encode cache when present), so there is no separate parse
+    stage; ``parse_log`` stays on ``ArmArtefacts`` for back-compat but is no longer written.
+    """
     logger.info(
         "experiment=%s arm=%s seed=%d work_dir=%s",
         spec.name,
@@ -944,35 +947,6 @@ def run_arm(
     eval_subdirs = [k for k in data_layout.keys() if k != "train"]
     has_eval = bool(eval_subdirs)
     eval_glob = build_eval_reglogs_arg(Path("/scratch/preframr"), data_layout)
-
-    parse_globs = train_glob
-    if has_eval:
-        eval_globs = ",".join(
-            f"/scratch/preframr/{subdir}/*/*.dump.parquet" for subdir in eval_subdirs
-        )
-        parse_globs = f"{train_glob},{eval_globs}"
-
-    if not cache_hit:
-        parse_args_list = [
-            "/preframr/parse.py",
-            "--no-require-pq",
-            "--max-files",
-            "999999",
-        ]
-        if macro_cli:
-            parse_args_list += shlex.split(macro_cli)
-        parse_args_list += shlex.split(arm.extra_cargs)
-        parse_args_list += ["--reglogs", parse_globs]
-        rc = _docker_run(
-            spec.image,
-            parse_args_list,
-            bind_root=work_dir,
-            log_path=parse_log,
-            memory="32g",
-            extra_volumes=dump_volumes,
-        )
-        if rc != 0:
-            raise RuntimeError(f"parse failed (rc={rc}); see {parse_log}")
 
     tokenize_args = [
         "/preframr/stftokenize.py",
