@@ -27,11 +27,11 @@ measured collapse 7.8× (order-0) / 23× (order-1) vs the 16-bit raw floor. Chip
 pinned as a 24-test reference in preframr-audio. Scope: single-speed non-digi (~92% of corpus).
 Details: `design/references/{verification_and_audits,learnability_token_ordering_theory}.md`.
 
-## Current arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (in progress)
+## Current arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (verdict taken; de-confound audit pending)
 
 The encoding + pipeline are done/shipped; the open arc is the **canonical learnability run
 on event tokens** (scientific, not operational). The atoms-only baseline is DONE and the
-BPE-dictionary run is in flight. Findings so far:
+BPE-dictionary run CONCLUDED on the NOT-LEARNED branch (verdict + NEXT below). Findings:
 
 - **TOKENIZER CRASH + FIX (load-bearing).** Any `tkvocab>0` run hit a hard **SIGSEGV** in the
   `tokenizers` 0.23.1 **UnigramTrainer** — root cause (gdb-confirmed): recursive
@@ -66,60 +66,34 @@ BPE-dictionary run is in flight. Findings so far:
   val_loss is a *real* learning transition — present in the un-averaged train iterate too — only
   ~6× amplified by the averaging, not a schedule artifact.)
 
-### NEXT — the dictionary run is in flight; branch on its content-tier outcome
-**RUNNING (2026-06-12, on the 0.2.29 / tokens 0.50.0 stack):** `generalize --tkvocab 2048` — the
-**canonical ~14M body** (8L-d320-im896) + unigram **tkvocab=2048**, same corpus/holdouts as the
-atoms-only baseline → directly comparable. Root `/scratch/tmp/preframr_experiments/unigram_canonical_v4`
-(fresh; corpus pre-encoded into `.atoms.zst` first, so the tokenize encode is reused — the `.uni.zst`
-worker pass dropped 17min→≤1min; the block pass is now thread-parallel too; `_v1`/`_v2`/`_v3` stopped +
-superseded). RUST_MIN_STACK fix + atom cache + parallel block pass all via the 0.2.29 stack. **Decision metric = content-tier on `eval_b` held-out composers
-vs the baseline** (eval_a 0.479 / daglish 0.559 / follin 0.416), NOT all-tier val_acc. (The ~107M
-`generalize_prodlike_unigram` prodlike variant remains a runnable spec for the scale-up branch, but
-the canonical learnability run is the 14M body.)
+### RESOLVED (2026-06-12) — NOT-LEARNED branch taken; NEXT = the de-confounding audit
+The `generalize --tkvocab 2048` canonical run (root
+`/scratch/tmp/preframr_experiments/unigram_canonical_v4`) came in **~6–11× worse on content-tier**
+than the atoms-only baseline (eval_a 0.049 vs 0.479; daglish 0.088 vs 0.559; follin 0.039 vs 0.416)
+→ **atoms-only (tkvocab=0) is the default; the "BPE dial is THE context lever" framing is
+refuted.** Full decision: `design/encoding/encoding_density_frontier.md` (+ registry entry
+`data/refuted/unigram_bpe_content_generalization.md`). Step 2 of the diagnose branch surfaced real
+artifacts: **the measured magnitude is PROVISIONAL** — (a) population (BPE content-tier scores only
+surviving base atoms — the rare tail unigram didn't merge); (b) granularity (merged-token argmax is
+joint over k atoms; parity ≈0.11–0.23, not 0.48); (c) training (matched epochs = ~3× fewer BPE
+steps; v4 stopped mid-descent, val_loss 7.08→6.27, plateau→steep-drop transition unexcluded).
 
-**IF CONTENT LEARNED** — BPE + capacity ≥ baseline on eval_b content (esp. lifts follin / narrows the
-held-out gap; content/structural holds) → the tokenizer-side lever works, **scale it**:
-1. De-confound: multi-seed + full-eval (`--max-blocks 0`) audit; confirm the eval_b gain is
-   generalisation, not memorisation.
-2. **Sweep the BPE-vocab dial — and read it as THE context lever, not just compression.** Target
-   framing: the **median tune fits ONE 8192 window** (atoms avg ~30k tok/tune; tkvocab 2048 already
-   cuts 2.6× → ~11.5k; the knee is plausibly 8192–16384). That flips "82% exceed the window" →
-   whole-tune structure enters the training distribution, and multiplies musical content in the
-   Orin prompt (PROMPT=2048). Sequence: (a) **static first** — `learnability_triage` on the merged
-   streams at vocab {2048, 4096, 8192, 16384} (minutes): per-frame h_k, induction-copy, and
-   **frames-per-window** (now a scorecard/ledger metric — the quantity that matters); (b) 1–2
-   confirmatory canonical runs at the predicted knee, not all four; (c) watch the two failure
-   modes — P1 welding (inspect the merge table; per-kind `NI_*` content acc) and rare-merge
-   sparsity (live-vocab %, long-tail). Cheap adjacent probe, compounds with the dial:
-   **musically-aligned KEYFRAME windows** (cut at pattern/loop boundaries from the landed corpus
-   structural index; dataset-side only, no alphabet change). `seq_len` 8192→16384 is the
-   brute-force complement — only if the dial saturates with long tunes still split (14M body
-   likely fits 24 GB; costs a dataset re-cut + wallclock).
-3. Stack embedding/conditioning treatments: typed-nibble embeddings (NIB_ENV may already deliver
-   §5.2 perceptual ADSR-tying — check first) + KEYFRAME variants.
-4. Then the **stretch**: cross-*engine* generalisation; re-open the Orin **offline** predict path
-   (grammar-mask constrained decode — real-time single-stream is out of reach, see
-   `design/performance/orin_inference_optimization_design.md`).
+**NEXT, in order:**
+1. **Frontier §7 de-confounding audit** (mostly CPU): bits/canonical-atom + position-matched
+   scoring + matched-steps v4 extension (~300 ep) + NI_STEP anchor/step split + digits-per-value
+   (radix) + full-corpus survey (49k-vs-30k reconciliation, per-marker head breakdown). Outcomes
+   map to actions via frontier §8; artifacts get copied into `data/audit/` (scratch is ephemeral).
+2. **Context arc:** `seq_len` 8192→16384 (verify 24 GB fit before the re-cut) + musically-aligned
+   KEYFRAME windows (dataset-side, from the landed structural index) on atoms-only; whole tunes via
+   register-domain chaining (`design/generation/long_range_structure.md` — now the norm path).
+3. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
+   stretch: cross-engine generalisation; Orin **offline** predict path (grammar-mask constrained
+   decode; real-time is out of reach per `design/performance/orin_inference_optimization_design.md`).
 
-**IF CONTENT NOT LEARNED** — eval_b content ≤ baseline / collapses / the content circuit never forms
-→ BPE/capacity isn't the content lever; **diagnose + re-represent**, don't add capacity (model-side
-is refuted at the 0.13 ceiling):
-1. Localise: per-op acc over event KINDs (which content fails — `NI_*` pitch intervals, `FD_*` freq
-   residual, `PW_*`); eval_b-vs-eval_a gap (memorisation vs generalisation); the per-tier transition
-   shape (did the copy circuit ever turn on?).
-2. Rule out artifacts: enough training (the schedule-free early-stop gotcha), all-tier confounding,
-   the window-triage trap.
-3. **Tokenizer-side interventions** (the only live lever): does BPE merging content+structural atoms
-   muddy the content tier? revisit learnability ordering (DEF→REF / causal-DAG); is the
-   note_index/note_table pitch two-layer learnable; are KEYFRAME segments sufficient for
-   durations/intervals.
-4. Re-run `learnability_triage` at seq_len 8192 to rank encodings before more training. If
-   tokenizer-side *also* can't lift content past the baseline, escalate to a content-layer
-   representation redesign (or re-scope cross-composer content as out-of-envelope).
-
-Carry-over: **all-tier val_acc is CONFOUNDED** across tokenizations — content-tier is the verdict.
-Within-tune `--mode window` triage credits trivial redundancy. Runnable specs: `generalize`,
-`generalize_prodlike_unigram`, `memorize`.
+Carry-over: **all-tier val_acc is CONFOUNDED** across tokenizations — and per frontier §1a
+**content-tier is too** (population + granularity): cross-tokenization comparisons only
+position-matched or in bits/canonical-atom. Within-tune `--mode window` triage credits trivial
+redundancy. Runnable specs: `generalize`, `generalize_prodlike_unigram`, `memorize`.
 
 ## Packages
 
@@ -220,15 +194,22 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
-- **2026-06-12 (BPE refuted + encoding frontier)** — canonical run verdict: **unigram BPE (tkvocab 2048)
-  harms content generalization** ~6-11x vs atoms-only at matched maturity (`data/refuted/unigram_bpe_content_generalization.md`);
-  mechanism = merged tokens ~1% predictable (BPE welds content across event boundaries). Per-KIND map:
-  timbre (G_STEP/PW_RAMP) learnable 0.5-0.77, **melody (NI_STEP) intrinsically high-entropy 0.18-0.31**
-  (a KNOWN pitch-model property — score onsets by audition not argmax, per `universal_multiresolution_pitch.md`,
-  NOT a fixable gap). **Encoding-density frontier reached:** parametric ramps (MDL POLY/PERIOD gestures) +
-  per-voice note-table pitch are ALREADY shipped (tokens 0.16/0.17, 0.47.0); avg 6.42 atoms/event,
-  ~48% irreducible content digits, **only open structural lever = head-amortization (25.9% marker ceiling,
-  ~10-15% realistic)**. Density is NOT the context lever (real levers = seq_len/windowing + accept melody entropy).
+- **2026-06-12 (BPE refuted + encoding frontier; evidence re-scoped same day)** — canonical run
+  verdict: **unigram BPE (tkvocab 2048) harms content generalization** ~6-11x as measured vs
+  atoms-only at matched ~epoch 100 (`data/refuted/unigram_bpe_content_generalization.md`) —
+  **magnitude PROVISIONAL** (population/granularity/steps confounds; de-confound audit specified,
+  frontier §7); mechanism (direction plausibly real) = merged tokens ~1% predictable, below joint
+  parity (BPE welds content across event boundaries — scales WITH vocab, closing the sweep). Scoped
+  ban: unconstrained cross-boundary merges; boundary-respecting dictionary untested/deprioritized.
+  Per-KIND map: timbre (G_STEP/PW_RAMP) learnable 0.5-0.77, **melody (NI_*, the interval lane)
+  high-entropy 0.18-0.31 at this regime** (anchor-vs-step split pending — score onsets by audition
+  not argmax, per `universal_multiresolution_pitch.md`). **Encoding-density frontier:** parametric
+  ramps (MDL under the codec cost model) + per-voice note-table pitch ALREADY shipped (tokens
+  0.16/0.17, 0.47.0); survey-sample avg 6.42 atoms/event, ~49k atoms/tune (vs repo ~30k —
+  reconciliation pending), ~48% content digits (irreducible per P1; radix closed by digits-per-value
+  — pending), **only open structural lever = head-amortization (25.9% marker ceiling, ~10-15%
+  realistic pending per-marker breakdown)**. Density is NOT the context lever (real levers =
+  seq_len/windowing + chaining + accept melody entropy).
 
 - **2026-06-12 (parallel block pass)** — **tokens 0.50.0**: `_encode_and_save_events` fans the per-dump
   `.0.blocks.npy` encode across a `ThreadPoolExecutor` (mirrors `train_tokenizer`'s uni-write pass — the

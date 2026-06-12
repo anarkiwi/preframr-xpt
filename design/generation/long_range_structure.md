@@ -1,15 +1,17 @@
 # Long-range structure — generating whole tunes beyond one window
 
-**Status:** Design (2026-06-12). The model trains on KEYFRAME-led self-contained windows of
-seq_len 8192; tunes average ~30k tokens and **82% exceed one window** (mean ~4.2 windows/tune,
-atoms-only — the **BPE vocab dial is the first-order fix**: tkvocab 2048 already cuts blocks 2.6×,
-and at the dial's knee the *median* tune should fit one window, making chaining the long-tail path
-rather than the norm; see AGENTS.md NEXT). So today the system can continue a prompt for part of a
-tune but has **no mechanism to produce a whole one**, and no measurement of coherence beyond a
-window — this doc covers both, for the tunes that exceed any realistic window and for whole-tune
-generation generally. This doc picks the mechanism and the
-measurement; it deliberately does NOT propose a bigger context or a hierarchical model (out of the
-single-4090 / Orin envelope — refuse in design, per AGENTS.md).
+**Status:** Design (2026-06-12; updated same day — BPE dial refuted). The model trains on
+KEYFRAME-led self-contained windows of seq_len 8192; tunes average ~30k tokens and **82% exceed one
+window** (mean ~4.2 windows/tune, atoms-only). The **BPE vocab dial is REFUTED as the context
+lever** (content harm at matched maturity —
+[`encoding_density_frontier.md`](../encoding/encoding_density_frontier.md); magnitude under a
+de-confound audit, but the dial is not the strategy either way), so **chaining is the NORM path for
+whole tunes, not the long-tail path**. The in-envelope window levers are `seq_len` 8192→16384 +
+musically-aligned KEYFRAME windows (more tune per window — NOT whole tunes; 30k+ ≫ 16384). So today
+the system can continue a prompt for part of a tune but has **no mechanism to produce a whole
+one**, and no measurement of coherence beyond a window — this doc covers both. It picks the
+mechanism and the measurement; it deliberately does NOT propose whole-tune-scale context or a
+hierarchical model (out of the single-4090 / Orin envelope — refuse in design, per AGENTS.md).
 
 ## v1 mechanism: decode-and-recompile chaining
 

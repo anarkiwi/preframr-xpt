@@ -1,9 +1,11 @@
-# Unigram BPE (tkvocab>0) harms content generalization — REFUTED as the context lever
+# Unigram BPE (tkvocab>0) harms content generalization — REFUTED as the context lever (magnitude provisional)
 
-**2026-06-12.** The canonical learnability run (`generalize`, 14M body) compared atoms-only
-(tkvocab=0) vs unigram BPE (tkvocab=2048), same corpus/holdouts.
+**2026-06-12 (evidence re-scoped same day after a confound review — see
+`design/encoding/encoding_density_frontier.md` §1a/§7/§8).** The canonical learnability run
+(`generalize`, 14M body) compared atoms-only (tkvocab=0) vs unigram BPE (tkvocab=2048, ~2.6×
+stream compression), same corpus/holdouts.
 
-**Result (content-tier accuracy, maturity-matched ~epoch 100):**
+**Result (content-tier accuracy, matched ~epoch 100):**
 
 | eval subset | BPE-2048 | atoms-only |
 |---|---|---|
@@ -11,18 +13,28 @@
 | eval_b_daglish | 0.088 | 0.559 |
 | eval_b_follin | 0.039 | 0.416 |
 
-BPE is **~6–11× worse** on content, including held-out composers, at matched maturity (v4 kept
-learning: val_loss 7.08→6.27). Not a training-maturity artifact.
+BPE is **~6–11× worse on content as measured** — but the magnitude is **PROVISIONAL**: (a) the BPE
+column scores only *surviving base atoms* (the rare tail unigram didn't merge) vs ALL content atoms
+for the baseline — different populations by construction; (b) merged-token argmax is joint over k
+atoms (parity for a 2–3-atom merge ≈ 0.11–0.23, not 0.48) — per-token argmax does not compare
+across tokenizations; (c) matched epochs gave BPE ~3× fewer optimizer steps and v4 stopped
+mid-descent (val_loss 7.08→6.27) with the plateau→steep-drop transition unexcluded. The frontier §7
+de-confounding audit (bits/canonical-atom, position-matched scoring, matched-steps extension)
+hardens or revises this entry per the §8 falsifier mapping.
 
-**Mechanism (localized):** merged BPE tokens are ~1% predictable (base atoms 4–8%); BPE welds
-content atoms into multi-atom merges across event boundaries, which are not predictable, and the
-welding degrades the surviving base atoms too. All-tier val_acc is confounded across tokenizations
-(bigger vocab → higher per-token entropy); content-tier is the verdict.
+**Mechanism (localized; direction plausibly real):** merged BPE tokens ~1% argmax-predictable —
+below even the parity-expected ~0.11–0.23 — consistent with BPE welding content atoms into merges
+across event boundaries. All-tier val_acc is confounded across tokenizations (bigger vocab →
+higher per-token entropy); per the above, content-tier is too.
 
-**Conclusion:** unigram/BPE is the wrong lever — it trades content learnability for sequence
-compression. The "BPE dial is THE context lever" framing is refuted. The encoding-density levers
-(parametric ramps, per-voice note-table pitch) are already shipped (tokens 0.16/0.17, 0.47.0);
-remaining density is structural (head overhead), not value-encoding. Melody (NI_STEP) is intrinsically
-high-entropy next-token (score by audition, not argmax) — a known pitch-model property, not a gap.
+**Operational conclusion (stands regardless of magnitude):** atoms-only (tkvocab=0) is the default;
+the "BPE dial is THE context lever" framing is refuted — even at per-atom parity the dial buys no
+content, and the welding mechanism scales WITH vocab (closing the planned vocab sweep). Scoped ban:
+*unconstrained cross-event-boundary merges*; an event-boundary-respecting dictionary is untested and
+deprioritized, not banned (frontier §6). Remaining density is structural (head-amortization
+~10–15%); the context levers are seq_len/windowing + register-domain chaining. Melody (NI_*, the
+interval lane) is high-entropy at this regime — anchor-vs-step split pending (frontier §2/§7D);
+score by audition/distribution, not argmax.
 
-Audit artifacts: `/scratch/tmp/v4_audit*.json`, per-KIND map in session log.
+Audit artifacts: `/scratch/tmp/v4_audit*.json`, per-KIND map in session log — **ephemeral until
+copied into `data/audit/` (frontier §7G)**.
