@@ -6,9 +6,9 @@ live elsewhere (sibling repos under `/scratch/anarkiwi/`).
 
 ## State (2026-06-12)
 
-The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens 0.47.0 / audio
-0.5.8 (PyPI), preframr 0.2.26 (Docker Hub `:0.2.26`+`:latest`, tag `v0.2.26`), xpt on
-`main`. The `memorize` build-gate runs train→generate→decode via event-native
+The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens 0.48.0 / audio
+0.5.9 (PyPI), preframr 0.2.27 (Docker Hub `:0.2.27`+`:latest`, tag `v0.2.27`), xpt on
+`main` (`ARG BASE=anarkiwi/preframr:0.2.27`). The `memorize` build-gate runs train→generate→decode via event-native
 `preframr/inference/event_gate.py` (decodes COMPLETE self-contained blocks, not
 truncated windows). The encoding **is** the event model now (`preframr_tokens/events/`,
 design `REDESIGN_optionB.md` as corrected by `events/STATUS.md` — STATUS wins on conflict)
@@ -66,13 +66,14 @@ BPE-dictionary run is in flight. Findings so far:
   ~6× amplified by the averaging, not a schedule artifact.)
 
 ### NEXT — the dictionary run is in flight; branch on its content-tier outcome
-**RUNNING:** `generalize_prodlike_unigram` (prodlike body ~107M / 16L-d768 + unigram **tkvocab=2048**,
-same corpus/holdouts as the baseline → directly comparable). ~2.2 min/epoch (319 steps/ep; unigram
-cut blocks 2.6× vs atoms-only), GPU uncontended. A per-tier transition watcher
-(`/scratch/tmp/prodlike_per_tier/`) audits every 2 epochs to test whether **content or structural**
-drives the epoch-~22 loss transition (the induction-head hypothesis v3c couldn't answer — only
-post-transition checkpoints survived it). **Decision metric = content-tier on `eval_b` held-out
-composers vs the baseline** (eval_a 0.479 / daglish 0.559 / follin 0.416), NOT all-tier val_acc.
+**RUNNING (2026-06-12, on the 0.2.27 / tokens 0.48.0 stack):** `generalize --tkvocab 2048` — the
+**canonical ~14M body** (8L-d320-im896) + unigram **tkvocab=2048**, same corpus/holdouts as the
+atoms-only baseline → directly comparable. Root `/scratch/tmp/preframr_experiments/unigram_canonical_v2`
+(fresh, re-tokenized against 0.48.0; the earlier `_v1` run was stopped + superseded by this rebuild).
+The RUST_MIN_STACK UnigramTrainer fix is plumbed via `_docker_run`. **Decision metric = content-tier
+on `eval_b` held-out composers vs the baseline** (eval_a 0.479 / daglish 0.559 / follin 0.416), NOT
+all-tier val_acc. (The ~107M `generalize_prodlike_unigram` prodlike variant remains a runnable spec
+for the scale-up branch, but the canonical learnability run is the 14M body.)
 
 **IF CONTENT LEARNED** — BPE + capacity ≥ baseline on eval_b content (esp. lifts follin / narrows the
 held-out gap; content/structural holds) → the tokenizer-side lever works, **scale it**:
@@ -108,16 +109,18 @@ Within-tune `--mode window` triage credits trivial redundancy. Runnable specs: `
 
 ## Packages
 
-- **`preframr` 0.2.26** — framework (train/inference/model/args/parse). Docker image
+- **`preframr` 0.2.27** — framework (train/inference/model/args/parse). Docker image
   `anarkiwi/preframr` (no PyPI). **Release = merge to `main`** (`release.yml` fires on main-push
   AND `v*` tags, `push:true` → `:VERSION`+`:latest`); also `git tag -a vX.Y.Z` each release.
-  Floors `preframr-tokens>=0.47.0` (only `requirements.txt`). Tier instrumentation is event-aware
+  Floors `preframr-tokens>=0.48.0` + `preframr-audio>=0.5.9` (in `requirements.txt`,
+  `predict-requirements.txt`, `jetson/predict-requirements.txt`). Tier instrumentation is event-aware
   via tokens-side `events/dataset.events_alphabet()` (value-digit atoms→content, markers→structural).
-- **`preframr-tokens` 0.47.0** (PyPI; canonical repo `/scratch/anarkiwi/preframr-tokens`,
-  gen2 merged in) — torch-free parser/tokenizer. Event model per the banner. Measured + rejected
+- **`preframr-tokens` 0.48.0** (PyPI; canonical repo `/scratch/anarkiwi/preframr-tokens`,
+  gen2 merged in) — torch-free parser/tokenizer. Event model per the banner. 0.48.0 = ~36%
+  faster warm parse + dead-wood removal (old generator/macro path trimmed; event API intact). Measured + rejected
   (don't re-propose): §8.4 joint freq/note DP, §2.7 mixed-radix ORDER-DT, DT-in-ticks, POLY degree
   cap, mid-note R-only NOTE_ON fold.
-- **`preframr-audio` 0.5.8** (PyPI) — SID rendering + chip-semantics canonical reference
+- **`preframr-audio` 0.5.9** (PyPI) — SID rendering + chip-semantics canonical reference
   (`test_gate_adsr_reference`, `test_adsr_write_liveness_matrix`, `test_release_write_position`).
   Envelope/canonicalization questions are answered from these tests, not ad-hoc probes.
 - **`preframr-experiments`** (this repo; editable/PYTHONPATH, no PyPI) — runner + specs + `audit/`.
@@ -164,7 +167,7 @@ direct product of this lens; the lever is tokenizer-side. Hub:
 
 - **Code = frozen baked image by default.** Runs use baked `preframr/`; rebake to pick up edits.
   Bind-mount is opt-in (`--bind-src` / `$PREFRAMR_BIND_SRC=1`) and runs un-gated code — ask first.
-  The baked `anarkiwi/preframr:0.2.26` is event-model-current (no bind / cache-disable needed).
+  The baked `anarkiwi/preframr:0.2.27` is event-model-current (no bind / cache-disable needed).
 - **Background runs**: `nohup`+`disown`; don't poll, use `ScheduleWakeup` or a tracked wait.
 - **Comments**: no narration / dev-local paths / PR numbers; `tests/test_lint.py` rejects narrative
   `#` and >5-line docstrings (gen2 enforces the same gate).
@@ -191,6 +194,14 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-12 (later)** — **release cascade + canonical 14M relaunch.** Stopped the `_v1`
+  `generalize --tkvocab 2048` run; released **tokens 0.48.0** (~36% faster warm parse + dead-wood
+  removal; tag `v0.48.0`) and **audio 0.5.9** (SID API-reference docs/tests; tag `v0.5.9`) to PyPI;
+  rebaked **preframr 0.2.27** (floors `tokens>=0.48.0` / `audio>=0.5.9`; cuda build gate green on
+  fogbank; pulled to defroster; `:latest`→0.2.27) + xpt `ARG BASE=0.2.27`. De-risked the tokens
+  dead-wood removal: all 27 framework-imported symbols resolve against the 0.48.0 wheel (the
+  `transforms_*_bit_exact` are submodule files, not package attrs — no framework code change).
+  Relaunched the canonical 14M run into `_v2` (re-tokenized on 0.48.0).
 - **2026-06-12** — **first event-model training runs.** `generalize` launched; flushed out the
   UnigramTrainer SIGSEGV (recursive `Rc::drop` stack overflow on long sentences) → fixed with
   `RUST_MIN_STACK` in `_docker_run`; confirmed at full scale. First content-tier numbers (atoms-only
