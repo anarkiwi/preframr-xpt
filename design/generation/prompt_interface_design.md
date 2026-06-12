@@ -45,16 +45,17 @@ textures with engine-specific programs). Mitigations, in order of expected lever
 1. **Reduction augmentation (training-side, the load-bearing bet).** Derive (melody-only prefix →
    full-texture continuation) training pairs from the corpus itself: take a real window, strip
    voices 1–2 (and the lead's ornament, optionally) from the first K frames, keep the target intact.
-   This *teaches arrangement from a lead sheet* with zero new data. Natural home: preframr-aug (it
-   already owns inaudible-perturbation/voice-permutation augmentation); the event encoder makes the
-   reduction trivial (drop the other voices' events; re-encode self-verifies). Run as an A/B arm:
-   reduction-augmented vs not, judged on phrase-prompted cohort quality (below) with no regression
-   on plain continuation.
+   This *teaches arrangement from a lead sheet* with zero new data. Natural home: preframr-aug,
+   beside [`transplant_augmentation_design.md`](transplant_augmentation_design.md) (same
+   register-domain splice machinery; transplants attack the melody×timbre binding, reduction
+   attacks the texture-completion task). Run as an A/B arm: reduction-augmented vs not, judged on
+   phrase-prompted cohort quality (below) with no regression on plain continuation.
 2. **Prompt scaffolding (inference-side, cheap).** Embed the phrase in a more corpus-like scaffold:
    phrase on voice 0 + a minimal drum/bass vamp vs bare. A/B by the off-manifold probe + quality
    gate; pick per-use-case.
-3. **Patch realism.** Sample the default instrument program from corpus statistics (common
-   (waveform, AD, SR) programs) instead of one fixed patch.
+3. **Patch realism.** Sample the default instrument program from the mined **instrument bank**
+   ([`transplant_augmentation_design.md`](transplant_augmentation_design.md) P0) instead of one
+   fixed patch.
 
 **Off-manifold probe (cheap, run first):** mean per-token CE of the trained model on compiled
 prompts vs natural prompts. If compiled prompts are wildly out-of-distribution the model will ignore

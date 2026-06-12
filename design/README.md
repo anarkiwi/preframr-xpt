@@ -112,6 +112,7 @@ quality gate lands first (it is what makes the rest measurable).
 | [`generation_quality_gate.md`](generation/generation_quality_gate.md) | **Land first.** Standard generation cohort + scorecard: pathology flags (loop/diversity/invalid), write-domain structure metrics vs corpus, chip-native fingerprint distance (FAD analogue), **memorization audit** (n-gram novelty + longest verbatim match), minimal blind A/B protocol; picks the sampling regime; event-grammar mask port folded in. Necessary-not-sufficient beside the content tier. | Design 2026-06-12 |
 | [`prompt_interface_design.md`](generation/prompt_interface_design.md) | The phrase compiler: MIDI/keyboard phrase → synthetic one-voice dump → `encode(verify=True)` → native prompt block. Distribution shift attacked by **reduction augmentation** (melody-prefix → full-texture pairs from the corpus), scaffolding A/Bs, patch realism; exemplar prompting before conditioning atoms; phrase-adherence gate. | Design 2026-06-12 |
 | [`long_range_structure.md`](generation/long_range_structure.md) | Whole tunes via **decode-and-recompile chaining** (re-canonicalize decoded writes into fresh self-contained KEYFRAME blocks — state exact by construction); long-horizon coherence metrics; evidence-gated escalation to section-exemplar conditioning; hierarchical models rejected (envelope). | Design 2026-06-12 |
+| [`transplant_augmentation_design.md`](generation/transplant_augmentation_design.md) | **Data side:** donor/host melody & instrument transplants (breaking the melody×timbre spurious binding — distributional P1) + the **mined instrument bank** (P0, feeds the phrase compiler's patch realism). Register-domain splice + `encode(verify=True)` ⇒ zero pipeline changes; train-split-only leakage rule; dosage A/B on eval_b content. Impl home: preframr-aug. | Design 2026-06-12 |
 
 ## measurement/ — prediction-side metrics & gates
 
@@ -183,9 +184,11 @@ quality gate builds on).
 
 **Elsewhere (not in this repo):**
 - `preframr-tokens:pipeline_trace.py` — torch-free pass-by-pass pipeline tracer (parse-domain).
-- `preframr-aug:design/melody_transfer_augmentation_design.md` — offline corpus expansion; the
-  **reduction augmentation** of [`prompt_interface_design.md`](generation/prompt_interface_design.md)
-  belongs beside it.
+- `preframr-aug:design/melody_transfer_augmentation_design.md` — offline corpus expansion. Its
+  cross-song-transfer axis is superseded by
+  [`transplant_augmentation_design.md`](generation/transplant_augmentation_design.md) (v3-native);
+  inaudible perturbation + voice permutation remain there. The **reduction augmentation** of
+  [`prompt_interface_design.md`](generation/prompt_interface_design.md) belongs beside both.
 
 Open (not a design doc): productize the corpus-scale **canonicalization-soundness** perceptual
 raw-vs-canonical A/B (see [`verification_and_audits.md`](references/verification_and_audits.md)).
