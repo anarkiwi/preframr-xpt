@@ -4,9 +4,15 @@ This repo is the **experiment surface**: docker-driven runner + spec registry
 + audits + design docs + tier data + refuted registry. Framework, libraries,
 corpus live elsewhere.
 
-> **EVENT-MODEL (Option B → v3 canonical) TOKENS — BUILT, MEASURED, CHIP-VERIFIED; the
-> downstream train run is the open gate — branch `mdl-transition-staging`, release `>=0.47.0` assumed.**
-> The tokens encoding IS the event/tracker model now (`gen2-preframr-tokens/preframr_tokens/events/`,
+> **EVENT-MODEL (Option B → v3 canonical) TOKENS — BUILT, MEASURED, CHIP-VERIFIED, and now
+> SHIPPED + train→generate→decode GREEN (2026-06-12).** tokens 0.47.0 / audio 0.5.8 (PyPI),
+> preframr 0.2.26 (Docker Hub `:0.2.26`+`:latest`, tagged `v0.2.26`), xpt on `main` based on
+> `:0.2.26`. The `memorize` build-gate runs train→generate→decode end-to-end (event-native
+> `preframr/inference/event_gate.py`, wired as its `predict_gate`): last run mean greedy acc 0.929,
+> mean decoded-gen fraction 0.960, PASS. NEXT-1 and NEXT-2 below are DONE; the open arc is the
+> canonical learnability run (NEXT-3). Canonical tokens repo is `/scratch/anarkiwi/preframr-tokens`
+> (gen2 merged in — forget the gen2 path).
+> The tokens encoding IS the event/tracker model now (`preframr_tokens/events/`,
 > design `REDESIGN_optionB.md` as corrected by `events/STATUS.md` — STATUS supersedes the design doc
 > where they disagree). The production swap is DONE and the encoding is **unconditional** (no macro
 > flags gate any of it): `stream.encode` is the tokenizer (`corpus.preload` → per-dump event blocks →
@@ -41,9 +47,9 @@ corpus live elsewhere.
 > (op,reg,subreg,val) substrate, ORDER descriptor, PRE primitive, literal/escape paths, gesture
 > codebook, arbiter/Claim, all dead-encoding flags. v1 factored codec remains in-tree as the
 > byte-exact measurement baseline only.
-> **Still open (the actual gate): the downstream model train/generate run on event tokens has never
-> been executed** (host has no torch — needs the image). Release tag 0.47.0 not yet cut; bump the
-> assumed floor in one place (`preframr/requirements.txt` + any spec `_IMAGE` pin) when known.
+> **Train→generate→decode is GREEN and shipped** (2026-06-12, `memorize` gate via `event_gate.py`);
+> tokens 0.47.0 + preframr 0.2.26 (tag `v0.2.26`) are released. The open arc is the canonical
+> learnability run (see Current arc / NEXT-3).
 
 ## Packages
 
@@ -69,8 +75,8 @@ corpus live elsewhere.
   registry-driven (pick-or-skip on `macro_flag_names()`); macro passes remain ONE validated list
   via `apply_macro_flags_to_args`, default all-OFF — but see the flag-surface warning under
   Tests + runner.
-- **`preframr-tokens` >=0.47.0** (PyPI; staged target — gen2, design `REDESIGN_optionB.md`
-  corrected by `events/STATUS.md`) — torch-free parser/tokenizer + macros + `render_play`.
+- **`preframr-tokens` 0.47.0** (PyPI; LIVE — canonical repo `/scratch/anarkiwi/preframr-tokens`,
+  design `REDESIGN_optionB.md` corrected by `events/STATUS.md`) — torch-free parser/tokenizer + macros + `render_play`.
   The event model: see banner for the full current state (v3 canonical contract, NOTE_ON
   envelope lifecycle, recorded gate-edge sides, typed nibbles, KEYFRAME, 127-atom vocab,
   measured collapse). Key invariants: escape-free complete-value fields over one fixed alphabet
@@ -147,40 +153,37 @@ research dimension** (mode-collapses; window distorts the static read) — plumb
 Model-side content interventions were refuted at the ~0.13 ceiling that tokenizer-side
 representation then lifted — the lever is tokenizer-side, which is now the event model itself.
 
-## Current arc — FIRST EVENT-MODEL TRAINING RUN (the encoding is done; the run is not)
+## Current arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (smoke green + shipped; the canonical run is open)
 
-The encoding rewrite that was this arc's subject is **complete and verified**: production swap
-done, v3 canonical contract settled and chip-verified (raw-vs-canonical at the reSID noise floor
-on all 5 drivers), corpus-scale collapse measured past target, tier split landed, distribution
-audited. The old reliability saga (arbiter soft-hang, generator mis-encode) is dissolved at the
-root — those mechanisms no longer exist. What has **never happened** is a model consuming event
-tokens: tokenize→train→generate end-to-end is the open gate, and it is operational, not
-scientific.
+The encoding rewrite AND the end-to-end pipeline are **done and shipped** (2026-06-12): production
+swap done, v3 canonical contract chip-verified, corpus-scale collapse measured past target, tier
+split landed — and now tokens 0.47.0 / audio 0.5.8 (PyPI), preframr 0.2.26 (Docker Hub + tag
+`v0.2.26`), xpt on `main`. The `memorize` build-gate validates train→generate→decode end-to-end via
+the event-native `event_gate.py` (acc 0.929, decoded-gen-frac 0.960, PASS). The old reliability saga
+(arbiter soft-hang, generator mis-encode) is dissolved at the root. What has **never happened** is
+the canonical learnability run on event tokens — that is the open arc, scientific not operational.
 
 ### NEXT (concrete, in order)
-1. **Smoke the pipeline end-to-end (the gate).** On fogbank/defroster with the existing
-   `anarkiwi/preframr` image, run the `memorize` then `generalize` specs against the bind-mounted
-   gen2 source with the dataset cache disabled:
-   `PREFRAMR_DATASET_CACHE_DISABLE=1 PYTHONPATH=. python3 -m preframr_experiments.run memorize --root <work>`
-   — cache-disable is **mandatory twice over**: the bind-mount doesn't bump the installed-dist
-   cache key, AND the 2026-06-11 wire-format changes (lifecycle fold + side flags) staled every
-   pre-existing parse/blocks/BPE artifact. Pass criteria: parse+tokenize completes (BPE trains on
-   event streams), training runs without loss anomalies, `memorize` reaches its usual
-   near-memorization bar, and generated ids decode through `events/generate.py` without grammar
-   rejections at a usable rate. Capture `audit_checkpoint_per_class` →
-   `content_tier_report` per arm-seed and sanity-check the per-tier numbers on event tokens
-   (ignore the by-op spotlight — event-irrelevant until §3.1).
-2. **Tag + release** `preframr-tokens` 0.47.0 from gen2 (the pre-release leftovers — §7.1 mask,
-   §3.1 labels, §4.1, dead-code — are post-tag work; they don't change the wire format), bump the
-   framework floor where assumed, rebuild `anarkiwi/preframr:0.2.26` + the xpt image so the
-   cache-key version bump fires and runs stop needing the bind-mount/cache-disable pair.
-3. **Triage, then design the canonical learnability run.** Re-point `learnability_triage` at the
-   event stream at seq_len 8192 for the static read, then write the new canonical spec. The
-   meaningful levers are: **BPE merge count / trained vocab size** (the 127-atom alphabet is
-   fixed; merges are the dictionary), **typed-nibble embedding treatment** (NIB_ENV may already
-   deliver what §5.2 perceptual ADSR-tying wanted — check before building it), and KEYFRAME
-   conditioning variants. NOT a macro-pass A/B (no flag surface exists). Gate on per-tier
-   `content_over_structural` + per-op acc over event KINDs + `eval_b_*` held-out composers.
+1. **DONE — smoke the pipeline end-to-end.** `memorize` trains→generates→decodes on current-wire
+   event tokens on the baked `anarkiwi/preframr:0.2.26` image (no bind, no cache-disable);
+   `event_gate.py` is wired as its `predict_gate`. **Methodology that matters:** the gate decodes
+   COMPLETE self-contained blocks (`--gen-tokens ≥ block_len`), NOT a truncated window —
+   `stream.decode` raises or returns empty on a mid-frame cut and frame boundaries are sparse in
+   dense songs, so a fixed window gives confounded zeros. Per-tier `content_tier_report` capture
+   still applies (ignore the by-op spotlight until §3.1).
+2. **DONE — release.** tokens 0.47.0 + audio 0.5.8 (PyPI), preframr 0.2.26 (Docker Hub `:0.2.26` +
+   `:latest`, tagged `v0.2.26`), xpt `ARG BASE`→0.2.26 on `main`. The framework was reconciled with
+   0.47.0 (`args.py` `NAMED_CONFIGS` is now a TUPLE → `named_config()`; 3 stale regdataset/macro
+   tests). Runs no longer need the bind-mount / cache-disable pair.
+3. **NOW — run `generalize`, triage, then design + run the canonical learnability spec.** First run
+   the `generalize` spec (held-out composers + Eval-A; canonical tier, its own val_acc
+   `predict_gate`). Then re-point `learnability_triage` at the event stream at seq_len 8192 for the
+   static read, and write the canonical event-model spec. Meaningful levers: **BPE merge count /
+   trained vocab size** (the 127-atom alphabet is fixed; merges are the dictionary),
+   **typed-nibble embedding treatment** (NIB_ENV may already deliver what §5.2 perceptual ADSR-tying
+   wanted — check before building it), and KEYFRAME conditioning variants. NOT a macro-pass A/B (no
+   flag surface exists). Gate on per-tier `content_over_structural` + per-op acc over event KINDs +
+   `eval_b_*` held-out composers.
 
 ### Carry-over context that survives
 - **Within-tune triage is NOT the verdict** (`--mode window` credited trivial redundancy, blind to
@@ -233,8 +236,9 @@ scientific.
 - **Code = frozen baked image by default.** Runs use baked `preframr/`; rebake
   to pick up edits. Working-tree bind-mount is opt-in (`run.py --bind-src` /
   `$PREFRAMR_BIND_SRC=1`) and runs un-gated code — don't use without asking.
-  Exception currently in force: event-model runs bind-mount gen2 until the
-  0.47.0 image rebuild (NEXT step 2), always with the cache disabled.
+  The 0.47.0/0.2.26 bind+cache-disable exception is RETIRED: the baked
+  `anarkiwi/preframr:0.2.26` image is event-model-current, so runs use it
+  directly (no bind, no cache-disable).
 - **Background runs:** `nohup`+`disown`; don't poll, use `ScheduleWakeup`.
 - **Comments:** no session narration / dev-local paths / PR numbers;
   `tests/test_lint.py` rejects narrative `#` and >5-line docstrings (gen2 enforces
@@ -334,6 +338,15 @@ token budget only from real event-model predict traces.
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-12** — **event model SHIPPED + train→generate→decode GREEN (NEXT-1/2 done).** Found the
+  framework's generate/decode path unported (`predict.py`→old macros walker, crashes on event
+  tokens); built event-native `preframr/inference/event_gate.py` (greedy gen → `events/generate.py`
+  decode of COMPLETE self-contained blocks; mean greedy acc 0.929 / decoded-gen-frac 0.960, PASS),
+  wired as `memorize`'s `predict_gate`. Reconciled the framework with tokens 0.47.0 (`args.py`
+  `NAMED_CONFIGS` is now a tuple → `named_config()`; 3 stale regdataset/macro tests). Released:
+  preframr 0.2.26 (Docker Hub `:0.2.26`+`:latest`, tag `v0.2.26`), xpt `ARG BASE`→0.2.26 on `main`.
+  Doc fix: framework releases on **main-push** (`release.yml` `push:true`), not tag-only; tag every
+  release going forward. Open arc → canonical learnability run (NEXT-3).
 - **2026-06-11** — **v3 canonical contract + chip-semantics verification + encoding conformance.**
   The fidelity contract corrected to `canonical_writes` (canonical, not byte-order; PRE primitive
   removed; NOTE_ON owns the envelope lifecycle; learnability layer measured in: typed nibbles, BE
