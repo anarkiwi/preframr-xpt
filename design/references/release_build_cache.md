@@ -70,7 +70,10 @@ not the git tag).
 
 - **preframr:** bump `VERSION`, floor the lib in **all** req files (`requirements.txt`,
   `predict-requirements.txt`, `jetson/predict-requirements.txt`), commit, push `main`
-  → `release.yml` publishes cuda + slim `-predict`/`-xpu`/`-jetson`.
+  → `release.yml` publishes cuda + slim `-predict`/`-xpu`/`-jetson`. **Then tag the
+  release: `git tag -a vX.Y.Z <released-main-sha> -m ... && git push origin vX.Y.Z`** —
+  every shipped VERSION gets a matching git tag (a version with no tag is useless). The
+  tag re-fires `release.yml` and re-pushes the identical image; that's expected/harmless.
 - **preframr-xpt:** bump `ARG BASE=anarkiwi/preframr:<v>` in the `Dockerfile` + the
   per-spec `image=` pins, push `main` → `docker.yml` builds (`push:false`, build IS the
   test gate; the runnable xpt image is baked locally).
