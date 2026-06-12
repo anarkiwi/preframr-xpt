@@ -53,7 +53,10 @@ A dedicated block at the top of the cross-arm report:
   — the cross-composer transfer signal; the `evalb_stratify` probe becomes this);
 - `loop_collapse` / `prompt_conditioning` flags;
 - tokenizer health (`longtail_frac`, `worst_family_longtail_frac`,
-  `alphabet_size`, `encoded_tokens_per_song` — the registry metrics).
+  `alphabet_size`, `encoded_tokens_per_song` — the registry metrics);
+- **`frames_per_window`** (musical context per seq_len window, + the fraction of tunes fitting one
+  window) — the read for the BPE-dial-as-context-lever sweep (AGENTS.md NEXT): more music in
+  context is the point of the dial, so track it per tokenizer-hash, not just vocab size.
 
 The family spread is the load-bearing read: a wide spread (e.g. STAGE 2's
 0.245–0.556) says failure is engine-family-specific → targeted augmentation, not

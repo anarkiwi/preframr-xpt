@@ -1,9 +1,13 @@
 # Long-range structure — generating whole tunes beyond one window
 
 **Status:** Design (2026-06-12). The model trains on KEYFRAME-led self-contained windows of
-seq_len 8192; tunes average ~30k tokens and **82% exceed one window** (mean ~4.2 windows/tune). So
-today the system can continue a prompt for part of a tune but has **no mechanism to produce a whole
-one**, and no measurement of coherence beyond a window. This doc picks the mechanism and the
+seq_len 8192; tunes average ~30k tokens and **82% exceed one window** (mean ~4.2 windows/tune,
+atoms-only — the **BPE vocab dial is the first-order fix**: tkvocab 2048 already cuts blocks 2.6×,
+and at the dial's knee the *median* tune should fit one window, making chaining the long-tail path
+rather than the norm; see AGENTS.md NEXT). So today the system can continue a prompt for part of a
+tune but has **no mechanism to produce a whole one**, and no measurement of coherence beyond a
+window — this doc covers both, for the tunes that exceed any realistic window and for whole-tune
+generation generally. This doc picks the mechanism and the
 measurement; it deliberately does NOT propose a bigger context or a hierarchical model (out of the
 single-4090 / Orin envelope — refuse in design, per AGENTS.md).
 

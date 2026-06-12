@@ -80,8 +80,20 @@ for the scale-up branch, but the canonical learnability run is the 14M body.)
 held-out gap; content/structural holds) → the tokenizer-side lever works, **scale it**:
 1. De-confound: multi-seed + full-eval (`--max-blocks 0`) audit; confirm the eval_b gain is
    generalisation, not memorisation.
-2. **Sweep the BPE-vocab dial** (2048 → 4096 → 8192…) for where content saturates (98% live ⇒
-   headroom); pick the knee and write the canonical event-model spec at it.
+2. **Sweep the BPE-vocab dial — and read it as THE context lever, not just compression.** Target
+   framing: the **median tune fits ONE 8192 window** (atoms avg ~30k tok/tune; tkvocab 2048 already
+   cuts 2.6× → ~11.5k; the knee is plausibly 8192–16384). That flips "82% exceed the window" →
+   whole-tune structure enters the training distribution, and multiplies musical content in the
+   Orin prompt (PROMPT=2048). Sequence: (a) **static first** — `learnability_triage` on the merged
+   streams at vocab {2048, 4096, 8192, 16384} (minutes): per-frame h_k, induction-copy, and
+   **frames-per-window** (now a scorecard/ledger metric — the quantity that matters); (b) 1–2
+   confirmatory canonical runs at the predicted knee, not all four; (c) watch the two failure
+   modes — P1 welding (inspect the merge table; per-kind `NI_*` content acc) and rare-merge
+   sparsity (live-vocab %, long-tail). Cheap adjacent probe, compounds with the dial:
+   **musically-aligned KEYFRAME windows** (cut at pattern/loop boundaries from the landed corpus
+   structural index; dataset-side only, no alphabet change). `seq_len` 8192→16384 is the
+   brute-force complement — only if the dial saturates with long tunes still split (14M body
+   likely fits 24 GB; costs a dataset re-cut + wallclock).
 3. Stack embedding/conditioning treatments: typed-nibble embeddings (NIB_ENV may already deliver
    §5.2 perceptual ADSR-tying — check first) + KEYFRAME variants.
 4. Then the **stretch**: cross-*engine* generalisation; re-open the Orin **offline** predict path
