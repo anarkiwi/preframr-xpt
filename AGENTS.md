@@ -6,9 +6,9 @@ live elsewhere (sibling repos under `/scratch/anarkiwi/`).
 
 ## State (2026-06-12)
 
-The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens 0.49.0 / audio
-0.5.9 (PyPI), preframr 0.2.28 (Docker Hub `:0.2.28`+`:latest`, tag `v0.2.28`), xpt on
-`main` (`ARG BASE=anarkiwi/preframr:0.2.28`). The `memorize` build-gate runs train→generate→decode via event-native
+The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens 0.50.0 / audio
+0.5.9 (PyPI), preframr 0.2.29 (Docker Hub `:0.2.29`+`:latest`, tag `v0.2.29`), xpt on
+`main` (`ARG BASE=anarkiwi/preframr:0.2.29`). The `memorize` build-gate runs train→generate→decode via event-native
 `preframr/inference/event_gate.py` (decodes COMPLETE self-contained blocks, not
 truncated windows). The encoding **is** the event model now (`preframr_tokens/events/`;
 **the authoritative reference is the preframr-tokens README** — alphabet / stream grammar /
@@ -67,12 +67,12 @@ BPE-dictionary run is in flight. Findings so far:
   ~6× amplified by the averaging, not a schedule artifact.)
 
 ### NEXT — the dictionary run is in flight; branch on its content-tier outcome
-**RUNNING (2026-06-12, on the 0.2.28 / tokens 0.49.0 stack):** `generalize --tkvocab 2048` — the
+**RUNNING (2026-06-12, on the 0.2.29 / tokens 0.50.0 stack):** `generalize --tkvocab 2048` — the
 **canonical ~14M body** (8L-d320-im896) + unigram **tkvocab=2048**, same corpus/holdouts as the
-atoms-only baseline → directly comparable. Root `/scratch/tmp/preframr_experiments/unigram_canonical_v3`
-(fresh; the corpus was pre-encoded into `.atoms.zst` first, so the tokenize encode is reused — the
-`.uni.zst` worker pass dropped 17min→≤1min; `_v1`/`_v2` stopped + superseded). RUST_MIN_STACK fix +
-atom cache both via the 0.2.28 stack. **Decision metric = content-tier on `eval_b` held-out composers
+atoms-only baseline → directly comparable. Root `/scratch/tmp/preframr_experiments/unigram_canonical_v4`
+(fresh; corpus pre-encoded into `.atoms.zst` first, so the tokenize encode is reused — the `.uni.zst`
+worker pass dropped 17min→≤1min; the block pass is now thread-parallel too; `_v1`/`_v2`/`_v3` stopped +
+superseded). RUST_MIN_STACK fix + atom cache + parallel block pass all via the 0.2.29 stack. **Decision metric = content-tier on `eval_b` held-out composers
 vs the baseline** (eval_a 0.479 / daglish 0.559 / follin 0.416), NOT all-tier val_acc. (The ~107M
 `generalize_prodlike_unigram` prodlike variant remains a runnable spec for the scale-up branch, but
 the canonical learnability run is the 14M body.)
@@ -123,15 +123,16 @@ Within-tune `--mode window` triage credits trivial redundancy. Runnable specs: `
 
 ## Packages
 
-- **`preframr` 0.2.28** — framework (train/inference/model/args/parse). Docker image
+- **`preframr` 0.2.29** — framework (train/inference/model/args/parse). Docker image
   `anarkiwi/preframr` (no PyPI). **Release = merge to `main`** (`release.yml` fires on main-push
   AND `v*` tags, `push:true` → `:VERSION`+`:latest`); also `git tag -a vX.Y.Z` each release.
-  Floors `preframr-tokens>=0.49.0` + `preframr-audio>=0.5.9` (in `requirements.txt`,
+  Floors `preframr-tokens>=0.50.0` + `preframr-audio>=0.5.9` (in `requirements.txt`,
   `predict-requirements.txt`, `jetson/predict-requirements.txt`). Tier instrumentation is event-aware
   via tokens-side `events/dataset.events_alphabet()` (value-digit atoms→content, markers→structural).
-- **`preframr-tokens` 0.49.0** (PyPI; canonical repo `/scratch/anarkiwi/preframr-tokens`,
+- **`preframr-tokens` 0.50.0** (PyPI; canonical repo `/scratch/anarkiwi/preframr-tokens`,
   gen2 merged in) — torch-free parser/tokenizer. Event model per the banner. 0.48.0 = ~36%
-  faster warm parse + dead-wood removal; **0.49.0 = tkvocab-independent atom-stream cache**
+  faster warm parse + dead-wood removal; **0.50.0 = thread-parallel block-encode pass**
+  (`_encode_and_save_events`); **0.49.0 = tkvocab-independent atom-stream cache**
   (`events/dataset.dump_token_ids(df, df_file)` reuses a codec-version-keyed `.atoms.zst` sidecar
   next to the dump, skipping `stream.encode` + its self-verify; bump `ATOM_CACHE_VERSION` on any
   event-codec change). **NB the parse-stage `.{i}.parquet` sidecars are VESTIGIAL for the event
@@ -219,6 +220,11 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-12 (parallel block pass)** — **tokens 0.50.0**: `_encode_and_save_events` fans the per-dump
+  `.0.blocks.npy` encode across a `ThreadPoolExecutor` (mirrors `train_tokenizer`'s uni-write pass — the
+  shared tokenizer's Rust encode/decode + zstd cache reads + `np.save` release the GIL, so no tokenizer
+  pickling). With the atom cache the per-dump encode is already cheap; this kills the remaining serial
+  wall (v2 ~19min serial). → **preframr 0.2.29** (floor) → xpt base bump. Relaunched as `_v4`.
 - **2026-06-12 (atom-stream cache)** — made vocab sweeps skip the encode. Traced the event tokenize:
   `corpus.preload` reads RAW dumps and the ~33-min cost is the event encode (`dump_token_ids` =
   `stream.encode` + self-verify, run twice — unigram-input `worker()` + serial `_encode_and_save_events`
