@@ -100,10 +100,13 @@ The **event-boundary-respecting dictionary is PROMOTED to a live lever** (fronti
 2. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
    stretch: cross-engine generalisation; Orin **offline** predict path (grammar-mask constrained
    decode; real-time is out of reach per `design/performance/orin_inference_optimization_design.md`).
-3. **(PROPOSED)** tokenizer-side: the **event-boundary-respecting dictionary** experiment —
-   `design/encoding/event_boundary_dictionary_proposal.md` (the frontier §6 promoted lever; ~2×
-   context density predicted at ≈parity bits/atom). **Its static triage (minutes) should run
-   BEFORE the #1 seq_len re-cut** — a winning dictionary changes the window math.
+3. **(STAGED — runbook ready)** tokenizer-side: the **event-boundary-respecting dictionary**
+   experiment — design: `design/encoding/event_boundary_dictionary_proposal.md`; tokens-side
+   mechanics: `WORK_ORDER_event_boundary_dictionary.md` on preframr-tokens main (in flight);
+   xpt-side execution: **`WORK_ORDER_boundary_dictionary_ab.md` (repo root — execute once tokens
+   0.51.0 lands;** covers the release cascade, triage kill-gate, canonical A/B, gates, writeback,
+   and deletes itself). **Its static triage (minutes) runs BEFORE the #1 seq_len re-cut** — a
+   winning dictionary changes the window math.
 
 Carry-over: **all-tier val_acc is CONFOUNDED** across tokenizations — and per frontier §1a
 **content-tier is too** (population + granularity): cross-tokenization comparisons only
