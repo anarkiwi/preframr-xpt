@@ -6,9 +6,9 @@ canonical learnability run, a corpus encoding survey, and the §7 audit (results
 `data/audit/deconfound_summary.md`). Verdict: **the atoms-only event encoding (tkvocab=0) is the
 shipped default and the content-correct representation; *unconstrained* unigram/BPE is refuted as the
 content/context lever — but the 6–11× argmax harm was CONFOUND-DOMINATED (all three §1a confounds
-confirmed real). The true model-quality gap is ~1.4× in bits/canonical-atom (§7A), ~2–4× in
-position-matched argmax (§7B), and STILL SHRINKING with matched steps (§7C) — modest, not
-catastrophic.** Because the gap is small and the mechanism is boundary-crossing welding, an
+confirmed real). The true model-quality gap is ~1.4× in bits/canonical-atom at ep174 (§7A), ~2–4× in
+position-matched argmax (§7B), and SHRINKS to ~1.2–1.3× at the matched-steps endpoint (§7C, ep299 —
+still descending) — modest, not catastrophic.** Because the gap is small and the mechanism is boundary-crossing welding, an
 **event-boundary-respecting dictionary is promoted to a live lever** (§6). Value-encoding density:
 **digit radix is a live ~12%-of-stream polish lever** (§3/§7E, not dead) scoped to multi-digit varint
 lanes; head-amortization recoverable share is **17.4%** (§4/§7F). Neither is a context lever: tunes
@@ -30,6 +30,10 @@ audit artifacts in `data/audit/` (`deconfound_summary.md`).
 | eval_b_daglish | 0.088 | 0.559 |
 | eval_b_follin | 0.039 | 0.416 |
 
+(The atoms-only column above was a noisy 24-block sample. At **full eval** the atoms-only content
+baseline is **0.515 / 0.516 / 0.479** — `v4_audit_posmatched.json` `atoms_content_overall` — so the
+three subsets are ~level; "daglish beats in-distribution" does **not** hold at full eval.)
+
 **De-confounded (§7, the decision-grade measures):**
 
 | measure | eval_a | daglish | follin | read |
@@ -50,10 +54,18 @@ confounds, all now CONFIRMED.
   BPE-base (~0.05–0.13) ~2–4× there, so population explains much of the gap, not all.
 - **(b) Granularity — CONFIRMED structurally.** A merged token's argmax is JOINT over its k atoms;
   cross-tokenization argmax is not comparable. §7A (bits/atom) is the tokenization-invariant fix → ~1.4×.
-- **(c) Training — CONFIRMED, and unbounded.** §7C: trained the BPE arm 100→174→300; content ~doubled
-  ep100→ep174 (0.05→0.077 etc.) and val_loss kept descending 5.57→4.74 to ep300 (STILL improving, no
-  plateau). Matched-steps gap is **≤1.4× and shrinking** (caveat: the run retained only the ep174 ckpt
-  — `save_top_k=1` on `val_loss` — so exact ep300 content is uncaptured; a `save_last` re-run pins it).
+- **(c) Training — CONFIRMED; matched-steps endpoint pinned (ep299).** §7C: the BPE arm trained
+  100→174 (`version_0`) then extended 174→300 (`version_1`/`version_2`); the **matched-steps endpoint
+  checkpoint EXISTS** — `version_2/checkpoints/best-epoch=299-val_loss=4.7437.ckpt` (`save_top_k=1` is
+  per-version, so the extension saved its own best). The monitored **val_loss** (not train loss)
+  descended 5.5728 (ep174) → 4.7437 (ep299) and is **still descending at ep299** (last 12 evals
+  monotonic 4.787→4.744, no plateau). Auditing ep299 full-eval (`v4_audit_ep299.json` vs
+  `v4_audit_ep174_fulleval.json`): the bits/atom gap to atoms-only **shrinks 1.43/1.50/1.39 (ep174) →
+  1.24/1.31/1.21 (ep299)** and content-tier rises 0.187→0.226 / 0.147→0.190 / 0.141→0.182. So the
+  matched-steps gap is **~1.2–1.3× and still closing** — no `save_last` re-run is needed (the endpoint
+  was saved). **Counter-signal (the writeback omitted this):** the content/structural accuracy ratio
+  FELL ep174→ep299 (eval_a 1.70→1.20) — extended training improved *structure* faster than content, so
+  the content gain is partly a structural-prediction gain, not pure content learning.
 
 **Operational verdict (direction unchanged, magnitude retracted):** atoms-only stays the default — it
 is genuinely better (1.4× bits/atom) and is the shipped, content-correct representation. But the harm
@@ -71,19 +83,22 @@ Content-digit accuracy on held-out composers, bucketed by the event KIND tracked
 | PW_RAMP (pulse-width sweep) | 0.56 / 0.51 / 0.49 | 11–23% | learnable, huge |
 | G_RAMP, EVT74/72 | 0.29–0.78 | small–mid | mostly learnable |
 | FD_STEP/FD_RAMP (freq residual) | 0.37–0.42 | ~15% | moderate |
-| **NI_STEP (note-index = melody)** | **0.18 / 0.30 / 0.31** | 9–14% | **high-entropy (split pending)** |
+| **NI_STEP (note-index = melody)** | **0.18 / 0.30 / 0.31** | 9–14% | **high-entropy (§7D: arpeggio 0.21–0.34 / stepwise 0.11–0.15)** |
 | NI_RAMP (portamento) | 0.38–0.40 | 6–10% | hard |
 
 **The atom model is good at timbre/envelope, weak at melody — with one caveat.** `NI_*` is the
 Δnote *interval* lane by construction (`design/landed/universal_multiresolution_pitch.md`), while
-the ≈0-entropy result that doc established is for *absolute onset* pitch (the anchor). The
-0.18–0.31 here therefore mixes anchor-like phrase-initial jumps with within-phrase steps — the §7D
-split separates them. Until then the claim is **high-entropy at this regime** (14M body, 1 seed,
-24-block audit sample, held-out composers), not "intrinsic". Either way the scoring guidance
-stands: **score onsets by audition/distribution, not argmax** — intervals fix within-melody
+the ≈0-entropy result that doc established is for *absolute onset* pitch (the anchor). The §7D split
+ran: it bucketed NI_STEP by interval size (|Δnote|≥5 vs stepwise), **not** by phrase position — and
+the large-interval bucket is 63–79% of NI_STEP with **median |Δ| = 12 semitones**, i.e. the SID
+**arpeggio / large-interval class, not phrase onsets**. So the read is *large-interval (arpeggio)
+0.21/0.34/0.33 vs stepwise 0.15/0.15/0.11*: arpeggio jumps are somewhat induction-predictable,
+stepwise motion is the hard part — **both high-entropy, the claim does NOT narrow to anchors.** A
+true *anchor* split (first onset after rest / voice start) remains untested. Either way the scoring
+guidance stands: **score onsets by audition/distribution, not argmax** — intervals fix within-melody
 transfer; the absolute anchor is creative content.
 
-## 3. Value-encoding density is at the frontier (shipped), one number outstanding
+## 3. Value-encoding density is at the frontier (shipped); radix resolved LIVE (~12% polish lever)
 
 The two density ideas one reaches for are already implemented and MDL-optimal **under the codec
 cost model**:
@@ -108,9 +123,9 @@ BPE ~2.2). Composition (authoritative, incl. typed nibbles as content): **conten
 50.1% + nibbles 18.9%), **head 28.5%** (KIND 15.9% / VOICE 11.1% / reg 1.5%), gesture SHAPE 2.5%.
 **67% of events are 2–4 atoms** (modal event = 3). The §4–5 conclusions are robust (50k ≫ 8192).
 
-- **Digit radix is a LIVE polish-grade lever (§7E), not dead.** Mean 1.364 digits/value overall, but
-  a deterministic byte-pack (one token per value, `saved = d − ⌈d/2⌉`) saves **8.79M atoms = ~12% of
-  the stream** (24% of varint content) — head-amortization-class, and on a *disjoint* atom family, so
+- **Digit radix is a LIVE polish-grade lever (§7E), not dead.** Mean 1.351 digits/value overall
+  (36755978 digits / 27196187 values), but a deterministic byte-pack (one token per value,
+  `saved = d − ⌈d/2⌉`) saves **8.79M atoms = ~12% of the stream** (24% of varint content) — head-amortization-class, and on a *disjoint* atom family, so
   the two **stack** (~1.3× combined density). The juice is per-lane: **FD_STEP 1.62, PW_STEP 1.53,
   PW_RAMP 1.52, FD_RAMP 1.49, NI_STEP 1.46**; FLD_CTRL/FLD_SR are dead (1.001, nibble-based). **P1
   scope:** P1 permits one-token-per-value for *multi-digit varints* (one decision → one token) but
@@ -119,7 +134,7 @@ BPE ~2.2). Composition (authoritative, incl. typed nibbles as content): **conten
   8192); gate on `learnability_triage` + P1 litigation before any run. (Supersedes the crude ≳1.7
   threshold: the decision metric is the computed byte-pack saving, not the raw mean.)
 
-## 4. The only open density lever: head-amortization (~10–15%, optional)
+## 4. The second open density lever: head-amortization (~10–15%, optional)
 
 Each event pays a `[KIND]` atom (and `[reg]` for globals); the `[VOICE]` atom is already amortized
 per frame-group. Since 67% of events are 2–4 atoms, heads are head-heavy. §7F breaks the 28.5% head
@@ -132,22 +147,24 @@ byte-exact-preserving, single-token-per-unit — *not* data-driven merges): comb
 or `(kind,reg)` atoms for the common cases; context-predicted kind elision where the grammar makes
 it unambiguous. **Audit caution:** combined atoms lower measured structural/all-tier accuracy by
 construction (joint granularity, §1a-b) — pre/post-amortization runs compare on content-tier only.
-**Worth doing as polish, but it does not move the needle on context** — ~49k → ~42k (or ~30k →
-~26k) atoms/tune is still ≫ 8192.
+**Worth doing as polish, but it does not move the needle on context** — 50k median → ~44k (85k mean
+→ ~75k) atoms/tune is still ≫ 8192. (Together with radix §3 the two stack to ~1.3× density; neither
+is a context lever.)
 
 ## 5. Context length is a `seq_len`/windowing/chaining problem, not an encoding problem
 
 There is no large remaining density win to fit tunes in the window — BPE was the only thing
-achieving 2.6× compression, and on current evidence it does so by destroying content learnability
-(§1). Therefore:
+achieving 2.73× compression, and on current evidence it does so at a modest but real content cost
+(~1.4× bits/atom, §1), by welding content across event boundaries. Therefore:
 
 - **Use tkvocab=0 (atoms-only).** Keep `tkvocab` as a dial but not as the strategy. **Accepted
-  cost:** the Orin PROMPT=2048 carries ~2.6× less music without merges — prompt-side mitigation
+  cost:** the Orin PROMPT=2048 carries ~2.73× less music without merges — prompt-side mitigation
   belongs to `design/generation/prompt_interface_design.md`, not the encoding.
 - **For more tune-per-window, scale `seq_len`** (8192 → 16384; AGENTS.md expects the 14M body fits
   24 GB — verify before the re-cut; costs a dataset re-cut + wallclock) and/or cut
   **musically-aligned KEYFRAME windows** at pattern/loop boundaries (dataset-side, no alphabet
-  change). These raise tune-per-window; they are **not** whole-tune mechanisms (30–49k ≫ 16384).
+  change). These raise tune-per-window; they are **not** whole-tune mechanisms (50k median / 85k
+  mean ≫ 16384).
 - **Whole tunes never required whole-tune windows:** register-domain decode-and-recompile
   **chaining** (`design/generation/long_range_structure.md`) re-canonicalizes state at KEYFRAME
   seams, so the window only has to carry local structure — chaining is the norm path for full
@@ -188,14 +205,20 @@ Outcome: the 6–11× magnitude is **retracted**; the direction (BPE costs more 
   refutation survives (well above the ~5–9% confound-(a) bar) but ~2–4×, not the raw table's gap.
   Confound (a) confirmed: the atoms-only population accuracy drags 0.51→0.26 once restricted to
   base positions, so the raw cross-tokenization table compared unlike populations.
-- **C. Matched-steps extension. RAN** (`v4_audit_ep174.json`; checkpoint `epoch=174`). BPE-2048
-  val_loss was **still descending (5.57→4.74) at matched steps** — confound (c) confirmed and
-  *unbounded*: the gap is shrinking and the matched-steps endpoint is not pinned (save_top_k=1 on
-  val_loss saved only ep174; a `save_last` re-run would pin exact ep300). Verdict: ≤1.4× and
-  closing.
-- **D. NI_STEP split. RAN** (`v4_audit_nistep.json`). Phrase-initial vs within-phrase both land in
-  the high-entropy regime (~0.18-class) — keep the high-entropy read, regime-conditioned; the
-  melody claim does **not** narrow to anchors.
+- **C. Matched-steps extension. RAN** (`v4_audit_ep299.json` + `v4_audit_ep174_fulleval.json`;
+  endpoint ckpt `version_2/best-epoch=299-val_loss=4.7437.ckpt`). The 174→300 extension's endpoint
+  WAS saved (`save_top_k=1` is per-version, in `version_2`). Monitored **val_loss** descended 5.5728
+  (ep174) → 4.7437 (ep299) and is **still descending at ep299** (no plateau). At the matched-steps
+  endpoint the bits/atom gap to atoms-only **shrinks 1.43/1.50/1.39 → 1.24/1.31/1.21** and content
+  rises 0.187→0.226 / 0.147→0.190 / 0.141→0.182 (full eval). Confound (c) confirmed; matched-steps
+  gap **~1.2–1.3× and still closing**. **Counter-signal:** content/structural ratio FELL ep174→ep299
+  (extended training favored structure over content). No `save_last` re-run needed — endpoint pinned.
+- **D. NI_STEP split. RAN** (`v4_audit_nistep.json`). The split is by interval size (|Δnote|≥5 vs
+  stepwise), **not** phrase position — and the |Δ|≥5 bucket is 63–79% of NI_STEP with median |Δ| =
+  12 semitones, i.e. the SID **arpeggio / large-interval class, not phrase onsets**. Large-interval
+  0.21/0.34/0.33 vs stepwise 0.15/0.15/0.11: both high-entropy — keep the high-entropy read,
+  regime-conditioned; the melody claim does **not** narrow to anchors. A true *anchor* split (first
+  onset after rest / voice start) remains untested.
 - **E. Digits-per-value distribution. RAN** (`data/audit/deconfound_windows_and_digits_per_value.txt`).
   Radix is a **polish-grade ~11–12% per-lane lever**, not dead and not a context lever: multi-digit
   varint lanes (FD_STEP 1.62, PW_STEP 1.53, NI_STEP, G_STEP digits/value) carry the juice; 18.9% of
@@ -218,28 +241,35 @@ Outcome: the 6–11× magnitude is **retracted**; the direction (BPE costs more 
   (A ~1.4× bits/atom, B ~2–4× position-matched, both real), but the 6–11× magnitude is retracted
   and the boundary-respecting dictionary is **promoted to a live lever** (§6).
 - **C shows a late content transition** approaching baseline → same as above; re-take the verdict
-  at matched steps. **FIRED:** val_loss still descending at matched steps (5.57→4.74); gap is
-  unbounded-shrinking, endpoint not pinned. Verdict re-taken as ≤1.4× and closing.
+  at matched steps. **FIRED:** at the matched-steps endpoint (ep299, pinned ckpt) the bits/atom gap
+  shrinks 1.4×→~1.2–1.3× and val_loss is still descending — verdict re-taken as ~1.2–1.3× and
+  closing (counter-signal: content/structural ratio fell, so the gain skews structural).
 - **E mean ≳1.7 nibbles/value** → radix is live; `learnability_triage` it against P1 before any run.
   **FIRED (revised):** threshold replaced by computed savings — radix is a **live ~11–12% per-lane
   polish lever** (FD/PW/NI multi-digit varint lanes), P1-scoped, stackable with head-amortization;
   not a context lever.
 - **D: within-phrase fine, anchors drag** → melody claim narrows to anchors (encoding exonerated);
-  **both ~0.18** → keep the high-entropy read, regime-conditioned. **FIRED (latter):** both regimes
-  high-entropy → high-entropy read kept, regime-conditioned; claim does **not** narrow to anchors.
+  **both ~0.18** → keep the high-entropy read, regime-conditioned. **FIRED (latter), with a label
+  correction:** the split was by interval size (large-interval/arpeggio 0.21–0.34 vs stepwise
+  0.11–0.15), not by phrase position — both high-entropy, claim does **not** narrow to anchors; a
+  true anchor split remains untested.
 - **F shifts composition shares materially** → redo §4's ceiling/recovery arithmetic. **FIRED:**
   content 69% / recoverable head 17.4% (was 25.9%); §3/§4 arithmetic redone. No truncation.
 - **None of the above fire** → strike "provisional" throughout; §6's ban becomes unconditional.
-  **DID NOT FIRE:** confounds (a)/(b)/(c) all confirmed → the ban stays conditioned on
-  C's unbounded tail; "provisional" retained where the matched-steps endpoint is unpinned.
+  **DID NOT FIRE:** confounds (a)/(b)/(c) all confirmed → the ban stays scoped to *unconstrained*
+  cross-boundary merges; the gap is real but modest (~1.2–1.4×) and still closing at matched steps.
 
 ## Provenance
 
 Stack: tokens 0.50.0 / preframr 0.2.29; spec `generalize` (canonical 14M body, 8L-d320-im896);
 single-speed 856-dump corpus. Baseline: atoms-only v3c, epoch 99/100, val_acc 0.561, ckpt
-`/scratch/tmp/v3c_final.ckpt`. BPE: root `/scratch/tmp/preframr_experiments/unigram_canonical_v4`,
-stopped ~epoch 100 mid-descent (val_loss 7.08→6.27). Audits: `audit_checkpoint_per_class` +
-`content_tier_report`; §7A/B/D ran **full-eval (`--max-blocks 0`)**, GPU-ized on defroster sharing
-the C run. Artifacts copied into `data/audit/` (§7G done): `v4_audit_bits_per_atom.json` (A),
-`v4_audit_posmatched.json` (B), `v4_audit_ep174.json` (C), `v4_audit_nistep.json` (D),
+`/scratch/tmp/v3c_final.ckpt`. BPE: root `/scratch/tmp/preframr_experiments/unigram_canonical_v4`;
+the canonical arm ran to ep174 (`version_0`, best val_loss 5.5728), then was **extended 174→300**
+(`version_2`, best `epoch=299-val_loss=4.7437.ckpt`) for the §7C matched-steps test — monitored
+val_loss descended 5.57→4.74 and was still descending at ep299. Audits: §7A/B/C/D ran **full-eval
+(`--max-blocks 0`)** on the v4 tkmodel, GPU-ized on defroster. Artifacts in `data/audit/`:
+`v4_audit_bits_per_atom.json` (A, atoms-only + BPE ep174), `v4_audit_posmatched.json` (B),
+`v4_audit_ep299.json` + `v4_audit_ep174_fulleval.json` (C, full-eval content + bits/atom at both
+endpoints), `v4_audit_ep174.json` + `v4_audit_ep174_postext.json` (24-block per-class trajectory;
+the latter is a post-extension re-audit of ep174, NOT an ep300 audit), `v4_audit_nistep.json` (D),
 `deconfound_windows_and_digits_per_value.txt` (E/F), `deconfound_summary.md` (full writeup).

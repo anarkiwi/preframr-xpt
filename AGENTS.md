@@ -27,7 +27,7 @@ measured collapse 7.8× (order-0) / 23× (order-1) vs the 16-bit raw floor. Chip
 pinned as a 24-test reference in preframr-audio. Scope: single-speed non-digi (~92% of corpus).
 Details: `design/references/{verification_and_audits,learnability_token_ordering_theory}.md`.
 
-## Current arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (verdict taken; de-confound audit pending)
+## Current arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (verdict taken; §7 de-confound audit RAN)
 
 The encoding + pipeline are done/shipped; the open arc is the **canonical learnability run
 on event tokens** (scientific, not operational). The atoms-only baseline is DONE and the
@@ -77,14 +77,19 @@ context lever" framing is refuted.** Full decision: `design/encoding/encoding_de
 **The §7 de-confounding audit RAN (2026-06-12; results `data/audit/deconfound_summary.md`). The
 6–11× magnitude is RETRACTED; the direction survives.** All three confounds were CONFIRMED:
 (a) population — restricting atoms-only to base positions drags it 0.51→0.26 (§7B); (b) granularity
-— merged-token argmax is joint over k atoms; (c) training — extending BPE-2048 to matched steps
-(§7C) had val_loss still descending 5.57→4.74, so the gap is shrinking and unbounded (endpoint
-unpinned). De-confounded gap: **~1.4× bits per canonical atom** (decisive, A: 1.93→2.71) /
-**~2–4× position-matched content argmax** (B: atoms-only 0.264 / 0.323 / 0.245) — both real, both
-far below the raw table. Audit also settled: no truncation (BlockMapper tiles all atoms; 49k-vs-30k
-was atoms-vs-BPE-tokens), composition content 69% / recoverable head 17.4%, radix a live ~11–12%
-per-lane polish lever (P1-scoped), melody high-entropy in both phrase regimes. The
-**event-boundary-respecting dictionary is PROMOTED to a live lever** (frontier §6).
+— merged-token argmax is joint over k atoms; (c) training — the BPE arm was extended 174→300 and
+the **matched-steps endpoint ckpt EXISTS** (`version_2/best-epoch=299-val_loss=4.7437.ckpt`;
+`save_top_k=1` is per-version). Monitored **val_loss** (not train) descended 5.57→4.74, still
+descending at ep299; auditing it full-eval, the bits/atom gap **shrinks 1.4×→~1.2–1.3×** (ratio
+1.24/1.31/1.21) and content rises 0.187→0.226/0.147→0.190/0.141→0.182 — gap real but closing, no
+`save_last` re-run needed. Counter-signal: content/structural ratio FELL ep174→ep299 (gain skews
+structural). De-confounded gap: **~1.4× bits/canonical-atom at ep174** (decisive, A: 1.93→2.71),
+**~1.2–1.3× at the matched-steps endpoint** (C, ep299) / **~2–4× position-matched argmax**
+(B: atoms-only 0.264 / 0.323 / 0.245) — all real, all far below the raw table. Audit also settled:
+no truncation (BlockMapper tiles all atoms; 49k-vs-30k was atoms-vs-BPE-tokens), composition content
+69% / recoverable head 17.4%, radix a live ~11–12% per-lane polish lever (P1-scoped); melody §7D
+split was by interval size (arpeggio vs stepwise, both high-entropy — NOT a phrase/anchor split).
+The **event-boundary-respecting dictionary is PROMOTED to a live lever** (frontier §6).
 
 **NEXT, in order:**
 1. **Context arc:** `seq_len` 8192→16384 (verify 24 GB fit before the re-cut) + musically-aligned
@@ -203,13 +208,17 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
   but the **§7 audit RETRACTED that magnitude** (`data/audit/deconfound_summary.md`,
   `data/refuted/unigram_bpe_content_generalization.md`). All three confounds CONFIRMED — (a)
   population (atoms-only drags 0.51→0.26 on base positions), (b) granularity (joint k-atom argmax),
-  (c) training (BPE val_loss still descending 5.57→4.74 at matched steps, gap unbounded). True gap:
-  **~1.4× bits/canonical-atom** (decisive A, 1.93→2.71) / **~2-4× position-matched argmax** (B,
-  0.264/0.323/0.245) — direction survives, 6-11x retracted. Verdict holds: **atoms-only is the
-  default; BPE is not the context lever**, but the **boundary-respecting dictionary is PROMOTED to a
-  live lever** (the harm is confirmed cross-boundary welding). Per-KIND map: timbre learnable
-  0.5-0.77, **melody (NI_*) high-entropy in BOTH phrase-initial and within-phrase regimes** (§7D —
-  high-entropy read kept, claim does not narrow to anchors). **Encoding-density frontier:** parametric
+  (c) training — BPE extended 174→300, matched-steps endpoint ckpt EXISTS
+  (`version_2/best-epoch=299-val_loss=4.7437.ckpt`), monitored val_loss descended 5.57→4.74 (still
+  descending at ep299); the bits/atom gap SHRINKS 1.4×→~1.2-1.3× there (no save_last needed),
+  counter-signal content/structural ratio fell (gain skews structural). True gap:
+  **~1.4× bits/canonical-atom at ep174** (decisive A, 1.93→2.71), **~1.2-1.3× at matched-steps
+  endpoint** (C ep299) / **~2-4× position-matched argmax** (B, 0.264/0.323/0.245) — direction
+  survives, 6-11x retracted. Verdict holds: **atoms-only is the default; BPE is not the context
+  lever**, but the **boundary-respecting dictionary is PROMOTED to a live lever** (the harm is
+  confirmed cross-boundary welding). Per-KIND map: timbre learnable 0.5-0.77, **melody (NI_*)
+  high-entropy** — §7D split was by interval size (arpeggio/large-interval vs stepwise, both
+  high-entropy), NOT a phrase/anchor split; claim does not narrow to anchors. **Encoding-density frontier:** parametric
   ramps + per-voice note-table pitch shipped (tokens 0.47.0); **no truncation** (BlockMapper tiles
   all atoms; 49k-vs-30k was atoms-vs-BPE-tokens), tunes ~50k atoms median / 85k mean, composition
   content 69%, **recoverable head 17.4%** (KIND+reg; replaces 25.9%), radix a **live ~11-12%
