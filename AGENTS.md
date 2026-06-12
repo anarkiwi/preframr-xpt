@@ -10,9 +10,10 @@ The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens 0.48.0 / aud
 0.5.9 (PyPI), preframr 0.2.27 (Docker Hub `:0.2.27`+`:latest`, tag `v0.2.27`), xpt on
 `main` (`ARG BASE=anarkiwi/preframr:0.2.27`). The `memorize` build-gate runs train→generate→decode via event-native
 `preframr/inference/event_gate.py` (decodes COMPLETE self-contained blocks, not
-truncated windows). The encoding **is** the event model now (`preframr_tokens/events/`,
-design `REDESIGN_optionB.md` as corrected by `events/STATUS.md` — STATUS wins on conflict)
-and is **unconditional** (no macro flags gate any primitive). `stream.encode` is the
+truncated windows). The encoding **is** the event model now (`preframr_tokens/events/`;
+**the authoritative reference is the preframr-tokens README** — alphabet / stream grammar /
+fidelity contract; the old `REDESIGN_optionB.md` + `events/STATUS.md` were folded into it
+and deleted) and is **unconditional** (no macro flags gate any primitive). `stream.encode` is the
 tokenizer (alphabet-agnostic `RegTokenizer`+unigram BPE-as-dictionary); `events/generate.py`
 decodes generated ids to render-ready writes.
 
@@ -134,7 +135,11 @@ defroster for training); when releasing the Docker app, build locally in paralle
 ## Project goal (OVERRIDING) + learnability lens
 
 Train a SID model that **generalises** — predicts unseen continuations from arbitrary mid-song
-prompts, across composers (primary `val_acc`), ideally across engines. Envelope: **train** single
+prompts, across composers (primary `val_acc`), ideally across engines. **Ultimate goal beyond
+continuation: generation from diverse prompts — e.g. a short musical phrase from a MIDI file or
+keyboard, arranged into a SID tune.** That program (phrase compiler + reduction augmentation,
+whole-tune chaining, and the generation quality gate incl. the memorization audit) is designed in
+`design/generation/` — the quality gate lands first, after the canonical run settles. Envelope: **train** single
 RTX 4090 24 GB (specs needing >~50M body to show Δ are out-of-envelope — refute in design, don't A/B);
 **predict** Jetson Orin NX. Real-time verdict measured (`design/performance/orin_inference_optimization_design.md`):
 single-stream at the quality tier is ~9× short of real-time (213 tok/s needed); offline auditions

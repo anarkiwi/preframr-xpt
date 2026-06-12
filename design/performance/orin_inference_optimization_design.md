@@ -645,7 +645,7 @@ ends so this isn't re-explored.
 
 - Vocab shrink details: this doc's "Vocab shrink interaction" section (the original
   `accuracy_push_prodlike_4x` audition that sourced the baseline is since retired).
-- Streaming-unembed-CE (training-side): existing design at
-  `design/performance/streaming_unembed_ce_design.md`.
+- Streaming-unembed-CE (training-side): design removed 2026-06-12 — moot at event-model vocab
+  scale (slab ≤0.5 GiB at tkvocab 8192); git history.
 - The atom-vs-merge tokenizer-ID analysis: produced 2026-05-19 during that audition
   (raw `tkmodel.json` lived under a since-cleared `/scratch/tmp/...` results dir).

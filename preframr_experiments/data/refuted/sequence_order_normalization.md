@@ -48,5 +48,6 @@ honest decomposition reorders whole voice-block units / sorts within a voice run
 
 The 16% dead same-value rewrites are a small, clean, inaudible token-count
 reduction — folded into the redundant-writes note in
-`design/encoding/audio_equivalence_normalization_design.md` (the still-open per-write
-sibling), not a standalone direction. The audit stays as a reusable instrument.
+the per-write equivalence direction — since REALIZED as the v3 canonical contract
+(same-value rewrites are canonicalized away; that design doc was removed 2026-06-12) —
+not a standalone direction. The audit stays as a reusable instrument.

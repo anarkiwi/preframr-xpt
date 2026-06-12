@@ -9,7 +9,7 @@ yet the model predicts the **V0 onset exactly 0.000** — because V0 is **absolu
 don't transfer across keys. **Fix implemented:** interval-coded freq V0 (tokens PR #19, framework
 PR #139, opt-in `--freq-v0-interval`) — see `design/landed/freq_v0_interval.md` + "Top lever" below. The
 absolute-encoding prodlike A/B was **stopped** (its melody result is predictable). Impl spec:
-[`preframr-tokens/design/freq_trajectory_anchoring.md`](../../preframr-tokens/design/freq_trajectory_anchoring.md).
+[`freq_trajectory_anchoring_impl.md`](freq_trajectory_anchoring_impl.md).
 This doc is the research-level framing + why it gates the program.
 
 **Re-frame at impl (gating):** the impl doc proposed an opt-*out* gate "mirroring

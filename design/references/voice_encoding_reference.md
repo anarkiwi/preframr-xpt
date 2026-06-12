@@ -1,23 +1,18 @@
 # Voice encoding reference — how the 3 SID voices are carried in the token stream
 
-**Status:** Pointer (2026-06-12). The encoding mechanics — FRAME-val base-4 voice-order
-packing, the `VOICE` (reg −126) delimiter trap (`val=0`, carries no voice identity),
-`remove_voice_reg` decode, the 15 legal `VALID_VOICEORDERS`, `zero_voice_reg` — are
-documented in the **[preframr-tokens README](https://github.com/anarkiwi/preframr-tokens)**
-(parse-domain section) and pinned by the code anchors there.
+**Status:** Pointer (re-anchored 2026-06-12 to the v3 event model). In the **event stream** voices
+are explicit `VOICE_*` tags inside each frame group (`<DT> ( <VOICE_v> <events>* )*`, voices
+ascending; per-voice `TUNING`/`NOTE_TABLE`/`TICK` stream headers) — see the
+[preframr-tokens README](https://github.com/anarkiwi/preframr-tokens) stream grammar. The
+**parse-domain** mechanics (FRAME-val base-4 voice-order packing, the `VOICE` reg −126 delimiter
+trap, `VALID_VOICEORDERS`) still exist for audits/constrained-decode and are documented in the same
+README's parse-domain section; they are not the trained encoding.
 
-**Learnability framing (xpt-internal).** The FRAME-val voice multiplex is the
-cross-voice causal-state the de-mux lever targets — see
-[`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md) and
-[`generator_mdl_representation.md`](../encoding/generator_mdl_representation.md).
+**Implications for modeling (xpt-internal, unchanged in substance):**
 
-## Implications for modeling (why this matters for melody)
-
-- Melodic onsets are **multiplexed across voices**: consecutive onsets belong to
-  different voices, set by the FRAME order — they are not one line. Predicting the next
-  onset requires tracking *which voice's* line is being continued.
-- Voice identity rides in a **structural token** (FRAME val, low 6 bits) that also
-  marks the time tick: the FRAME class is load-bearing for content, not just
-  scaffolding — its per-class accuracy is worth reading alongside onset accuracy.
-- `per_voice_aux_supervision_design.md` and any voice-trajectory work depend on this:
-  the supervision target is the FRAME-derived voice, not a VOICE token field.
+- Melodic onsets remain **multiplexed across voices** — within a frame group, consecutive events
+  belong to different voices, so the next same-voice note is a long-range, position-unstable
+  dependency. This is the structural cost the
+  [`lane_demux_hypothesis.md`](../encoding/lane_demux_hypothesis.md) targets (open; evidence-gated).
+- Voice identity is structural (P4) and explicit in v3; the de-mux question is about *ordering*,
+  not attribution.

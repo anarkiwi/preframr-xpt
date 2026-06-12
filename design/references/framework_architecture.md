@@ -13,7 +13,7 @@ floors `preframr-tokens` / `preframr-audio` versions in `requirements.txt`.
 | `stftokenize.py` | parsed dfs → tokenized blocks + vocab (`Corpus`/`RegTokenizer`). |
 | `train/trainer.py` | the training run (Lightning `Trainer.fit`). |
 | `inference/predict.py` | checkpoint → generated continuation → WAV (+`--predict-dump`). |
-| `mine_motifs.py` | mine the motif codebook artifact (`mine_dict_from_dumps`). |
+| `inference/event_gate.py` | event-native train→generate→decode build gate (decodes complete self-contained blocks via `events.generate`; drives the `memorize` spec). |
 | `inference/export_weights.py` | export weights for slim/Jetson predict images. |
 
 All share **`args.py`** — `add_args(parser)` is the central CLI; a
@@ -100,6 +100,13 @@ structural-tier loss term (load-bearing — masking it collapses diversity).
 "overwritten tensor" crash in incremental decode; unconstrained `temperature 1.0`
 over the de-merged base-atom vocab emits runaway DELAY/empty-frame tokens → near-
 silent drone (use `--constrained-decode` + low temp).
+
+**Event-model caveat (2026-06-12):** `--constrained-decode`'s mask
+(`preframr_tokens.constrained_decode.StreamState`) speaks the **parse-domain** token space, not the
+v3 event grammar; the event-native generation path is `event_gate.py` → `events.generate`
+(strict-grammar decode, raises on invalid streams). Porting the sampling-time mask to the event
+grammar is an open item — see
+[`../generation/generation_quality_gate.md`](../generation/generation_quality_gate.md) §sampling.
 
 ## Deploy envelope
 

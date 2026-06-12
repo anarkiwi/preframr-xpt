@@ -1,193 +1,90 @@
-**Status:** Reference + prototype tool shipped (2026-06-03) — training-free triage, `audit/learnability_triage.py`. Predicts sign/ordering; the scale-threshold still needs one canonical run.
+**Status:** Reference + tool (`audit/learnability_triage.py`, training-free). The v3 event model is
+the lens's current product; the triage remains the pre-run ranking instrument for any proposed
+representation change (run it at seq_len 8192, window mode, before spending a training run).
 
 # A theoretical basis for token + ordering design (predict before you A/B)
 
 The all-empirical loop (mini A/B per encoding) cannot see the thing it is testing: mini
 **mode-collapses regardless** of vocab (`loop_collapse_rate` ~1.0), so the collapse→learning
-transition only appears at canonical/prodlike. Yet we keep spending mini runs to pick *direction*
-(does this macro help?), which theory can answer for free. This doc separates the two: **theory +
-training-free measurement decide direction and ordering; one canonical run decides the threshold.**
+transition only appears at canonical/prodlike. Theory + training-free measurement decide direction
+and ordering; one canonical run decides the threshold.
 
 ## The load-bearing fact: the architecture is already exonerated
 `framework_arch_test` — torchtune llama3_2, mini — reaches **val 0.903 on UNSEEN synthetic motifs**
 (`design/landed/substrate_ablation_v1.md`). The model class generalizes when the structure is clean.
-So the SID failure is **not capacity** — it is a mismatch between the *encoding* and what a bounded
+So a SID failure is **not capacity** — it is a mismatch between the *encoding* and what a bounded
 transformer can cheaply represent. That mismatch is computable from the encoder + driver model
-**without training**.
+**without training**. (Confirmed empirically twice over: model-side interventions all refuted at the
+~0.13 content ceiling; tokenizer-side representation lifted it — most recently the v3 event model's
+atoms-only baseline at eval_a content 0.479.)
 
 ## Principle 1 — a transformer is a bounded automaton, not a recurrence
 A constant-depth, log-precision softmax transformer sits at ~**TC⁰** (Merrill & Sabharwal 2023). It
-**cannot maintain an unbounded sequential counter** and generalize over length. Liu et al. ("Transformers
-Learn Shortcuts to Automata", ICLR'23) sharpen it: a transformer *can represent* a finite automaton, but
-SGD finds a **shortcut** that fits the training horizon and **fails to extrapolate**. Mini mode-collapse
-is consistent with shortcut-fitting a driver automaton it cannot actually simulate.
+**cannot maintain an unbounded sequential counter** and generalize over length. Liu et al. (ICLR'23):
+a transformer *can represent* a finite automaton, but SGD finds a **shortcut** that fits the training
+horizon and fails to extrapolate. A SID driver **is** a finite-state machine (wavetable pointer,
+envelope phase, arp index, ramp counters), so learnability reduces to two quantities, derivable from
+the encoder logic + the driver model:
 
-A SID driver **is** a finite-state machine: per-voice wavetable pointer, envelope phase, arp index,
-pulse/filter ramp counters. So the learnability of an encoding reduces to two quantities, both derivable
-from the encoder logic + the driver model we already have:
+1. **Causal-state size** — how big a latent must be reconstructed to predict the next token
+   (Crutchfield causal states / statistical complexity C_μ).
+2. **Dependency horizon** — how far back the determining tokens live.
 
-1. **Causal-state size** — how big is the latent the model must reconstruct to predict the next token
-   (Crutchfield computational-mechanics *causal state* / statistical complexity C_μ).
-2. **Dependency horizon** — how far back live the tokens that *determine* this token's value.
-
-Minimize both and you are back in the regime the synthetic motifs already proved learnable.
+Minimize both and you are back in the regime the synthetic motifs proved learnable.
 
 ## Principle 2 — prefer induction-head-expressible structure
-Induction heads (copy "what followed this token last time") are the **first, most reliable** circuit a
-transformer forms (Olsson et al. 2022). So **DEF/REF codebooks** (wavetable / stamp / patch, and the
-PR2 ctrl codebook) are *provably* in the easy regime: REF→DEF is a single induction-head copy. An
-**implicit per-frame arp/ramp increment is not** — it needs a maintained counter (Principle 1). The
-right notion of "compressible" here is **copy-fraction**, NOT gzip — gzip rewards redundancy the
-transformer cannot exploit, copy-fraction rewards the redundancy it *can*.
+Induction heads (copy "what followed this token last time") are the first, most reliable circuit a
+transformer forms (Olsson et al. 2022). Explicit repetition-with-cheap-reference is the easy regime;
+an implicit per-frame arp/ramp counter is not (Principle 1). The right notion of "compressible" is
+**copy-fraction, NOT gzip** — gzip rewards redundancy the transformer cannot exploit.
 
-## Principle 3 — the residual-SET program is a learnability program
-Each residual-elimination PR removes an implicit counter or exposes hidden state locally — a learnability
-win, not just a token-budget win. The volume ranking happens to match the learnability ranking:
-- **Note duration (PR3 Option A)** replaces "gate-off implied by a counter run since onset" with an
-  explicit scalar → kills a latent counter. **Predicted strictly more learnable than Option B** (B still
-  makes the model infer *when* the off lands). Act on this without an A/B.
-- **Codebook DEF/REF (PR2)** → induction-head copy (Principle 2).
-- **INIT snapshot / DEF-on-first (PR5/PR6)** → front-loads the cold-start latent instead of inferring it.
-
-This is a stronger motivation for census-to-zero than compression, and it ranks the PRs.
+## Principle 3 — eliminate implicit counters at the representation
+Every encoding change that replaces "state implied by a counter run since some event" with an
+explicit local parameter is a learnability win, independent of token budget: explicit durations kill
+a latent counter; periodic/polynomial ramp *shapes* with explicit params move the per-frame counter
+into the deterministic decoder, out of the prediction target. (v3: mixed-radix durations on
+`FLD_NOTE_ON`, `SHAPE_POLY`/`SHAPE_PERIOD` ramps, settled end-of-frame values.)
 
 ## Principle 4 — ordering = topological order of the causal DAG
-In the infinite-capacity limit the AR chain rule is order-invariant; ordering only matters under finite
-capacity + optimization + exposure bias. Two training-free rules:
-1. **If A causes B, emit A before B.** Predicting an effect before its cause forces a higher-entropy
-   marginal that will not generalize. Derive the ordering from the driver data-flow graph.
-   `voice_canonical_block_order` and "**FRAME header carries voice order + write counts**" *are* this — a
-   header that front-loads structural determinants collapses every downstream conditional entropy.
-2. **Front-load determinants, but only low-entropy ones.** Teacher-forcing compounds errors, so an early
-   token must itself be highly determined (a write-count header is; an absolute onset pitch is not). This
-   is exactly why **V0 onset ≈ 0** while trajectory *structure* learns: onset pitch is high-entropy with
-   no local determinant, so it both fails to learn and derails what follows. Anchoring it to a nearby
-   reference (interval-from-previous) is the theory-prescribed fix
-   (see `audit/melody_predictability.py`).
+Ordering matters only under finite capacity + optimization + exposure bias; two training-free rules:
+1. **If A causes B, emit A before B** — predicting an effect before its cause forces a high-entropy
+   marginal. Derive ordering from the driver data-flow graph. (Open application: accompaniment
+   before melody — [`lane_demux_hypothesis.md`](../encoding/lane_demux_hypothesis.md).)
+2. **Front-load determinants, but only low-entropy ones.** An early token must itself be highly
+   determined. This is why absolute onset pitch ≈ 0 next-token while structure learns: high-entropy,
+   no local determinant. Anchoring to a nearby reference (interval-from-previous — v3's `NI_*` lane)
+   is the theory-prescribed fix; the absolute anchor stays ≈0 and must be scored distributionally.
 
-## The training-free triage (substitutes for direction-finding A/Bs)
-Compute on the tokenized corpus, no transformer — `audit/learnability_triage.py`:
-- **Entropy-rate vs memory** h_k = H_{k+1} − H_k (bits/token) for k=0..K. The *floor* is the achievable
-  next-token CE loss; the *k where h_k plateaus* is the effective memory (the dependency-horizon proxy,
-  i.e. an empirical stand-in for causal-state size). Miller–Madow corrected; report per-token AND
-  **per-frame** (h_k·N/F) so the cross-encoding comparison is not confounded by sequence length (a
-  compressing encoding has fewer tokens that each carry more — total tune information is ~constant).
-- **MI decay** I(x_t ; x_{t−d}) vs d. Concentrated at small d = good; a fat tail = a long-range counter
-  the model will shortcut.
-- **Induction-copy rate** — share of tokens completing a seen bigram (∃ j<t: x_{j−1}=x_{t−1} ∧ x_j=x_t):
-  the induction-head-able fraction. Plus **novel rate** (first occurrence in a window).
-- **Alphabet size + token/frame counts** — context.
+## The training-free triage — `audit/learnability_triage.py`
+Computed on the tokenized corpus, no transformer: **entropy-rate** h_k = H_{k+1} − H_k per token AND
+per frame (cross-encoding comparison must be per-frame — token counts differ); **MI decay**
+I(x_t; x_{t−d}) vs d (fat tail = a long-range counter the model will shortcut); **induction-copy
+rate** (share of tokens completing a previously-seen bigram); alphabet/coverage context. Read: low
+per-frame h_k + early plateau + fast MI decay + high copy ⇒ predicted learnable. **Measure at the
+real block scale** (seq_len 8192, window mode) — whole-song mode over-credits cross-window reuse,
+and smaller windows over-penalize codebooks (both measured failure modes).
 
-Read: a candidate with low per-frame h_k, an early h_k plateau, fast MI decay, and high induction-copy
-is **predicted learnable**; a fat MI tail + low copy-fraction is **predicted to collapse**. This ranks
-designs and prunes the experiment set. Exact determinant-distance (from encoder instrumentation) is a
-follow-up; the h_k-plateau + MI-decay are its empirical proxies for now.
+**Track record (why the tool is trusted):** (1) at block scale it flipped the song-mode ordering and
+predicted absolute-keyed codebooks don't pay in-window (copy 0.718 < baseline 0.852) — consistent
+with the later full_macros content win; (2) on the generator-MDL encoding it returned a conditional
+NO-GO (alphabet 3.7×, copy 0.916 < atomic 0.930 — exact residuals fragmenting the key) that a
+canonical run would have cost a day to learn; the v3 event redesign followed its prescriptions
+(small fixed alphabet, digit atoms, intervals, no fragmentable codebook keys). Numbers:
+[`../landed/generator_mdl_representation.md`](../landed/generator_mdl_representation.md) + this
+file's git history.
 
-## First read (prototype, 9 player-diverse non-digi tunes, tokens 0.42.1)
-`learnability_triage.py --configs baseline,full_macros,codebook` (codebook = base + skeleton/stamp/
-sweep/pw/filter/wavetable/patch/held_arp; `ctrl_osc`/`note_off` not yet shipped at 0.42.1 → auto-dropped):
-
-**`--mode song` (full-song parse, 9/9 tunes, robust):**
-
-| config | alphabet | tok/frame | h∞/frame | h∞/token | induction-copy | MI@1 | MI@16 |
-|---|---|---|---|---|---|---|---|
-| baseline | 727 | 5.88 | 4.93 | 0.839 | 0.975 | 3.18 | 1.46 |
-| full_macros | 1678 | 5.33 | 3.83 | 0.718 | 0.960 | 4.32 | 2.40 |
-| codebook | 1781 | 4.78 | **3.65** | 0.762 | 0.955 | 3.84 | 1.91 |
-
-Both macro arms cut per-frame information ~22–26% vs baseline, and here **codebook edges full_macros**.
-**But song mode is the wrong stream:** the model trains/predicts on **self-contained blocks**, not whole
-songs, and song mode lets a codebook's REFs accumulate over the entire tune — over-crediting its
-compression (block-locality keeps DEF→REF in-block; the generator-MDL codebook follows this —
-`generator_mdl_representation.md`).
-
-**`--mode blocks` at `seq_len=8192` (the real prodlike/predict block scale; EXPERIMENTAL, 5/9 tunes — the
-standalone block re-encode trips on ops needing parser context, faithful version needs the Corpus
-block-builder):**
-
-| config | alphabet | tok/frame | h∞/frame | h∞/token | induction-copy | MI@1 | MI@16 |
-|---|---|---|---|---|---|---|---|
-| baseline | 567 | 3.67 | 3.03 | 0.825 | 0.942 | 3.52 | 1.58 |
-| full_macros | 1073 | 0.96 | **0.38** | **0.400** | 0.852 | 5.88 | 4.05 |
-| codebook | 1365 | 0.95 | 0.51 | 0.535 | **0.718** | 5.34 | 3.03 |
-
-**At block scale the ordering FLIPS vs song mode: full_macros beats codebook on every metric** (h∞/frame
-0.38 < 0.51, h∞/token 0.400 < 0.535), and the codebook arm's **in-window induction-copy is lower (0.718 vs
-0.852)** with the largest alphabet (1365). Reading: the heavy codebook passes (stamp/wavetable/patch) must
-recur *within one block* to pay off, and many don't — so they add vocabulary without buying back reuse.
-**The codebook compression does not survive to the scale the model learns at.** Decision-relevant — it
-cautions against the codebook pipeline as a *learnability* bet, consistent with the confirmed `full_macros`
-content win (eval_a 0.219→0.324) and the codebooks remaining experimental.
-
-**Scale matters — use the real seq_len.** This was first run at `seq_len=4096` (mini): the smaller window
-*over-penalised* codebooks (copy 0.683, h∞/frame 0.55) because programs had less room to recur in-window.
-At the correct `seq_len=8192` the gap narrows (copy 0.718, h∞/frame 0.51) **but full_macros still wins** —
-the conclusion is robust, only the mini magnitude was an artifact. The triage default is now 8192.
-**Corollary (a finding in itself): mini is not a useful research dimension** — it mode-collapses in
-*training* (loop_collapse_rate ~1.0) AND distorts the *static* read via its window size. The resolution is
-NOT "always train prodlike" (6–11 hr): the triage gives the prodlike-*scale* learnability read at
-mini-*cost* (static analysis, minutes) — reserve training runs for the collapse→learning *threshold* only.
-Caveats on these numbers: 5/9 tunes (biased simpler), absolute pre-voice-reg blocks, high-k undersampling
-— trust the DIRECTION; **certify on full coverage via the Corpus block-builder before acting**. (The earlier "codebook edges full_macros, re-run the residual arm to push below 3.65"
-claim was a song-mode artifact — withdrawn.)
-
-## Compatibility with the generator-MDL pipeline + the open question (2026-06-05)
-The generator-MDL encoding (`generator_mdl_representation.md`) is, in most respects, the encoding this theory
-prescribes — but it inherits the theory's own *unresolved* risk, which must be measured before committing.
-
-**Where it is the theory's ideal:**
-- **Principle 3, maximally.** Every implicit per-frame counter (arp index, ramp/sweep counter, wavetable
-  pointer) becomes ONE explicit-parameter atom (ACCUM/SWEEP/TABLE). Counter-elimination is now structural, not
-  pass-by-pass — the strongest version of the residual-SET-as-learnability program.
-- **Principle 2.** `GEN_TABLE` is a DEF→REF codebook = the induction-head-easy regime by construction.
-- **Principle 1.** A gesture's latent is its O(1) generator params; the per-frame counter lives in the
-  deterministic DECODER, OUT of the model's prediction target.
-
-**The open risk (the theory's own block-scale measurement, still unresolved).** The `--mode blocks` table
-above found **codebooks did NOT survive to block scale** (full_macros beat the codebook arm: h∞/frame
-0.38<0.51, induction-copy 0.852>0.718) because stamp/wavetable/patch keyed on ABSOLUTE spans that don't recur
-within one 8192-token block. **The generator-MDL bets the opposite via transposition-invariant (note-relative)
-`GEN_TABLE` keys** — the same arp shape at different pitches collapses to one entry (measured −64% distinct
-shapes), which should RAISE in-block induction-copy where absolute codebooks couldn't. This is a prediction,
-directly testable: **re-run `learnability_triage.py --mode blocks --seq_len 8192` on the generator encoding; the
-go/no-go is whether its in-block induction-copy beats the old codebook arm's 0.718.** If note-relative keys
-still don't recur in-block, `GEN_TABLE` adds alphabet without buying copy — the same trap.
-
-**Two cautions the theory raises against the current impl spec:**
-1. **Optimize copy-fraction, not raw MDL.** Principle 2's "copy-fraction, not gzip" applies: the design is sold
-   as description-length (MDL), but L is only a PROXY — the lever is induction-copyable reuse + counter
-   elimination. An L-shrinking refinement that traded copy-fraction for shorter codes would HURT learnability.
-   State the objective as copy-fraction; let MDL track it, not the reverse.
-2. **The residual must not refragment the codebook key.** The impl doc stores each cycle's freq residual INSIDE
-   the `GEN_TABLE` entry and keys on (offsets, **residuals**) — so two arps with identical note-offsets but
-   different residuals (vibrato/detune) get DIFFERENT entries, destroying the transposition-invariant reuse the
-   win depends on (the −64% collapse was on offsets ALONE). Clean driver arps write exact LUT values
-   (resid=0) and still collapse, so the damage may be modest — but **measure the refragmentation**, and if
-   material, key on note-offsets only + carry the residual on a separate mostly-zero companion stream (the
-   note+resid split the impl doc collapsed for decode-simplicity — the wrong axis to optimize).
-
-**Unchanged hard limit (honest).** The generator-MDL does NOT make absolute onset pitch learnable — an ACCUM's
-`start` / a TABLE's `base_note` are absolute pitch: high-entropy, no local determinant ⇒ still ~0 next-token
-(Principle 4.2 / P6). The win is STRUCTURE learnability (gesture type + shape transfer), not pitch accuracy;
-score the latter distributionally.
+**Corollary: mini is not a research dimension** — it mode-collapses in training AND distorts the
+static read via its window size. The triage gives the prodlike-scale read at mini cost; reserve
+training runs for the collapse→learning threshold.
 
 ## Honest limit
-Theory + these metrics give **sign, relative difficulty, and ordering** — not val_acc, and **not the
-scale threshold** where collapse flips to learning (an emergence phenomenon current DL theory cannot pin
-numerically; "mini collapses, canonical settles it" is precisely this). Also: block-entropy h_k is
-**undersampling-biased downward at higher k** (a 9-tune sample badly undersamples 4-grams over a ~1700
-alphabet), so read the *per-frame floor + the cross-config ordering*, not absolute high-k values;
-corpus-scale re-run tightens them. The ordering is trustworthy because the bias hits all configs similarly
-— and it already agrees with the measured result. Workflow: **theory + triage to design and rank → one
-canonical confirmatory run.** Keep the experiment for the *threshold*; stop spending it on *direction*.
-
-## Cross-links
-`generator_mdl_representation.md` (the current encoding — one self-verifying generator decomposition over all
-channels with a block-local DEF→REF codebook; supersedes the per-pass pitch/ornament/residual-SET stack this
-doc's principles were originally applied to), `audit/melody_predictability.py` (the conditional-predictability
-math scoped to V0 onsets).
+Theory + these metrics give **sign, relative difficulty, and ordering** — not val_acc, and not the
+scale threshold where collapse flips to learning (an emergence phenomenon current theory cannot pin
+numerically). Block-entropy is undersampling-biased downward at high k — read the per-frame floor +
+cross-config ordering, not absolute high-k values. Workflow: **theory + triage to design and rank →
+one canonical confirmatory run.**
 
 ## References
-Liu et al. 2023 (shortcuts to automata); Merrill & Sabharwal 2023 (log-precision ⊆ TC⁰); Hahn 2020
-(attention limitations); Olsson et al. 2022 (induction heads); Crutchfield (computational mechanics /
-ε-machines, causal states, C_μ); Bialek/Tishby (predictive information / excess entropy).
+Liu et al. 2023 (shortcuts to automata); Merrill & Sabharwal 2023 (log-precision ⊆ TC⁰); Hahn 2020;
+Olsson et al. 2022 (induction heads); Crutchfield (computational mechanics); Bialek/Tishby
+(predictive information).

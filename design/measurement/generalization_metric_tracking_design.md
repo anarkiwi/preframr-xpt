@@ -6,6 +6,11 @@ audit modules + the metric registry; this is **wiring, not new audits**.
 
 **Learnability framing.** The content-tier scorecard should also carry the training-free triage outputs (per-frame h_k, MI-decay, induction-copy from [`learnability_token_ordering_theory.md`](../references/learnability_token_ordering_theory.md)) so representation A/Bs are ranked *before* a run, not only after.
 
+**Generation framing (2026-06-12).** The scorecard measures *prediction*. Its generation-side
+counterpart — sample, render, and score generated continuations (structure metrics, fingerprint
+distance, memorization audit) — is [`../generation/generation_quality_gate.md`](../generation/generation_quality_gate.md);
+§1's audit stage is where that gate's cohort hook also lands, so wire them together.
+
 ## Problem
 
 The program's North Star is generalization (content prediction across

@@ -39,8 +39,16 @@ historical context; consult git log for the actual commits.
 
 | Doc | What landed |
 |---|---|
-| [`unified_oscillation_primitive_design.md`](unified_oscillation_primitive_design.md) | Unified `FREQ_TRAJ` op (SLOPE + OSCILLATE_ENV + FREQ_VIBRATO + FREQ_RUN) + 2-atom `FREQ_NUDGE`; shipped preframr-tokens 0.16/0.17, now the live deployment tokenizer (drives STAGE 1/2). |
+| [`generator_mdl_representation.md`](generator_mdl_representation.md) | Generator-MDL encoding (tokens 0.45–0.46 deployed default) → **superseded by the v3 event model** (0.47); records what v3 absorbed + the triage NO-GO that triggered the redesign. |
+| [`universal_multiresolution_pitch.md`](universal_multiresolution_pitch.md) | Recovered per-voice note-table pitch model — **absorbed into v3** as `NOTE_TABLE`/`TUNING`/`NI_*`; keeps the universal-grid / chorus-guardrail findings. |
+| [`unified_oscillation_primitive_design.md`](unified_oscillation_primitive_design.md) | Unified `FREQ_TRAJ` op (SLOPE + OSCILLATE_ENV + FREQ_VIBRATO + FREQ_RUN) + 2-atom `FREQ_NUDGE`; shipped preframr-tokens 0.16/0.17 (retired substrate era). |
 | [`tokenizer_profiling_tooling_design.md`](tokenizer_profiling_tooling_design.md) | Torch-free tokenizer profiling: `python -m preframr_tokens.tokenizer_profile` + `audit_primitives` reductions (`op_atom_profile`, `register_state`, `trajectory_coverage`) + `tokenizer_config` source-of-truth; shipped preframr-tokens 0.20.0. |
+
+## Performance
+
+| Doc | What landed |
+|---|---|
+| [`parse_perf_proposal.md`](parse_perf_proposal.md) | Parse-perf hygiene wins (PR #49, block path −40%, xdist test gate) + the dead-end registry (structural block slice, diff-attribution, suffix-resume). Remaining levers OBE under v3. |
 
 ## Bug fixes
 

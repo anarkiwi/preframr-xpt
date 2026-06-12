@@ -1,6 +1,8 @@
 # flag stage routing — design note
 
-**Status:** Pending impl. Touches `preframr_experiments/base.py`.
+**Status:** Pending impl. Touches `preframr_experiments/base.py`. (2026-06-12: macro flags are
+semantically inert under the unconditional event encoding — the live stage-specific flags are
+`--tkvocab` and train-side knobs; routing remains worthwhile, the macro-flag rows are legacy.)
 
 Framework follow-up from AGENTS.md §Framework follow-ups:
 `run_arm` (`preframr_experiments/base.py:786`) forwards
