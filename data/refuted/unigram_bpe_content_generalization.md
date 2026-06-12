@@ -1,11 +1,11 @@
-# Unigram BPE (tkvocab>0) harms content generalization — REFUTED as the context lever (magnitude provisional)
+# Unigram BPE (tkvocab>0) harms content generalization — REFUTED as the context lever (true gap ~1.4× bits/atom)
 
-**2026-06-12 (evidence re-scoped same day after a confound review — see
-`design/encoding/encoding_density_frontier.md` §1a/§7/§8).** The canonical learnability run
-(`generalize`, 14M body) compared atoms-only (tkvocab=0) vs unigram BPE (tkvocab=2048, ~2.6×
-stream compression), same corpus/holdouts.
+**2026-06-12 (magnitude RETRACTED same day after the §7 de-confounding audit — see
+`design/encoding/encoding_density_frontier.md` §1a/§7/§8 and `data/audit/deconfound_summary.md`).**
+The canonical learnability run (`generalize`, 14M body) compared atoms-only (tkvocab=0) vs unigram
+BPE (tkvocab=2048, ~2.6× stream compression), same corpus/holdouts.
 
-**Result (content-tier accuracy, matched ~epoch 100):**
+**Raw cross-tokenization argmax (matched ~epoch 100) — now known confounded, kept for record:**
 
 | eval subset | BPE-2048 | atoms-only |
 |---|---|---|
@@ -13,28 +13,41 @@ stream compression), same corpus/holdouts.
 | eval_b_daglish | 0.088 | 0.559 |
 | eval_b_follin | 0.039 | 0.416 |
 
-BPE is **~6–11× worse on content as measured** — but the magnitude is **PROVISIONAL**: (a) the BPE
-column scores only *surviving base atoms* (the rare tail unigram didn't merge) vs ALL content atoms
-for the baseline — different populations by construction; (b) merged-token argmax is joint over k
-atoms (parity for a 2–3-atom merge ≈ 0.11–0.23, not 0.48) — per-token argmax does not compare
-across tokenizations; (c) matched epochs gave BPE ~3× fewer optimizer steps and v4 stopped
-mid-descent (val_loss 7.08→6.27) with the plateau→steep-drop transition unexcluded. The frontier §7
-de-confounding audit (bits/canonical-atom, position-matched scoring, matched-steps extension)
-hardens or revises this entry per the §8 falsifier mapping.
+The raw table read ~6–11×. **That magnitude is RETRACTED.** All three suspected confounds were
+**confirmed** by the §7 audit, so the table compared unlike things:
+- **(a) population.** The BPE column scored only *surviving base atoms*; the atoms-only column
+  scored ALL content atoms. Restricting atoms-only to base positions drags it **0.51→0.26** (§7B) —
+  different populations by construction.
+- **(b) granularity.** Merged-token argmax is joint over k atoms; per-token argmax doesn't compare
+  across tokenizations.
+- **(c) training.** Matched epochs gave BPE ~3× fewer steps; extending BPE-2048 to matched steps
+  (§7C) showed val_loss **still descending 5.57→4.74** — the gap is shrinking and *unbounded*
+  (endpoint unpinned: save_top_k=1 saved only ep174).
 
-**Mechanism (localized; direction plausibly real):** merged BPE tokens ~1% argmax-predictable —
-below even the parity-expected ~0.11–0.23 — consistent with BPE welding content atoms into merges
-across event boundaries. All-tier val_acc is confounded across tokenizations (bigger vocab →
-higher per-token entropy); per the above, content-tier is too.
+**De-confounded result (the decisive measures):**
 
-**Operational conclusion (stands regardless of magnitude):** atoms-only (tkvocab=0) is the default;
-the "BPE dial is THE context lever" framing is refuted — even at per-atom parity the dial buys no
-content, and the welding mechanism scales WITH vocab (closing the planned vocab sweep). Scoped ban:
-*unconstrained cross-event-boundary merges*; an event-boundary-respecting dictionary is untested and
-deprioritized, not banned (frontier §6). Remaining density is structural (head-amortization
-~10–15%); the context levers are seq_len/windowing + register-domain chaining. Melody (NI_*, the
-interval lane) is high-entropy at this regime — anchor-vs-step split pending (frontier §2/§7D);
-score by audition/distribution, not argmax.
+| measure | gap | source |
+|---|---|---|
+| bits per canonical atom (A, full-eval, tokenization-invariant) | **~1.4×** (1.93→2.71) | `v4_audit_bits_per_atom.json` |
+| position-matched base-atom content argmax (B) | **~2–4×** (atoms-only 0.264 / 0.323 / 0.245) | `v4_audit_posmatched.json` |
 
-Audit artifacts: `/scratch/tmp/v4_audit*.json`, per-KIND map in session log — **ephemeral until
-copied into `data/audit/` (frontier §7G)**.
+**Direction survives, magnitude retracted:** BPE genuinely costs ~1.4× more bits per canonical atom
+and ~2–4× on position-matched content argmax — well above the ~5–9% confound-(a) bar — but the
+6–11× headline was confound-dominated, and confound (c) means even the 1.4× is a shrinking upper
+bound. All-tier val_acc and raw cross-tokenization content-tier are confounded; only A/B-style
+measures are decision-grade.
+
+**Operational conclusion:** atoms-only (tkvocab=0) stays the default; the "BPE dial is THE context
+lever" framing is refuted — even de-confounded the dial buys no content worth its cost. Scoped ban:
+*unconstrained cross-event-boundary merges*. An **event-boundary-respecting dictionary is now
+PROMOTED to a live lever** (frontier §6) — the audit's confirmation that the harm is welding across
+boundaries means a boundary-respecting variant is the untested upside, not deprioritized. Remaining
+density: head-amortization (recoverable head 17.4%, §7F) + radix (live ~11–12% per-lane polish
+lever, P1-scoped, §7E). Melody (NI_*) is high-entropy in **both** phrase-initial and within-phrase
+regimes (§7D) — keep the high-entropy read, regime-conditioned; the claim does not narrow to
+anchors. Corpus: no truncation (BlockMapper tiles all atoms); tunes ~50k atoms median / 85k mean
+(F survey over 862 tunes; A/B/D audits over the 856-dump eval corpus).
+
+Audit artifacts in `data/audit/`: `v4_audit_bits_per_atom.json` (A), `v4_audit_posmatched.json`
+(B), `v4_audit_ep174.json` (C), `v4_audit_nistep.json` (D),
+`deconfound_windows_and_digits_per_value.txt` (E/F), `deconfound_summary.md` (full writeup).

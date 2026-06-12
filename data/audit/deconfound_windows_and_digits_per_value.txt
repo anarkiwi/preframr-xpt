@@ -1,0 +1,18 @@
+=== windows reconciliation (862 tunes, NO truncation: BlockMapper tiles all) ===
+atoms/tune:      mean=85497 median=50318
+BPE tokens/tune: mean=31338 median=18089  (= atoms/2.73x)
+atoms-only windows/tune ~6.1 (median, /8192); BPE windows/tune ~2.2 -> 4.16 in AGENTS.md is BPE not atoms
+=== E per-KIND digits/value + byte-pack savings (saved=d-ceil(d/2)) ===
+  FLD_NOTE_ON  vals=4996228   mean=1.117  byte-saved=582659 (10.4% of its digit-atoms)
+  PW_RAMP      vals=4698838   mean=1.524  byte-saved=2207707 (30.8% of its digit-atoms)
+  NI_STEP      vals=2792641   mean=1.459  byte-saved=1279542 (31.4% of its digit-atoms)
+  NI_RAMP      vals=2297933   mean=1.267  byte-saved=611213 (21.0% of its digit-atoms)
+  G_RAMP       vals=2284048   mean=1.205  byte-saved=457735 (16.6% of its digit-atoms)
+  FD_RAMP      vals=2272864   mean=1.490  byte-saved=918333 (27.1% of its digit-atoms)
+  G_STEP       vals=2213139   mean=1.233  byte-saved=516020 (18.9% of its digit-atoms)
+  FD_STEP      vals=2163907   mean=1.620  byte-saved=1043404 (29.8% of its digit-atoms)
+  PW_STEP      vals=2124699   mean=1.530  byte-saved=1126500 (34.6% of its digit-atoms)
+  FLD_CTRL     vals=1161921   mean=1.001  byte-saved=1518 (0.1% of its digit-atoms)
+  NOTE_TABLE   vals=148112    mean=1.319  byte-saved=40868 (20.9% of its digit-atoms)
+  FLD_SR       vals=41857     mean=1.001  byte-saved=27 (0.1% of its digit-atoms)
+TOTAL: 27196187 values, 36755978 digit-atoms, byte-pack saves 8785526 atoms (23.9% of varint content)

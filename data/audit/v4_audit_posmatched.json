@@ -1,0 +1,23 @@
+{
+ "eval_a": {
+  "atoms_content_overall": 0.5150033971384339,
+  "atoms_content_at_BPEbase": 0.26409445787340785,
+  "n_content": 5018930,
+  "n_content_base": 1007772,
+  "base_frac_of_stream": 0.13077713307251868
+ },
+ "eval_b_daglish": {
+  "atoms_content_overall": 0.5162039321960893,
+  "atoms_content_at_BPEbase": 0.3233072188024622,
+  "n_content": 445756,
+  "n_content_base": 64332,
+  "base_frac_of_stream": 0.09315960533277517
+ },
+ "eval_b_follin": {
+  "atoms_content_overall": 0.4791761248237796,
+  "atoms_content_at_BPEbase": 0.24518038797313338,
+  "n_content": 334808,
+  "n_content_base": 66551,
+  "base_frac_of_stream": 0.13617105608492813
+ }
+}

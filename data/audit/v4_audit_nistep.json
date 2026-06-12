@@ -1,0 +1,26 @@
+{
+ "eval_a": {
+  "phrase_initial_acc": 0.2124663850686312,
+  "within_phrase_acc": 0.1453690807799443,
+  "n_PI": 299718,
+  "n_WP": 80416,
+  "median_abs_interval": 12,
+  "pct_PI": 0.7884535453287524
+ },
+ "eval_b_daglish": {
+  "phrase_initial_acc": 0.3424024640657084,
+  "within_phrase_acc": 0.14594978262798333,
+  "n_PI": 19480,
+  "n_WP": 11271,
+  "median_abs_interval": 4,
+  "pct_PI": 0.6334753341354753
+ },
+ "eval_b_follin": {
+  "phrase_initial_acc": 0.3267195339051627,
+  "within_phrase_acc": 0.10874987528684027,
+  "n_PI": 30895,
+  "n_WP": 10023,
+  "median_abs_interval": 12,
+  "pct_PI": 0.7550466787233002
+ }
+}

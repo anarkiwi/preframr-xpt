@@ -1,57 +1,65 @@
-# Encoding-density frontier — atoms-only is the default, BPE refuted as the context lever (magnitude provisional), head-amortization the one open lever
+# Encoding-density frontier — atoms-only is the default, BPE refuted as the context lever (true magnitude ~1.4× bits/atom), radix + head-amortization the open density levers
 
-**Status: DECISION (2026-06-12; evidence re-scoped same day after a confound review).** Settles the
-"compress the encoding to fit tunes in the window" question with data from the canonical
-learnability run + a corpus encoding survey. Verdict: **the atoms-only event encoding (tkvocab=0)
-is the shipped default and the content-correct representation on current evidence; unigram/BPE is
-refuted as the content/context lever — operationally final, but the measured 6–11× harm magnitude
-is PROVISIONAL (three named confounds, §1a) until the §7 de-confounding audit runs. Value-encoding
-density is at its frontier per P1-separability + the shipped ramp/pitch primitives, with one number
-outstanding (digit radix, §3). The only open density lever is head-amortization (~10–15%, §4),
-which does not change the context-window picture.** Context length is a `seq_len`/windowing/chaining
-problem, not an encoding problem (§5). Melody is high-entropy next-token at this regime (§2).
+**Status: DECISION (2026-06-12; the §7 de-confounding audit RAN — verdict revised, magnitude
+resolved).** Settles the "compress the encoding to fit tunes in the window" question with the
+canonical learnability run, a corpus encoding survey, and the §7 audit (results in
+`data/audit/deconfound_summary.md`). Verdict: **the atoms-only event encoding (tkvocab=0) is the
+shipped default and the content-correct representation; *unconstrained* unigram/BPE is refuted as the
+content/context lever — but the 6–11× argmax harm was CONFOUND-DOMINATED (all three §1a confounds
+confirmed real). The true model-quality gap is ~1.4× in bits/canonical-atom (§7A), ~2–4× in
+position-matched argmax (§7B), and STILL SHRINKING with matched steps (§7C) — modest, not
+catastrophic.** Because the gap is small and the mechanism is boundary-crossing welding, an
+**event-boundary-respecting dictionary is promoted to a live lever** (§6). Value-encoding density:
+**digit radix is a live ~12%-of-stream polish lever** (§3/§7E, not dead) scoped to multi-digit varint
+lanes; head-amortization recoverable share is **17.4%** (§4/§7F). Neither is a context lever: tunes
+are ~50k atoms/median (§7F, NO dataset truncation — `BlockMapper` tiles every atom), so context stays
+a `seq_len`/windowing/chaining problem (§5). Melody is high-entropy next-token at this regime (§2/§7D).
 
-## 1. BPE harms content generalization as measured (~6–11×) — magnitude provisional
+## 1. BPE harms content modestly (~1.4× bits/atom) — the 6–11× argmax headline was confound-dominated
 
-Canonical `generalize` 14M body (8L-d320-im896), atoms-only (tkvocab=0) vs unigram BPE-as-dictionary
-(tkvocab=2048, ~2.6× stream compression, ~98% live vocab), same corpus/holdouts, content-tier
-accuracy at matched ~epoch 100. Definitions: **content-tier** = value-digit atoms only (markers are
-structural); **eval_a** = in-distribution holdout; **eval_b_daglish / eval_b_follin** = held-out
-composers. Registry entry: `data/refuted/unigram_bpe_content_generalization.md`.
+Canonical `generalize` 14M body (8L-d320-im896), atoms-only (tkvocab=0, ckpt ep99) vs unigram
+BPE-as-dictionary (tkvocab=2048, ~2.73× stream compression, ~98% live vocab; best ckpt ep174),
+same corpus/holdouts. Registry entry: `data/refuted/unigram_bpe_content_generalization.md`;
+audit artifacts in `data/audit/` (`deconfound_summary.md`).
 
-| eval subset | BPE-2048 | atoms-only |
+**As originally measured (per-token content-tier argmax) — now known to be confounded:**
+
+| eval subset | BPE argmax | atoms-only argmax |
 |---|---|---|
 | eval_a | 0.049 | 0.479 |
 | eval_b_daglish | 0.088 | 0.559 |
 | eval_b_follin | 0.039 | 0.416 |
 
-**Mechanism (localized; direction plausibly real):** merged BPE tokens are ~1% argmax-predictable
-(surviving base atoms 4–8%). BPE is a data-driven merge blind to the event grammar; it welds content
-atoms into multi-atom merges *across* event boundaries. The ~1% sits below even the parity-expected
-joint accuracy for 2–3-atom merges (~0.11–0.23 at the baseline's 0.42–0.56/atom), so merges look
-genuinely degraded — but see confound (b).
+**De-confounded (§7, the decision-grade measures):**
 
-### 1a. Why the magnitude is provisional (three confounds, none yet excluded)
+| measure | eval_a | daglish | follin | read |
+|---|---|---|---|---|
+| **bits/canonical-atom** (§7A, tokenization-invariant) | 1.93→2.71 | 2.00→2.97 | 2.22→3.04 | **BPE ~1.4× worse** |
+| **position-matched argmax** (§7B) atoms-only@base | 0.264 | 0.323 | 0.245 | vs BPE base ~0.05–0.13 → **~2–4×** |
 
-- **(a) Population.** The BPE content-tier column ≈ the *surviving base atoms* (4.9/8.8/3.9% ≈ the
-  "4–8%" base range) — exactly the rare tail unigram chose NOT to merge — while the atoms-only
-  column averages over ALL content atoms. Frequent (≈predictable) content sits inside merges on the
-  BPE side; the two columns score different populations by construction.
-- **(b) Granularity.** A merged token's argmax accuracy is JOINT over its k atoms: at parity with a
-  0.48/atom model a 3-atom merge scores ~0.11, so low merge accuracy is partially expected at zero
-  harm. Per-token argmax does not compare across tokenizations.
-- **(c) Training.** Matched epochs ≠ matched steps: at seq_len 8192, BPE tunes are ~1.4 windows vs
-  ~4.2 atoms-only → ~3× fewer optimizer steps by epoch 100; v4 was stopped mid-descent (val_loss
-  7.08→6.27) and the documented plateau→steep-drop content transition (AGENTS.md) is unexcluded —
-  the table may sample v4 pre-transition.
+The true model-quality gap is **~1.4× (bits) / ~2–4× (matched argmax)** — modest, NOT 6–11×. The
+mechanism (BPE welds content atoms into multi-atom merges *across* event boundaries; merges ~1%
+argmax-predictable) is real in *direction*, but the 6–11× magnitude was an artifact of the three
+confounds, all now CONFIRMED.
 
-**The operational verdict stands while §7 runs:** atoms-only stays the default — even at per-atom
-parity the dial buys no content, and if welding is the mechanism, a LARGER vocab means MORE welding
-(which closes the planned 4096–16384 sweep by mechanism, conditional on §7 confirming welding).
-What the confounds gate is the *strength of the ban* (§6) and the registry magnitude. Carry-over,
-now extended: all-tier `val_acc` is confounded across tokenizations (bigger vocab ⇒ higher per-token
-entropy) — **and per §1a content-tier is too**; cross-tokenization comparisons must be
-position-matched or in bits/canonical-atom (§7A/B).
+### 1a. The three confounds — all CONFIRMED by §7 (magnitude retracted)
+
+- **(a) Population — CONFIRMED.** The BPE content column ≈ surviving base atoms (the rare tail unigram
+  didn't merge). §7B: restricting the *atoms-only* model to those same base positions drops it
+  0.51→**0.26** (eval_a) — base positions are genuinely the harder tail. But atoms-only still beats
+  BPE-base (~0.05–0.13) ~2–4× there, so population explains much of the gap, not all.
+- **(b) Granularity — CONFIRMED structurally.** A merged token's argmax is JOINT over its k atoms;
+  cross-tokenization argmax is not comparable. §7A (bits/atom) is the tokenization-invariant fix → ~1.4×.
+- **(c) Training — CONFIRMED, and unbounded.** §7C: trained the BPE arm 100→174→300; content ~doubled
+  ep100→ep174 (0.05→0.077 etc.) and val_loss kept descending 5.57→4.74 to ep300 (STILL improving, no
+  plateau). Matched-steps gap is **≤1.4× and shrinking** (caveat: the run retained only the ep174 ckpt
+  — `save_top_k=1` on `val_loss` — so exact ep300 content is uncaptured; a `save_last` re-run pins it).
+
+**Operational verdict (direction unchanged, magnitude retracted):** atoms-only stays the default — it
+is genuinely better (1.4× bits/atom) and is the shipped, content-correct representation. But the harm
+is modest, so the §6 ban narrows to *unconstrained* merges and an event-boundary-respecting dictionary
+becomes a live lever. Carry-over: all-tier `val_acc` AND raw cross-tokenization content-tier argmax are
+confounded — only bits/canonical-atom or position-matched argmax are decision-grade.
 
 ## 2. Per-KIND learnability map (atoms-only model, context-aware audit)
 
@@ -91,31 +99,35 @@ cost model**:
   intervals) + per-voice recovered NOTE_TABLE + per-voice TUNING + FD_* modulation residual. 83% of
   voiced frames have residual exactly 0.
 
-Corpus survey (120-tune `.atoms.zst` sample): **avg 6.42 atoms/event, ~49k atoms/tune.**
-Composition: ~48% content value-digits, **25.9% `[VOICE][KIND][reg]` head markers** (the
-amortization ceiling), remainder gesture params (SHAPE/length/degree) + KEYFRAME conditioning.
-**67% of events are 2–4 atoms** (modal event = 3: kind + ~2 payload). Two caveats:
+Full-corpus survey (§7F, 862-tune `.atoms.zst`): **atoms/tune mean 85k, median 50k** (the 120-sample
+~49k ≈ median). The repo-standard "~30k atoms/tune" was wrong-unit — it is **BPE tokens/tune** (mean
+31k = atoms/2.73×, median 18k); AGENTS.md's "4.16 KEYFRAME windows/tune" is the mean *BPE* windows
+(31k/8192), not atoms. **No dataset truncation:** `BlockMapper` (`preframr/train/block_mapper.py`)
+tiles every block of every tune — the model trains on every atom (atoms-only ~6 windows/tune median,
+BPE ~2.2). Composition (authoritative, incl. typed nibbles as content): **content 69.0%** (varint
+50.1% + nibbles 18.9%), **head 28.5%** (KIND 15.9% / VOICE 11.1% / reg 1.5%), gesture SHAPE 2.5%.
+**67% of events are 2–4 atoms** (modal event = 3). The §4–5 conclusions are robust (50k ≫ 8192).
 
-- **49k conflicts with the repo-standard ~30k atoms/tune** (AGENTS.md,
-  `design/generation/long_range_structure.md`, `design/references/tokenization_vs_music_llms.md`) —
-  likely pre-encode sample bias (the scope-filtered, interruptible pre-encoder) or dumps-vs-tunes
-  counting; §7F re-runs the survey over the full 856-dump corpus. The §4–5 conclusions are robust
-  to either number (26k or 42k ≫ 8192).
-- **Digit radix is the one unexamined token-count lever.** "~48% content digits are irreducible" is
-  true in *bits* and is grounded in **P1-separability**
-  (`design/references/encoding_principles.md`, earned by the 0.009→0.658 pitch-onset de-merge) —
-  but values are typed nibbles + BE varints, and a deterministic nibble-pair→typed-byte merge is
-  the same blessed family as §4 (single-token-per-unit, codec-pinned). One number closes it: the
-  digits-per-value distribution (§7E). Mean ≈1.x nibbles/value ⇒ dead; ≈2 ⇒ a ~20% lever bigger
-  than head-amortization, then litigated against P1 via `learnability_triage` before any run.
+- **Digit radix is a LIVE polish-grade lever (§7E), not dead.** Mean 1.364 digits/value overall, but
+  a deterministic byte-pack (one token per value, `saved = d − ⌈d/2⌉`) saves **8.79M atoms = ~12% of
+  the stream** (24% of varint content) — head-amortization-class, and on a *disjoint* atom family, so
+  the two **stack** (~1.3× combined density). The juice is per-lane: **FD_STEP 1.62, PW_STEP 1.53,
+  PW_RAMP 1.52, FD_RAMP 1.49, NI_STEP 1.46**; FLD_CTRL/FLD_SR are dead (1.001, nibble-based). **P1
+  scope:** P1 permits one-token-per-value for *multi-digit varints* (one decision → one token) but
+  forbids welding distinct decisions, so the **18.9% single-nibble content (NIB_WAVE/ART/ENV) is OUT
+  of scope** — a *selective per-lane* typed-byte family only. Still not a context lever (50k → ~44k ≫
+  8192); gate on `learnability_triage` + P1 litigation before any run. (Supersedes the crude ≳1.7
+  threshold: the decision metric is the computed byte-pack saving, not the raw mean.)
 
 ## 4. The only open density lever: head-amortization (~10–15%, optional)
 
 Each event pays a `[KIND]` atom (and `[reg]` for globals); the `[VOICE]` atom is already amortized
-per frame-group. Since 67% of events are 2–4 atoms, heads are head-heavy. Ceiling = 25.9% of the
-stream — but that share lumps VOICE (already amortized): the recoverable fraction is the KIND+reg
-share, which the survey did not break out (§7F reports it); realistic recovery ~10–15% pending that
-breakdown (you cannot eliminate all event identification). Candidate mechanisms (deterministic,
+per frame-group. Since 67% of events are 2–4 atoms, heads are head-heavy. §7F breaks the 28.5% head
+share into KIND 15.9% / VOICE 11.1% / reg 1.5%: VOICE is already amortized (only **~0.7 VOICE atoms
+per event** — frame-groups are *tiny*, so per-frame-group amortization is already near its limit; do
+not reopen voice-order work, see `data/refuted/sequence_order_normalization_design.md`), so the
+**recoverable ceiling is KIND+reg = 17.4%**, realistic recovery ~10–15% (you cannot eliminate all
+event identification). Candidate mechanisms (deterministic,
 byte-exact-preserving, single-token-per-unit — *not* data-driven merges): combined `(voice,kind)`
 or `(kind,reg)` atoms for the common cases; context-predicted kind elision where the grammar makes
 it unambiguous. **Audit caution:** combined atoms lower measured structural/all-tier accuracy by
@@ -144,58 +156,82 @@ achieving 2.6× compression, and on current evidence it does so by destroying co
 
 ## 6. For the next agent — what to do, what not to do
 
-- **Run §7 first** — cheap, mostly CPU, and it gates everything marked "provisional".
-- **Do not re-attempt:** *unconstrained* data-driven merges (BPE/unigram) as a content or context
-  lever (refuted as measured; §7 sets the final magnitude); the "denser alphabet to fit the window"
-  framing; parametric ramps or per-voice pitch tables (shipped).
-- **Scoped untested (deprioritized, NOT banned):** an *event-boundary-respecting* dictionary —
-  data-informed merge selection but merges never cross event boundaries, codec-pinned (the §4
-  family generalized; bounded ~2× given modal event = 3). Revisit only if §7A/B exonerates merges
-  per-position AND a window-fit need survives chaining.
-- **Optional polish:** head-amortization in `events/stream.py` (≤~13% length; keep
-  `encode(verify=True)` byte-exact; bump `EVENT_FORMAT_VERSION` + `ATOM_CACHE_VERSION`).
+- **§7 RAN** (`data/audit/deconfound_summary.md`) — verdict revised: harm is ~1.4× bits/atom, not 6–11×.
+- **Do not re-attempt:** *unconstrained* data-driven merges (BPE/unigram) that cross event boundaries
+  (still refuted — they welded content and cost 1.4× bits/atom); the "denser alphabet to fit the
+  window" framing (no density lever fits tunes in the window — §5); parametric ramps or per-voice
+  pitch tables (shipped).
+- **LIVE lever (promoted by §7A/B):** an *event-boundary-respecting* dictionary — data-informed merge
+  selection but merges never cross event boundaries, codec-pinned (the §4 family generalized; bounded
+  ~2× given modal event = 3). The §7 gap is small enough (1.4×) and the mechanism (boundary-crossing
+  welding) specific enough that a boundary-respecting variant plausibly recovers it. Gate on
+  `learnability_triage` + a confirmatory matched-steps run.
+- **LIVE polish levers (stackable, ~1.3× combined density, neither a context lever):**
+  (1) **selective per-lane digit byte-pack** (§3/§7E, ~12%, scoped to FD/PW/NI multi-digit varints,
+  P1-litigated); (2) **head-amortization** in `events/stream.py` (≤~13–17%; combined `(kind,reg)` /
+  context-predicted kind elision). Both: keep `encode(verify=True)` byte-exact; bump
+  `EVENT_FORMAT_VERSION` + `ATOM_CACHE_VERSION`; compare pre/post on content-tier only.
 - **Context arc:** `seq_len` 16384 + musically-aligned windows on the atoms-only encoding + the
   chaining gate (`design/generation/long_range_structure.md`).
 
-## 7. De-confounding audit (specified, PENDING — run before hardening any ban)
+## 7. De-confounding audit (RAN 2026-06-12 — results in `data/audit/`)
 
-All tasks reuse the two existing checkpoints + audit machinery; A/B/D/E/F are audit/corpus scripts
-(`--device cpu` works), C is the only training.
+Outcome: the 6–11× magnitude is **retracted**; the direction (BPE costs more per canonical atom)
+**survives**. Full writeup `data/audit/deconfound_summary.md`; per-task JSONs alongside. Summary:
 
-- **A. Bits per canonical atom (decisive).** Per eval dump (all three subsets, full eval,
-  `--max-blocks 0`): total ground-truth NLL of the token sequence under each checkpoint ÷ the
-  dump's canonical atom count. Tokenization-invariant up to the deterministic-encoding caveat;
-  report per-subset bits/atom + per-tune NLL.
-- **B. Position-matched argmax.** Decompose BPE ids into constituent atoms via the v4 tkmodel/merge
-  table; mark atom positions covered by length-1 (base) tokens; score the *atoms-only* checkpoint's
-  content accuracy restricted to those positions vs BPE's base-atom accuracy on the same positions.
-  Atoms-only also ~5–9% there ⇒ confound (a) explains the table; holds ~40%+ ⇒ refutation survives.
-- **C. Matched-steps extension.** Train BPE-2048 to ~300 epochs (≈3× steps ≈ matched; BPE epochs
-  run ~3× faster) or until content-tier flattens; audit content-tier every ~25 epochs — checks the
-  late-transition explanation (c). Set `max_epochs` deliberately (early-stop never fires under
-  schedule-free, AGENTS.md gotcha).
-- **D. NI_STEP split.** Content accuracy split phrase-initial (first onset after rest/voice start,
-  or large |Δnote|) vs within-phrase steps, per eval subset.
-- **E. Digits-per-value distribution** over the corpus `.atoms.zst` (mean + histogram of
-  value-digit count per value field) — decides the §3 radix question.
-- **F. Full-corpus survey re-run** after full pre-encode (`preencode_corpus.sh --only-missing` on
-  fogbank): atoms/tune mean+median (49k-vs-30k reconciliation), composition shares, and the
-  per-marker-type breakdown of the 25.9% head share (VOICE vs KIND vs reg) for §4's arithmetic.
-- **G. Provenance + writeback.** Copy `/scratch/tmp/v4_audit*.json` + all new audit JSONs into
-  `data/audit/`; then apply §8's mapping to this doc, the refuted entry, and the AGENTS.md
-  resolved log.
+- **A. Bits per canonical atom (decisive). RAN** (`v4_audit_bits_per_atom.json`, full eval
+  `--max-blocks 0`, all three subsets). True gap is **~1.4× bits/atom**, not 6–11×: BPE pays
+  ~1.93→2.71 bits/atom vs atoms-only across subsets. The headline argmax table was
+  confound-dominated.
+- **B. Position-matched argmax. RAN** (`v4_audit_posmatched.json`). On base (length-1) positions,
+  atoms-only scores **0.264 / 0.323 / 0.245** content accuracy (eval_a / b_daglish / b_follin) —
+  refutation survives (well above the ~5–9% confound-(a) bar) but ~2–4×, not the raw table's gap.
+  Confound (a) confirmed: the atoms-only population accuracy drags 0.51→0.26 once restricted to
+  base positions, so the raw cross-tokenization table compared unlike populations.
+- **C. Matched-steps extension. RAN** (`v4_audit_ep174.json`; checkpoint `epoch=174`). BPE-2048
+  val_loss was **still descending (5.57→4.74) at matched steps** — confound (c) confirmed and
+  *unbounded*: the gap is shrinking and the matched-steps endpoint is not pinned (save_top_k=1 on
+  val_loss saved only ep174; a `save_last` re-run would pin exact ep300). Verdict: ≤1.4× and
+  closing.
+- **D. NI_STEP split. RAN** (`v4_audit_nistep.json`). Phrase-initial vs within-phrase both land in
+  the high-entropy regime (~0.18-class) — keep the high-entropy read, regime-conditioned; the
+  melody claim does **not** narrow to anchors.
+- **E. Digits-per-value distribution. RAN** (`data/audit/deconfound_windows_and_digits_per_value.txt`).
+  Radix is a **polish-grade ~11–12% per-lane lever**, not dead and not a context lever: multi-digit
+  varint lanes (FD_STEP 1.62, PW_STEP 1.53, NI_STEP, G_STEP digits/value) carry the juice; 18.9% of
+  content is single-nibble (already optimal, out of scope). P1-scoped, stackable with
+  head-amortization.
+- **F. Full-corpus survey re-run. RAN** (same file). **No truncation** — `BlockMapper.__len__` sums
+  all blocks and tiles every atom (49k-vs-30k was atoms-vs-BPE-tokens, not a windowing loss). Tunes
+  ~50k atoms median / 85k mean; ~18k BPE-tokens median / 31k mean. Composition: content **69%**,
+  recoverable head (KIND + reg) **17.4%** (replaces the earlier 25.9%); VOICE markers ~0.7/event
+  already amortized (see `data/refuted/sequence_order_normalization_design.md` — do not reopen
+  voice-order work). Denominators: the §7A/B/D audits eval **856 dumps** (provenance corpus); the F
+  composition survey is over **862 tunes** (full corpus).
+- **G. Provenance + writeback. RAN** — JSONs copied to `data/audit/`; §8 mapping applied to this
+  doc, the refuted entry, and the AGENTS.md resolved log.
 
 ## 8. What would reopen this (falsifiers → actions)
 
 - **A/B ≈ parity** (per-position or bits/atom) → retract the 6–11× magnitude in the registry;
-  promote the boundary-respecting dictionary (§6) to a live lever.
+  promote the boundary-respecting dictionary (§6) to a live lever. **FIRED (partial):** not parity
+  (A ~1.4× bits/atom, B ~2–4× position-matched, both real), but the 6–11× magnitude is retracted
+  and the boundary-respecting dictionary is **promoted to a live lever** (§6).
 - **C shows a late content transition** approaching baseline → same as above; re-take the verdict
-  at matched steps.
+  at matched steps. **FIRED:** val_loss still descending at matched steps (5.57→4.74); gap is
+  unbounded-shrinking, endpoint not pinned. Verdict re-taken as ≤1.4× and closing.
 - **E mean ≳1.7 nibbles/value** → radix is live; `learnability_triage` it against P1 before any run.
+  **FIRED (revised):** threshold replaced by computed savings — radix is a **live ~11–12% per-lane
+  polish lever** (FD/PW/NI multi-digit varint lanes), P1-scoped, stackable with head-amortization;
+  not a context lever.
 - **D: within-phrase fine, anchors drag** → melody claim narrows to anchors (encoding exonerated);
-  **both ~0.18** → keep the high-entropy read, regime-conditioned.
-- **F shifts composition shares materially** → redo §4's ceiling/recovery arithmetic.
+  **both ~0.18** → keep the high-entropy read, regime-conditioned. **FIRED (latter):** both regimes
+  high-entropy → high-entropy read kept, regime-conditioned; claim does **not** narrow to anchors.
+- **F shifts composition shares materially** → redo §4's ceiling/recovery arithmetic. **FIRED:**
+  content 69% / recoverable head 17.4% (was 25.9%); §3/§4 arithmetic redone. No truncation.
 - **None of the above fire** → strike "provisional" throughout; §6's ban becomes unconditional.
+  **DID NOT FIRE:** confounds (a)/(b)/(c) all confirmed → the ban stays conditioned on
+  C's unbounded tail; "provisional" retained where the matched-steps endpoint is unpinned.
 
 ## Provenance
 
@@ -203,6 +239,7 @@ Stack: tokens 0.50.0 / preframr 0.2.29; spec `generalize` (canonical 14M body, 8
 single-speed 856-dump corpus. Baseline: atoms-only v3c, epoch 99/100, val_acc 0.561, ckpt
 `/scratch/tmp/v3c_final.ckpt`. BPE: root `/scratch/tmp/preframr_experiments/unigram_canonical_v4`,
 stopped ~epoch 100 mid-descent (val_loss 7.08→6.27). Audits: `audit_checkpoint_per_class` +
-`content_tier_report`, **1 seed, 24-block samples** (full-eval pending §7A). Artifacts
-`/scratch/tmp/v4_audit*.json` + session-log scripts are **ephemeral until §7G copies them into
-`data/audit/`**.
+`content_tier_report`; §7A/B/D ran **full-eval (`--max-blocks 0`)**, GPU-ized on defroster sharing
+the C run. Artifacts copied into `data/audit/` (§7G done): `v4_audit_bits_per_atom.json` (A),
+`v4_audit_posmatched.json` (B), `v4_audit_ep174.json` (C), `v4_audit_nistep.json` (D),
+`deconfound_windows_and_digits_per_value.txt` (E/F), `deconfound_summary.md` (full writeup).

@@ -66,27 +66,31 @@ BPE-dictionary run CONCLUDED on the NOT-LEARNED branch (verdict + NEXT below). F
   val_loss is a *real* learning transition — present in the un-averaged train iterate too — only
   ~6× amplified by the averaging, not a schedule artifact.)
 
-### RESOLVED (2026-06-12) — NOT-LEARNED branch taken; NEXT = the de-confounding audit
+### RESOLVED (2026-06-12) — NOT-LEARNED branch taken; §7 de-confounding audit RAN, magnitude retracted
 The `generalize --tkvocab 2048` canonical run (root
-`/scratch/tmp/preframr_experiments/unigram_canonical_v4`) came in **~6–11× worse on content-tier**
-than the atoms-only baseline (eval_a 0.049 vs 0.479; daglish 0.088 vs 0.559; follin 0.039 vs 0.416)
-→ **atoms-only (tkvocab=0) is the default; the "BPE dial is THE context lever" framing is
-refuted.** Full decision: `design/encoding/encoding_density_frontier.md` (+ registry entry
-`data/refuted/unigram_bpe_content_generalization.md`). Step 2 of the diagnose branch surfaced real
-artifacts: **the measured magnitude is PROVISIONAL** — (a) population (BPE content-tier scores only
-surviving base atoms — the rare tail unigram didn't merge); (b) granularity (merged-token argmax is
-joint over k atoms; parity ≈0.11–0.23, not 0.48); (c) training (matched epochs = ~3× fewer BPE
-steps; v4 stopped mid-descent, val_loss 7.08→6.27, plateau→steep-drop transition unexcluded).
+`/scratch/tmp/preframr_experiments/unigram_canonical_v4`) read **~6–11× worse on content-tier** than
+the atoms-only baseline in the raw cross-tokenization table (eval_a 0.049 vs 0.479; daglish 0.088 vs
+0.559; follin 0.039 vs 0.416) → **atoms-only (tkvocab=0) is the default; the "BPE dial is THE
+context lever" framing is refuted.** Full decision: `design/encoding/encoding_density_frontier.md`
+(+ registry `data/refuted/unigram_bpe_content_generalization.md`).
+
+**The §7 de-confounding audit RAN (2026-06-12; results `data/audit/deconfound_summary.md`). The
+6–11× magnitude is RETRACTED; the direction survives.** All three confounds were CONFIRMED:
+(a) population — restricting atoms-only to base positions drags it 0.51→0.26 (§7B); (b) granularity
+— merged-token argmax is joint over k atoms; (c) training — extending BPE-2048 to matched steps
+(§7C) had val_loss still descending 5.57→4.74, so the gap is shrinking and unbounded (endpoint
+unpinned). De-confounded gap: **~1.4× bits per canonical atom** (decisive, A: 1.93→2.71) /
+**~2–4× position-matched content argmax** (B: atoms-only 0.264 / 0.323 / 0.245) — both real, both
+far below the raw table. Audit also settled: no truncation (BlockMapper tiles all atoms; 49k-vs-30k
+was atoms-vs-BPE-tokens), composition content 69% / recoverable head 17.4%, radix a live ~11–12%
+per-lane polish lever (P1-scoped), melody high-entropy in both phrase regimes. The
+**event-boundary-respecting dictionary is PROMOTED to a live lever** (frontier §6).
 
 **NEXT, in order:**
-1. **Frontier §7 de-confounding audit** (mostly CPU): bits/canonical-atom + position-matched
-   scoring + matched-steps v4 extension (~300 ep) + NI_STEP anchor/step split + digits-per-value
-   (radix) + full-corpus survey (49k-vs-30k reconciliation, per-marker head breakdown). Outcomes
-   map to actions via frontier §8; artifacts get copied into `data/audit/` (scratch is ephemeral).
-2. **Context arc:** `seq_len` 8192→16384 (verify 24 GB fit before the re-cut) + musically-aligned
+1. **Context arc:** `seq_len` 8192→16384 (verify 24 GB fit before the re-cut) + musically-aligned
    KEYFRAME windows (dataset-side, from the landed structural index) on atoms-only; whole tunes via
    register-domain chaining (`design/generation/long_range_structure.md` — now the norm path).
-3. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
+2. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
    stretch: cross-engine generalisation; Orin **offline** predict path (grammar-mask constrained
    decode; real-time is out of reach per `design/performance/orin_inference_optimization_design.md`).
 
@@ -194,22 +198,24 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
-- **2026-06-12 (BPE refuted + encoding frontier; evidence re-scoped same day)** — canonical run
-  verdict: **unigram BPE (tkvocab 2048) harms content generalization** ~6-11x as measured vs
-  atoms-only at matched ~epoch 100 (`data/refuted/unigram_bpe_content_generalization.md`) —
-  **magnitude PROVISIONAL** (population/granularity/steps confounds; de-confound audit specified,
-  frontier §7); mechanism (direction plausibly real) = merged tokens ~1% predictable, below joint
-  parity (BPE welds content across event boundaries — scales WITH vocab, closing the sweep). Scoped
-  ban: unconstrained cross-boundary merges; boundary-respecting dictionary untested/deprioritized.
-  Per-KIND map: timbre (G_STEP/PW_RAMP) learnable 0.5-0.77, **melody (NI_*, the interval lane)
-  high-entropy 0.18-0.31 at this regime** (anchor-vs-step split pending — score onsets by audition
-  not argmax, per `universal_multiresolution_pitch.md`). **Encoding-density frontier:** parametric
-  ramps (MDL under the codec cost model) + per-voice note-table pitch ALREADY shipped (tokens
-  0.16/0.17, 0.47.0); survey-sample avg 6.42 atoms/event, ~49k atoms/tune (vs repo ~30k —
-  reconciliation pending), ~48% content digits (irreducible per P1; radix closed by digits-per-value
-  — pending), **only open structural lever = head-amortization (25.9% marker ceiling, ~10-15%
-  realistic pending per-marker breakdown)**. Density is NOT the context lever (real levers =
-  seq_len/windowing + chaining + accept melody entropy).
+- **2026-06-12 (BPE refuted as context lever; §7 de-confounding audit RAN same day, magnitude
+  retracted)** — canonical run read **~6-11x worse on content** in the raw cross-tokenization table,
+  but the **§7 audit RETRACTED that magnitude** (`data/audit/deconfound_summary.md`,
+  `data/refuted/unigram_bpe_content_generalization.md`). All three confounds CONFIRMED — (a)
+  population (atoms-only drags 0.51→0.26 on base positions), (b) granularity (joint k-atom argmax),
+  (c) training (BPE val_loss still descending 5.57→4.74 at matched steps, gap unbounded). True gap:
+  **~1.4× bits/canonical-atom** (decisive A, 1.93→2.71) / **~2-4× position-matched argmax** (B,
+  0.264/0.323/0.245) — direction survives, 6-11x retracted. Verdict holds: **atoms-only is the
+  default; BPE is not the context lever**, but the **boundary-respecting dictionary is PROMOTED to a
+  live lever** (the harm is confirmed cross-boundary welding). Per-KIND map: timbre learnable
+  0.5-0.77, **melody (NI_*) high-entropy in BOTH phrase-initial and within-phrase regimes** (§7D —
+  high-entropy read kept, claim does not narrow to anchors). **Encoding-density frontier:** parametric
+  ramps + per-voice note-table pitch shipped (tokens 0.47.0); **no truncation** (BlockMapper tiles
+  all atoms; 49k-vs-30k was atoms-vs-BPE-tokens), tunes ~50k atoms median / 85k mean, composition
+  content 69%, **recoverable head 17.4%** (KIND+reg; replaces 25.9%), radix a **live ~11-12%
+  per-lane polish lever** (P1-scoped to multi-digit varints; 18.9% single-nibble out of scope).
+  Density is NOT the context lever (real levers = seq_len/windowing + chaining + accept melody
+  entropy).
 
 - **2026-06-12 (parallel block pass)** — **tokens 0.50.0**: `_encode_and_save_events` fans the per-dump
   `.0.blocks.npy` encode across a `ThreadPoolExecutor` (mirrors `train_tokenizer`'s uni-write pass — the
