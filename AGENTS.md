@@ -29,8 +29,8 @@ Details: `design/references/{verification_and_audits,learnability_token_ordering
 ## Current arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (in progress)
 
 The encoding + pipeline are done/shipped; the open arc is the **canonical learnability run
-on event tokens** (scientific, not operational). First runs of the `generalize` spec are
-executing. Findings so far:
+on event tokens** (scientific, not operational). The atoms-only baseline is DONE and the
+BPE-dictionary run is in flight. Findings so far:
 
 - **TOKENIZER CRASH + FIX (load-bearing).** Any `tkvocab>0` run hit a hard **SIGSEGV** in the
   `tokenizers` 0.23.1 **UnigramTrainer** — root cause (gdb-confirmed): recursive
@@ -45,27 +45,66 @@ executing. Findings so far:
   both unrealizable for the 127-atom alphabet and the first to trip the crash. Vocab is now a
   **dial** (the 127 atoms are fixed; merges are the dictionary). Pass realizable values via
   `--tkvocab N` (folds into the dataset-cache key → re-tokenizes).
-- **First content-tier numbers (atoms-only `tkvocab=0` baseline, epoch ~28, still training):**
-  eval_a content **0.33**, eval_b_daglish **0.35**, eval_b_follin **0.27**, content/structural
-  0.74–0.90. Above the old **~0.13 eval_a content ceiling**, and held-out composers track
-  in-distribution (no generalization collapse). Caveats: early (run unfinished), this is the
-  **no-dictionary floor**, single-seed, 24-block sample, and the content-tier *definition* under
-  events (value-digit atoms = op0) differs from the old substrate — so 0.33-vs-0.13 is
-  directional, not apples-to-apples.
+- **Atoms-only `tkvocab=0` baseline DONE** (stopped epoch 99/100, val_acc 0.561). Content-tier
+  (the decisive gate): eval_a **0.479**, eval_b_daglish **0.559**, eval_b_follin **0.416**;
+  content/structural 0.72–0.88. ~3.7× the old **~0.13 eval_a content ceiling**, and held-out
+  composers track/beat in-distribution (daglish > eval_a) — **content is learnable and generalises
+  in the event model, even at the no-dictionary floor.** Artifacts: `/scratch/tmp/v3c_final.ckpt`,
+  `audit_per_class_{,2,3,final}.json`. (1 seed, 24-block sample; content-tier defn differs from the
+  old substrate, so vs-0.13 is directional.)
+- **Live vocab ~98%** at unigram tkvocab=2048 (2015/2048 ids used; the 33 dead are rare base atoms
+  absent from the single-speed corpus). Demolishes the old "~91% dead tkvocab" problem — vocab is a
+  **dial with near-full utilisation**. Tunes avg ~30k tokens; **82% exceed seq_len 8192** (mean 4.16
+  KEYFRAME-led windows/tune) — the model trains on self-contained windows, never whole tunes.
+- **EARLY-STOP IS EFFECTIVELY DISABLED under schedule-free (load-bearing gotcha).** Optimizer is
+  `AdamWScheduleFree` (no LR schedule/warmup); its averaged eval-iterate val_loss decreases steadily
+  (~0.005/epoch) for 100+ epochs, so `EarlyStopping(min_delta=0.01, patience=5)` re-counts an
+  "improvement" every ~2 epochs and **never fires** → runs hit `max_epochs`. Stops only when
+  improvement < min_delta/patience (≈0.002/ep). For a real stop: raise `min_delta` (≈ target_rate ×
+  patience, e.g. 0.05) per run, or set a deliberate `max_epochs`. (Aside: the plateau→steep-drop in
+  val_loss is a *real* learning transition — present in the un-averaged train iterate too — only
+  ~6× amplified by the averaging, not a schedule artifact.)
 
-### NEXT (in order)
-1. **Re-run `generalize` with a realizable `tkvocab`** (e.g. 2048) now that `RUST_MIN_STACK` is
-   plumbed → get the **dictionary-run** content-tier numbers to compare against the atoms-only
-   baseline. (This is the real BPE-vocab lever; the baseline is just the vocab=0 anchor.)
-2. Re-point `learnability_triage` at the event stream at **seq_len 8192** (prodlike static read;
-   mini 4096 mode-collapses — plumbing only), then write + run the canonical event-model spec.
-   Levers: BPE merge count / vocab size, typed-nibble embedding treatment, KEYFRAME conditioning.
-   NOT a macro-pass A/B (no flag surface exists). Gate on per-tier `content_over_structural` +
-   per-op acc over event KINDs + `eval_b_*` held-out composers.
+### NEXT — the dictionary run is in flight; branch on its content-tier outcome
+**RUNNING:** `generalize_prodlike_unigram` (prodlike body ~107M / 16L-d768 + unigram **tkvocab=2048**,
+same corpus/holdouts as the baseline → directly comparable). ~2.2 min/epoch (319 steps/ep; unigram
+cut blocks 2.6× vs atoms-only), GPU uncontended. A per-tier transition watcher
+(`/scratch/tmp/prodlike_per_tier/`) audits every 2 epochs to test whether **content or structural**
+drives the epoch-~22 loss transition (the induction-head hypothesis v3c couldn't answer — only
+post-transition checkpoints survived it). **Decision metric = content-tier on `eval_b` held-out
+composers vs the baseline** (eval_a 0.479 / daglish 0.559 / follin 0.416), NOT all-tier val_acc.
 
-Carry-over: **all-tier val_acc is CONFOUNDED** across tokenizations — the content-tier read is the
-verdict. Within-tune `--mode window` triage credits trivial redundancy — not the verdict.
-Surviving runnable specs: `generalize` + `memorize` (build-gate, encoding-agnostic).
+**IF CONTENT LEARNED** — BPE + capacity ≥ baseline on eval_b content (esp. lifts follin / narrows the
+held-out gap; content/structural holds) → the tokenizer-side lever works, **scale it**:
+1. De-confound: multi-seed + full-eval (`--max-blocks 0`) audit; confirm the eval_b gain is
+   generalisation, not memorisation.
+2. **Sweep the BPE-vocab dial** (2048 → 4096 → 8192…) for where content saturates (98% live ⇒
+   headroom); pick the knee and write the canonical event-model spec at it.
+3. Stack embedding/conditioning treatments: typed-nibble embeddings (NIB_ENV may already deliver
+   §5.2 perceptual ADSR-tying — check first) + KEYFRAME variants.
+4. Then the **stretch**: cross-*engine* generalisation; re-open the Orin **offline** predict path
+   (grammar-mask constrained decode — real-time single-stream is out of reach, see
+   `design/performance/orin_inference_optimization_design.md`).
+
+**IF CONTENT NOT LEARNED** — eval_b content ≤ baseline / collapses / the content circuit never forms
+→ BPE/capacity isn't the content lever; **diagnose + re-represent**, don't add capacity (model-side
+is refuted at the 0.13 ceiling):
+1. Localise: per-op acc over event KINDs (which content fails — `NI_*` pitch intervals, `FD_*` freq
+   residual, `PW_*`); eval_b-vs-eval_a gap (memorisation vs generalisation); the per-tier transition
+   shape (did the copy circuit ever turn on?).
+2. Rule out artifacts: enough training (the schedule-free early-stop gotcha), all-tier confounding,
+   the window-triage trap.
+3. **Tokenizer-side interventions** (the only live lever): does BPE merging content+structural atoms
+   muddy the content tier? revisit learnability ordering (DEF→REF / causal-DAG); is the
+   note_index/note_table pitch two-layer learnable; are KEYFRAME segments sufficient for
+   durations/intervals.
+4. Re-run `learnability_triage` at seq_len 8192 to rank encodings before more training. If
+   tokenizer-side *also* can't lift content past the baseline, escalate to a content-layer
+   representation redesign (or re-scope cross-composer content as out-of-envelope).
+
+Carry-over: **all-tier val_acc is CONFOUNDED** across tokenizations — content-tier is the verdict.
+Within-tune `--mode window` triage credits trivial redundancy. Runnable specs: `generalize`,
+`generalize_prodlike_unigram`, `memorize`.
 
 ## Packages
 
