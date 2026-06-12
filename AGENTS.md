@@ -47,11 +47,15 @@ corpus live elsewhere.
 
 ## Packages
 
-- **`preframr` 0.2.26** (staged; 0.2.25 is the live release) — framework only (train /
+- **`preframr` 0.2.26** (live release; published 2026-06-12) — framework only (train /
   inference / model / args / parse / stftokenize / utils). Image `anarkiwi/preframr`.
-  No PyPI; ships as the docker image (`:VERSION` + `:latest` published on **`v*` tag via
-  release.yml**, NOT main-push — main-push docker.yml is `push:false`/test-only). Carries
-  the per-op-accuracy gate. **0.2.26 floors `preframr-tokens>=0.47.0`** (the event-model release;
+  No PyPI; ships as the docker image. **The release is the merge to `main`**:
+  `release.yml` fires on **main-push AND `v*` tags** with `push: true`, publishing
+  `:${VERSION}` (from the VERSION file) + `:latest`. `docker.yml` is the separate
+  `push: false` *validation* build (PRs + main). **Convention: also tag each release
+  `git tag -a vX.Y.Z <released-main-sha>` and push it** (a version number with no tag is
+  useless; the tag re-fires `release.yml` and re-pushes the identical image — harmless).
+  Carries the per-op-accuracy gate. **0.2.26 floors `preframr-tokens>=0.47.0`** (the event-model release;
   only **one** req file — `requirements.txt` — floors tokens). Framework coupling is RESOLVED with
   no framework source change: `corpus.preload` (tokens-side) still writes per-dump `.0.blocks.npy`
   + `tokens.csv` + reg-widths and `iter_block_seqs` serves blocks unchanged; the event stream rides
