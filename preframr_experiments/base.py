@@ -536,6 +536,8 @@ def _docker_run(
         f"--memory-swap={memory}",
         "--ulimit",
         "nofile=1048576:1048576",
+        "--env",
+        "RUST_MIN_STACK=2000000000",
         "-v",
         f"{bind_root}:/scratch/preframr",
     ]
