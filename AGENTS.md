@@ -67,14 +67,15 @@ BPE-dictionary run is in flight. Findings so far:
   ~6× amplified by the averaging, not a schedule artifact.)
 
 ### NEXT — the dictionary run is in flight; branch on its content-tier outcome
-**RUNNING (2026-06-12, on the 0.2.27 / tokens 0.48.0 stack):** `generalize --tkvocab 2048` — the
+**RUNNING (2026-06-12, on the 0.2.28 / tokens 0.49.0 stack):** `generalize --tkvocab 2048` — the
 **canonical ~14M body** (8L-d320-im896) + unigram **tkvocab=2048**, same corpus/holdouts as the
-atoms-only baseline → directly comparable. Root `/scratch/tmp/preframr_experiments/unigram_canonical_v2`
-(fresh, re-tokenized against 0.48.0; the earlier `_v1` run was stopped + superseded by this rebuild).
-The RUST_MIN_STACK UnigramTrainer fix is plumbed via `_docker_run`. **Decision metric = content-tier
-on `eval_b` held-out composers vs the baseline** (eval_a 0.479 / daglish 0.559 / follin 0.416), NOT
-all-tier val_acc. (The ~107M `generalize_prodlike_unigram` prodlike variant remains a runnable spec
-for the scale-up branch, but the canonical learnability run is the 14M body.)
+atoms-only baseline → directly comparable. Root `/scratch/tmp/preframr_experiments/unigram_canonical_v3`
+(fresh; the corpus was pre-encoded into `.atoms.zst` first, so the tokenize encode is reused — the
+`.uni.zst` worker pass dropped 17min→≤1min; `_v1`/`_v2` stopped + superseded). RUST_MIN_STACK fix +
+atom cache both via the 0.2.28 stack. **Decision metric = content-tier on `eval_b` held-out composers
+vs the baseline** (eval_a 0.479 / daglish 0.559 / follin 0.416), NOT all-tier val_acc. (The ~107M
+`generalize_prodlike_unigram` prodlike variant remains a runnable spec for the scale-up branch, but
+the canonical learnability run is the 14M body.)
 
 **IF CONTENT LEARNED** — BPE + capacity ≥ baseline on eval_b content (esp. lifts follin / narrows the
 held-out gap; content/structural holds) → the tokenizer-side lever works, **scale it**:
