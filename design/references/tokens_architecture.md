@@ -1,10 +1,24 @@
 # preframr-tokens architecture
 
+> **⚠️ SUPERSEDED (2026-06-11): everything below "The dump (input)" describes the RETIRED
+> (op,reg,subreg,val) substrate** — the atom model, op codes, FREQ_TRAJ, marker registers and
+> macro passes no longer exist in the shipped pipeline. The current tokenizer is the **event
+> model** (gen2 `preframr_tokens/events/` — `stream.py` is the codec, `dataset.py`/`pipeline.py`
+> the corpus build, `generate.py` the decode path), governed by the **v3 canonical contract**:
+> oracle `stream.canonical_writes`, 127-atom fixed alphabet (BE-varint digits, regs, voices,
+> kinds/shapes, typed value nibbles, KEYFRAME), `[DT]([VOICE][kind-led events]*)*` voice-grouped
+> frames, NOTE_ON-owned envelope lifecycle with recorded gate-edge sides, derived gate-offs,
+> mixed-radix durations, BPE-as-dictionary. Authoritative current docs: gen2 `events/STATUS.md`
+> (state + measurements), `REDESIGN_optionB.md` (design, as corrected by STATUS),
+> [`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md) (chip facts + contract),
+> [`verification_and_audits.md`](verification_and_audits.md) (gates). The dump-format and
+> register-map sections below remain correct; keep this doc for reading old designs/results.
+
 The **torch-free** parser + tokenizer for SID register-log dumps. Turns a raw
 `(clock, irq, chipno, reg, val)` write log into a compact, learnable token stream
 (and decodes it back, byte-exact). No torch, no audio — the framework
 (`preframr`) and the renderer (`preframr-audio`) depend on this; it depends on
-neither. This doc is the canonical reference for the parse→pass→tokenize→decode
+neither. This doc was the canonical reference for the retired parse→pass→tokenize→decode
 pipeline so it does not have to be re-derived from the code each time.
 
 ## Topology

@@ -1,9 +1,13 @@
 # Encoding principles — fidelity × context-efficiency × learnability
 
-**Status:** Reference. The single rubric for how to encode the SID register stream as
-model tokens. Other encoding designs should be checked against this; when they trade one
-axis for another, say which and why. Distilled from the 2026-05 melody-onset arc (de-merge
-win + voice / op48 / semitone results).
+**Status:** Reference (axis 1 + checklist updated 2026-06-11 to the v3 canonical contract; the
+P1–P8 evidence cites the retired substrate's arcs — the principles stand, the cited tools/ops are
+historical). The single rubric for how to encode the SID register stream as model tokens. Other
+encoding designs should be checked against this; when they trade one axis for another, say which
+and why. Distilled from the 2026-05 melody-onset arc (de-merge win + voice / op48 / semitone
+results). The event model (gen2 `events/`) is the current embodiment: P1 separability = typed
+value nibbles + kind-led events; P7 provenance-invariance = the universal event grammar with no
+literal path; the old lossy/RESID framing in P8 is moot under v3 (no residual concept).
 
 **Learnability framing.** These three axes are not co-equal: subordinate to
 [`learnability_token_ordering_theory.md`](learnability_token_ordering_theory.md), **fidelity
@@ -20,18 +24,19 @@ training-free (`audit/learnability_triage.py`).
 A token encoding is judged on three axes — two constraints then the objective; the order
 below is how they resolve **when they conflict**:
 
-1. **Fidelity (the floor).** `decode(encode(x))` must reproduce the source dump's SID
-   register writes — **the same registers in the same input order with the same nominal
-   `_MIN_DIFF` delay.** That is the whole criterion: same registers/order/delay ⟹ identical
-   render *by construction* ([`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md)).
-   So fidelity is a **register-level** property, checked by the existing tools
-   (`PREFRAMR_PARSE_AUDIT=raise` → `cb_div_audit.py`; see
-   [`verification_and_audits.md`](verification_and_audits.md)) — control regs exact,
-   FREQ/PW/filter within `freq_tol` cents on audible frames. A *deliberately* lossy content-tier
-   change (cent-binned slope/preset/transpose) is fine **only if it still lands within that
-   `freq_tol` tolerance** — in which case it passes the same register gate. **No WAV render or
-   listening is the gate.** A change whose decoded register stream diverges from the source
-   beyond tolerance is invalid; there is no "sounds fine" escape hatch.
+1. **Fidelity (the floor) — v3 canonical (2026-06-11).** `decode(encode(x))` must reproduce
+   **`stream.canonical_writes(x)`** exactly — the dump's audibly-faithful canonical form: an
+   intra-frame permutation + derivation of the dump's writes with zero drops, where every
+   canonicalization liberty (settled freq/PW first, globals last, same-value drops, derived
+   gate-offs, NOTE_ON envelope folds on the *recorded* gate-edge side) is licensed by a pinned
+   reSID measurement ([`sid_render_fidelity_contract.md`](sid_render_fidelity_contract.md)).
+   Checked by `stream.encode(verify=True)` — every encode self-verifies, fail-loudly
+   ([`verification_and_audits.md`](verification_and_audits.md)). There is **no `freq_tol` band,
+   no lossy content tier, no escape path** — values are byte-exact, only canonical *placement*
+   is licensed, and a new placement liberty requires a new chip measurement (write-count-matched,
+   per-write-clocked — collapsed-timing A/Bs mask the effects). **No WAV render or listening is
+   the gate** for encoding changes; the measurement burden sits one level up, on the
+   canonicalization rules themselves.
 2. **Context efficiency.** Tokens per song, bounded by the deploy envelope (Jetson Orin:
    PROMPT=2048 / MAX=8192, KV ~16 KiB/token). Fewer tokens = more musical context per
    window. Unigram merging is the main lever here.
@@ -121,9 +126,10 @@ fidelity-neutral is *not* learnability-neutral.
 
 ## The checklist (apply to any encoding change)
 
-1. **Fidelity:** does the decoded register stream match the source — same regs, same input
-   order, same delay, within `freq_tol` — under `parse_audit`/`cb_div_audit`? If not, it's
-   invalid (no WAV-audition exception).
+1. **Fidelity:** does `decode(encode(x)) == canonical_writes(x)` exactly (the encode
+   self-verify + the events roundtrip suites)? If the change adds a new canonicalization
+   liberty, is it licensed by a reSID measurement in preframr-audio? If not, it's invalid
+   (no WAV-audition exception).
 2. **Separability:** does any single token fuse multiple independent content decisions
    (esp. via Unigram merges crossing content boundaries)? If so, split them
    ([`melody_merge_split.md`](../landed/melody_merge_split.md)).

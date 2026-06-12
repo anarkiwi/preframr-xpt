@@ -8,10 +8,12 @@ change or release.
 
 **Per-repo architecture references** (all docs live here in preframr-xpt; the code
 they describe lives in the sibling repos under `/scratch/anarkiwi/`):
-- [`tokens_architecture.md`](references/tokens_architecture.md) — **the parsing reference**:
-  preframr-tokens parse→pass→tokenize→decode pipeline, register/atom/op model,
-  `combine_reg` settled-freq, the 3-layer pass-framework registration, fidelity,
-  Corpus/blocks/df-map, and the invariants/gotchas. Consult before touching parsing.
+- [`tokens_architecture.md`](references/tokens_architecture.md) — **historical parsing
+  reference (superseded 2026-06-11)**: documents the retired (op,reg,subreg,val) substrate;
+  dump format + register map still correct. The current tokenizer is the event model — see
+  gen2 `events/STATUS.md` + the updated
+  [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) /
+  [`verification_and_audits.md`](references/verification_and_audits.md).
 - [`audio_architecture.md`](references/audio_architecture.md) — preframr-audio render pipeline
   + fidelity oracle.
 - [`framework_architecture.md`](references/framework_architecture.md) — preframr train/predict/
@@ -96,13 +98,13 @@ updated before the body. Lifecycle:
 | Doc | Summary | Status |
 |---|---|---|
 | [`architecture_overview.md`](references/architecture_overview.md) | The map for deciding *which repo a change belongs in* and *deriving the release process* from the dependency layering. Read before any cross-repo change. | Reference |
-| [`tokens_architecture.md`](references/tokens_architecture.md) | The torch-free parser + tokenizer: parse→pass→tokenize→decode, register/atom/op model, `combine_reg`, the 3-layer pass framework, Corpus/blocks/df-map, byte-exact decode, invariants/gotchas. | Reference |
+| [`tokens_architecture.md`](references/tokens_architecture.md) | The retired (op,reg,subreg,val) parser + tokenizer: atom/op model, pass framework. Dump format + register map still valid; the shipped tokenizer is the event model (gen2 `events/STATUS.md`). | Reference (superseded 2026-06-11) |
 | [`audio_architecture.md`](references/audio_architecture.md) | preframr-audio render pipeline (parsed DataFrame → PCM via resid-fp) + the fidelity-comparison oracle + fingerprinting. | Reference |
 | [`framework_architecture.md`](references/framework_architecture.md) | The torch layer: train/predict/model wrapping tokens (parse+tokenize) and audio (render) with a torchtune body + lightning; the `anarkiwi/preframr` image. | Reference |
 | [`learnability_token_ordering_theory.md`](references/learnability_token_ordering_theory.md) | **The north-star lens** (read before any representation work): theory of cheap next-token representability + the training-free `learnability_triage` that ranks encodings *without a run* (mini mode-collapses regardless of vocab, so it cannot pick direction). | Reference + tool |
 | [`encoding_principles.md`](references/encoding_principles.md) | The orienting rubric for SID stream encoding: **fidelity × context-efficiency × learnability** (priority order), the learnability sub-principles (separability / locality / no-multiplexing / alphabet≠learnability / right-yardstick), and a per-change checklist. Other encoding designs check against this. | Reference |
-| [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) | **Cite, don't re-derive:** the SID render-timing + canonical-order + losslessness contract, each fact CITING the preframr-audio unit test that proves it. The renderer clocks ~`_MIN_DIFF` cycles after EACH write → intra-frame write ORDER and timing ARE audible; the ADSR bug makes envelope order-dependent (keep each voice's writes in input order); `register_state` (settled snapshot) is NOT a sufficient fidelity oracle. | Reference |
-| [`verification_and_audits.md`](references/verification_and_audits.md) | **THE how-to-verify reference.** Two properties, one tool each: **byte-exact losslessness** → `PREFRAMR_PARSE_AUDIT=raise` → `cb_div_audit.py`; **residual-zero** → `test_whole_chip_no_singleton_set` + `wholechip_census.py`. Documents THE TRAP (never hand-roll a `register_state` diff). Deployed default = 197/197 byte-exact. | Reference (authoritative) |
+| [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) | **Cite, don't re-derive:** SID render timing + the complete envelope mechanism (the ADSR bug is compare-change associated; the (phase × nibble) write-liveness matrix; gate-edge position is content) + the v3 preserved-vs-canonicalized split, each fact citing its preframr-audio test (the 2026-06-11 canonical reference suites). Oracle = `stream.canonical_writes`. | Reference (updated 2026-06-11) |
+| [`verification_and_audits.md`](references/verification_and_audits.md) | **THE how-to-verify reference (v3).** Two properties: **canonical fidelity** → `stream.encode(verify=True)` self-check + events roundtrip suites; **canonicalization soundness** → the chip-semantics suites + the perceptual raw-vs-canonical A/B (productizing corpus-wide = open follow-up). Old `parse_audit`/`cb_div_audit`/residual-census = retired substrate. | Reference (authoritative, rewritten 2026-06-11) |
 | [`voice_encoding_reference.md`](references/voice_encoding_reference.md) | How the 3 SID voices are carried in the token stream: voice is **packed into the FRAME (−128) val** (low 6 bits, base-4 digits = voice+1), NOT in the VOICE (−126) token. `_add_voice_reg` canonicalises reg + emits VOICE delimiters; `remove_voice_reg` inverts. Melody onsets are multiplexed across voices by this header. | Reference |
 | [`sid_driver_ornament_reference.md`](references/sid_driver_ornament_reference.md) | **Background reference:** how C64 SID drivers generate per-frame ornament across pitch, pulse-width, and filter. Two mechanisms: (A) note-index semitone-offset cycles = arps (codebook); (B) parametric/table sweeps = vibrato/portamento/PW/filter. Filter is global; PW/filter sweeps persist across notes; gate-on ≠ note boundary. Sources: defMON, SID Wizard, Hubbard, Galway, C=Hacking #5. | Reference |
 | [`digi_detection_reference.md`](references/digi_detection_reference.md) | Digi techniques + detection (C=Hacking #20; Mahoney's *Musik Run/Stop*), written to refine `dump_meta.is_digi` (which misses PWM digis) and correct a row-count exclusion process error. | Reference |
@@ -146,7 +148,7 @@ regression) + one canonical run gate it.
 | [`compound_token_design.md`](encoding/compound_token_design.md) | Approach D: compound-token tokenizer + parallel-attribute heads (CompoundWord / OctupleMIDI). Multi-attribute-per-token reorganization. Also an efficiency bet (token budget). | Draft, design review pending |
 | [`instrument_program_codebook_design.md`](encoding/instrument_program_codebook_design.md) | Instrument-program codebook: collapse the note-associated macro cluster (the per-note `(waveform,AD,SR)` program) into codebook references; distinguishes note-associated vs not-note-associated driver operations. Supersedes the older instrument-state-codebook. | Design 2026-06-04 |
 | [`log_to_swm_recompiler_design.md`](encoding/log_to_swm_recompiler_design.md) | A tool (does NOT exist yet) compiling a preframr **register log → SID-Wizard SWM** that re-renders to the SAME output (lossless = re-render-equivalence). Reuses the generator-MDL IR; pysidwizard `build_swm`; the player is the verifier. Path A brute-force wavetable → Path B structured/editable; reports the SID-Wizard-inexpressible residue. Makes generated tunes editable in a real tracker. | Design 2026-06-06 |
-| [`audio_equivalence_normalization_design.md`](encoding/audio_equivalence_normalization_design.md) | Tokenizer-side normalization collapsing `(op, reg, val)` tuples that render perceptually-equivalent SID output into canonical forms. | Draft 2026-05-23 |
+| [`audio_equivalence_normalization_design.md`](encoding/audio_equivalence_normalization_design.md) | Tokenizer-side normalization collapsing writes that render perceptually-equivalent into canonical forms. | Superseded — realized as the v3 canonical contract (gen2 `canonical_writes`, chip-measured rules; 2026-06-11) |
 | [`backlog_tokens_hardening.md`](encoding/backlog_tokens_hardening.md) | preframr-tokens testing discipline: real-pipeline structural/balance tests (catch the synthetic-df false-green class) + SID-fixture policy + the 3-layer pass-framework model. | Pending impl (real-pipeline harness); rest OBE |
 
 ## measurement/ — metrics & generalization
@@ -232,10 +234,11 @@ train/inference split, regdataset decomposition) are archived in
   expansion (inaudible perturbation, voice permutation, cross-song transfer). Moved
   to preframr-aug.
 
-Open (not a design doc): the **corpus-scale register-equivalence CI gate** —
-`cb_div_audit.py` over the corpus (decoded regs == source within `freq_tol`), the
-register-level check that supersedes a WAV `compare_renders` pass (same regs/order/delay
-⟹ same render; see [`references/verification_and_audits.md`](references/verification_and_audits.md)).
+Open (not a design doc): the **corpus-scale canonicalization-soundness audit** — productize
+the perceptual raw-vs-canonical A/B render (currently a gen2 tmp probe on the 5 drivers) as a
+corpus-wide check. The old `cb_div_audit.py` register-equivalence gate belonged to the retired
+substrate; under v3 the per-encode self-verify covers canonical fidelity and this audit covers
+the canonicalization rules (see [`references/verification_and_audits.md`](references/verification_and_audits.md)).
 
 ## Decision rules
 
