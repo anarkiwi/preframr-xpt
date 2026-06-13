@@ -4,11 +4,15 @@ This repo is the **experiment surface**: docker-driven runner + spec registry +
 audits + design docs + tier data + refuted registry. Framework, libraries, corpus
 live elsewhere (sibling repos under `/scratch/anarkiwi/`).
 
-## State (2026-06-12)
+## State (2026-06-13)
 
-The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens 0.50.0 / audio
-0.5.9 (PyPI), preframr 0.2.29 (Docker Hub `:0.2.29`+`:latest`, tag `v0.2.29`), xpt on
-`main` (`ARG BASE=anarkiwi/preframr:0.2.29`). The `memorize` build-gate runs train→generate→decode via event-native
+The **event/tracker model is SHIPPED and end-to-end GREEN**: tokens **0.51.0** / audio
+0.5.9 (PyPI), preframr **0.2.30** (Docker Hub `:0.2.30`+`:latest`, tag `v0.2.30`), xpt on
+`main` (`ARG BASE=anarkiwi/preframr:0.2.30`). **tokens 0.51.0 = v2 event codec**
+(`EVENT_FORMAT_VERSION=2`; a `recover_table` modal-vs-median pitch fix changed encode output ~0.8%
+agg / ≤11% per tune → `.atoms.zst` caches recompute) + the event-boundary dictionary segmenter
+(triaged not-adopted). The **v2 atoms-only baseline is DONE and re-anchored** (see the resolved log);
+the v1 `v3c_final.ckpt` + its numbers are superseded. The `memorize` build-gate runs train→generate→decode via event-native
 `preframr/inference/event_gate.py` (decodes COMPLETE self-contained blocks, not
 truncated windows). The encoding **is** the event model now (`preframr_tokens/events/`;
 **the authoritative reference is the preframr-tokens README** — alphabet / stream grammar /
@@ -46,14 +50,15 @@ BPE-dictionary run CONCLUDED on the NOT-LEARNED branch (verdict + NEXT below). F
   both unrealizable for the 127-atom alphabet and the first to trip the crash. Vocab is now a
   **dial** (the 127 atoms are fixed; merges are the dictionary). Pass realizable values via
   `--tkvocab N` (folds into the dataset-cache key → re-tokenizes).
-- **Atoms-only `tkvocab=0` baseline DONE** (stopped epoch 99/100, val_acc 0.561). Content-tier
-  (the decisive gate): eval_a **0.479**, eval_b_daglish **0.559**, eval_b_follin **0.416**;
-  content/structural 0.72–0.88. ~3.7× the old **~0.13 eval_a content ceiling**, and held-out
-  composers track in-distribution (the 24-block sample read daglish > eval_a; at full eval daglish ≈
-  eval_a, 0.516 vs 0.515 — frontier §1 baseline note) — **content is learnable and generalises
-  in the event model, even at the no-dictionary floor.** Artifacts: `/scratch/tmp/v3c_final.ckpt`,
-  `audit_per_class_{,2,3,final}.json`. (1 seed, 24-block sample; content-tier defn differs from the
-  old substrate, so vs-0.13 is directional.)
+- **Atoms-only `tkvocab=0` baseline DONE — now on the v2 codec** (re-baselined 2026-06-13, ep100,
+  val_acc 0.555 / val_loss 1.391). **Decisive full-eval numbers (the current reference, v2 stack):**
+  content-tier eval_a **0.505** / daglish **0.552** / follin **0.485**; bits/canonical-atom
+  **1.998 / 2.058 / 2.272**; structural 0.72 / 0.60 / 0.66. ≈ parity with the v1 atoms baseline
+  (content held; bits/atom +~3% = the v2 stream is marginally denser, codec dropped easy redundant
+  atoms — benign). Still ~3.7× the old **~0.13 eval_a content ceiling** — **content is learnable and
+  generalises in the event model at the no-dictionary floor.** Artifacts:
+  `/scratch/tmp/v2_atoms_baseline.ckpt` (stable copy), `data/audit/v2_atoms_baseline_audit.json`.
+  (1 seed; v1 reference `v3c_final.ckpt` / `1.931/2.001/2.221` / `0.515/0.516/0.479` superseded.)
 - **Live vocab ~98%** at unigram tkvocab=2048 (2015/2048 ids used; the 33 dead are rare base atoms
   absent from the single-speed corpus). Demolishes the old "~91% dead tkvocab" problem — vocab is a
   **dial with near-full utilisation**. Tunes avg ~30k **BPE tokens** (atoms: ~85k mean / ~50k median —
@@ -96,9 +101,14 @@ The **event-boundary-respecting dictionary** (promoted here) shipped tokens 0.51
 win — frontier §9).
 
 **NEXT, in order:**
-1. **Context arc:** `seq_len` 8192→16384 (verify 24 GB fit before the re-cut) + musically-aligned
-   KEYFRAME windows (dataset-side, from the landed structural index) on atoms-only; whole tunes via
-   register-domain chaining (`design/generation/long_range_structure.md` — now the norm path).
+1. **Context arc (the next experiment — now RUNNABLE; v2 baseline is its comparator):** `seq_len`
+   8192→16384 (verify 24 GB fit at the 14M body first — may need smaller `--batch-size` + more
+   grad-accum; `run.py --max-epochs` matches the budget) + musically-aligned KEYFRAME windows
+   (dataset-side, from the landed structural index) on atoms-only **v2**; A/B vs the v2-8192 baseline
+   in bits/canonical-atom + content-tier (full-eval). Whole tunes via register-domain chaining
+   (`design/generation/long_range_structure.md` — the norm path; this arc is about music-per-window,
+   not whole-tune windows). Suggest seq_len-16384 alone first (isolate raw context), then aligned
+   windows.
 2. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
    stretch: cross-engine generalisation; Orin **offline** predict path (grammar-mask constrained
    decode; real-time is out of reach per `design/performance/orin_inference_optimization_design.md`).
@@ -118,14 +128,17 @@ redundancy. Runnable specs: `generalize`, `generalize_prodlike_unigram`, `memori
 
 ## Packages
 
-- **`preframr` 0.2.29** — framework (train/inference/model/args/parse). Docker image
+- **`preframr` 0.2.30** — framework (train/inference/model/args/parse). Docker image
   `anarkiwi/preframr` (no PyPI). **Release = merge to `main`** (`release.yml` fires on main-push
   AND `v*` tags, `push:true` → `:VERSION`+`:latest`); also `git tag -a vX.Y.Z` each release.
-  Floors `preframr-tokens>=0.50.0` + `preframr-audio>=0.5.9` (in `requirements.txt`,
+  Floors `preframr-tokens>=0.51.0` + `preframr-audio>=0.5.9` (in `requirements.txt`,
   `predict-requirements.txt`, `jetson/predict-requirements.txt`). Tier instrumentation is event-aware
   via tokens-side `events/dataset.events_alphabet()` (value-digit atoms→content, markers→structural).
-- **`preframr-tokens` 0.50.0** (PyPI; canonical repo `/scratch/anarkiwi/preframr-tokens`,
-  gen2 merged in) — torch-free parser/tokenizer. Event model per the banner. 0.48.0 = ~36%
+- **`preframr-tokens` 0.51.0** (PyPI; canonical repo `/scratch/anarkiwi/preframr-tokens`,
+  gen2 merged in) — torch-free parser/tokenizer. Event model per the banner. **0.51.0 = v2 event
+  codec** (`EVENT_FORMAT_VERSION=2`, `ATOM_CACHE_VERSION=2`: `recover_table` modal-vs-median pitch fix
+  changes encode output on real dumps; caches recompute) + event-boundary dictionary segmenter
+  (`unit_starts`; triaged not-adopted). 0.48.0 = ~36%
   faster warm parse + dead-wood removal; **0.50.0 = thread-parallel block-encode pass**
   (`_encode_and_save_events`); **0.49.0 = tkvocab-independent atom-stream cache**
   (`events/dataset.dump_token_ids(df, df_file)` reuses a codec-version-keyed `.atoms.zst` sidecar
@@ -188,7 +201,7 @@ direct product of this lens; the lever is tokenizer-side. Hub:
 
 - **Code = frozen baked image by default.** Runs use baked `preframr/`; rebake to pick up edits.
   Bind-mount is opt-in (`--bind-src` / `$PREFRAMR_BIND_SRC=1`) and runs un-gated code — ask first.
-  The baked `anarkiwi/preframr:0.2.27` is event-model-current (no bind / cache-disable needed).
+  The baked `anarkiwi/preframr:0.2.30` is event-model-current + the v2 codec (no bind / cache-disable needed).
 - **Background runs**: `nohup`+`disown`; don't poll, use `ScheduleWakeup` or a tracked wait.
 - **Comments**: no narration / dev-local paths / PR numbers; `tests/test_lint.py` rejects narrative
   `#` and >5-line docstrings (gen2 enforces the same gate).
@@ -215,6 +228,17 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-13 (v2 re-baseline DONE — codec neutral, stack adopted)** — adopted the v2 event codec
+  end-to-end: released **preframr 0.2.30** (floor `preframr-tokens>=0.51.0`, framework tests green
+  vs 0.51.0) + xpt `BASE=0.2.30` + a `run.py --max-epochs` override. Trained a fresh **v2 atoms-only
+  baseline** (`generalize --tkvocab 0`, seq_len 8192, ep100; via `--bind-src` on compat-verified v2
+  source while 0.2.30 built). Full-eval decision audit (`data/audit/v2_atoms_baseline_audit.json`,
+  ckpt `/scratch/tmp/v2_atoms_baseline.ckpt`): content-tier **0.505/0.552/0.485**,
+  bits/canonical-atom **1.998/2.058/2.272** — **≈ parity with v1** (content held; bits/atom +~3% =
+  marginally denser v2 stream, expected from dropping settled transients). val_loss 1.391 / val_acc
+  0.555 ≈ v1's 1.373/0.561. **Verdict: the v2 codec did not regress learnability; the re-baseline is
+  the new reference and the context arc (NEXT #1) is now its comparator.** Why: tokens 0.51.0's codec
+  bump staled the v1 baseline, so a valid v2 A/B needed a fresh v2 atoms-only comparator.
 - **2026-06-13 (boundary-respecting dictionary triaged — NOT adopted)** — the §6-promoted
   event-boundary-respecting dictionary shipped (tokens 0.51.0, `unit_starts` segmenter) and ran its
   P2 static triage on the v2 codec: compression **1.58/1.65/1.71×** (tkvocab 1024/2048/4096),
