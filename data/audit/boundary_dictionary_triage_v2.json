@@ -1,0 +1,147 @@
+{
+ "codec_version": 2,
+ "vocabs": {
+  "1024": {
+   "compression": {
+    "eval_a": {
+     "n_tunes": 75,
+     "compression_aggregate": 1.5784914480261558,
+     "compression_pertune_mean": 1.5572427052274564,
+     "compression_pertune_median": 1.5646183155376368,
+     "tokens_per_tune_median": 27153,
+     "windows_per_tune_median_8192": 3.3145751953125
+    },
+    "eval_b_daglish": {
+     "n_tunes": 16,
+     "compression_aggregate": 1.5597992175119222,
+     "compression_pertune_mean": 1.609945273635099,
+     "compression_pertune_median": 1.5563913063380603,
+     "tokens_per_tune_median": 34103.0,
+     "windows_per_tune_median_8192": 4.1629638671875
+    },
+    "eval_b_follin": {
+     "n_tunes": 15,
+     "compression_aggregate": 1.5475299840009682,
+     "compression_pertune_mean": 1.5572907110053522,
+     "compression_pertune_median": 1.547669549137978,
+     "tokens_per_tune_median": 15078,
+     "windows_per_tune_median_8192": 1.840576171875
+    },
+    "train": {
+     "n_tunes": 750,
+     "compression_aggregate": 1.5818296785511272,
+     "compression_pertune_mean": 1.5892617486967244,
+     "compression_pertune_median": 1.5787620264420852,
+     "tokens_per_tune_median": 32071.5,
+     "windows_per_tune_median_8192": 3.91497802734375
+    }
+   },
+   "live_vocab_pct": 0.966796875,
+   "vocab_pieces_total": 1023,
+   "vocab_pieces_multi_atom": 895,
+   "weld_free_crossing_voice_kf": 0,
+   "merge_classes": {
+    "other(no-kind)": 106,
+    "head+payload(single-kind)": 463,
+    "all_digits(within-value/DT)": 326
+   },
+   "max_piece_atoms": 16
+  },
+  "2048": {
+   "compression": {
+    "eval_a": {
+     "n_tunes": 75,
+     "compression_aggregate": 1.6497187889002098,
+     "compression_pertune_mean": 1.6399552904758898,
+     "compression_pertune_median": 1.6264386714896415,
+     "tokens_per_tune_median": 25833,
+     "windows_per_tune_median_8192": 3.1534423828125
+    },
+    "eval_b_daglish": {
+     "n_tunes": 16,
+     "compression_aggregate": 1.6608814428570315,
+     "compression_pertune_mean": 1.714943471468034,
+     "compression_pertune_median": 1.6602239055726609,
+     "tokens_per_tune_median": 32164.5,
+     "windows_per_tune_median_8192": 3.92633056640625
+    },
+    "eval_b_follin": {
+     "n_tunes": 15,
+     "compression_aggregate": 1.6421031930776517,
+     "compression_pertune_mean": 1.663543489277634,
+     "compression_pertune_median": 1.6718986702575325,
+     "tokens_per_tune_median": 13172,
+     "windows_per_tune_median_8192": 1.60791015625
+    },
+    "train": {
+     "n_tunes": 750,
+     "compression_aggregate": 1.6523838403140898,
+     "compression_pertune_mean": 1.668588538093847,
+     "compression_pertune_median": 1.6505318872743673,
+     "tokens_per_tune_median": 30345.0,
+     "windows_per_tune_median_8192": 3.7042236328125
+    }
+   },
+   "live_vocab_pct": 0.98291015625,
+   "vocab_pieces_total": 2047,
+   "vocab_pieces_multi_atom": 1919,
+   "weld_free_crossing_voice_kf": 0,
+   "merge_classes": {
+    "all_digits(within-value/DT)": 599,
+    "head+payload(single-kind)": 1107,
+    "other(no-kind)": 213
+   },
+   "max_piece_atoms": 16
+  },
+  "4096": {
+   "compression": {
+    "eval_a": {
+     "n_tunes": 75,
+     "compression_aggregate": 1.7118992290087296,
+     "compression_pertune_mean": 1.7108631609117384,
+     "compression_pertune_median": 1.697183630323165,
+     "tokens_per_tune_median": 25748,
+     "windows_per_tune_median_8192": 3.14306640625
+    },
+    "eval_b_daglish": {
+     "n_tunes": 16,
+     "compression_aggregate": 1.7409289491367566,
+     "compression_pertune_mean": 1.7906579229492323,
+     "compression_pertune_median": 1.765198948649334,
+     "tokens_per_tune_median": 30544.0,
+     "windows_per_tune_median_8192": 3.728515625
+    },
+    "eval_b_follin": {
+     "n_tunes": 15,
+     "compression_aggregate": 1.7277690975887843,
+     "compression_pertune_mean": 1.763036490256661,
+     "compression_pertune_median": 1.7487361419068737,
+     "tokens_per_tune_median": 12470,
+     "windows_per_tune_median_8192": 1.522216796875
+    },
+    "train": {
+     "n_tunes": 750,
+     "compression_aggregate": 1.7144656953015402,
+     "compression_pertune_mean": 1.7400999310813425,
+     "compression_pertune_median": 1.7141559753837252,
+     "tokens_per_tune_median": 29571.0,
+     "windows_per_tune_median_8192": 3.6097412109375
+    }
+   },
+   "live_vocab_pct": 0.99169921875,
+   "vocab_pieces_total": 4095,
+   "vocab_pieces_multi_atom": 3967,
+   "weld_free_crossing_voice_kf": 3,
+   "merge_classes": {
+    "head+payload(single-kind)": 2315,
+    "all_digits(within-value/DT)": 1216,
+    "other(no-kind)": 436
+   },
+   "max_piece_atoms": 16
+  }
+ },
+ "kill_gate": {
+  "best_eval_a_compression": 1.7118992290087296,
+  "verdict": "SURVIVES-triage"
+ }
+}

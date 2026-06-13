@@ -1,6 +1,23 @@
-# Event-boundary-respecting dictionary — the promoted §6 lever, specified
+# Event-boundary-respecting dictionary — the promoted §6 lever, triage-resolved PARTIAL (NOT adopted)
 
-**Status: PROPOSAL (2026-06-12; triage-gated).** Implements the lever
+**Status: RESOLVED — PARTIAL, not adopted (2026-06-13).** The tokens-side mechanism shipped
+(preframr-tokens 0.51.0, `unit_starts` segmenter wired into `Corpus.preload`); the xpt-side static
+triage RAN on the v2 codec and the **kill-gate survived but the ADOPT gate is structurally
+unreachable** — compression caps at **1.58× / 1.65× / 1.71×** at tkvocab 1024/2048/4096 (eval_a
+aggregate), **below the 1.8× ADOPT threshold at every vocab** and asymptoting ~1.7×. The merge table
+is **~89% deterministic-pack-shaped** (tkvocab=2048: 57.7% head+payload single-kind, 31.2%
+within-value/DT digits), so per the PARTIAL gate the **deterministic packs capture the same gain more
+cheaply** (no dictionary infra, no codec/A-B-baseline). **Decision: do not adopt the dictionary; the
+density path is the deterministic packs (§3 radix + §4 head-amortization); the context arc proceeds
+on atoms-only + `seq_len`/windowing/chaining.** The matched-steps bits/atom A/B was **not run** (it
+could only land PARTIAL/REJECT, never ADOPT, given compression <1.8×). Full results
+`data/audit/boundary_dictionary_triage_summary.md` + `boundary_dictionary_triage_v2.json`.
+**Unconstrained merges stay banned** (frontier §6); the original proposal text below is retained for
+the record.
+
+---
+
+**Original PROPOSAL (2026-06-12; triage-gated).** Implements the lever
 `encoding_density_frontier.md` §6 promoted after the §7 de-confounding audit. One sentence: train
 the existing unigram BPE-as-dictionary with **merges constrained to never cross event boundaries**,
 because the audit showed (a) unconstrained BPE's true cost is only **~1.2–1.3× bits/canonical-atom

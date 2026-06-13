@@ -8,8 +8,10 @@ shipped default and the content-correct representation; *unconstrained* unigram/
 content/context lever — but the 6–11× argmax harm was CONFOUND-DOMINATED (all three §1a confounds
 confirmed real). The true model-quality gap is ~1.4× in bits/canonical-atom at ep174 (§7A), ~2–4× in
 position-matched argmax (§7B), and SHRINKS to ~1.2–1.3× at the matched-steps endpoint (§7C, ep299 —
-still descending) — modest, not catastrophic.** Because the gap is small and the mechanism is boundary-crossing welding, an
-**event-boundary-respecting dictionary is promoted to a live lever** (§6). Value-encoding density:
+still descending) — modest, not catastrophic.** The boundary-crossing-welding mechanism motivated an
+**event-boundary-respecting dictionary**, which shipped (tokens 0.51.0) and was **triage-resolved
+NOT-adopted** (§9, 2026-06-13: compression caps ~1.7× < 1.8× ADOPT bar, merge table ~89%
+deterministic-pack-shaped → the packs win). Value-encoding density:
 **digit radix is a live ~12%-of-stream polish lever** (§3/§7E, not dead) scoped to multi-digit varint
 lanes; head-amortization recoverable share is **17.4%** (§4/§7F). Neither is a context lever: tunes
 are ~50k atoms/median (§7F, NO dataset truncation — `BlockMapper` tiles every atom), so context stays
@@ -69,8 +71,8 @@ confounds, all now CONFIRMED.
 
 **Operational verdict (direction unchanged, magnitude retracted):** atoms-only stays the default — it
 is genuinely better (1.4× bits/atom) and is the shipped, content-correct representation. But the harm
-is modest, so the §6 ban narrows to *unconstrained* merges and an event-boundary-respecting dictionary
-becomes a live lever. Carry-over: all-tier `val_acc` AND raw cross-tokenization content-tier argmax are
+is modest, so the §6 ban narrows to *unconstrained* merges; an event-boundary-respecting dictionary was
+the candidate but triage-resolved NOT-adopted (§9). Carry-over: all-tier `val_acc` AND raw cross-tokenization content-tier argmax are
 confounded — only bits/canonical-atom or position-matched argmax are decision-grade.
 
 ## 2. Per-KIND learnability map (atoms-only model, context-aware audit)
@@ -178,12 +180,14 @@ achieving 2.73× compression, and on current evidence it does so at a modest but
   (still refuted — they welded content and cost 1.4× bits/atom); the "denser alphabet to fit the
   window" framing (no density lever fits tunes in the window — §5); parametric ramps or per-voice
   pitch tables (shipped).
-- **LIVE lever (promoted by §7A/B):** an *event-boundary-respecting* dictionary — data-informed merge
-  selection but merges never cross event boundaries, codec-pinned (the §4 family generalized; bounded
-  ~2× given modal event = 3). The §7 gap is small enough (1.4×) and the mechanism (boundary-crossing
-  welding) specific enough that a boundary-respecting variant plausibly recovers it. Gate on
-  `learnability_triage` + a confirmatory matched-steps run.
-- **LIVE polish levers (stackable, ~1.3× combined density, neither a context lever):**
+- **RESOLVED — boundary-respecting dictionary NOT adopted (§9 triage, 2026-06-13).** The
+  event-boundary-respecting dictionary (proposal `event_boundary_dictionary_proposal.md`, shipped
+  tokens 0.51.0) ran its static triage on the v2 codec: compression caps at **1.58/1.65/1.71×**
+  (tkvocab 1024/2048/4096), **below the 1.8× ADOPT bar at every vocab** and asymptoting ~1.7×, and
+  the merge table is **~89% deterministic-pack-shaped** (head+payload + within-value/DT digits). Per
+  the PARTIAL gate the deterministic packs capture the same gain more cheaply → **the packs are the
+  density path; the dictionary is not adopted** (`data/audit/boundary_dictionary_triage_summary.md`).
+- **LIVE polish levers (the chosen density path — stackable, ~1.3× combined, neither a context lever):**
   (1) **selective per-lane digit byte-pack** (§3/§7E, ~12%, scoped to FD/PW/NI multi-digit varints,
   P1-litigated); (2) **head-amortization** in `events/stream.py` (≤~13–17%; combined `(kind,reg)` /
   context-predicted kind elision). Both: keep `encode(verify=True)` byte-exact; bump
@@ -258,6 +262,37 @@ Outcome: the 6–11× magnitude is **retracted**; the direction (BPE costs more 
 - **None of the above fire** → strike "provisional" throughout; §6's ban becomes unconditional.
   **DID NOT FIRE:** confounds (a)/(b)/(c) all confirmed → the ban stays scoped to *unconstrained*
   cross-boundary merges; the gap is real but modest (~1.2–1.4×) and still closing at matched steps.
+
+## 9. Boundary-dictionary triage (RAN 2026-06-13 — NOT adopted, deterministic packs win)
+
+The §6-promoted event-boundary-respecting dictionary (proposal
+`event_boundary_dictionary_proposal.md`, shipped tokens 0.51.0) ran its static triage on the **v2
+codec** (`EVENT_FORMAT_VERSION=2` — tokens 0.51.0 bundled an owner-directed pitch fix that bumped the
+codec; the v1 baseline is stale, so the matched-steps A/B was deferred and ultimately not needed).
+Full artifacts `data/audit/boundary_dictionary_triage_v2.json` + `..._summary.md`.
+
+- **Compression (eval_a aggregate / train): 1.58×/1.58× (1024), 1.65×/1.65× (2048), 1.71×/1.71×
+  (4096).** Survives the ≥1.5× kill gate but is **below the 1.8× ADOPT bar at every vocab** and
+  asymptoting ~1.7× (+0.07 per vocab-doubling). Unconstrained BPE was 2.73×; the boundary constraint
+  costs ~40% of the compression and undershot the proposal's 1.8–2.5× estimate. ⇒ **ADOPT is
+  structurally unreachable** for this corpus, *independent of the bits/atom A/B* (which gates on
+  compression ≥1.8× AND bits ≤1.05×), so the A/B was not run.
+- **Merge table ~89% deterministic-pack-shaped** (tkvocab=2048, 1919 multi-atom pieces by count):
+  **57.7% head+payload** (single-kind `[kind][payload digits]` → §4 head-amortization), **31.2%
+  within-value/DT digits** (→ §3 radix byte-pack), 11.1% other. The dictionary captures almost
+  exactly what the two deterministic packs target. Per the **PARTIAL gate** ("prefer whichever
+  captures the gain more cheaply") the packs win — no dictionary infra, no codec/A-B-baseline.
+- **Weld-free invariant holds** (0 real crossings at every vocab; the 3 flagged at 4096 are
+  `[VOICE][TUNING][digit]` header-unit pieces — a `bpe_audit` heuristic false-positive, since a
+  header-section VOICE marker legitimately starts a multi-atom unit). **Live-vocab healthy**
+  (96.7/98.3/99.2%). Window math: median tune ~26k dict-tokens at 2048 ≈ 3.1 windows @8192 / ≈1.6
+  @16384 — does not rescue ADOPT.
+
+**Decision: the boundary-respecting dictionary is NOT adopted.** The density path is the deterministic
+packs (§3 radix + §4 head-amortization, ~1.3× combined); the context arc proceeds on atoms-only +
+`seq_len`/windowing/chaining (§5). Open (separate, operator's call): tokens 0.51.0's v2 codec is live
+on PyPI but the framework/xpt are still on 0.50.0/0.2.29 — adopting v2 (e.g. for the packs work or any
+new canonical run) requires the corpus re-encode + a fresh v2 atoms-only baseline.
 
 ## Provenance
 

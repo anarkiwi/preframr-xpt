@@ -91,7 +91,9 @@ structural). De-confounded gap: **~1.4× bits/canonical-atom at ep174** (decisiv
 no truncation (BlockMapper tiles all atoms; 49k-vs-30k was atoms-vs-BPE-tokens), composition content
 69% / recoverable head 17.4%, radix a live ~11–12% per-lane polish lever (P1-scoped); melody §7D
 split was by interval size (arpeggio vs stepwise, both high-entropy — NOT a phrase/anchor split).
-The **event-boundary-respecting dictionary is PROMOTED to a live lever** (frontier §6).
+The **event-boundary-respecting dictionary** (promoted here) shipped tokens 0.51.0 and was
+**triage-resolved NOT-adopted** 2026-06-13 (compression ~1.7× < 1.8× ADOPT bar; deterministic packs
+win — frontier §9).
 
 **NEXT, in order:**
 1. **Context arc:** `seq_len` 8192→16384 (verify 24 GB fit before the re-cut) + musically-aligned
@@ -100,13 +102,14 @@ The **event-boundary-respecting dictionary is PROMOTED to a live lever** (fronti
 2. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
    stretch: cross-engine generalisation; Orin **offline** predict path (grammar-mask constrained
    decode; real-time is out of reach per `design/performance/orin_inference_optimization_design.md`).
-3. **(STAGED — runbook ready)** tokenizer-side: the **event-boundary-respecting dictionary**
-   experiment — design: `design/encoding/event_boundary_dictionary_proposal.md`; tokens-side
-   mechanics: `WORK_ORDER_event_boundary_dictionary.md` on preframr-tokens main (in flight);
-   xpt-side execution: **`WORK_ORDER_boundary_dictionary_ab.md` (repo root — execute once tokens
-   0.51.0 lands;** covers the release cascade, triage kill-gate, canonical A/B, gates, writeback,
-   and deletes itself). **Its static triage (minutes) runs BEFORE the #1 seq_len re-cut** — a
-   winning dictionary changes the window math.
+3. **(RESOLVED 2026-06-13 — NOT adopted)** the **event-boundary-respecting dictionary** shipped
+   (tokens 0.51.0) and ran its static triage on the v2 codec: compression caps ~1.7× (< the 1.8×
+   ADOPT bar at every vocab), merge table ~89% deterministic-pack-shaped → PARTIAL, the deterministic
+   packs win. The matched-steps A/B was not run (couldn't reach ADOPT). Density path = the
+   deterministic packs (frontier §3 radix + §4 head-amortization). Full write-up frontier §9 +
+   `data/audit/boundary_dictionary_triage_summary.md`. **The deterministic packs are the new density
+   sub-arc** (codec bump + corpus re-encode + byte-exact `encode(verify=True)`), gated on
+   bits/canonical-atom + content-tier.
 
 Carry-over: **all-tier val_acc is CONFOUNDED** across tokenizations — and per frontier §1a
 **content-tier is too** (population + granularity): cross-tokenization comparisons only
@@ -212,6 +215,20 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-13 (boundary-respecting dictionary triaged — NOT adopted)** — the §6-promoted
+  event-boundary-respecting dictionary shipped (tokens 0.51.0, `unit_starts` segmenter) and ran its
+  P2 static triage on the v2 codec: compression **1.58/1.65/1.71×** (tkvocab 1024/2048/4096),
+  **below the 1.8× ADOPT bar at every vocab**, merge table **~89% deterministic-pack-shaped** (57.7%
+  head+payload, 31.2% within-value/DT digits). Per the PARTIAL gate the deterministic packs capture
+  the same gain more cheaply → **dictionary NOT adopted; density path = §3 radix + §4
+  head-amortization packs**; context arc stays atoms-only + seq_len/windowing/chaining. The
+  matched-steps bits/atom A/B was NOT run (compression <1.8× makes ADOPT unreachable regardless).
+  Weld-free invariant held (the 3 flagged at 4096 are header-unit `bpe_audit` false-positives).
+  **Codec note:** tokens 0.51.0 bundled an owner-directed pitch fix that bumped
+  `EVENT_FORMAT_VERSION` 1→2 (atom stream changed ~0.8% aggregate / up to ~11% per tune), so the v1
+  baseline (`v3c_final.ckpt`, 1.931/2.001/2.221 bits/atom) is STALE — any new canonical run or the
+  packs work needs the corpus re-encoded on v2 + a fresh v2 atoms-only baseline (operator's call;
+  framework/xpt still on 0.50.0/0.2.29). Frontier §9 + `data/audit/boundary_dictionary_triage_*`.
 - **2026-06-12 (BPE refuted as context lever; §7 de-confounding audit RAN same day, magnitude
   retracted)** — canonical run read **~6-11x worse on content** in the raw cross-tokenization table,
   but the **§7 audit RETRACTED that magnitude** (`data/audit/deconfound_summary.md`,
