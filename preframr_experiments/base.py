@@ -933,6 +933,7 @@ def run_arm(
 
     cargs = (
         f"--no-require-pq --seq-len {spec.seq_len} "
+        f"--max-seq-len {spec.seq_len} "
         f"--tkvocab {spec.tkvocab} "
         f"--df-map-csv /scratch/preframr/df-map.csv "
         f"--no-max-autotune "
