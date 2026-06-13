@@ -1,7 +1,11 @@
 # Encoding-density frontier — atoms-only is the default, BPE refuted as the context lever (true magnitude ~1.4× bits/atom), radix + head-amortization the open density levers
 
 **Status: DECISION (2026-06-12; the §7 de-confounding audit RAN — verdict revised, magnitude
-resolved).** Settles the "compress the encoding to fit tunes in the window" question with the
+resolved).** *Codec note (2026-06-13): the live reference baseline was re-anchored to the **v2 codec**
+(tokens 0.51.0, `EVENT_FORMAT_VERSION=2`) — current numbers content-tier 0.505/0.552/0.485,
+bits/canonical-atom 1.998/2.058/2.272 (`data/audit/v2_atoms_baseline_audit.json`), ≈ parity with v1.
+The §1/§7 numbers below are the **v1** record they were computed on; conclusions are unchanged.*
+Settles the "compress the encoding to fit tunes in the window" question with the
 canonical learnability run, a corpus encoding survey, and the §7 audit (results in
 `data/audit/deconfound_summary.md`). Verdict: **the atoms-only event encoding (tkvocab=0) is the
 shipped default and the content-correct representation; *unconstrained* unigram/BPE is refuted as the
