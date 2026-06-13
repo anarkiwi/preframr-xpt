@@ -149,6 +149,27 @@ cluster-conditional content head, static class-weighted CE (`weighted_token_loss
 `learnable_class_loss`), per-voice auxiliary supervision, naive DPO/energy sequence ranking. **And
 not beam search** — it worsens open-ended degeneration and busts the Orin envelope.
 
+## Diagnostic tooling (realized)
+
+The Tier-0/1/2 reads are implemented as CI-tested audits (pure-logic core + GPU-host CLI), in
+`preframr_experiments/audit/` (indexed in its README):
+
+- `free_running_gap_audit.py` — the Tier-0 go/no-go: TF-vs-free-running gap by horizon + verdict;
+  `--verify-cache` rules out a KV-cache/position bug masquerading as the pathology.
+- `copy_novel_audit.py` — copy-vs-novel accuracy split (is the TF number real or induction-copying).
+- `effective_context_audit.py` — accuracy vs truncated context k → the model's real horizon
+  (disambiguates the `short_context_or_bug` verdict).
+- `event_position_audit.py` — accuracy by atom role / offset-in-event (strips the by-design
+  front-loading confound, P4.2).
+- `voice_interleave_audit.py` — accuracy by voice + interleave gap (the Tier-2 lane-demux trigger).
+- `calibration_audit.py` — ECE / over-confidence / entropy (informs the Tier-1 sampling regime).
+- `memorization_audit.py` — novel-fraction + longest verbatim match (the quality-gate memorization
+  check; output-side copy-dominance, Tier 3).
+
+All single-checkpoint, post-hoc reads; none is a promotion gate on its own — they characterise the
+pathology and point to the tier. Wiring them as runner stages is deferred to the
+[metric-tracking design](../measurement/generalization_metric_tracking_design.md) (mid-run-edit rule).
+
 ## Promotion & sequencing
 
 - **Promotion rule (inherited):** any default flip (encoding, sampling regime, conditioning) requires
