@@ -121,6 +121,17 @@ win — frontier §9).
    sub-arc** (codec bump + corpus re-encode + byte-exact `encode(verify=True)`), gated on
    bits/canonical-atom + content-tier.
 
+**Open arc (orthogonal — free-running pathology).** Whether the event model learned a short-horizon /
+copy-dominated next-token map (good first token, poor afterward) is **unconfirmed but
+un-instrumented**: every deciding metric here is teacher-forced, and the only free-running probe
+(`event_gate`) is greedy single-reference at collapse-scale. Design + tiered remediation ladder
+(Tier-0 confirm / quality-gate / free-running-aware selection → decoding → lane-demux → augmentation
+→ exposure-bias, anti-queue-aligned): `design/generation/free_running_pathology_remediation_design.md`.
+Tier-0 go/no-go tool — teacher-forced vs greedy free-running accuracy by horizon, per
+content/structural tier, verdict `healthy`/`exposure_bias`/`short_context_or_bug`:
+`preframr_experiments/audit/free_running_gap_audit.py` (GPU host, `load_model`/`Predictor` path like
+`event_gate`). **Open the ladder only if the probe shows a material gap with a flat read-A curve.**
+
 Carry-over: **all-tier val_acc is CONFOUNDED** across tokenizations — and per frontier §1a
 **content-tier is too** (population + granularity): cross-tokenization comparisons only
 position-matched or in bits/canonical-atom. Within-tune `--mode window` triage credits trivial
