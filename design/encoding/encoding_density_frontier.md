@@ -114,7 +114,7 @@ cost model**:
 - **Per-voice note-table pitch** — shipped tokens 0.47.0
   (`design/landed/universal_multiresolution_pitch.md`): universal semitone NI_* lane (Δnote
   intervals) + per-voice recovered NOTE_TABLE + per-voice TUNING + FD_* modulation residual. 83% of
-  voiced frames have residual exactly 0.
+  voiced frames have residual exactly 0 (codec v1; the v2 modal-table pitch fix, §9, raises this — re-measure).
 
 Full-corpus survey (§7F, 862-tune `.atoms.zst`): **atoms/tune mean 85k, median 50k** (the 120-sample
 ~49k ≈ median). The repo-standard "~30k atoms/tune" was wrong-unit — it is **BPE tokens/tune** (mean
@@ -134,7 +134,10 @@ BPE ~2.2). Composition (authoritative, incl. typed nibbles as content): **conten
   forbids welding distinct decisions, so the **18.9% single-nibble content (NIB_WAVE/ART/ENV) is OUT
   of scope** — a *selective per-lane* typed-byte family only. Still not a context lever (50k → ~44k ≫
   8192); gate on `learnability_triage` + P1 litigation before any run. (Supersedes the crude ≳1.7
-  threshold: the decision metric is the computed byte-pack saving, not the raw mean.)
+  threshold: the decision metric is the computed byte-pack saving, not the raw mean.) **Codec caveat:
+  these per-lane digits/value are codec v1; the 0.51.0 pitch fix (§9) moved the FD_\* residual split
+  specifically, so re-measure digits-per-value on v2 before implementing the byte-pack — FD_STEP 1.62
+  / FD_RAMP 1.49 are the most exposed lanes.**
 
 ## 4. The second open density lever: head-amortization (~10–15%, optional)
 
@@ -151,7 +154,8 @@ it unambiguous. **Audit caution:** combined atoms lower measured structural/all-
 construction (joint granularity, §1a-b) — pre/post-amortization runs compare on content-tier only.
 **Worth doing as polish, but it does not move the needle on context** — 50k median → ~44k (85k mean
 → ~75k) atoms/tune is still ≫ 8192. (Together with radix §3 the two stack to ~1.3× density; neither
-is a context lever.)
+is a context lever.) The head/composition shares are the v1 survey; the v2 pitch fix barely touches
+head markers, but re-confirm against the v2 re-encode when implementing (§9 codec note).
 
 ## 5. Context length is a `seq_len`/windowing/chaining problem, not an encoding problem
 
