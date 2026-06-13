@@ -11,7 +11,9 @@ import unittest
 from preframr_experiments.audit.free_running_gap_audit import (
     _h_bucket,
     _scalars,
+    aggregate_cache,
     build_result,
+    cache_consistency,
     classify,
     finalize_curve,
     finalize_gap,
@@ -169,6 +171,41 @@ class TestBuildResult(unittest.TestCase):
         s = _scalars(result)
         self.assertIn("tf_acc_far", s)
         self.assertEqual(s["verdict_source"], "all")
+
+
+class TestCacheConsistency(unittest.TestCase):
+    def test_identical_is_consistent(self):
+        cc = cache_consistency([1, 2, 3], [1, 2, 3])
+        self.assertEqual(cc["consistent_frac"], 1.0)
+        self.assertIsNone(cc["first_divergence"])
+        self.assertEqual(cc["match"], 3)
+
+    def test_divergence_located(self):
+        cc = cache_consistency([1, 2, 3], [1, 9, 3])
+        self.assertAlmostEqual(cc["consistent_frac"], 2 / 3)
+        self.assertEqual(cc["first_divergence"], 1)
+
+    def test_uses_min_length(self):
+        cc = cache_consistency([1, 2, 3, 4], [1, 2])
+        self.assertEqual(cc["n"], 2)
+        self.assertEqual(cc["consistent_frac"], 1.0)
+
+    def test_empty(self):
+        self.assertEqual(cache_consistency([], [])["n"], 0)
+
+    def test_aggregate_pools_blocks(self):
+        a = aggregate_cache(
+            [cache_consistency([1, 2, 3], [1, 2, 3]), cache_consistency([4, 5], [4, 9])]
+        )
+        self.assertEqual(a["n_blocks"], 2)
+        self.assertAlmostEqual(a["consistent_frac"], 4 / 5)
+        self.assertEqual(a["inconsistent_blocks"], 1)
+        self.assertEqual(a["earliest_divergence"], 1)
+
+    def test_aggregate_empty(self):
+        a = aggregate_cache([])
+        self.assertEqual(a["n_blocks"], 0)
+        self.assertIsNone(a["consistent_frac"])
 
 
 if __name__ == "__main__":

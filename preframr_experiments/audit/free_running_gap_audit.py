@@ -100,6 +100,50 @@ def gap_events(block, tf_pred, fr_gen, prompt_len: int, pad_id: int = 0, tier_of
     return out
 
 
+def cache_consistency(gen, recompute) -> dict:
+    """Compare incremental (KV-cached) greedy ``gen`` against a from-scratch full-recompute
+    argmax over the same realized sequence. They MUST match if the decode loop's cache /
+    positions are correct; a mismatch is a decode bug, not the pathology. Returns match
+    count + consistent fraction + first divergence index (None if fully consistent)."""
+    n = min(len(gen), len(recompute))
+    if not n:
+        return {"n": 0, "match": 0, "consistent_frac": None, "first_divergence": None}
+    first = None
+    match = 0
+    for i in range(n):
+        if gen[i] == recompute[i]:
+            match += 1
+        elif first is None:
+            first = i
+    return {
+        "n": n,
+        "match": match,
+        "consistent_frac": match / n,
+        "first_divergence": first,
+    }
+
+
+def aggregate_cache(checks) -> dict:
+    """Pool per-block ``cache_consistency`` dicts. A consistent_frac < 1.0 means the
+    incremental decode diverges from full recompute => suspect a cache/position bug before
+    trusting any gap verdict."""
+    checks = [c for c in checks if c["n"]]
+    if not checks:
+        return {"checked": True, "n_blocks": 0, "consistent_frac": None}
+    total_n = sum(c["n"] for c in checks)
+    total_m = sum(c["match"] for c in checks)
+    firsts = [
+        c["first_divergence"] for c in checks if c["first_divergence"] is not None
+    ]
+    return {
+        "checked": True,
+        "n_blocks": len(checks),
+        "consistent_frac": total_m / total_n,
+        "inconsistent_blocks": len(firsts),
+        "earliest_divergence": min(firsts) if firsts else None,
+    }
+
+
 def finalize_curve(acc: dict, fine_max: int = 8) -> dict:
     """{h:[hits,tot]} -> per-h fine rows (h<=fine_max) + log2-bucketed rows."""
     fine = [
@@ -289,6 +333,7 @@ def run_probe(args, logger) -> int:
     b_fr: dict = {}
     tier_tf: dict = {}
     tier_fr: dict = {}
+    cache_checks: list = []
     for path, block in blocks:
         x = torch.tensor(block[:-1], dtype=torch.long).unsqueeze(0).to(device)
         with torch.inference_mode():
@@ -307,6 +352,21 @@ def run_probe(args, logger) -> int:
             .cpu()
             .tolist()
         )
+
+        if args.verify_cache:
+            seq = block[:prompt_len] + gen[:-1]
+            xr = torch.tensor(seq, dtype=torch.long).unsqueeze(0).to(device)
+            if model.model.caches_are_enabled():
+                model.model.reset_caches()
+            with torch.inference_mode():
+                rlogits = model.model(xr)
+            if isinstance(rlogits, list):
+                rpred = torch.cat([c.argmax(dim=-1) for c in rlogits], dim=1)
+            else:
+                rpred = rlogits.argmax(dim=-1)
+            rpred = rpred.squeeze(0).cpu().tolist()
+            recompute = rpred[prompt_len - 1 : prompt_len - 1 + len(gen)]
+            cache_checks.append(cache_consistency(gen, recompute))
 
         for h, hit in tf_start_events(block, tf_pred):
             _bump(a_acc, h, hit)
@@ -333,6 +393,9 @@ def run_probe(args, logger) -> int:
         "sampling": "greedy(top_k=1,temperature=1.0)",
     }
     result = build_result(a_acc, b_tf, b_fr, tier_tf, tier_fr, config)
+    result["cache_check"] = (
+        aggregate_cache(cache_checks) if args.verify_cache else {"checked": False}
+    )
     text = json.dumps(result, indent=2, default=str)
     if args.out is not None:
         Path(args.out).write_text(text)
@@ -360,6 +423,13 @@ def add_probe_args(parser):
         type=int,
         default=256,
         help="Free-running horizon per block (prompt is --prompt-seq-len).",
+    )
+    parser.add_argument(
+        "--verify-cache",
+        action="store_true",
+        help="Also recompute each free-run from scratch (no KV cache) and assert it "
+        "matches the incremental decode — rules out a cache/position bug masquerading "
+        "as the pathology.",
     )
     parser.add_argument("--out", type=Path, default=None)
     return parser
