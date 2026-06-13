@@ -22,6 +22,16 @@ ids; those decode to `(frame, reg, val)` writes; writes render to WAV via reSID.
 - **predict.py is old-substrate** for this — its `_state_df` keys on `FRAME_REG` and token→(reg,val),
   neither of which exists in the event alphabet. Use the event-native path only.
 
+## NO GPU NEEDED (captured generations provided)
+
+Real generations are saved at **`/scratch/tmp/audition_sample_gen.npz`** (4 prompts from the v2
+baseline, constrained decode). Per `i` in 0..3: `prompt_i` (128 atoms), `truth_i` (512 grammatical
+ground-truth atoms), `gen_i` (512 model-generated atoms — the ones that fail to decode), `path_i`.
+Debug decode/render against these **entirely on CPU**: `truth_i` is a known-good stream (verify the
+decode/render fix works on a valid window), `gen_i` is the failing case to fix. The only step that
+needs a (brief, ~3 GB) generation is the final end-to-end re-confirm on a fresh ckpt — optional until
+the very end, and shareable with the GPU batch or run after it.
+
 ## The bug (reproduce this first)
 
 The audition CLI `run_render`/`main` in `event_render.py` (load ckpt → generate → constrained
@@ -61,8 +71,10 @@ No WAV is written. Constrained decode (the grammar mask) is already enabled in `
    (`ids_to_writes`) then rejects. `EventStreamState`'s docstring claims it "mirrors the stream
    decoder's field reads exactly" — verify that, and verify priming.
 
-**Decisive first probe (CPU, ~1 min):** does the PROMPT ALONE (`prompt_ids`, no generation) decode?
-`from preframr_tokens.events.generate import tokens_to_writes; tokens_to_writes(tokenizer, list(prompt_ids))`.
+**Decisive first probe (CPU, ~1 min, use the saved `prompt_0`/`truth_0`/`gen_0`):** does the PROMPT
+ALONE decode? does `prompt_0 + truth_0` (a real grammatical window) decode? does `prompt_0 + gen_0`?
+`from preframr_tokens.events.generate import tokens_to_writes; tokens_to_writes(tokenizer, list(ids))`
+(build the events tokenizer with `tkvocab=0` via `events.dataset.make_tokenizer`; no model/GPU).
 - Fails at 128 too → it's hypothesis 1 (truncated-window/keyframe decode), independent of generation.
 - Decodes fine → it's the generation/priming (hypothesis 2): the model's first generated token is
   invalid because the constrained mask isn't primed from the prompt's grammar state.
@@ -106,10 +118,11 @@ No WAV is written. Constrained decode (the grammar mask) is already enabled in `
 
 ## Gotchas
 
-- **GPU:** defroster runs the context-arc overnight batch (seq_len sweep) for ~12–16 h from
-  2026-06-13 05:31 UTC — check `/scratch/tmp/preframr_experiments/ctx_overnight.done`. Generation is
-  light (~3 GB); brief GPU-sharing is OK, or wait. Most of this work (the decode probe, the fix
-  design, the priming) is CPU.
+- **GPU: NOT needed for the core work** — the saved `audition_sample_gen.npz` lets you do the probe,
+  diagnosis, fix, and CPU verification (against `truth_i`/`gen_i`) with no model. Only an optional
+  final end-to-end re-confirm needs a brief (~3 GB) generation; defroster runs the context-arc
+  overnight batch (~12–16 h from 2026-06-13 05:31 UTC, marker
+  `/scratch/tmp/preframr_experiments/ctx_overnight.done`), so share briefly or wait.
 - v2 baseline ckpt: `/scratch/tmp/v2_atoms_baseline.ckpt`; run dir (tokens.csv/df-map/blocks):
   `/scratch/tmp/preframr_experiments/unigram_atoms_v2/results/generalize/default/seed0`.
 - `event_render.py` lives in preframr PR #163 (merge first, or bind-mount as in the repro).
