@@ -95,6 +95,16 @@ def main():
         help="Override --accumulate-grad-batches in spec.train_args.",
     )
     ap.add_argument(
+        "--max-epochs",
+        type=int,
+        default=None,
+        help=(
+            "Override --max-epochs in spec.train_args. Deliberate epoch budgets "
+            "matter under schedule-free (early-stop never fires); use to match "
+            "steps across arms."
+        ),
+    )
+    ap.add_argument(
         "--only-arm",
         type=str,
         default=None,
@@ -153,16 +163,21 @@ def main():
     spec.train_args = _override_train_arg(
         spec.train_args, "--accumulate-grad-batches", args.accumulate_grad_batches
     )
+    spec.train_args = _override_train_arg(
+        spec.train_args, "--max-epochs", args.max_epochs
+    )
     if (
         args.tkvocab is not None
         or args.batch_size is not None
         or (args.accumulate_grad_batches is not None)
+        or (args.max_epochs is not None)
     ):
         logger.info(
-            "overrides: tkvocab=%s batch_size=%s accumulate_grad_batches=%s",
+            "overrides: tkvocab=%s batch_size=%s accumulate_grad_batches=%s max_epochs=%s",
             args.tkvocab,
             args.batch_size,
             args.accumulate_grad_batches,
+            args.max_epochs,
         )
     validate_metric_names(spec)
 
