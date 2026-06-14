@@ -1,8 +1,10 @@
 # Context-length arc — does longer `seq_len` improve held-out continuation? (v2)
 
-**Status: DESIGN + RUNNING (2026-06-13).** The next experiment after the v2 re-baseline; AGENTS NEXT
-#1. Overnight `seq_len` sweep on the atoms-only v2 model, decided in bits/canonical-atom +
-content-tier (full-eval). Batch: `/scratch/tmp/ctx_overnight_batch.sh`.
+**Status: RAN, INCONCLUSIVE — step-confounded (2026-06-13); decisive re-do = matched STEPS (see
+Results).** The first experiment after the v2 re-baseline; AGENTS NEXT #1. Overnight `seq_len` sweep
+on the atoms-only v2 model, decided in bits/canonical-atom + content-tier (full-eval). The
+matched-epochs design conflated context with optimizer-step budget; do not read the raw sweep as
+"context hurts". Batch: `preframr_experiments/ctx_overnight_batch.sh`.
 
 ## Why this is the experiment
 
@@ -49,6 +51,33 @@ Reads:
   §-NEXT-1 sub-lever; a separate dataset-side dev item, not in this batch).
 - **Flat / declining by 16384** → context is *not* the lever at this body/regime; the encoding-side
   arc is done — pivot to embedding/conditioning (NEXT #2). A real, publishable negative.
+
+## Results (RAN 2026-06-13 — STEP-CONFOUNDED, verdict INCONCLUSIVE)
+
+The sweep executed cleanly (3 trains + full-eval audits, no failures; artifacts
+`data/audit/context_length_sweep_v2.md` + `ctx_audit_sl*.json`). Raw result — longer context is
+**monotonically worse** on every decisive metric vs the v2-8192 baseline (content 0.505/0.552/0.485,
+bits/atom 1.998/2.058/2.272):
+
+| seq_len | steps | bits/atom (a/dag/fol) | content (a/dag/fol) | val_loss |
+|---|---|---|---|---|
+| 8192 | **10600** | 1.998/2.058/2.272 | 0.505/0.552/0.485 | 1.391 |
+| 12288 | 7100 | 2.129/2.318/2.430 | 0.470/0.504/0.440 | 1.550 |
+| 16384 | 5400 | 2.315/2.511/2.607 | 0.428/0.451/0.390 | 1.691 |
+| 24576 | 3800 | 2.669/2.869/2.969 | 0.366/0.397/0.346 | 1.979 |
+
+**But this is the §7C trap: matched EPOCHS ≠ matched STEPS.** Longer windows tile into far fewer
+windows/tune (`block_stride = seq_len//4` also scales), so at 100 epochs the longer-`seq_len` arms did
+**half (16384) to a third (24576) the optimizer steps**. Under schedule-free (no LR decay, more steps
+= more convergence) they are simply **undertrained** — the higher val_loss confirms it, and the
+degradation tracks the step deficit. The "Effective batch held at 32" risk-note above guarded the
+batch dimension but **missed the step dimension**: matched epochs holds tokens-seen + effective batch
+constant but NOT the number of updates. So the sweep conflates context with optimization budget and
+**cannot conclude context hurts.**
+
+**Decisive re-do = match STEPS, not epochs.** Scale `--max-epochs` so each arm reaches ~10600 steps:
+12288→~149, 16384→~196, 24576→~279 ep. The single clean headline is **16384 @ ~196 ep (~7 h) vs the
+8192 baseline**. A `--max-steps` cap (cleaner than epoch-scaling) is worth adding to the trainer.
 
 ## Risks / watch
 

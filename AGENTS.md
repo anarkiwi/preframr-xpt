@@ -100,15 +100,16 @@ The **event-boundary-respecting dictionary** (promoted here) shipped tokens 0.51
 **triage-resolved NOT-adopted** 2026-06-13 (compression ~1.7× < 1.8× ADOPT bar; deterministic packs
 win — frontier §9).
 
-**NEXT, in order:**
-1. **Context arc (the next experiment — now RUNNABLE; v2 baseline is its comparator):** `seq_len`
-   8192→16384 (verify 24 GB fit at the 14M body first — may need smaller `--batch-size` + more
-   grad-accum; `run.py --max-epochs` matches the budget) + musically-aligned KEYFRAME windows
-   (dataset-side, from the landed structural index) on atoms-only **v2**; A/B vs the v2-8192 baseline
-   in bits/canonical-atom + content-tier (full-eval). Whole tunes via register-domain chaining
-   (`design/generation/long_range_structure.md` — the norm path; this arc is about music-per-window,
-   not whole-tune windows). Suggest seq_len-16384 alone first (isolate raw context), then aligned
-   windows.
+1. **Context arc — RAN, INCONCLUSIVE (step-confounded); decisive re-do = matched STEPS.** The v2
+   atoms-only `seq_len` sweep {8192,12288,16384,24576} ran (2026-06-13, `design/encoding/
+   context_length_experiment.md` Results, `data/audit/context_length_sweep_v2.md`). Raw result:
+   longer context monotonically WORSE on bits/atom + content + val_loss — **but matched EPOCHS ≠
+   matched STEPS** (longer windows tile fewer/tune; `block_stride=seq_len//4`), so 16384 did 5400
+   steps vs 8192's 10600 (half) and 24576 only 3800 → undertrained (the §7C trap). Do NOT read this
+   as "context hurts". **Decisive: re-run matched-steps** (scale `--max-epochs` to ~10600 steps:
+   12288→149, 16384→196, 24576→279 ep; or add a `--max-steps` trainer cap), single headline
+   **16384 @ ~196 ep vs 8192**. Then layer musically-aligned KEYFRAME windows (dataset-side, the other
+   sub-lever). Effective batch held at 32; whole tunes via chaining (this arc = music-per-window).
 2. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
    stretch: cross-engine generalisation; Orin **offline** predict path (grammar-mask constrained
    decode; real-time is out of reach per `design/performance/orin_inference_optimization_design.md`).
@@ -239,6 +240,14 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-13 (context-length sweep RAN — step-confounded, INCONCLUSIVE)** — v2 atoms-only `seq_len`
+  {8192,12288,16384,24576} sweep, matched 100 epochs. Longer context monotonically worse on bits/atom
+  + content + val_loss, BUT longer windows tile fewer/tune so steps fell 10600→7100→5400→3800
+  (16384 = half of 8192) → undertrained, not a clean context test (the §7C matched-epochs≠steps trap;
+  the "effective batch held" guard missed the step dimension). Verdict: do NOT conclude context hurts;
+  re-run matched-STEPS (scale epochs to ~10600 steps, headline 16384@~196ep vs 8192). Artifacts
+  `data/audit/context_length_sweep_v2.md` + `ctx_audit_sl*.json`; full
+  `design/encoding/context_length_experiment.md` Results.
 - **2026-06-13 (v2 re-baseline DONE — codec neutral, stack adopted)** — adopted the v2 event codec
   end-to-end: released **preframr 0.2.30** (floor `preframr-tokens>=0.51.0`, framework tests green
   vs 0.51.0) + xpt `BASE=0.2.30` + a `run.py --max-epochs` override. Trained a fresh **v2 atoms-only
