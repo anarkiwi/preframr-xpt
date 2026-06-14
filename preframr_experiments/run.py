@@ -105,6 +105,16 @@ def main():
         ),
     )
     ap.add_argument(
+        "--seq-len",
+        type=int,
+        default=None,
+        help=(
+            "Override spec.seq_len (the context-window length). Folds into the "
+            "dataset-cache key, so a different length re-tokenizes/re-blocks. "
+            "The context arc's primary dial."
+        ),
+    )
+    ap.add_argument(
         "--only-arm",
         type=str,
         default=None,
@@ -157,6 +167,8 @@ def main():
         spec.seeds = args.seeds
     if args.tkvocab is not None:
         spec.tkvocab = args.tkvocab
+    if args.seq_len is not None:
+        spec.seq_len = args.seq_len
     spec.train_args = _override_train_arg(
         spec.train_args, "--batch-size", args.batch_size
     )
@@ -171,13 +183,15 @@ def main():
         or args.batch_size is not None
         or (args.accumulate_grad_batches is not None)
         or (args.max_epochs is not None)
+        or (args.seq_len is not None)
     ):
         logger.info(
-            "overrides: tkvocab=%s batch_size=%s accumulate_grad_batches=%s max_epochs=%s",
+            "overrides: tkvocab=%s batch_size=%s accumulate_grad_batches=%s max_epochs=%s seq_len=%s",
             args.tkvocab,
             args.batch_size,
             args.accumulate_grad_batches,
             args.max_epochs,
+            args.seq_len,
         )
     validate_metric_names(spec)
 
