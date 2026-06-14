@@ -31,10 +31,18 @@ measured collapse 7.8× (order-0) / 23× (order-1) vs the 16-bit raw floor. Chip
 pinned as a 24-test reference in preframr-audio. Scope: single-speed non-digi (~92% of corpus).
 Details: `design/references/{verification_and_audits,learnability_token_ordering_theory}.md`.
 
-## Current arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (verdict taken; §7 de-confound audit RAN)
+## Current arc — FREE-RUNNING PATHOLOGY REMEDIATION (pivoted 2026-06-14; learnability run CONCLUDED)
 
-The encoding + pipeline are done/shipped; the open arc is the **canonical learnability run
-on event tokens** (scientific, not operational). The atoms-only baseline is DONE and the
+**THE LIVE ARC has pivoted to generation.** The encoding/content learnability run is CONCLUDED:
+content is learnable + generalises, the encoding is settled (BPE refuted, boundary-dict not-adopted,
+context-length closed as a `seq_len` lever). The binding constraint is now the **free-running
+pathology** — the model learns (teacher-forced healthy) but cannot *generate* (free-running collapses;
+copy-dominance is the root). Tier-0 CONFIRMED + Tier-1 LANDED + the ckpt→generate→WAV audition works;
+full status + next in **NEXT #1** below and `design/generation/free_running_pathology_remediation_design.md`.
+The learnability-run findings (now the settled foundation) follow.
+
+The encoding + pipeline are done/shipped; the (now-concluded) **canonical learnability run
+on event tokens** established the foundation. The atoms-only baseline is DONE and the
 BPE-dictionary run CONCLUDED on the NOT-LEARNED branch (verdict + NEXT below). Findings:
 
 - **TOKENIZER CRASH + FIX (load-bearing).** Any `tkvocab>0` run hit a hard **SIGSEGV** in the
@@ -100,34 +108,36 @@ The **event-boundary-respecting dictionary** (promoted here) shipped tokens 0.51
 **triage-resolved NOT-adopted** 2026-06-13 (compression ~1.7× < 1.8× ADOPT bar; deterministic packs
 win — frontier §9).
 
-1. **Context arc — RAN, INCONCLUSIVE (step-confounded); decisive re-do = matched STEPS.** The v2
-   atoms-only `seq_len` sweep {8192,12288,16384,24576} ran (2026-06-13, `design/encoding/
-   context_length_experiment.md` Results, `data/audit/context_length_sweep_v2.md`). Raw result:
-   longer context monotonically WORSE on bits/atom + content + val_loss — **but matched EPOCHS ≠
-   matched STEPS** (longer windows tile fewer/tune; `block_stride=seq_len//4`), so 16384 did 5400
-   steps vs 8192's 10600 (half) and 24576 only 3800 → undertrained (the §7C trap). Do NOT read this
-   as "context hurts". **Decisive: re-run matched-steps** (scale `--max-epochs` to ~10600 steps:
-   12288→149, 16384→196, 24576→279 ep; or add a `--max-steps` trainer cap), single headline
-   **16384 @ ~196 ep vs 8192**. Then layer musically-aligned KEYFRAME windows (dataset-side, the other
-   sub-lever). Effective batch held at 32; whole tunes via chaining (this arc = music-per-window).
-2. Embedding/conditioning treatments (typed-nibble embeddings, KEYFRAME variants), then the
-   stretch: cross-engine generalisation; Orin **offline** predict path (grammar-mask constrained
-   decode; real-time is out of reach per `design/performance/orin_inference_optimization_design.md`).
-3. **(RESOLVED 2026-06-13 — NOT adopted)** the **event-boundary-respecting dictionary** shipped
-   (tokens 0.51.0) and ran its static triage on the v2 codec: compression caps ~1.7× (< the 1.8×
-   ADOPT bar at every vocab), merge table ~89% deterministic-pack-shaped → PARTIAL, the deterministic
-   packs win. The matched-steps A/B was not run (couldn't reach ADOPT). Density path = the
-   deterministic packs (frontier §3 radix + §4 head-amortization). Full write-up frontier §9 +
-   `data/audit/boundary_dictionary_triage_summary.md`. **The deterministic packs are the new density
-   sub-arc** (codec bump + corpus re-encode + byte-exact `encode(verify=True)`), gated on
-   bits/canonical-atom + content-tier.
-
-**Open arc (orthogonal — free-running pathology).** Whether the event model learned a short-horizon /
-copy-dominated next-token map (good first token, poor afterward) is **unconfirmed but
-un-instrumented**: every deciding metric here is teacher-forced, and the only free-running probe
-(`event_gate`) is greedy single-reference at collapse-scale. Design + tiered remediation ladder
-(Tier-0 confirm / quality-gate / free-running-aware selection → decoding → lane-demux → augmentation
-→ exposure-bias, anti-queue-aligned): `design/generation/free_running_pathology_remediation_design.md`.
+1. **Free-running pathology remediation — THE LIVE ARC (Tier-0 CONFIRMED 2026-06-14, Tier-1 LANDED).**
+   The encoding/content arc is CLOSED (content learnable + generalises, encoding settled). The binding
+   constraint on *usable generation* is the free-running pathology: the model *learns* but cannot
+   *generate*. Tier-0 diagnostics (the realized probe suite, all fixed for a shared KV-cache bug) on
+   the v2 baseline:
+   - **exposure_bias CONFIRMED** (`free_running_gap_audit`, `data/audit/v2_baseline_freerun_gap.json`):
+     teacher-forced is long-horizon healthy but free-running collapses within ~4 tokens (to a ~2-token
+     drone — free-run content acc → 0.04 while TF holds ~0.5).
+   - **copy-dominance (M4)** (`copy_novel`): copyable 0.535 vs novel **0.194** — the healthy TF ~0.5 is
+     induction-copy, not novel generation. **The root cause.**
+   - **effective context ~1024** (`effective_context`): uses ~1/8 of `seq_len` 8192.
+   - **well-calibrated** (ECE 0.014 → sampling-temp is low-yield); **lane-demux triaged-OUT** (voice-form
+     induction-copy flat, `data/audit/lane_demux_triage_v2.md`).
+   - **Tier-1 decode caps LANDED** (preframr #167: `--repetition-penalty` + `--no-repeat-ngram-size`) →
+     collapse broken (uniq tokens 2–6 → 76–85). With grammar-priming (preframr #164) + `event_render`
+     (preframr #163) the **ckpt→generate→WAV audition now works** end-to-end
+     (`/scratch/tmp/v2_generation_audition_*.wav`).
+   **NEXT in this arc:** Tier-1 is a band-aid; the root is M4 → **Tier-3 transplant/reduction
+   augmentation** (breaks the copy reward), **BLOCKED on porting preframr-aug to the EVENT substrate**
+   (it is parse-domain; register-domain splice + `encode(verify=True)`). That port is the next big
+   build. Then Tier-4 DAgger (exposure bias) gated last. Ladder:
+   `design/generation/free_running_pathology_remediation_design.md`.
+2. **Context arc — CLOSED as a `seq_len` lever** (`design/encoding/context_length_experiment.md`). The
+   sweep was step-confounded (matched epochs ≠ steps), AND effective context saturates ~1024 « 8192, so
+   longer windows have no long-range signal to exploit. Matched-steps re-run is LOW priority; the real
+   context lever is shorter/learnable dependencies (representation), not window length.
+3. **Deterministic-packs density sub-arc** (frontier §3 radix + §4 head-amortization; the RESOLVED
+   boundary-dict was NOT adopted) + embedding/conditioning treatments; cross-engine generalisation;
+   Orin **offline** predict path (grammar-mask constrained decode — now working; real-time out of
+   reach per `design/performance/orin_inference_optimization_design.md`).
 Tier-0 go/no-go tool — teacher-forced vs greedy free-running accuracy by horizon, per
 content/structural tier, verdict `healthy`/`exposure_bias`/`short_context_or_bug`:
 `preframr_experiments/audit/free_running_gap_audit.py` (GPU host, `load_model`/`Predictor` path like
@@ -240,6 +250,19 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-14 (free-running pathology CONFIRMED + Tier-1 LANDED; arc pivots to generation)** — ran
+  the realized Tier-0 probe suite on the v2 baseline (fixed a shared KV-cache bug in 6 probes first).
+  Verdict: the model learns but cannot generate. **exposure_bias** (`free_running_gap_audit`: TF
+  long-horizon healthy, free-run collapses to a ~2-token drone within ~4 tokens), root cause
+  **copy-dominance M4** (`copy_novel`: copyable 0.535 vs novel 0.194), **effective context ~1024**
+  (so `seq_len` is moot — context arc closed), **well-calibrated** (M3 ruled out), **lane-demux
+  triaged-OUT** (voice-form induction-copy flat). **Tier-1 decode caps LANDED** (preframr #167:
+  repetition-penalty + no-repeat-ngram) → collapse broken (uniq 2-6→76-85); with grammar-priming
+  (#164) + event_render (#163) the **ckpt→generate→WAV audition works** (`/scratch/tmp/
+  v2_generation_audition_*.wav`). NEXT root fix = Tier-3 augmentation, BLOCKED on the preframr-aug
+  event port. Artifacts `data/audit/{v2_baseline_freerun_gap,calibration_audit_v2,copy_novel_audit_v2,
+  effective_context_audit_v2}.json` + `lane_demux_triage_v2.md`; arc
+  `design/generation/free_running_pathology_remediation_design.md`.
 - **2026-06-13 (context-length sweep RAN — step-confounded, INCONCLUSIVE)** — v2 atoms-only `seq_len`
   {8192,12288,16384,24576} sweep, matched 100 epochs. Longer context monotonically worse on bits/atom
   + content + val_loss, BUT longer windows tile fewer/tune so steps fell 10600→7100→5400→3800
