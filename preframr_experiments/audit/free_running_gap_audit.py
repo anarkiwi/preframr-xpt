@@ -298,6 +298,9 @@ def _iter_blocks(blocks_glob: str, n_blocks: int, min_len: int, logger):
 
 def run_probe(args, logger) -> int:
     import torch  # pylint: disable=import-outside-toplevel
+    from torchtune.modules.common_utils import (  # pylint: disable=import-outside-toplevel
+        disable_kv_cache,
+    )
 
     from preframr.inference.predict import (  # pylint: disable=import-outside-toplevel
         Predictor,
@@ -336,7 +339,7 @@ def run_probe(args, logger) -> int:
     cache_checks: list = []
     for path, block in blocks:
         x = torch.tensor(block[:-1], dtype=torch.long).unsqueeze(0).to(device)
-        with torch.inference_mode():
+        with torch.inference_mode(), disable_kv_cache(model.model):
             logits = model.model(x)
         if isinstance(logits, list):
             tf_pred = torch.cat([c.argmax(dim=-1) for c in logits], dim=1)
