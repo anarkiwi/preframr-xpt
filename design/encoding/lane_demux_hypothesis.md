@@ -53,6 +53,20 @@ sub-question: do BPE merges across voice boundaries re-introduce the cross-melod
 3. **Melody/bass role inference** — latent and lossy (pitch range, ornament signature, gate rhythm);
    build the segmenter only if the triage shows role-lanes ≫ voice-lanes.
 
+## Triage RESULT (voice-form RAN 2026-06-14 — does NOT clear the gate)
+
+Voice-form triage ran on the v2 corpus (frame-major vs voice-major event ordering,
+`learnability_triage` proxies, window-mode 8192 + song-mode; `data/audit/lane_demux_triage_v2.md`).
+**Verdict: voice-form does not clear the gate.** Window-mode: **induction-copy is flat**
+(0.9457→0.9469 — the gate requires it to *rise*); per-frame h_k drops only at high memory-depth
+(k=4 −14%, k=3 −6%) and *rises* at k=1 — weak and mixed. Consistent with the refuted
+`sequence_order_normalization` (~5% recovery). The interleave (M2) is **not** the binding learnability
+constraint — induction-copy is already ~0.946 regardless of ordering (copy-dominance M4 is
+corpus-inherent, not interleave-caused). **Deprioritized.** Role-form (the truer target, +0.294 bits
+prior) is untested but needs the role segmenter, and voice-form's flat copy tempers it — build only on
+a stronger signal. The binding constraints stay M4/M1 (see
+`../generation/free_running_pathology_remediation_design.md`).
+
 ## Gate
 
 Triage before any build: reorder a labeled sample into frame-major / voice-major / role-major and run
