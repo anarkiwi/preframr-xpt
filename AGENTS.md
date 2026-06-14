@@ -37,8 +37,9 @@ Details: `design/references/{verification_and_audits,learnability_token_ordering
 content is learnable + generalises, the encoding is settled (BPE refuted, boundary-dict not-adopted,
 context-length closed as a `seq_len` lever). The binding constraint is now the **free-running
 pathology** — the model learns (teacher-forced healthy) but cannot *generate* (free-running collapses;
-copy-dominance is the root). Tier-0 CONFIRMED + Tier-1 LANDED + the ckpt→generate→WAV audition works;
-full status + next in **NEXT #1** below and `design/generation/free_running_pathology_remediation_design.md`.
+copy-dominance is the root). Tier-0 CONFIRMED; Tier-1 caps LANDED as a lever (#167); the audition WAVs
+were silent (mid-frame-prompt harness bug, fixed #168) — a clean free-running audition still needs a GPU
+re-gen; full status + next in **NEXT #1** below and `design/generation/free_running_pathology_remediation_design.md`.
 The learnability-run findings (now the settled foundation) follow.
 
 The encoding + pipeline are done/shipped; the (now-concluded) **canonical learnability run
@@ -108,7 +109,8 @@ The **event-boundary-respecting dictionary** (promoted here) shipped tokens 0.51
 **triage-resolved NOT-adopted** 2026-06-13 (compression ~1.7× < 1.8× ADOPT bar; deterministic packs
 win — frontier §9).
 
-1. **Free-running pathology remediation — THE LIVE ARC (Tier-0 CONFIRMED 2026-06-14, Tier-1 LANDED).**
+1. **Free-running pathology remediation — THE LIVE ARC (Tier-0 CONFIRMED 2026-06-14; audition harness
+   bug found+fixed; clean WAV audition still PENDING a GPU re-gen).**
    The encoding/content arc is CLOSED (content learnable + generalises, encoding settled). The binding
    constraint on *usable generation* is the free-running pathology: the model *learns* but cannot
    *generate*. Tier-0 diagnostics (the realized probe suite, all fixed for a shared KV-cache bug) on
@@ -121,11 +123,19 @@ win — frontier §9).
    - **effective context ~1024** (`effective_context`): uses ~1/8 of `seq_len` 8192.
    - **well-calibrated** (ECE 0.014 → sampling-temp is low-yield); **lane-demux triaged-OUT** (voice-form
      induction-copy flat, `data/audit/lane_demux_triage_v2.md`).
-   - **Tier-1 decode caps LANDED** (preframr #167: `--repetition-penalty` + `--no-repeat-ngram-size`) →
-     collapse broken (uniq tokens 2–6 → 76–85). With grammar-priming (preframr #164) + `event_render`
-     (preframr #163) the **ckpt→generate→WAV audition now works** end-to-end
-     (`/scratch/tmp/v2_generation_audition_*.wav`).
-   **NEXT in this arc:** Tier-1 is a band-aid; the root is M4 → **Tier-3 transplant/reduction
+   - **Tier-1 decode caps LANDED as a lever (preframr #167), NOT a fix** (`--repetition-penalty` +
+     `--no-repeat-ngram-size`) → broke the single-token collapse (uniq tokens 2–6 → 76–85), but did NOT
+     make the audition audible.
+   - **AUDITION HARNESS BUG (found 2026-06-14, FALSE-GREEN corrected).** The earlier "ckpt→generate→WAV
+     audition works end-to-end" claim was wrong — the WAVs are **silent after a pop**. `load_prompts` cut
+     prompts at a fixed atom count, landing **mid-frame** (unit boundaries near 128 are 105/131, not 128),
+     so the prompt is not a self-contained decodable stream: 3/4 auditions decode nothing, 1/4 yields
+     ~0.2s then goes grammatically invalid. Renderer/decoder are correct (truth → 514 frames). **Fixed:
+     snap prompts to whole-frame `unit_starts()` boundaries (preframr #168).** The `memorize` smoke
+     masked it (gen==truth reconstructs the block). **A clean free-running WAV audition still needs a GPU
+     re-gen on the #168 harness** before the model's true free-running quality is known.
+   **NEXT in this arc:** (a) GPU re-gen on the #168 harness to hear true free-running output; (b) root is
+   M4 → **Tier-3 transplant/reduction
    augmentation** (breaks the copy reward), **BLOCKED on porting preframr-aug to the EVENT substrate**
    (it is parse-domain; register-domain splice + `encode(verify=True)`). That port is the next big
    build. Then Tier-4 DAgger (exposure bias) gated last. Ladder:
@@ -250,17 +260,21 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
-- **2026-06-14 (free-running pathology CONFIRMED + Tier-1 LANDED; arc pivots to generation)** — ran
-  the realized Tier-0 probe suite on the v2 baseline (fixed a shared KV-cache bug in 6 probes first).
-  Verdict: the model learns but cannot generate. **exposure_bias** (`free_running_gap_audit`: TF
-  long-horizon healthy, free-run collapses to a ~2-token drone within ~4 tokens), root cause
-  **copy-dominance M4** (`copy_novel`: copyable 0.535 vs novel 0.194), **effective context ~1024**
-  (so `seq_len` is moot — context arc closed), **well-calibrated** (M3 ruled out), **lane-demux
-  triaged-OUT** (voice-form induction-copy flat). **Tier-1 decode caps LANDED** (preframr #167:
-  repetition-penalty + no-repeat-ngram) → collapse broken (uniq 2-6→76-85); with grammar-priming
-  (#164) + event_render (#163) the **ckpt→generate→WAV audition works** (`/scratch/tmp/
-  v2_generation_audition_*.wav`). NEXT root fix = Tier-3 augmentation, BLOCKED on the preframr-aug
-  event port. Artifacts `data/audit/{v2_baseline_freerun_gap,calibration_audit_v2,copy_novel_audit_v2,
+- **2026-06-14 (free-running pathology CONFIRMED; audition harness bug found+fixed; arc pivots to
+  generation)** — ran the realized Tier-0 probe suite on the v2 baseline (fixed a shared KV-cache bug in
+  6 probes first). Verdict: the model learns but cannot generate. **exposure_bias**
+  (`free_running_gap_audit`: TF long-horizon healthy, free-run collapses to a ~2-token drone within ~4
+  tokens), root cause **copy-dominance M4** (`copy_novel`: copyable 0.535 vs novel 0.194), **effective
+  context ~1024** (so `seq_len` is moot — context arc closed), **well-calibrated** (M3 ruled out),
+  **lane-demux triaged-OUT** (voice-form induction-copy flat). **Tier-1 decode caps LANDED as a lever**
+  (preframr #167: repetition-penalty + no-repeat-ngram) → single-token collapse broken (uniq 2-6→76-85).
+  **FALSE-GREEN CORRECTED:** the "audition works end-to-end" claim was wrong — the user reported the WAVs
+  are SILENT after a pop. Diagnosed: `load_prompts` cut prompts mid-frame (fixed atom count vs
+  `unit_starts` boundaries), so prompts aren't self-contained decodable streams (3/4 decode nothing, 1/4
+  ~0.2s then invalid). Renderer/decoder are correct (truth→514 frames). **Fixed: snap prompts to
+  whole-frame boundaries (preframr #168).** A clean free-running WAV audition still needs a GPU re-gen on
+  the #168 harness; NEXT root fix = Tier-3 augmentation, BLOCKED on the preframr-aug event port.
+  Artifacts `data/audit/{v2_baseline_freerun_gap,calibration_audit_v2,copy_novel_audit_v2,
   effective_context_audit_v2}.json` + `lane_demux_triage_v2.md`; arc
   `design/generation/free_running_pathology_remediation_design.md`.
 - **2026-06-13 (context-length sweep RAN — step-confounded, INCONCLUSIVE)** — v2 atoms-only `seq_len`

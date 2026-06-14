@@ -1,13 +1,23 @@
 # Free-running pathology — remediation ladder for "good first token, poor afterward"
 
-**Status: LIVE — Tier-0 CONFIRMED + Tier-1 LANDED; root = copy-dominance, next = Tier-3 (2026-06-14).**
+**Status: LIVE — Tier-0 CONFIRMED; audition harness bug found+fixed (silent WAVs); clean
+free-running audition still PENDING a GPU re-gen (2026-06-14).**
 THE PROJECT'S LIVE ARC (AGENTS NEXT #1; the encoding/content learnability run is concluded). Tier-0
-confirmed the pathology and characterized it (below); **Tier-1 decode caps LANDED** (preframr #167:
-`--repetition-penalty` + `--no-repeat-ngram-size` in the constrained loop — collapse broken, uniq
-tokens 2–6 → 76–85), and with grammar-priming (preframr #164) + `event_render` (preframr #163) the
-**ckpt→generate→WAV audition now works end-to-end** (`/scratch/tmp/v2_generation_audition_*.wav`).
-Tier-1 is a band-aid; the **root cause is copy-dominance (M4)** → the next move is **Tier-3
-transplant/reduction augmentation, BLOCKED on porting preframr-aug to the event substrate**.
+confirmed the pathology and characterized it (below). **CORRECTION (2026-06-14):** the earlier claim
+that the ckpt→generate→WAV audition "works end-to-end" was a **false-green** — `run_render` returned
+non-zero only because a WAV *file* was written, but the user reported the WAVs are **silent after an
+initial pop**. Root cause diagnosed: `load_prompts` cut prompts at a fixed atom count
+(`prompt_seq_len`), landing **mid-frame** (unit boundaries near 128 are e.g. 105/131, not 128), so the
+prompt is not a self-contained decodable stream — 3/4 auditions decode *nothing* past the prompt, 1/4
+yields ~0.2s (the pop) then the divergent continuation goes grammatically invalid. The renderer/decoder
+are correct (ground-truth continuations decode to 514 frames). **Fix: snap prompts to whole-frame
+`unit_starts()` boundaries (preframr #168)**; verified on CPU (old `prompt[:128]` fails, snapped prompt
+decodes). The `memorize` smoke test masked this because `gen==truth` reconstructs the original block.
+**Tier-1 decode caps** (preframr #167: `--repetition-penalty` + `--no-repeat-ngram-size`) broke the
+single-token collapse (uniq tokens 2–6 → 76–85) but did NOT by themselves produce music — they are a
+lever, not the fix. The **root cause remains copy-dominance (M4)**; next, after a clean re-gen confirms
+the model's true free-running quality, is **Tier-3 transplant/reduction augmentation, BLOCKED on porting
+preframr-aug to the event substrate**.
 
 The go/no-go fired: `free_running_gap_audit` on `/scratch/tmp/v2_atoms_baseline.ckpt` (8 held-out
 blocks, result `data/audit/v2_baseline_freerun_gap.json`) reads **`exposure_bias`** — teacher-forced
@@ -126,13 +136,15 @@ gate's sampling grid (sampling is "the gate's subject").
   runaway) by sampling *per tier*: near-greedy on structural/grammar atoms, calibrated sampling
   (top-p / min-p / locally-typical) on content atoms. Add as configs to the gate's grid; it lowers
   single-reference acc, which is exactly why Tier 0 lands first.
-- **Loop/repeat penalty at decode — LANDED (preframr #167).** `--repetition-penalty` +
-  `--no-repeat-ngram-size` in the constrained loop (after the grammar mask, reverts if it would leave
-  no valid token) broke the collapse on the v2 baseline (uniq tokens 2–6 → 76–85, repeated-bigram
-  0.99 → 0.47) and made the ckpt→generate→WAV audition work. Defaults off; recommended audition values
-  rep 1.3 / nrns 4. **Still TODO:** a grammar-aware hard frame/DELAY budget cap (the event
-  `EventStreamState` has no `frame_budget` yet — the parse-domain `StreamState` does); the loop penalty
-  alone sufficed for the drone, but the budget cap is the principled forbid-runaway-empty-frames guard.
+- **Loop/repeat penalty at decode — LANDED as a lever (preframr #167), NOT a fix.**
+  `--repetition-penalty` + `--no-repeat-ngram-size` in the constrained loop (after the grammar mask,
+  reverts if it would leave no valid token) broke the single-token collapse on the v2 baseline (uniq
+  tokens 2–6 → 76–85, repeated-bigram 0.99 → 0.47). **It did NOT by itself make the audition audible** —
+  the silent WAVs were a separate harness bug (mid-frame prompts; fixed in #168, see Status). Defaults
+  off; recommended audition values rep 1.3 / nrns 4, but the true free-running quality with these caps is
+  still UNMEASURED pending a clean re-gen on the #168 harness. **Still TODO:** a grammar-aware hard
+  frame/DELAY budget cap (the event `EventStreamState` has no `frame_budget` yet — the parse-domain
+  `StreamState` does); the budget cap is the principled forbid-runaway-empty-frames guard.
 - **Finer-grained decode-and-recompile re-anchoring.** Shorten the chaining interval of
   [`long_range_structure.md`](long_range_structure.md) (its v2 loop-escape — raise T / re-anchor at a
   fresh KEYFRAME on detected tail cycle — is the same lever). **Limit:** this bounds *compounding
