@@ -35,10 +35,13 @@ bug as the gap probe). The diagnosis is sharper than "exposure bias" alone — i
   high-T-runaway miscalibration artefact — so Tier-1 *temperature* tuning is low-yield; the Tier-1
   value is the **decode budget caps** (forbid the empty-frame drone / loops), not the sampling temp.
 
-**Refined sequencing:** Tier 1 budget-caps (free, immediate band-aid) → then the root causes are
-**Tier 3 (transplant/reduction augmentation, breaks the copy reward — M4)** and **Tier 2 (lane-demux,
-self-conditioning stability — M2)**, with Tier 4 DAgger (M1) gated last. Per-tier *sampling* drops in
-priority given the good calibration.
+**Refined sequencing:** Tier 1 budget-caps (free, immediate band-aid) → then the root cause is
+**Tier 3 (transplant/reduction augmentation, breaks the copy reward — M4)**, with Tier 4 DAgger (M1)
+gated last. Per-tier *sampling* drops in priority given the good calibration. **Tier 2 voice-form
+lane-demux was triaged 2026-06-14 and does NOT clear the gate** (induction-copy flat, h_k drops only
+at high memory-depth — `../encoding/lane_demux_hypothesis.md`, `data/audit/lane_demux_triage_v2.md`):
+the interleave is not the binding learnability constraint, so M2 drops below M4 (role-form lane-demux
+remains untested but needs the role segmenter — build only on a stronger signal).
 
 ## The failure mode
 
