@@ -1,7 +1,8 @@
 # Free-running pathology — remediation ladder for "good first token, poor afterward"
 
-**Status: LIVE — Tier-0 CONFIRMED; audition harness bug found+fixed (silent WAVs); clean
-free-running audition still PENDING a GPU re-gen (2026-06-14).**
+**Status: LIVE — Tier-0 CONFIRMED; audition harness bug found+fixed AND verified audible (CPU re-gen,
+preframr #168); the model's free-running QUALITY still shows the pathology — one audition drifts to
+~91% empty frames (2026-06-14).**
 THE PROJECT'S LIVE ARC (AGENTS NEXT #1; the encoding/content learnability run is concluded). Tier-0
 confirmed the pathology and characterized it (below). **CORRECTION (2026-06-14):** the earlier claim
 that the ckpt→generate→WAV audition "works end-to-end" was a **false-green** — `run_render` returned
@@ -11,8 +12,13 @@ initial pop**. Root cause diagnosed: `load_prompts` cut prompts at a fixed atom 
 prompt is not a self-contained decodable stream — 3/4 auditions decode *nothing* past the prompt, 1/4
 yields ~0.2s (the pop) then the divergent continuation goes grammatically invalid. The renderer/decoder
 are correct (ground-truth continuations decode to 514 frames). **Fix: snap prompts to whole-frame
-`unit_starts()` boundaries (preframr #168)**; verified on CPU (old `prompt[:128]` fails, snapped prompt
-decodes). The `memorize` smoke test masked this because `gen==truth` reconstructs the original block.
+`unit_starts()` boundaries (preframr #168)** — scanning a bounded prefix only (the `.blocks.npy` row is
+a `seq_len` window that itself ends mid-frame, so never parse the whole row). **Verified end-to-end on a
+CPU re-gen** (v2 ckpt, 2 prompts): both auditions now decode and render real audio (RMS 1942 / 583,
+trim 1–3) where the fixed-128 cut rendered silence (`/scratch/tmp/v2_audition_FIXED_*.wav`). The
+`memorize` smoke test masked the original bug because `gen==truth` reconstructs the original block.
+**The quality is still pathological:** one audition drifts to ~91% empty frames (the M3 near-silent
+empty-frame drone / M4 copy-collapse) — now *audible* instead of hidden behind the decode bug.
 **Tier-1 decode caps** (preframr #167: `--repetition-penalty` + `--no-repeat-ngram-size`) broke the
 single-token collapse (uniq tokens 2–6 → 76–85) but did NOT by themselves produce music — they are a
 lever, not the fix. The **root cause remains copy-dominance (M4)**; next, after a clean re-gen confirms

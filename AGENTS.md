@@ -110,7 +110,8 @@ The **event-boundary-respecting dictionary** (promoted here) shipped tokens 0.51
 win — frontier §9).
 
 1. **Free-running pathology remediation — THE LIVE ARC (Tier-0 CONFIRMED 2026-06-14; audition harness
-   bug found+fixed; clean WAV audition still PENDING a GPU re-gen).**
+   bug found+fixed+verified audible; model free-running QUALITY still pathological — drifts to ~91%
+   empty frames).**
    The encoding/content arc is CLOSED (content learnable + generalises, encoding settled). The binding
    constraint on *usable generation* is the free-running pathology: the model *learns* but cannot
    *generate*. Tier-0 diagnostics (the realized probe suite, all fixed for a shared KV-cache bug) on
@@ -132,10 +133,13 @@ win — frontier §9).
      so the prompt is not a self-contained decodable stream: 3/4 auditions decode nothing, 1/4 yields
      ~0.2s then goes grammatically invalid. Renderer/decoder are correct (truth → 514 frames). **Fixed:
      snap prompts to whole-frame `unit_starts()` boundaries (preframr #168).** The `memorize` smoke
-     masked it (gen==truth reconstructs the block). **A clean free-running WAV audition still needs a GPU
-     re-gen on the #168 harness** before the model's true free-running quality is known.
-   **NEXT in this arc:** (a) GPU re-gen on the #168 harness to hear true free-running output; (b) root is
-   M4 → **Tier-3 transplant/reduction
+     masked it (gen==truth reconstructs the block). **VERIFIED audible on a CPU re-gen** (2 prompts, v2
+     ckpt): both auditions decode + render real audio (RMS 1942/583, trim 1–3) where the fixed-128 cut
+     was silent (`/scratch/tmp/v2_audition_FIXED_*.wav`). **But the quality is still pathological:** one
+     audition drifts to ~91% empty frames (the M3/M4 collapse) — now audible, not hidden behind the
+     decode bug.
+   **NEXT in this arc:** (a) re-gen with Tier-1 caps (#167) + temperature tuning to test if they reduce
+   the empty-frame drift now that audio decodes; (b) root is M4 → **Tier-3 transplant/reduction
    augmentation** (breaks the copy reward), **BLOCKED on porting preframr-aug to the EVENT substrate**
    (it is parse-domain; register-domain splice + `encode(verify=True)`). That port is the next big
    build. Then Tier-4 DAgger (exposure bias) gated last. Ladder:
