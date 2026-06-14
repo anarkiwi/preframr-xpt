@@ -99,6 +99,9 @@ def _probe_positions(block_len: int, k: int, max_probes: int) -> list:
 
 def run_audit(args, logger) -> int:
     import torch  # pylint: disable=import-outside-toplevel
+    from torchtune.modules.common_utils import (
+        disable_kv_cache,
+    )  # pylint: disable=import-outside-toplevel
 
     from preframr.inference.predict import (
         load_model,
@@ -124,7 +127,7 @@ def run_audit(args, logger) -> int:
                 continue
             windows = [block[p - k : p] for p in positions]
             x = torch.tensor(windows, dtype=torch.long).to(device)
-            with torch.inference_mode():
+            with torch.inference_mode(), disable_kv_cache(model.model):
                 logits = model.model(x)
             if isinstance(logits, list):
                 logits = torch.cat(logits, dim=1)

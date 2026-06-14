@@ -1,0 +1,45 @@
+{
+ "curve": [
+  {
+   "k": 16,
+   "acc": 0.34765625,
+   "n": 256
+  },
+  {
+   "k": 64,
+   "acc": 0.49609375,
+   "n": 256
+  },
+  {
+   "k": 256,
+   "acc": 0.5078125,
+   "n": 256
+  },
+  {
+   "k": 1024,
+   "acc": 0.640625,
+   "n": 256
+  },
+  {
+   "k": 4096,
+   "acc": 0.578125,
+   "n": 256
+  }
+ ],
+ "saturation_k": 1024,
+ "acc_at_min_k": 0.34765625,
+ "acc_at_max_k": 0.578125,
+ "long_context_gain": 0.23046875,
+ "config": {
+  "blocks_glob": "/scratch/preframr/train/**/*.blocks.npy",
+  "n_blocks": 8,
+  "ctx_lens": [
+   16,
+   64,
+   256,
+   1024,
+   4096
+  ],
+  "max_probes": 32
+ }
+}

@@ -7,13 +7,38 @@ fired: `free_running_gap_audit` on `/scratch/tmp/v2_atoms_baseline.ckpt` (8 held
 atoms, so the model genuinely *uses* long context and is NOT short-horizon/context≈0), but
 free-running **collapses within ~4 tokens** (read-B: free-run ≈ TF at horizon 1, then drops to ~0.04
 content acc while TF holds ~0.5; gap widens to ~0.4–0.58). The pathology was assumed, now observed —
-this is the live remediation arc. *(Bears on the context-length null: the model uses long context, so
-that null is the matched-epochs step-confound, not short effective context — see
-`../encoding/context_length_experiment.md`.)* It is the
+this is the live remediation arc. It is the
 remediation counterpart to [`generation_quality_gate.md`](generation_quality_gate.md): the gate
 *measures* the pathology, this doc is the prioritised ladder of *fixes* the gate's verdict selects
 among. Every arm here is itself gate-promoted (content tier + quality gate), triage-first for
 representation changes — nothing flips a default on this doc's say-so.
+
+### Tier-0 full-suite characterization (v2 baseline, 2026-06-14)
+
+The rest of the realized suite ran on the v2 baseline (artifacts `data/audit/{calibration,copy_novel,
+effective_context}_audit_v2.json`; all five TF-forward probes were also fixed for the same KV-cache
+bug as the gap probe). The diagnosis is sharper than "exposure bias" alone — it points at **M4
+(copy-dominance) + M1 (exposure bias)** as the binding constraints, and **rules out M3 (miscalibration)**:
+
+- **Copy-dominated TF (M4 confirmed).** `copy_novel`: copyable-token acc **0.535** vs novel-token acc
+  **0.194** (gap 0.341). The "healthy ~0.5" teacher-forced number is carried by **induction-copy** of
+  the prompt; on genuinely novel content the model is weak (~0.19). So in free-running (nothing to
+  copy) it has little to fall back on — the collapse is copy-dependence, not just exposure scheduling.
+- **Effective context ≈ 1024 atoms.** `effective_context`: acc-vs-truncated-k **saturates at k=1024**
+  (acc 0.35 @min-k → 0.58 @max-k, long-context gain 0.23, flat past 1024). The model uses context up
+  to ~1024 atoms and **no further** — far below `seq_len` 8192. **This re-reads the context-length
+  null:** longer windows have no exploitable long-range signal for *this* model, so the sweep null is
+  not only the step-confound — `seq_len`-as-lever is unpromising. The context lever is making
+  dependencies shorter/learnable (representation: lane-demux, dependency-horizon), not window length.
+- **Well-calibrated, NOT overconfident (M3 ruled out).** `calibration`: ECE **0.014**, overconfidence
+  **−0.013** (slightly under), mean entropy 1.65 nats. The collapse is not a low-T-drone /
+  high-T-runaway miscalibration artefact — so Tier-1 *temperature* tuning is low-yield; the Tier-1
+  value is the **decode budget caps** (forbid the empty-frame drone / loops), not the sampling temp.
+
+**Refined sequencing:** Tier 1 budget-caps (free, immediate band-aid) → then the root causes are
+**Tier 3 (transplant/reduction augmentation, breaks the copy reward — M4)** and **Tier 2 (lane-demux,
+self-conditioning stability — M2)**, with Tier 4 DAgger (M1) gated last. Per-tier *sampling* drops in
+priority given the good calibration.
 
 ## The failure mode
 

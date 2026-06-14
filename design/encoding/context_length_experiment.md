@@ -79,6 +79,16 @@ constant but NOT the number of updates. So the sweep conflates context with opti
 12288→~149, 16384→~196, 24576→~279 ep. The single clean headline is **16384 @ ~196 ep (~7 h) vs the
 8192 baseline**. A `--max-steps` cap (cleaner than epoch-scaling) is worth adding to the trainer.
 
+**But a stronger reason this lever is unpromising (added 2026-06-14):** `effective_context_audit` on
+the v2 baseline shows teacher-forced accuracy **saturates at k≈1024 atoms** (acc 0.35→0.58, flat past
+1024; `data/audit/effective_context_audit_v2.json`). The model already uses only ~1024 of its 8192
+window — there is no exploitable long-range signal beyond ~1/8 of the *current* `seq_len`, so longer
+windows are doubly unlikely to help (step-confound AND no long-range dependency to exploit).
+**Reprioritized:** the matched-steps re-run drops below the free-running-pathology arc
+(`../generation/free_running_pathology_remediation_design.md`) — the binding constraint is generation
+collapse (copy-dominance + exposure bias), not window length. The real context lever is making
+dependencies shorter/learnable (representation: lane-demux), not `seq_len`.
+
 ## Risks / watch
 
 - **24 GB fit** at long `seq_len` — mitigated by the constant-effective-batch reduction + a 16384
