@@ -1,0 +1,33 @@
+{
+ "ckpt": "/scratch/tmp/preframr_experiments/ctx_atoms_v2_sl24576/results/generalize/default/seed0/tb_logs/preframr/version_0/checkpoints/best-epoch=99-val_loss=1.9793.ckpt",
+ "codec_version": 2,
+ "subsets": {
+  "eval_a": {
+   "bits_per_canonical_atom": 2.669025537814931,
+   "content_acc": 0.36554412859734076,
+   "structural_acc": 0.6092687528240963,
+   "content_over_structural": 0.5999718956584632,
+   "tot_atoms": 9287869,
+   "content_n": 5776107,
+   "structural_n": 3638332
+  },
+  "eval_b_daglish": {
+   "bits_per_canonical_atom": 2.868778234441552,
+   "content_acc": 0.39727878735513195,
+   "structural_acc": 0.4332195382400052,
+   "content_over_structural": 0.9170380194972602,
+   "tot_atoms": 852371,
+   "content_n": 613403,
+   "structural_n": 247228
+  },
+  "eval_b_follin": {
+   "bits_per_canonical_atom": 2.969127427919298,
+   "content_acc": 0.3458537067219835,
+   "structural_acc": 0.5236332197528353,
+   "content_over_structural": 0.6604884749008724,
+   "tot_atoms": 554683,
+   "content_n": 364446,
+   "structural_n": 196630
+  }
+ }
+}
