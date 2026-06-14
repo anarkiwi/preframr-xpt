@@ -1,0 +1,14 @@
+{
+ "n": 46006,
+ "ece": 0.013694067672559014,
+ "mean_confidence": 0.4958563170598672,
+ "accuracy": 0.5092161891927139,
+ "overconfidence": -0.013359872132846728,
+ "mean_entropy_nats": 1.648176492651986,
+ "median_entropy_nats": 1.875,
+ "config": {
+  "blocks_glob": "/scratch/preframr/train/**/*.blocks.npy",
+  "n_blocks": 8,
+  "scored": "content"
+ }
+}

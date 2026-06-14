@@ -88,6 +88,9 @@ def _iter_blocks(blocks_glob: str, n_blocks: int, logger):
 
 def run_audit(args, logger) -> int:
     import torch  # pylint: disable=import-outside-toplevel
+    from torchtune.modules.common_utils import (
+        disable_kv_cache,
+    )  # pylint: disable=import-outside-toplevel
 
     from preframr.inference.predict import (
         load_model,
@@ -115,7 +118,7 @@ def run_audit(args, logger) -> int:
     entropies: list = []
     for _path, block in blocks:
         x = torch.tensor(block[:-1], dtype=torch.long).unsqueeze(0).to(device)
-        with torch.inference_mode():
+        with torch.inference_mode(), disable_kv_cache(model.model):
             logits = model.model(x)
             if isinstance(logits, list):
                 logits = torch.cat(logits, dim=1)
