@@ -1,12 +1,19 @@
 # Free-running pathology — remediation ladder for "good first token, poor afterward"
 
-**Status:** Scoping / proposal (2026-06-13). **Trigger:** open this only once the Tier-0 diagnostic
-confirms a *material* free-running ↔ teacher-forced gap on a canonical event-model checkpoint (the
-quick confirmation below, then [`generation_quality_gate.md`](generation_quality_gate.md)). It is the
-remediation counterpart to that gate: the gate *measures* the pathology, this doc is the prioritised
-ladder of *fixes* the gate's verdict selects among. Every arm here is itself gate-promoted (content
-tier + quality gate), triage-first for representation changes — nothing flips a default on this doc's
-say-so.
+**Status: LIVE — Tier-0 CONFIRMED `exposure_bias` on the v2 baseline (2026-06-14).** The go/no-go
+fired: `free_running_gap_audit` on `/scratch/tmp/v2_atoms_baseline.ckpt` (8 held-out blocks, result
+`data/audit/v2_baseline_freerun_gap.json`) reads **`exposure_bias`** — teacher-forced accuracy is
+**long-horizon healthy** (read-A by distance-from-start rises then plateaus ~0.50–0.535 out to 31k
+atoms, so the model genuinely *uses* long context and is NOT short-horizon/context≈0), but
+free-running **collapses within ~4 tokens** (read-B: free-run ≈ TF at horizon 1, then drops to ~0.04
+content acc while TF holds ~0.5; gap widens to ~0.4–0.58). The pathology was assumed, now observed —
+this is the live remediation arc. *(Bears on the context-length null: the model uses long context, so
+that null is the matched-epochs step-confound, not short effective context — see
+`../encoding/context_length_experiment.md`.)* It is the
+remediation counterpart to [`generation_quality_gate.md`](generation_quality_gate.md): the gate
+*measures* the pathology, this doc is the prioritised ladder of *fixes* the gate's verdict selects
+among. Every arm here is itself gate-promoted (content tier + quality gate), triage-first for
+representation changes — nothing flips a default on this doc's say-so.
 
 ## The failure mode
 
