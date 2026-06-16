@@ -6,6 +6,9 @@ novel-content +26%) but free-running content acc stayed flat ~0.05–0.07 at eve
 exposure-bias (M1) signature — the binding constraint is the **train↔inference mismatch**, not the data
 distribution. Tier 4 is the model-side axis the [remediation
 ladder](free_running_pathology_remediation_design.md) gated last; it is now the live arc.
+**Next concrete action = the P0 prerequisite below** (a verified re-canonicalisation function): an
+attempt to run the recoverability triage proved the naive recanon composition reframes the stream
+(delta ≈ 0.99) and does not re-prompt — there is no working oracle yet, so that is the first build.
 
 ## The precise problem (and the hard part, stated up front)
 
@@ -61,6 +64,29 @@ render-fingerprint reward, no DPO** (that re-opens the refuted axis).
    entirely. Weaker theoretical tie to "musical quality," but immune to the target-mismatch objection.
 3. **Excluded:** reward/preference ranking on render fingerprint (anti-queue-refuted); beam search
    (worsens open-ended degeneration, busts the Orin envelope).
+
+## P0 PREREQUISITE (found 2026-06-16 by attempting the triage): a VERIFIED re-canonicalisation function
+
+The triage build surfaced that **the re-canonicalisation oracle this whole tier leans on does not yet
+exist as a working function.** The naive composition
+`block_to_ids(ordered_writes(writes_to_dump_df(ids_to_writes(g))))` is wrong:
+
+- It **reframes the stream** — recanon vs rollout atom-delta ≈ **0.99** (almost nothing preserved), and
+  the result **does not re-prompt** (continuations from `ĝ` fail to decode). The round-trip through
+  `writes_to_dump_df` → `ordered_writes` does not reconstruct the original `OrderedWrites` (frame/clock
+  assignment + the KEYFRAME conditioning segment differ).
+- It is *idempotent* on the few stored blocks that decode (13/14) — so the projector **concept** is
+  sound — but idempotent onto the WRONG fixed point (a reframed stream), which is useless for training.
+- Stored `.blocks.npy` rows decode-fail ~89% as-is (they need frame-trimming, like the audition's
+  `decode_tolerant`); fixed-length rollouts end mid-event and also need trimming before decode.
+
+**So Tier-4's real first task is tokens-side, not trainer-side:** build a content-preserving
+re-canonicalisation `recanon(atoms) -> atoms` in `preframr_tokens/events/` with a hard test suite:
+(1) **round-trip identity** — `recanon(block) == block` for every real corpus block (after frame-trim);
+(2) **idempotency** onto the canonical form; (3) **re-promptable** — `EventConstraint` primes cleanly
+from `ĝ` and a continuation decodes; (4) preserves the decoded register writes
+(`decode(recanon(g)) == decode(g)` up to canonicalisation). This is small and well-scoped, and **must be
+green before the triage below or any DAgger build** — without it there is no oracle to roll out against.
 
 ## Triage FIRST (training-free; gates the build, per project discipline)
 
