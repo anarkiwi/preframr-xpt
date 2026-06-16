@@ -6,9 +6,22 @@ novel-content +26%) but free-running content acc stayed flat ~0.05–0.07 at eve
 exposure-bias (M1) signature — the binding constraint is the **train↔inference mismatch**, not the data
 distribution. Tier 4 is the model-side axis the [remediation
 ladder](free_running_pathology_remediation_design.md) gated last; it is now the live arc.
-**Next concrete action = the P0 prerequisite below** (a verified re-canonicalisation function): an
-attempt to run the recoverability triage proved the naive recanon composition reframes the stream
-(delta ≈ 0.99) and does not re-prompt — there is no working oracle yet, so that is the first build.
+**TRIAGE RAN (2026-06-16) — objective 1 NOT supported; lean off-ramp or objective 2.** The
+prior-state-aware recanon shipped (preframr-tokens #84/#85: `seed_keyframe`/`decode_windowed`/
+`writes_to_ordered`; verified — windowed eval-B states recover ~729 frames vs 0). With it, the
+recoverability triage finally ran on real eval-B rollouts (`/scratch/tmp/recover_triage.py`,
+instrument_full ckpt). **Verdict: re-canonicalising the drifted state does NOT restore recoverability.**
+On *matched* prompts (both raw `g` and recanon `ĝ` continuations decode) the continuation empty-frame
+fraction is a **wash** (mixed better/worse, ~split); the apparent aggregate "improvement" is a confound
+(ĝ-continuations are often undecodable, so the means compare non-matched subsets). Crucially
+**`recanon_delta ≈ 1.0`** — the model emits ~99% *non-canonical* atom surface (grammar-valid but not the
+canonical order it trained on), so re-prompting from the canonical `ĝ` is itself **off-distribution** and
+frequently breaks the continuation. So scheduled-sampling + re-prompt-from-recanon (objective 1) has a
+weak premise here. **Redirect:** either **objective 2 (consistency / fixed-point** — train the model so
+its *own* output is canonical, i.e. minimise the delta; needs no off-distribution re-prompt and is
+motivated by the delta≈1.0 finding) or the **off-ramp** (usable generation via constrained decode +
+Tier-1 caps — already works). Given Tier-3 (M1) + this triage, the off-ramp is the highest-confidence
+ship; objective 2 is the one remaining model-side bet worth a cheap probe before committing.
 
 ## The precise problem (and the hard part, stated up front)
 
