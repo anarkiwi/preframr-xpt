@@ -7,7 +7,20 @@ fired: `free_running_gap_audit` on `/scratch/tmp/v2_atoms_baseline.ckpt` (8 held
 atoms, so the model genuinely *uses* long context and is NOT short-horizon/context≈0), but
 free-running **collapses within ~4 tokens** (read-B: free-run ≈ TF at horizon 1, then drops to ~0.04
 content acc while TF holds ~0.5; gap widens to ~0.4–0.58). The pathology was assumed, now observed —
-this is the live remediation arc. It is the
+this is the live remediation arc.
+
+**Progress (2026-06-16): audition fixed; Tier-3 augmentation RAN — does NOT fix free-running →
+Tier-4 is next.** The dosage A/B gave real dose-dependent *teacher-forced* gains (instrument transplant:
+eval-B novel-content 0.152→0.192, +26%) but **free-running content acc stayed flat ~0.05–0.07 at every
+dose** (`data/audit/aug_ab_evalb_results.md`) — the exposure-bias (M1) signature: better data-fit doesn't
+transfer to self-conditioned generation. So the binding constraint is **M1, not M4**, and the live arc
+moves to **Tier 4 (DAgger on re-canonicalised rollouts)**. History below for context. The
+ckpt→generate→WAV audition rendered *silent* — a harness bug (`load_prompts` cut prompts mid-frame, so
+they were not self-contained decodable streams), **NOT** the model; fixed by snapping prompts to
+`unit_starts` whole-frame boundaries (preframr #168), verified audible. The model's free-running
+*quality* is still pathological (drifts to ~91% empty frames) — exactly what Tier-3 targets. **Tier-1
+caps (preframr #167) are a lever, not a fix.** Tier-3 augmentation is now built+released (preframr-aug
+v0.1.0) and its dosage A/B is launched — see the Tier 3 section. It is the
 remediation counterpart to [`generation_quality_gate.md`](generation_quality_gate.md): the gate
 *measures* the pathology, this doc is the prioritised ladder of *fixes* the gate's verdict selects
 among. Every arm here is itself gate-promoted (content tier + quality gate), triage-first for
@@ -161,6 +174,26 @@ gate's sampling grid (sampling is "the gate's subject").
   directly. Register-domain splice + `encode(verify=True)` = zero pipeline change. *Gate:* dosage A/B
   on eval_b content + the quality gate's memorization audit (does novel-fraction rise?), train-split
   leakage rule per the transplant doc. Impl home: preframr-aug.
+- **RESULT (2026-06-16): RAN, does NOT fix free-running → escalate to Tier 4.** The dosage A/B
+  (`generalize_aug_ab`, 5 arms, atoms-only ep100; `data/audit/aug_ab_evalb_results.md`) gave real,
+  dose-dependent **teacher-forced** gains — strongest for instrument transplant: held-out eval-B
+  copy_novel novel-content 0.152→**0.192** (+26%), TF acc 0.416→0.520 — but **free-running content acc
+  stayed FLAT (~0.05–0.07) across every arm and dose** (baseline 0.062; best-TF arm instrument_full also
+  0.062; reduce_full 0.047). The free-running gap *widened*. Textbook **exposure-bias (M1)**: learning
+  the data distribution better (Tier-3 attacks M4 copy-dominance) does not transfer to self-conditioned
+  generation. **Tier-3 is refuted as a free-running fix; the binding constraint is M1, not M4.** The
+  teacher-forced eval-B gain may still be worth keeping for general recombination quality. Next = Tier 4.
+- **BUILT (2026-06-16).** preframr-aug **v0.1.0 released** (PyPI): write-domain CORE +
+  **M1 reduce** (melody-only prefix) + **M2 instrument transplant** (same-role, envelope-compatible
+  donors via `voices.roles ∩ voices.transplantable`), all `encode(verify=True)`-clean; blessed render
+  harness `tests/audio_render.render_ow_to_wav`. Augmented corpora generated from the canonical train
+  split (reduce +749 / instrument +276 dumps; `/scratch/tmp/aug_corpora/`) and **audibly coherent**
+  (operator-confirmed: reduce thins the intro, same-role transplant re-voices without clashing). The
+  **dosage A/B is launched** (xpt spec `generalize_aug_ab`: atoms-only baseline vs reduce_full/_25,
+  instrument_full/_25; tkvocab 0, seq_len 8192, ep100; `PREFRAMR_DATASET_CACHE_DISABLE=1` is MANDATORY
+  — the cache key hashes the data_layout lists, not the `pre_run_hook`'s added dumps). **Decision:
+  event-native `copy_novel` (novel-fraction rise above 0.194) + `free_running_gap` re-run per arm +
+  eval-B content tier.** No lift at any dose → escalate to Tier 4.
 
 ## Tier 4 — Training objective (gated LAST; anti-queue-aware; attacks M1)
 
@@ -172,7 +205,9 @@ unexplored because they attack exposure bias, not content distribution:
   (DPO/energy). Roll the model out, **decode → re-canonicalise the rollout into a valid SID state**
   (the same operation chaining already performs, fidelity-checked), and train it to continue from
   *that*. Because re-canonicalisation is exact, you teach recovery from *plausible* self-generated
-  states — not token garbage, which is what blind scheduled sampling cannot guarantee.
+  states — not token garbage, which is what blind scheduled sampling cannot guarantee. **Full design +
+  the training-free triage that gates the build: [`dagger_recanonicalization_design.md`](dagger_recanonicalization_design.md).
+  Tier-3 having RAN flat (above) is what promotes this to the live arc.**
 - **Scheduled sampling / teacher-forcing decay** — textbook exposure-bias fix, never tried here;
   known-unstable and awkward with KV-cache training. Lower priority than DAgger.
 
