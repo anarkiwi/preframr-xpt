@@ -80,6 +80,18 @@ exist as a working function.** The naive composition
 - Stored `.blocks.npy` rows decode-fail ~89% as-is (they need frame-trimming, like the audition's
   `decode_tolerant`); fixed-length rollouts end mid-event and also need trimming before decode.
 
+**UPDATE (2026-06-16): recanon built for the continuous case; the windowed-prior-state case is the
+real blocker.** `events.generate.recanon` now exists (preframr-tokens #84): on a **continuous
+keyframe-free** stream it is identity / idempotent / write-preserving (5 green unit tests; real DRAX
+×12 content-exact, identity 9/12 — the 3 are a leading-rest frame-base off-by-one). **But running the
+recoverability triage exposed the critical gap:** real rollouts are prompted from **windowed eval-B
+blocks whose leading `[KEYFRAME …]` carries prior state**, and `strip_keyframes` + `decode` cannot
+restore that state — so recanon of a windowed rollout is ~100% different (delta ≈ 1.0) and won't
+re-prompt. **The DAgger oracle therefore needs a *prior-state-aware* recanon: a decode that CONSUMES the
+leading keyframe to seed register state, then canonicalises the body.** That (not the trainer change,
+not the continuous-case recanon already shipped) is the binding P0. Until it lands, the triage can only
+run on continuous-from-t=0 (whole-tune-prefix) prompts.
+
 **So Tier-4's real first task is tokens-side, not trainer-side:** build a content-preserving
 re-canonicalisation `recanon(atoms) -> atoms` in `preframr_tokens/events/` with a hard test suite:
 (1) **round-trip identity** — `recanon(block) == block` for every real corpus block (after frame-trim);
