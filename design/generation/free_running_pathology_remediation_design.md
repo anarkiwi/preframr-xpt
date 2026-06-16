@@ -205,7 +205,9 @@ unexplored because they attack exposure bias, not content distribution:
   (DPO/energy). Roll the model out, **decode → re-canonicalise the rollout into a valid SID state**
   (the same operation chaining already performs, fidelity-checked), and train it to continue from
   *that*. Because re-canonicalisation is exact, you teach recovery from *plausible* self-generated
-  states — not token garbage, which is what blind scheduled sampling cannot guarantee.
+  states — not token garbage, which is what blind scheduled sampling cannot guarantee. **Full design +
+  the training-free triage that gates the build: [`dagger_recanonicalization_design.md`](dagger_recanonicalization_design.md).
+  Tier-3 having RAN flat (above) is what promotes this to the live arc.**
 - **Scheduled sampling / teacher-forcing decay** — textbook exposure-bias fix, never tried here;
   known-unstable and awkward with KV-cache training. Lower priority than DAgger.
 
