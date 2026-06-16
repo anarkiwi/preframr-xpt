@@ -7,7 +7,15 @@ fired: `free_running_gap_audit` on `/scratch/tmp/v2_atoms_baseline.ckpt` (8 held
 atoms, so the model genuinely *uses* long context and is NOT short-horizon/context≈0), but
 free-running **collapses within ~4 tokens** (read-B: free-run ≈ TF at horizon 1, then drops to ~0.04
 content acc while TF holds ~0.5; gap widens to ~0.4–0.58). The pathology was assumed, now observed —
-this is the live remediation arc. It is the
+this is the live remediation arc.
+
+**Progress (2026-06-16): audition path fixed; Tier-3 BUILT and the A/B is RUNNING.** The
+ckpt→generate→WAV audition rendered *silent* — a harness bug (`load_prompts` cut prompts mid-frame, so
+they were not self-contained decodable streams), **NOT** the model; fixed by snapping prompts to
+`unit_starts` whole-frame boundaries (preframr #168), verified audible. The model's free-running
+*quality* is still pathological (drifts to ~91% empty frames) — exactly what Tier-3 targets. **Tier-1
+caps (preframr #167) are a lever, not a fix.** Tier-3 augmentation is now built+released (preframr-aug
+v0.1.0) and its dosage A/B is launched — see the Tier 3 section. It is the
 remediation counterpart to [`generation_quality_gate.md`](generation_quality_gate.md): the gate
 *measures* the pathology, this doc is the prioritised ladder of *fixes* the gate's verdict selects
 among. Every arm here is itself gate-promoted (content tier + quality gate), triage-first for
@@ -161,6 +169,17 @@ gate's sampling grid (sampling is "the gate's subject").
   directly. Register-domain splice + `encode(verify=True)` = zero pipeline change. *Gate:* dosage A/B
   on eval_b content + the quality gate's memorization audit (does novel-fraction rise?), train-split
   leakage rule per the transplant doc. Impl home: preframr-aug.
+- **BUILT + RUNNING (2026-06-16).** preframr-aug **v0.1.0 released** (PyPI): write-domain CORE +
+  **M1 reduce** (melody-only prefix) + **M2 instrument transplant** (same-role, envelope-compatible
+  donors via `voices.roles ∩ voices.transplantable`), all `encode(verify=True)`-clean; blessed render
+  harness `tests/audio_render.render_ow_to_wav`. Augmented corpora generated from the canonical train
+  split (reduce +749 / instrument +276 dumps; `/scratch/tmp/aug_corpora/`) and **audibly coherent**
+  (operator-confirmed: reduce thins the intro, same-role transplant re-voices without clashing). The
+  **dosage A/B is launched** (xpt spec `generalize_aug_ab`: atoms-only baseline vs reduce_full/_25,
+  instrument_full/_25; tkvocab 0, seq_len 8192, ep100; `PREFRAMR_DATASET_CACHE_DISABLE=1` is MANDATORY
+  — the cache key hashes the data_layout lists, not the `pre_run_hook`'s added dumps). **Decision:
+  event-native `copy_novel` (novel-fraction rise above 0.194) + `free_running_gap` re-run per arm +
+  eval-B content tier.** No lift at any dose → escalate to Tier 4.
 
 ## Tier 4 — Training objective (gated LAST; anti-queue-aware; attacks M1)
 

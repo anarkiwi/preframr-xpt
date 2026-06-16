@@ -240,6 +240,19 @@ content ceiling (since lifted by tokenizer-side representation): `per_tier_heads
 
 ## Resolved log (compact; full detail in git log + design/landed/ + data/refuted/)
 
+- **2026-06-16 (audition fixed; Tier-3 augmentation BUILT + A/B RUNNING)** — the ckpt→generate→WAV
+  audition rendered SILENT: a harness bug (`load_prompts` cut prompts mid-frame → not self-contained
+  decodable streams), not the model. Fixed by snapping prompts to `unit_starts` whole-frame boundaries
+  (preframr **#168**), verified audible; Tier-1 decode caps (preframr **#167**) are a lever, not a fix.
+  Free-running QUALITY still pathological (~91% empty-frame drift = M3/M4). **Tier-3 augmentation built:
+  preframr-aug v0.1.0** (write-domain CORE + M1 reduce + M2 same-role instrument transplant,
+  `encode(verify=True)`-clean, blessed render harness; operator-confirmed audibly coherent). Augmented
+  corpora generated (`/scratch/tmp/aug_corpora/` reduce +749 / instrument +276) and the **dosage A/B is
+  launched** (xpt spec `generalize_aug_ab`, 5 arms, atoms-only tkvocab 0 / ep100,
+  `PREFRAMR_DATASET_CACHE_DISABLE=1` MANDATORY — the cache key doesn't see the `pre_run_hook` dumps).
+  Decide on per-arm `copy_novel` (novel>0.194?) + `free_running_gap` + eval-B content. Arc:
+  `design/generation/free_running_pathology_remediation_design.md` (Tier 3); aug plan:
+  `preframr-aug/IMPLEMENTATION.md`.
 - **2026-06-13 (context-length sweep RAN — step-confounded, INCONCLUSIVE)** — v2 atoms-only `seq_len`
   {8192,12288,16384,24576} sweep, matched 100 epochs. Longer context monotonically worse on bits/atom
   + content + val_loss, BUT longer windows tile fewer/tune so steps fell 10600→7100→5400→3800
