@@ -23,6 +23,19 @@ motivated by the delta≈1.0 finding) or the **off-ramp** (usable generation via
 Tier-1 caps — already works). Given Tier-3 (M1) + this triage, the off-ramp is the highest-confidence
 ship; objective 2 is the one remaining model-side bet worth a cheap probe before committing.
 
+**OBJECTIVE 2 DE-RISKED DEAD (2026-06-16).** The cheap training-free check ran (n=28, instrument_full,
+`/scratch/tmp/delta_drone_corr.py`): per free-running rollout, recanon-delta vs empty-frame fraction.
+**Both premises fail.** (a) delta is saturated at mean 0.972 / std 0.016 — the model emits ~97%
+non-canonical surface CONSTANTLY, whether droning (empty 0.99) or making music (empty 0.03); corr(delta,
+empty)=+0.21 is noise on a no-variance predictor → non-canonicality is NOT a degeneration signal.
+(b) recanon preserves the empty-frame fraction (mean|Δ|=0.021) — `recanon(drone)` IS a drone, because
+recanon canonicalises surface ORDER, not CONTENT, so the fixed-point target cannot teach un-droning.
+**Conclusion: the model-side recanon lever is exhausted.** The drone is a CONTENT failure under
+self-conditioning that no surface-level objective touches; Tier-3 (data) was flat, DAgger objective-1
+unsupported, objective-2 dead. Remaining handles on the drone: the decode-time frame-budget cap
+(cosmetic) or not generating open-ended (phrase-prompting). The recanon oracle (#84/#85) stands as a
+useful codec capability regardless.
+
 ## The precise problem (and the hard part, stated up front)
 
 The model is trained **teacher-forced** (next-token CE on ground-truth windows) and deployed
