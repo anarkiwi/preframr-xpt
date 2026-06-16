@@ -9,7 +9,12 @@ free-running **collapses within ~4 tokens** (read-B: free-run ≈ TF at horizon 
 content acc while TF holds ~0.5; gap widens to ~0.4–0.58). The pathology was assumed, now observed —
 this is the live remediation arc.
 
-**Progress (2026-06-16): audition path fixed; Tier-3 BUILT and the A/B is RUNNING.** The
+**Progress (2026-06-16): audition fixed; Tier-3 augmentation RAN — does NOT fix free-running →
+Tier-4 is next.** The dosage A/B gave real dose-dependent *teacher-forced* gains (instrument transplant:
+eval-B novel-content 0.152→0.192, +26%) but **free-running content acc stayed flat ~0.05–0.07 at every
+dose** (`data/audit/aug_ab_evalb_results.md`) — the exposure-bias (M1) signature: better data-fit doesn't
+transfer to self-conditioned generation. So the binding constraint is **M1, not M4**, and the live arc
+moves to **Tier 4 (DAgger on re-canonicalised rollouts)**. History below for context. The
 ckpt→generate→WAV audition rendered *silent* — a harness bug (`load_prompts` cut prompts mid-frame, so
 they were not self-contained decodable streams), **NOT** the model; fixed by snapping prompts to
 `unit_starts` whole-frame boundaries (preframr #168), verified audible. The model's free-running
@@ -169,7 +174,16 @@ gate's sampling grid (sampling is "the gate's subject").
   directly. Register-domain splice + `encode(verify=True)` = zero pipeline change. *Gate:* dosage A/B
   on eval_b content + the quality gate's memorization audit (does novel-fraction rise?), train-split
   leakage rule per the transplant doc. Impl home: preframr-aug.
-- **BUILT + RUNNING (2026-06-16).** preframr-aug **v0.1.0 released** (PyPI): write-domain CORE +
+- **RESULT (2026-06-16): RAN, does NOT fix free-running → escalate to Tier 4.** The dosage A/B
+  (`generalize_aug_ab`, 5 arms, atoms-only ep100; `data/audit/aug_ab_evalb_results.md`) gave real,
+  dose-dependent **teacher-forced** gains — strongest for instrument transplant: held-out eval-B
+  copy_novel novel-content 0.152→**0.192** (+26%), TF acc 0.416→0.520 — but **free-running content acc
+  stayed FLAT (~0.05–0.07) across every arm and dose** (baseline 0.062; best-TF arm instrument_full also
+  0.062; reduce_full 0.047). The free-running gap *widened*. Textbook **exposure-bias (M1)**: learning
+  the data distribution better (Tier-3 attacks M4 copy-dominance) does not transfer to self-conditioned
+  generation. **Tier-3 is refuted as a free-running fix; the binding constraint is M1, not M4.** The
+  teacher-forced eval-B gain may still be worth keeping for general recombination quality. Next = Tier 4.
+- **BUILT (2026-06-16).** preframr-aug **v0.1.0 released** (PyPI): write-domain CORE +
   **M1 reduce** (melody-only prefix) + **M2 instrument transplant** (same-role, envelope-compatible
   donors via `voices.roles ∩ voices.transplantable`), all `encode(verify=True)`-clean; blessed render
   harness `tests/audio_render.render_ow_to_wav`. Augmented corpora generated from the canonical train
