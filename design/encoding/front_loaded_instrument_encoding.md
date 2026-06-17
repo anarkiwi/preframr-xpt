@@ -1,7 +1,25 @@
 # Front-loaded instrument encoding — tracker-style DEF→REF for the onset program
 
-**Status:** Design + build work-order (2026-06-17). The first experiment that targets the *confirmed
-root cause* of the free-running failure on a *new axis*. Implementation home: **preframr-tokens**
+**Status: BUILT (preframr-tokens #86, v3, byte-exact) + A/B RAN (2026-06-17) — does NOT meaningfully fix
+free-running.** Implementation home: **preframr-tokens** (`events/`); README is the authoritative grammar.
+
+**RESULT.** v3 (instrument DEF→REF, n_vocab 130) trained atoms-only, same config as the v2 baseline
+(via `--bind-src` + `PREFRAMR_DATASET_CACHE_DISABLE=1`; ckpt
+`/scratch/tmp/preframr_experiments/aug_ab_v3/.../baseline/seed0`). `free_running_gap` looked like a big
+win — **free-run content acc 0.062 (v2) → 0.116 (v3)** — but that is the **`INSTR_REF` confound**:
+references are copyable/easy and `INSTR_REF` is in the content-atom set, inflating aggregate content acc
+(the same trap as Tier-3's val-acc). The de-confounded read is `copy_novel` **novel**-content (excludes
+copyable, so excludes the easy references): **v2 0.152 → v3 0.161 — within noise.** So the easy local
+DEF→REF raises the cosmetic number but does NOT improve genuine novel generation. Consistent with the
+diagnosis: **instruments are not the structural lever; melodic *patterns* are.** The encoding itself is a
+sound, byte-exact capability (kept); learnability_triage proxies improved (tokens/frame −10.5%, lower
+entropy floor) but that gain is the *predictable* part. **Next on this axis: the pattern/phrase DEF→REF**
+(front-load recurring melodic phrases — the `[A][A]` structure the probe is actually about). Original
+design + build-order below.
+
+---
+
+**Design + build work-order (2026-06-17).** Implementation home: **preframr-tokens**
 (`events/`); the README is the authoritative grammar reference — read it first.
 
 ## Why (the diagnosis this serves)
