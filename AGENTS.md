@@ -31,7 +31,47 @@ measured collapse 7.8× (order-0) / 23× (order-1) vs the 16-bit raw floor. Chip
 pinned as a 24-test reference in preframr-audio. Scope: single-speed non-digi (~92% of corpus).
 Details: `design/references/{verification_and_audits,learnability_token_ordering_theory}.md`.
 
-## Current arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (verdict taken; §7 de-confound audit RAN)
+## LIVE ARC (2026-06-17) — FREE-RUNNING ROOT = STRUCTURAL ABSTRACTION FAILURE; explicit-structure encoding
+
+**Read `memory/augmentation-arc.md` (the running log of this whole thread) + the design docs below
+before acting.** The free-running pathology arc (the model learns teacher-forced but can't generate)
+was run to its end and the ROOT CAUSE is now diagnosed and multi-method-confirmed:
+
+- **The model is a STRONG LOCAL abstractor but a WEAK LONG-RANGE STRUCTURAL one** — a "bag of local
+  content" bounded by ~1024 effective context. Representation probes (`design/generation/
+  representation_abstraction_probe.md`, scripts `preframr_experiments/audit/{abstraction_probe,
+  abstraction_probe_ksweep,repeat_control}.py`): transposition/voice-INVARIANT + interval-SENSITIVE
+  (local ratio 24-29) but order/form-INVARIANT (block-reverse barely moves the rep; a literal `[A][A]`
+  section-repeat lifts TF acc only +0.10, decaying past ~1024). Replicated across 2 composers + the
+  atoms-only ckpt. This unifies copy_novel(novel 0.19)/effective-context(~1024)/the drone/Tier-3.
+- **The whole remediation ladder is exhausted** (`design/generation/free_running_pathology_remediation_design.md`):
+  Tier-1 caps shipped; Tier-2 lane-demux triaged out; Tier-3 augmentation (preframr-aug v0.1.0) flat on
+  free-running (M1 not M4); Tier-4 DAgger objective-1 unsupported + objective-2 de-risked dead (the
+  model emits ~97% non-canonical surface always, recanon preserves the drone). **OFF-RAMP SHIPPED**
+  (`design/generation/generation_offramp_shipped.md`, preframr #170): usable generation = `event_render.py`
+  default constrained-decode + Tier-1 caps. recanon oracle (tokens #84/#85) is a kept codec capability.
+- **NEW FIX AXIS = make long-range structure LOCAL/EXPLICIT (DEF→REF)** so the strong local abstractor
+  can grasp it. First experiment (instruments) RAN and is NEGATIVE on the hard metric:
+  - **Front-loaded instrument encoding** (tracker DEF→REF, tokens #86, v3 n_vocab 130, byte-exact;
+    `design/encoding/front_loaded_instrument_encoding.md`). A/B: aggregate free_running_gap looked like a
+    win (free-run content 0.062→0.116) but that's the **INSTR_REF confound** (copyable refs inflate
+    content acc, same trap as Tier-3 val-acc); **de-confounded copy_novel novel-content v2 0.152 → v3
+    0.161 = WITHIN NOISE.** Easy local DEF→REF doesn't fix novel generation. Encoding kept (sound capability).
+  - **NEXT (the on-target swing): the PATTERN/phrase DEF→REF** — front-load recurring MELODIC phrases as
+    references (the `[A][A]` structure the probe is actually about; the instrument half just proved the
+    DEF→REF *mechanism* doesn't help when the referenced content is locally-easy — patterns are the
+    structural content that's hard). Harder build (phrase segmentation + reference grammar, byte-exact).
+- **A/B reproduction recipe** (when re-auditing v2 vs v3): v2 ckpt = `aug_ab_v1/.../baseline/seed0`
+  (free-run 0.062, novel 0.152); v3 ckpt = `aug_ab_v3/.../baseline/seed0` (n_vocab 130). Audits in
+  `preframr_experiments/audit/{free_running_gap,copy_novel}_audit.py` + `repeat_control`/`abstraction_probe`,
+  run in `anarkiwi/preframr:latest` with the arm dir as `/scratch/preframr` + local preframr-tokens bound
+  over site-packages (`-v .../preframr_tokens:/root/.local/lib/python3.12/site-packages/preframr_tokens`) +
+  `-v .../preframr/preframr:/preframr`; **DECISION METRIC = de-confounded `copy_novel` novel-content, NOT
+  aggregate free_running_gap** (the new atoms inflate aggregate). To train a v3-style arm: `PREFRAMR_BIND_SRC=1
+  PREFRAMR_DATASET_CACHE_DISABLE=1 python3 -m preframr_experiments.run generalize_aug_ab --only-arm baseline
+  --bind-src ... --max-epochs 100` (bind injects local tokens; cache-disable forces re-tokenise).
+
+## Historical arc — CANONICAL EVENT-MODEL LEARNABILITY RUN (verdict taken; §7 de-confound audit RAN)
 
 The encoding + pipeline are done/shipped; the open arc is the **canonical learnability run
 on event tokens** (scientific, not operational). The atoms-only baseline is DONE and the
