@@ -66,8 +66,48 @@ model already fails to use context past ~1024 (a learnability limit, not a windo
 ## Caveats / next
 
 n=10, one composer, one checkpoint; block-reverse keeps long contiguous segments (so "model sees
-mostly-intact local content" is the mechanism — which *is* the bag-of-local reading). Before betting:
-(1) replicate on 2–3 more composers + the atoms-only baseline ckpt; (2) finer-grained shuffles
-(smaller blocks) to map at what scale order-sensitivity drops off; (3) a positive control — does the rep
-detect a *genuine* internal repeat (`[A][A]` vs `[A][B]`)? Then scope the explicit-structure encoding
-experiment.
+mostly-intact local content" is the mechanism — which *is* the bag-of-local reading).
+
+## Replication + positive control (2026-06-17) — verdict holds
+
+- **Replicated across composers + checkpoints.** Local ratio (random/transpose): Daglish 24.0
+  (instrument_full), 23.6 (**atoms-only baseline ckpt**), Hubbard 29.4 — strong everywhere, so it's the
+  model class, not the augmented model. Structural (block-reverse vs different-tune): Daglish 0.11–0.24,
+  Hubbard 0.36–0.43 — always far below local, but **composer-dependent**, which exposes a confound:
+  block-reverse also redistributes the *local* content each window sees (more for a varied composer), so
+  it is not a clean structure-*only* probe.
+- **K-sweep:** even K=32 (≈48-atom blocks, inside the window) moves the rep only ~0.25 of a
+  different-tune distance — order-sensitivity rises weakly/gradually with finer disruption, never
+  approaching "different music." Bag-of-local at all scales.
+- **Positive control (the cleaner test): `[A][A]` literal-musical-repeat vs `[A][B]` novel, TF accuracy
+  on the second segment by repeat distance (instrument_full, Daglish):** lift +0.10 @235 atoms → +0.10
+  @351 → +0.08 @576 → +0.07 @978 → **+0.04 @1852**. The model **weakly** exploits a section-level repeat
+  (a strong structural model would lift ~0.5 on a literal repeat), and the benefit **decays past ~1024**.
+  Contrast `copy_novel` copyable-acc 0.535 (local n-gram induction is strong). So: **local copy strong,
+  section-repeat exploitation weak and short-ranged** — converges with the representation probe.
+
+**Verdict (multi-composer, multi-checkpoint, multi-method): strong local abstractor, weak long-range
+structural abstractor.** Confirmed.
+
+## Front-loaded-instrument hypothesis (operator, 2026-06-17) — the first explicit-structure experiment
+
+Hypothesis: instruments are currently defined *just-in-time* (the onset program re-emitted inline at
+every note); instead **define all instruments up front (a header / bank) and have the body reference
+them by id** — how trackers actually author this music. This is a concrete DEF→REF instance of the fix
+axis. Why it should help: (1) it matches the data's *true generative process* (composers used instrument
+tables) — a strong learnability prior; (2) it's a clean DEF→REF the induction head handles natively
+(define once, reference; the model's *strong local abstraction* grasps a reference token instead of
+re-deriving a ~15-atom program it currently treats as long-range repeated content); (3) it **compresses
+the body** — census (Daglish): **timbre = ~38% of the stream** (`FLD_CTRL/AD/SR/PW`), ~1153 onsets/tune
+but few distinct instruments, so front-load+reference reclaims most of that 38% → ~1.5× more musical
+*form* per ~1024-atom window, attacking the diagnosed bottleneck directly. Constrained decode enforces
+define-then-reference (cannot reference an undefined instrument), exactly like the existing grammar mask.
+**Honest scope:** this is the *instrument* half of the tracker structure; the *pattern* half (melodic
+phrase references) is the complement and the harder part — instruments are the right FIRST step (biggest
+immediate win, validates DEF→REF) but may not alone fix *melodic* form. The ~2% onset-program variation
+needs a per-use residual/override (or accept small loss). It is a real tokens-side codec redesign with
+the byte-exact round-trip invariant, aligned with the existing instrument-bank design
+(`transplant_augmentation_design.md` P0). **Triage before the build:** confirm onset-program recurrence
+exactness (how lossy pure-reference is); `learnability_triage` on a sample tune encoded reference-style
+vs inline (does induction-copy rise / h_k drop?). Then the encode + train A/B on `free_running_gap` + the
+structural probe + the `[A][A]` repeat lift.
