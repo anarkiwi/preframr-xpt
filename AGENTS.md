@@ -82,11 +82,14 @@ never by truncation or a lossy shortcut (residual-zero stays the gate).
 
 The lane miner is robust (0 crashes / 0 lossless violations on 763 dumps); the gaps are in the
 representation, ranked by tunes-unblocked. Each is a precise "needs X", never "irreducible":
-1. **Multispeed-aware framing — IN PROGRESS (PR).** `per_frame_state` samples one CPF=19656 frame; on a
-   2×-multispeed tune (Galway Times_of_Lore) it **drops 53% of register changes** → the substrate is
-   silently LOSSY (the miner's "lossless" holds only over its own sampling, not the true bus), so BACC on
-   any multispeed tune (all Galway/Tel) is non-residual-zero. Fix = detect the play-cadence (burst interval;
-   bursts/frame ≥ 1.8 = multispeed) and frame at the true speed (CPF/2, CPF/4). The BIGGEST unlock.
+1. **Multispeed-aware framing — LANDED (PR #99).** `per_frame_state` sampled one CPF=19656 frame; on a
+   2×-multispeed tune (Galway Times_of_Lore) it **dropped 54.5% of register changes** → silently LOSSY.
+   Fixed: `detect_play_period` finds the true play period from the dump's write cadence (single-speed →
+   exactly CPF; Times_of_Lore → ~8547 ≈ CPF/2.3, need not divide evenly); framing there is LOSSLESS (0.0%
+   dropped). Conservative: `per_frame_state(dump, cpf=None)` auto-detects ONLY when cpf is unset — every
+   existing call site passes explicit cpf, so single-speed byte-exact is unchanged. New gate
+   `test_multispeed_framing`. (Sanxion's ~83% "loss" at every period = a DIGI player streaming volume-PCM,
+   correctly NOT multispeed — reinforces gap #3's digi sub-frame need.)
 2. **Generic IRQ-driven play harness (open).** The generic classifier/fitter call play via JSR and silently
    can't reach `play_addr==0` RSIDs (most lft, Hülsbeck, Follin). Only the lft backend has the MPU65ILL+IRQ
    machine, and only for A Mind Is Born's signature (it rejects Platform_Hopping, another lft RSID).
