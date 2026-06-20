@@ -56,11 +56,19 @@ hits any budget). **This test MUST pass, MUST run in CI, and may NEVER be remove
 bypassed; its fixture is auto-acquired (no skip path).** The same dual gate applies to the GoatTracker
 (Grid_Runner) and 5TT tests.
 
-**The original "below context 8192" goal is now ACHIEVED** — the two-file BACC codec made the whole tune
-fit a single 8192-token context window with room to spare: **Monty 1,247 tokens (0.071 tok/frame),
-5_Title_Tunes 1,543 (0.753), Grid_Runner 4,132 (0.264)** — all residual-zero. (The 0.901 / 15,816-token
-figures above describe the older STEP codec; the BACC codec is far sparser.) BPE does NOT count; these are
-pre-BPE token-id streams.
+**The original "below context 8192" goal is now ACHIEVED** — the two-file BACC codec makes the whole tune
+fit a single 8192-token context window with room to spare: **Monty 3,863 tokens (0.220 tok/frame),
+5_Title_Tunes 1,394 (0.680), Grid_Runner 4,132 (0.264), A Mind Is Born 496 (0.061)** — all residual-zero.
+(The 0.901 / 15,816-token figures above describe the older STEP codec; the BACC codec is far sparser.) BPE
+does NOT count; these are pre-BPE token-id streams.
+
+**Cross-driver note unification + the absolute-grid tradeoff (recorded):** the note token is the ABSOLUTE
+canonical 12-TET A440 grid index, identical across drivers (the same concert pitch = the same token,
+Hubbard and GoatTracker). This costs intra-phrase delta compression a *relative*-interval scheme would have
+(Monty was 1,247 tokens pre-migration under relative; absolute is 3,863 even after a backward Transpose op
+recovers transposed-phrase reuse) — the deliberate trade for one learnable cross-driver alphabet. The
+remaining intra-phrase cost is the lever for SUBWORD (BPE/Unigram) to recover at the motif level WITHOUT
+welding fields together (study in flight); see `design/encoding/cross_driver_note_unification.md`.
 
 **STRETCH GOAL (scalability) — 90% of songs under 4096 tokens.** Whole-song-in-context is the lever for
 everything downstream: training context length, inference cost/latency, and Orin-deploy memory all scale
