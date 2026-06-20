@@ -48,14 +48,27 @@ repetition (REPEAT/LREPLAY, tapped out ~37k) → the STEP reframe → pitch-inva
 `design/encoding/sid_player_decompiler.md` ("HOW IT LANDED"); op-set grounding:
 `design/encoding/sid_opset_inventory.md`.
 
-### PERMANENT GATE — `test_monty_context_budget` (the < 1 token/frame forcing function)
+### PERMANENT GATE — `test_monty_context_budget` (< 1 token/frame AND whole-song < 8192)
 
-The test parses Monty_on_the_Run sub 1 to the codec token-id stream and **FAILS if the codec emits ≥ 1
-token/frame**. It is the executable form of the headline goal. **This test MUST pass, MUST run in CI, and
-may NEVER be removed, skipped, xfailed, or bypassed; its fixture is auto-acquired (no skip path).** It is
-now GREEN (0.901). It is carried into `preframr-tokens/tests/` by the port, unchanged in intent (the old
-"≤ 8192 tokens / 8192-frame window" form is retired — the gate is < 1 token/frame, pre-BPE; BPE does NOT
-count).
+The test parses Monty_on_the_Run sub 1 to the codec token-id stream and **FAILS unless BOTH hold: (1) < 1
+token/frame, and (2) the WHOLE SONG is < 8192 tokens** (residual-zero throughout — a lossy codec trivially
+hits any budget). **This test MUST pass, MUST run in CI, and may NEVER be removed, skipped, xfailed, or
+bypassed; its fixture is auto-acquired (no skip path).** The same dual gate applies to the GoatTracker
+(Grid_Runner) and 5TT tests.
+
+**The original "below context 8192" goal is now ACHIEVED** — the two-file BACC codec made the whole tune
+fit a single 8192-token context window with room to spare: **Monty 1,247 tokens (0.071 tok/frame),
+5_Title_Tunes 1,543 (0.753), Grid_Runner 4,132 (0.264)** — all residual-zero. (The 0.901 / 15,816-token
+figures above describe the older STEP codec; the BACC codec is far sparser.) BPE does NOT count; these are
+pre-BPE token-id streams.
+
+**STRETCH GOAL (scalability) — 90% of songs under 4096 tokens.** Whole-song-in-context is the lever for
+everything downstream: training context length, inference cost/latency, and Orin-deploy memory all scale
+with it. **If ≥ 90% of the corpus encodes under 4,096 tokens, that is a massive all-round win** — it halves
+the context vs the 8192 gate, fits two songs (or a song + prompt) in one window, and makes whole-tune
+generation/continuation cheap. Track the corpus distribution of whole-song token counts; drive the tail
+under 4096 by the same levers (pitch-invariant instruments, backward orderlist/REPEAT, generator recovery),
+never by truncation or a lossy shortcut (residual-zero stays the gate).
 
 ## LIVE ARC — the step codec lands; clean-slate port; then generalize → corpus → train
 
