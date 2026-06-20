@@ -118,12 +118,9 @@ class TestPlausibilityCorpusCalibration(unittest.TestCase):
         """Calibration anchor: real HVSC tunes define plausible, so every one must
         verdict PASS. If this fails, a detector has drifted into flagging real usage
         (the failure mode that the dropped volume check exhibited)."""
-        from preframr_tokens.tokenizer_config import named_config
-
-        args = named_config("baseline")
         dumps = sorted(glob.glob(os.path.join(CORPUS_DIR, "*.dump.parquet")))
         for dump in dumps:
-            state = reg_state_from_dump(dump, args)
+            state = reg_state_from_dump(dump)
             rep = plausibility_report(state)
             self.assertEqual(
                 rep.verdict, "PASS", f"{os.path.basename(dump)}: {rep.as_dict()}"

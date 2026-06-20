@@ -10,7 +10,20 @@ import sys
 from pathlib import Path
 
 
-from preframr_tokens import detect_tail_cycle  # noqa: F401
+def detect_tail_cycle(tokens, tail_window=128, max_period=32, min_repeats=3):
+    """Detect whether the tail of ``tokens`` collapsed into a short repeating cycle. Examines the last ``tail_window`` ids and returns ``{"period", "repeats", "cycle"}`` for the smallest period (<= ``max_period``) under which the whole window is exactly periodic with at least ``min_repeats`` repetitions, else None."""
+    window = list(tokens[-tail_window:]) if tail_window else list(tokens)
+    w = len(window)
+    for period in range(1, max_period + 1):
+        if w < period * min_repeats:
+            break
+        if all(window[i] == window[i - period] for i in range(period, w)):
+            return {
+                "period": period,
+                "repeats": w // period,
+                "cycle": window[:period],
+            }
+    return None
 
 
 def _load_tokens(path: Path):

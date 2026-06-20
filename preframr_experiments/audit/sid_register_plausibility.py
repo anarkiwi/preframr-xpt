@@ -163,40 +163,21 @@ def plausibility_report(state: np.ndarray) -> PlausibilityReport:
     return rep
 
 
-def reg_state_from_dump(dump, args, irq=None) -> np.ndarray:
-    """Parse a raw dump and return its ``(n_frames, 25)`` per-frame register state
-    -- the same state the audio render sees (via prepare_df_for_audio)."""
+def reg_state_from_dump(dump, args=None, irq=None) -> np.ndarray:
+    """Read a raw dump and return its ``(n_frames, 25)`` per-frame register state via the BACC codec's ``per_frame_state`` (the same state the renderer + verifier see). ``args`` is accepted but unused (legacy parser-config slot); ``irq`` overrides the frame clock, else it is taken from the ``.meta.txt`` sidecar."""
     # pylint: disable=import-outside-toplevel
-    from preframr_audio.sidwav import sidq
-    from preframr_tokens import RegLogParser, prepare_df_for_audio, read_initial_irq
+    from preframr_tokens import cpf_from_meta, per_frame_state
 
-    parser = RegLogParser(args=args)
-    df = next(parser.parse(dump, max_perm=1, require_pq=False, reparse=True), None)
-    if df is None or len(df) == 0:
+    base = dump[: -len(".dump.parquet")] if dump.endswith(".dump.parquet") else dump
+    cpf = irq if irq is not None else cpf_from_meta(base)
+    state = per_frame_state(dump, cpf, 10**9)
+    if state is None or len(state) == 0:
         return np.zeros((0, 25), dtype=np.int64)
-    if irq is None:
-        irq = read_initial_irq(df)
-    adf, _ = prepare_df_for_audio(df, {}, irq, sidq(), strict=False)
-    n_frames = int(adf["f"].max()) + 1
-    state = np.zeros((n_frames, 25), dtype=np.int64)
-    cur = np.zeros(25, dtype=np.int64)
-    cf = 0
-    for reg, val, frame in adf[["reg", "val", "f"]].to_numpy():
-        reg, frame = int(reg), int(frame)
-        while cf < frame and cf < n_frames:
-            state[cf] = cur
-            cf += 1
-        if 0 <= reg <= 24:
-            cur[reg] = int(val)
-    while cf < n_frames:
-        state[cf] = cur
-        cf += 1
-    return state
+    return np.asarray(state, dtype=np.int64)
 
 
-def calibrate_corpus(dumps, args) -> dict:
-    """Run the judge over real dumps; return per-dump reports + the corpus max rate.
-    Real tunes define plausible, so the corpus max bounds where thresholds must sit."""
+def calibrate_corpus(dumps, args=None) -> dict:
+    """Run the judge over real dumps; return per-dump reports + the corpus max rate. Real tunes define plausible, so the corpus max bounds where thresholds must sit."""
     reports = {}
     worst = 0.0
     for dump in dumps:
@@ -212,13 +193,10 @@ def _main(argv=None):
     import argparse  # pylint: disable=import-outside-toplevel
     import json  # pylint: disable=import-outside-toplevel
 
-    from preframr_tokens.tokenizer_config import named_config  # pylint: disable=C0415
-
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("dumps", nargs="+", help="raw dump parquet path(s)")
-    ap.add_argument("--config", default="baseline")
     args = ap.parse_args(argv)
-    out = calibrate_corpus(args.dumps, named_config(args.config))
+    out = calibrate_corpus(args.dumps)
     print(json.dumps(out, indent=2))
     return out
 

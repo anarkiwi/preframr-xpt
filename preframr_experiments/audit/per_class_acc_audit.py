@@ -9,7 +9,33 @@ import json
 import sys
 from pathlib import Path
 
-from preframr_tokens import tier_accuracy as audit
+
+def audit(predicted, ground_truth, tier_map):
+    """Per-class + per-tier next-token accuracy keyed by the ground-truth token's tier (``tier_map``: token_id -> tier_name; unmapped ids bucket as ``_unknown``). Returns per-class + per-tier {n, correct, acc}, total ``n_positions`` (min of the two lengths), and ``content_over_structural`` (content acc / structural acc, the apush4x collapse signature; 0.0 when structural acc is 0)."""
+    n = min(len(predicted), len(ground_truth))
+    per_class = {}
+    per_tier = {}
+    for i in range(n):
+        gt = ground_truth[i]
+        correct = int(predicted[i] == gt)
+        cls = per_class.setdefault(gt, {"n": 0, "correct": 0})
+        cls["n"] += 1
+        cls["correct"] += correct
+        tier = tier_map.get(gt, "_unknown")
+        bucket = per_tier.setdefault(tier, {"n": 0, "correct": 0})
+        bucket["n"] += 1
+        bucket["correct"] += correct
+    for bucket in (*per_class.values(), *per_tier.values()):
+        bucket["acc"] = bucket["correct"] / bucket["n"] if bucket["n"] else 0.0
+    struct_acc = per_tier.get("structural", {}).get("acc", 0.0)
+    content_acc = per_tier.get("content", {}).get("acc", 0.0)
+    cos = content_acc / struct_acc if struct_acc > 0 else 0.0
+    return {
+        "n_positions": n,
+        "per_class": {str(k): v for k, v in per_class.items()},
+        "per_tier": per_tier,
+        "content_over_structural": cos,
+    }
 
 
 def _load_int_csv(path: Path):
