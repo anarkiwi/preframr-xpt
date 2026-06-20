@@ -220,3 +220,30 @@ residual-zero discipline), and the analysis above predicts that set is small.
 
 **Do NOT** invest further in dump-only (flavor B) generator recovery for dense tunes: probe 3d proves the
 distinguishing bit is absent from the dump. Flavor B should be scoped to the sparse subset only.
+
+---
+
+## 7. Result — the fitter, built and validated (2026-06-20)
+
+The §6 experiment landed (`/scratch/tmp/sidemu/generic_fitter.py`, timing `generic_fitter_timing.md`).
+A greedy sliced cover of each freq+pw lane with a *searched* bounded-accumulator archetype (byte-exact
+params only; no per-driver generator math) recovers residual-zero: **Monty 99.0% of segments, 5TT 92.3%,
+Grid_Runner 96.4%**, all with the SAME seven archetype families the hand `_generators()` encode. **Proof
+it is the hand math, not a curve-fit:** the fitted vibrato `amp_step` equals `(notetab[n+1]−notetab[n]) >>
+depth` on 40/40 sampled Monty pieces, using the *generically discovered* note table ($8456). The library
+transfers to GoatTracker unchanged.
+
+**Timing (the scaling answer): seconds per tune** — Monty 1.6 s / 18.4k frames (0.30 ms/note, 86 µs/frame),
+Grid_Runner 3.8 s, 5TT 3.0 s; py65 dump-gen adds ~0.5 s / 3000-frame subtune. **Full corpus (61,830
+subtunes) ≈ 4–17 core-hours = a few MINUTES wall-time on the 72-core box** — embarrassingly parallel across
+lanes/tunes. Generic fitting is therefore a practical replacement for the hand backends on the
+per-note-resetting majority; each backend collapses to a `matches()` fingerprint + the shared fitter.
+
+**The one gap is the predicted free-running wall.** The classifier flags a free-running pw lane (RMW every
+frame, writes not at note-ons); fitting it as ONE continuous generator instead of slicing at note-ons lifts
+5TT v0 pw 51%→70% and GT v0 pw 73%→96% — the classifier's bit is exactly what resolves it. But continuous
+fitting HURTS lanes that do reset per-note (GT v1/v2 pw → ~49%), so slice-vs-continuous must be **gated on
+the classifier** (rule proven, wiring is the remaining work). The residual 5TT pw is the **carry-coupled
+additive PW** (the pw step depends on the freq accumulator's carry-out) — a cross-lane coupling, one
+archetype to add, not a missing accumulator. Honest dependency: the fitter needs the offline py65
+read/write classifier (flavor A) to resolve free-running lanes, exactly as predicted; flavor B cannot.
