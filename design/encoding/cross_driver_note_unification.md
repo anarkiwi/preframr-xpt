@@ -90,7 +90,10 @@ Fn(note onset)  =  canonical_grid_Fn[n]            (fixed, A440 12-TET — share
 2. **Dynamic tuning = the per-onset `micro`** (signed sub-semitone, bounded — the arc's existing field):
    the vibrato/slide phase sampled at the onset frame + chorus detune between paired voices. Where the
    instrument generator is recovered, `micro` is **derived** from the generator's phase at onset (not
-   stored), as the landed codec already does; only the irreducible per-onset residual is carried.
+   stored), as the landed codec already does — for GoatTracker it is **0** (pygoattracker the VM
+   regenerates the vibrato). Where a generator is not yet recovered, the onset modulation SAMPLE is carried
+   as a small signed field (it is a deterministic generator-onset value, not an irreducible residual — once
+   the generator is recovered it too is regenerated, per HARD RULE #0: nothing is irreducible).
 
 The MODEL sees only the canonical interval token. `Δ(n)` is per-tune conditioning (one small table, or a
 shared-table reference + a scalar); `micro` is a low-entropy side channel the model may ignore for note
