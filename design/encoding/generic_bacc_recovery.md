@@ -227,11 +227,12 @@ distinguishing bit is absent from the dump. Flavor B should be scoped to the spa
 
 The §6 experiment landed (`/scratch/tmp/sidemu/generic_fitter.py`, timing `generic_fitter_timing.md`).
 A greedy sliced cover of each freq+pw lane with a *searched* bounded-accumulator archetype (byte-exact
-params only; no per-driver generator math) recovers residual-zero: **Monty 99.0% of segments, 5TT 92.3%,
-Grid_Runner 96.4%**, all with the SAME seven archetype families the hand `_generators()` encode. **Proof
-it is the hand math, not a curve-fit:** the fitted vibrato `amp_step` equals `(notetab[n+1]−notetab[n]) >>
-depth` on 40/40 sampled Monty pieces, using the *generically discovered* note table ($8456). The library
-transfers to GoatTracker unchanged.
+params only; no per-driver generator math) recovers **residual-zero — 100% of freq+pw lane-frames byte-exact
+on all three drivers: Monty 108084/108084, 5TT 47994/47994, Grid_Runner 93694/93694** — all with the SAME
+archetype families the hand `_generators()` encode. **Proof it is the hand math, not a curve-fit:** the
+fitted vibrato `amp_step` equals `(notetab[n+1]−notetab[n]) >> depth` on 40/40 sampled Monty pieces, using
+the *generically discovered* note table ($8456); the library transfers to GoatTracker unchanged. (First pass
+was 92–99%; closed to 100% by the carry-coupled-PW archetype + classifier-gated slice/continuous below.)
 
 **Timing (the scaling answer): seconds per tune** — Monty 1.6 s / 18.4k frames (0.30 ms/note, 86 µs/frame),
 Grid_Runner 3.8 s, 5TT 3.0 s; py65 dump-gen adds ~0.5 s / 3000-frame subtune. **Full corpus (61,830
@@ -239,11 +240,15 @@ subtunes) ≈ 4–17 core-hours = a few MINUTES wall-time on the 72-core box** �
 lanes/tunes. Generic fitting is therefore a practical replacement for the hand backends on the
 per-note-resetting majority; each backend collapses to a `matches()` fingerprint + the shared fitter.
 
-**The one gap is the predicted free-running wall.** The classifier flags a free-running pw lane (RMW every
-frame, writes not at note-ons); fitting it as ONE continuous generator instead of slicing at note-ons lifts
-5TT v0 pw 51%→70% and GT v0 pw 73%→96% — the classifier's bit is exactly what resolves it. But continuous
-fitting HURTS lanes that do reset per-note (GT v1/v2 pw → ~49%), so slice-vs-continuous must be **gated on
-the classifier** (rule proven, wiring is the remaining work). The residual 5TT pw is the **carry-coupled
-additive PW** (the pw step depends on the freq accumulator's carry-out) — a cross-lane coupling, one
-archetype to add, not a missing accumulator. Honest dependency: the fitter needs the offline py65
-read/write classifier (flavor A) to resolve free-running lanes, exactly as predicted; flavor B cannot.
+**The predicted free-running wall is now closed (the fix).** Two pieces: (1) the classifier-gated
+slice-vs-continuous choice — a free-running pw lane (RMW every frame, writes not at note-ons) is fit as ONE
+continuous generator, a per-note-resetting lane stays sliced (continuous on the wrong lane HURTS it, so the
+choice is gated on the classifier). (2) the **carry-coupled additive PW** archetype: 5TT's pw is `pwlo +=
+pulsevalue + carry` where carry is the freq vibrato's no-CLC 16-bit-add carry-out (period-8
+`[0,0,0,0,0,1,1,0]`, tied to the LFO phase). `additive_pw` self-derives pulsevalue + the carry, **gated on
+the carry being a small-period (≤8) RULE** — that periodicity check proves it's an LFO-derived generator,
+not stored data (and ranks above `arp` so a real accumulator isn't memorized as a short-cycle arp). 5TT
+recovers with 2 such rules (pulsevalue 152/119 + the shared carry), pitch-invariant, reused 88× — exactly
+`hubbard.py`'s `pulse_additive`. Honest dependency: the fitter needs the offline py65 read/write classifier
+(flavor A) to resolve free-running lanes, exactly as predicted; flavor B cannot. (NOTE: residual-zero here
+is per-LANE freq+pw; full-25-register byte-exact incl ctrl/ADSR is the hand backend's render layer.)
