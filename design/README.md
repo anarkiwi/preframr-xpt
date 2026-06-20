@@ -5,18 +5,21 @@ part lives in which repo (tokens / audio / framework / xpt / aug) and **why**, t
 dependency layering, and how to **derive the release process**. Read it before any
 cross-repo change or release.
 
-**THE encoding is the v3 event model** (tokens 0.47.0+, `preframr_tokens/events/`): a fixed
-**127-atom alphabet** (varint digits / reg / voice / kind / shape / KEYFRAME) with BPE as the only
-dictionary, unconditional (no macro flags), fidelity = `decode(encode(ow)) == canonical_writes(ow)`
-self-verified on every encode. **Its authoritative reference is the
-[preframr-tokens README](https://github.com/anarkiwi/preframr-tokens)** (alphabet, stream grammar,
-fidelity contract, dump format, parse-domain schema); chip facts + pinning tests are in the
-[preframr-audio README](https://github.com/anarkiwi/preframr-audio). The docs here are pointers plus
-xpt-internal seams: [`tokens_architecture.md`](references/tokens_architecture.md),
+**THE encoding is the STEP / TRACKER codec** (landed 2026-06-20): decompile a dump → per-voice tracker
+ROWS `(pitch_interval, duration_in_steps, freq_instrument_ref, timbre_instrument_ref)` on a 4-frame step
+grid; instruments are **pitch-invariant parameters** (vibrato/arp/PWM rendered byte-exact through the note
+table); repeated phrases dedup via an inline backward orderlist; DECODE = render steps→frames through the
+recovered generators. It reached the headline goal — **Monty residual-zero at 0.901 token/frame** (7.9×
+under the old frame codec). It is `trace = VM(program)` realized: encode the PROGRAM, not the per-frame
+TRACE. The design + the enduring lessons are
+[`encoding/sid_player_decompiler.md`](encoding/sid_player_decompiler.md) ("HOW IT LANDED"); the op-set
+grounding is [`encoding/sid_opset_inventory.md`](encoding/sid_opset_inventory.md). The codec is being
+**ported into preframr-tokens** (clean slate — `events/` + `macros/` + the old frame codec DELETED); chip
+facts + pinning tests are in the [preframr-audio README](https://github.com/anarkiwi/preframr-audio). xpt-
+internal seams: [`tokens_architecture.md`](references/tokens_architecture.md),
 [`audio_architecture.md`](references/audio_architecture.md),
-[`framework_architecture.md`](references/framework_architecture.md),
-[`backlog_tokens_hardening.md`](encoding/backlog_tokens_hardening.md) (the tokens testing
-discipline).
+[`framework_architecture.md`](references/framework_architecture.md) (these still describe the pre-port
+event model; they are repointed by the port).
 
 ## North star: LEARNABILITY (read this first)
 
@@ -29,9 +32,10 @@ representation work — is
 + the training-free `audit/learnability_triage.py` that ranks encodings *without a run*).
 **Everything else is subordinate:** correctness/fidelity is the *gate*; compression and
 parse/runner/deploy work are *infra* that buy cheaper learnability experiments. The decisive
-empirical lesson: **model-side content interventions all refuted at a ~0.13 content ceiling that
-tokenizer-side representation then lifted** — most recently the v3 event model's atoms-only baseline
-at **eval_a content 0.479** (the architecture was exonerated long ago, `framework_arch_test`).
+empirical lesson: **model-side content interventions all refuted at a ~0.13 content ceiling because the
+frame/event codec signal-fit a dense trace** — the representation-level fix landed as the step/tracker
+codec (sparse, generator-level, < 1 token/frame). The model-side architecture was exonerated long ago
+(`framework_arch_test`); the next training read is the atoms-only continuation on the step stream.
 
 The priority order (learnability → correctness → efficiency → infra) is the lens for what to work on
 next; it is orthogonal to the physical layout below, which groups docs by *subject*. Every doc
@@ -72,7 +76,7 @@ evidence stub) / **Deferred** / **Reference**.
 | [`architecture_overview.md`](references/architecture_overview.md) | The repo/dependency/release map. Read before any cross-repo change. | Reference |
 | [`learnability_token_ordering_theory.md`](references/learnability_token_ordering_theory.md) | **The north-star lens**: cheap next-token representability + the training-free triage (run at seq_len 8192, window mode, before any training A/B). Track record: predicted the codebook block-scale failure and the generator NO-GO. | Reference + tool |
 | [`encoding_principles.md`](references/encoding_principles.md) | The rubric: fidelity (gate) × context-efficiency (bound) × learnability (objective), sub-principles P1–P8, per-change checklist. Evidence re-anchored to v3 (2026-06-12). | Reference |
-| [`tokens_architecture.md`](references/tokens_architecture.md) | Pointer → tokens README (the v3 event codec reference). Old revisions document the retired (op,reg,subreg,val) substrate. | Pointer |
+| [`tokens_architecture.md`](references/tokens_architecture.md) | Pointer → tokens README. Describes the pre-port event codec; repointed to the step/tracker codec by the port. | Pointer (pre-port) |
 | [`audio_architecture.md`](references/audio_architecture.md) | Pointer → audio README + the xpt cross-repo render seam. | Pointer |
 | [`framework_architecture.md`](references/framework_architecture.md) | The torch layer: train/predict/model, data path, generation gotchas (incl. the event-vs-parse-domain constrained-decode caveat). | Reference |
 | [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) | Pointer: chip facts → audio README; v3 canonical form + encode self-verify → tokens README. | Pointer |
@@ -84,22 +88,21 @@ evidence stub) / **Deferred** / **Reference**.
 | [`related_work.md`](references/related_work.md) | Adversarially-verified survey: the raw-register-stream LM + learnability-ordering combination is unaddressed in the literature. | Reference (positioning) |
 | [`tokenization_vs_music_llms.md`](references/tokenization_vs_music_llms.md) | v3 register-event scheme vs symbolic/MIDI/codec paradigms: wins fidelity + inductive bias + verified augmentation; pays sequence length, engine specificity, data scale. | Reference (positioning, v3 2026-06-12) |
 
-## encoding/ — what is still open on the representation side
+## encoding/ — the landed codec + its grounding
 
-The encoding itself **shipped** (event model; see banner). The macro-pass era and its design stack
-(generator-MDL pipeline, melody skeleton work order, superframe/role lane designs, speculative
-claims+arbitration, compound tokens, instrument-program codebook, audio-equivalence normalization)
-ended 2026-06-12: the generator and pitch docs moved to [`landed/`](landed/) with their absorbed-
-into-v3 mapping; the rest were **removed** (melody layer 2 = absorbed as `NI_*` intervals; the
-claims/compound/codebook problems were mooted by the unconditional fixed-atom design; full text in
-git history). What remains open:
+The codec **landed** (step/tracker; see banner) — Monty residual-zero at < 1 token/frame. The
+frame/event-codec era and its whole design stack (event/v3 model, generator-MDL pipeline, GoatTracker-
+target codec, invented-op-set codec, DEF→REF instrument/phrase banks, melody/timbre factorization, lane-
+demux, boundary dictionary, density frontier, context-length sweep, the port deadwood/macros-removal
+plans, automated generator recovery, SWM recompiler) all moved to [`landed/`](landed/) with a supersession
+banner: every "distinct body" was a few instruments rendered at many pitches (the transposition trap,
+HARD RULE #0). What stays live here:
 
 | Doc | Summary | Status |
 |---|---|---|
-| [`event_boundary_dictionary_proposal.md`](encoding/event_boundary_dictionary_proposal.md) | Unigram dictionary with merges constrained to never cross event boundaries — implements the frontier §6 promoted lever; predicted ~2× context density at ≈parity bits/canonical-atom; deterministic byte-pack/head packs as fallback. | **PROPOSAL 2026-06-12** — triage-gated; run triage *before* the seq_len 16384 re-cut |
-| [`lane_demux_hypothesis.md`](encoding/lane_demux_hypothesis.md) | Cross-voice de-multiplexing (voice-form) + role/causal-DAG ordering (role-form, accompaniment-before-melody) of the event stream; sync/ring wiring constraints; tractability ladder. | Open hypothesis — **trigger only if canonical runs localize content failure to cross-voice interference**; triage-gated |
-| [`log_to_swm_recompiler_design.md`](encoding/log_to_swm_recompiler_design.md) | Register log → editable SID-Wizard SWM with re-render-equivalence gate (generated tunes become tracker-editable). | Design 2026-06-06 (IR retargeted 2026-06-12) |
-| [`backlog_tokens_hardening.md`](encoding/backlog_tokens_hardening.md) | tokens testing discipline: real-pipeline structural/balance tests through the event codec + the no-skip fixture policy. | Pending impl (retargeted to events 2026-06-12) |
+| [`sid_player_decompiler.md`](encoding/sid_player_decompiler.md) | **The landed codec + the durable lessons.** `trace = VM(program)`; op-set = grammar, per-tune program = music, residual→0 the gate, no escape hatch; "HOW IT LANDED" = the step reframe + pitch-invariant instruments + backward orderlist + the transposition trap. | **LANDED 2026-06-20** |
+| [`sid_opset_inventory.md`](encoding/sid_opset_inventory.md) | The universal op-set extracted from real drivers (GoatTracker / SID-Wizard / defMON / WEMUSIC + Hubbard/Follin/Galway/Whittaker/Tel/Gray): ~18 ops / 7 primitives, ≈85-90% overlap; the grounding for HARD RULE #0 and residual→0. | Reference (op-set grounding) |
+| [`generic_bacc_recovery.md`](encoding/generic_bacc_recovery.md) | Can BACC recovery be made GENERIC (remove the per-driver hand disassembly)? Probed on 4 drivers: note-ons from gate transitions, note-table auto-discovery, and a read/write state classifier auto-infer the RAM map (flavor A, offline). Dump-only (flavor B) hits a wall on dense/free-running tunes. Residual driver-specific cost = the generator arithmetic = a small bounded archetype set → the **generator-fitter** experiment. | Analysis (fitter in flight) |
 
 ## generation/ — the generation program (the ultimate goal)
 
@@ -113,23 +116,23 @@ quality gate lands first (it is what makes the rest measurable).
 | [`generation_quality_gate.md`](generation/generation_quality_gate.md) | **Land first.** Standard generation cohort + scorecard: pathology flags (loop/diversity/invalid), write-domain structure metrics vs corpus, chip-native fingerprint distance (FAD analogue), **memorization audit** (n-gram novelty + longest verbatim match), minimal blind A/B protocol; picks the sampling regime; event-grammar mask port folded in. Necessary-not-sufficient beside the content tier. | Design 2026-06-12 |
 | [`prompt_interface_design.md`](generation/prompt_interface_design.md) | The phrase compiler: MIDI/keyboard phrase → synthetic one-voice dump → `encode(verify=True)` → native prompt block. Distribution shift attacked by **reduction augmentation** (melody-prefix → full-texture pairs from the corpus), scaffolding A/Bs, patch realism; exemplar prompting before conditioning atoms; phrase-adherence gate. | Design 2026-06-12 |
 | [`long_range_structure.md`](generation/long_range_structure.md) | Whole tunes via **decode-and-recompile chaining** (re-canonicalize decoded writes into fresh self-contained KEYFRAME blocks — state exact by construction); long-horizon coherence metrics; evidence-gated escalation to section-exemplar conditioning; hierarchical models rejected (envelope). | Design 2026-06-12 |
-| [`transplant_augmentation_design.md`](generation/transplant_augmentation_design.md) | **Data side:** donor/host melody & instrument transplants (breaking the melody×timbre spurious binding — distributional P1) + the **mined instrument bank** (P0, feeds the phrase compiler's patch realism). Register-domain splice + `encode(verify=True)` ⇒ zero pipeline changes; train-split-only leakage rule; dosage A/B on eval_b content. Impl home: preframr-aug. | Design 2026-06-12 |
-| [`free_running_pathology_remediation_design.md`](generation/free_running_pathology_remediation_design.md) | **Remediation ladder** for the free-running ↔ teacher-forced gap ("good first token, poor after") — a *different axis* than the closed content-ceiling arc. Tier-0 confirm + quality gate + free-running-aware checkpoint selection → decoding (structure-aware sampling, budget caps) → lane-demux → augmentation → exposure-bias (DAgger-on-recanonicalised rollouts). Anti-queue-aligned. | Scoping 2026-06-13 — triage/gate-gated |
+| [`transplant_augmentation_design.md`](generation/transplant_augmentation_design.md) | **Data side:** donor/host melody & instrument transplants (breaking the melody×timbre spurious binding — distributional P1) + the **mined instrument bank** (P0, feeds the phrase compiler's patch realism). Register-domain splice + `encode(verify=True)` ⇒ zero pipeline changes; train-split-only leakage rule; dosage A/B on eval_b content. Impl home: preframr-aug. | Design 2026-06-12 — re-target to the step codec |
+
+(The free-running remediation ladder + DAgger + the abstraction probe + the shipped off-ramp were
+event-codec-era; they moved to [`landed/`](landed/) — the free-running ↔ teacher-forced gap was a
+dense-stream pathology the step/tracker codec addresses at the representation level. Re-evaluate
+generation on the landed stream after the framework rebuild.)
 
 ## measurement/ — prediction-side metrics & gates
 
-The live run plan (canonical event-model learnability: atoms-only baseline done at eval_a content
-0.479; unigram-dictionary arm in flight; decision branches) is operational state and lives in
-**AGENTS.md "Current arc"**. Durable designs:
+The live run plan (re-encode the corpus on the step stream + train atoms-only continuation) is
+operational state and lives in **AGENTS.md "LIVE ARC"**. Durable designs (the metrics themselves carry
+over to the step stream):
 
 | Doc | Summary | Status |
 |---|---|---|
 | [`generalization_metric_tracking_design.md`](measurement/generalization_metric_tracking_design.md) | Make the decisive content-tier audit a runner stage, scorecard the cross-composer signal, tokenizer-hash-keyed ledger auto-flagging confounded comparisons. The generation quality gate wires into the same stage. | Drafted, pending impl |
-| [`generalize_min_val_acc_floor_design.md`](measurement/generalize_min_val_acc_floor_design.md) | Calibrate `GENERALIZE_MIN_VAL_ACC` = 2/3 × median once 2–3 canonical event-model baselines settle (first point exists: 0.561). | Pending calibration |
-
-(The generator-era measurement plan is superseded; its surviving result — the triage NO-GO that
-motivated the v3 redesign — is recorded in
-[`landed/generator_mdl_representation.md`](landed/generator_mdl_representation.md).)
+| [`generalize_min_val_acc_floor_design.md`](measurement/generalize_min_val_acc_floor_design.md) | Calibrate `GENERALIZE_MIN_VAL_ACC` = 2/3 × median once 2–3 step-codec baselines settle. | Pending calibration (re-baseline on step codec) |
 
 ## performance/ — deploy envelope & throughput
 
@@ -152,6 +155,7 @@ was removed (moot at event-model vocab scale; git history).
 | [`start_seq_rotation_audit_design.md`](infra/start_seq_rotation_audit_design.md) | `predict_load` hard-codes rotation 0; flat-indexing fix + coverage probe. | Pending impl |
 | [`audio_driver_split_design.md`](infra/audio_driver_split_design.md) | preframr-audio: split `audio_driver.py` into render core vs live I/O. | Drafted, pending review |
 | [`cloud_rental_runner_design.md`](infra/cloud_rental_runner_design.md) | Deferred cloud-rental program: `--resume` → auto early-abort → `--max-parallel-arms`. | Deferred |
+| [`tokens_port_release_cascade.md`](infra/tokens_port_release_cascade.md) | Post-port release runbook: tokens tag → preframr rebuild → xpt image repoint → `generalize_continuation` run; flags the >=0.53.0 floor drift. | Prep (pre-port) |
 
 ## refuted/ — tested & rejected
 
@@ -172,17 +176,24 @@ without …" conditions live in `preframr_experiments/data/refuted/<exp>.md`. Th
 
 ## landed/ — archived (shipped or superseded-with-record)
 
-Indexed in [`landed/README.md`](landed/README.md). Notable for current work:
-[`generator_mdl_representation.md`](landed/generator_mdl_representation.md) (the superseded
-generator arc + what v3 absorbed + the triage NO-GO that triggered the redesign),
-[`universal_multiresolution_pitch.md`](landed/universal_multiresolution_pitch.md) (the recovered
-note-table findings now shipped as `NOTE_TABLE`/`TUNING`/`NI_*`),
-[`unified_oscillation_primitive_design.md`](landed/unified_oscillation_primitive_design.md) +
-[`trajectory_anchoring.md`](landed/trajectory_anchoring.md) (the FREQ_TRAJ era),
+Indexed in [`landed/README.md`](landed/README.md). Notable for current work — the **decompiler arc**
+(all superseded-with-banner by the landed step/tracker codec, kept for the record):
+[`ornament_generator_recovery.md`](landed/ornament_generator_recovery.md) (the central diagnosis: the
+event stream isn't sparse because ornaments are per-frame generators),
+[`universal_sid_codec.md`](landed/universal_sid_codec.md) +
+[`virtual_tracker_codec.md`](landed/virtual_tracker_codec.md) (the invented-op-set / GoatTracker-cage
+detours), [`automated_generator_recovery.md`](landed/automated_generator_recovery.md),
+[`front_loaded_instrument_encoding.md`](landed/front_loaded_instrument_encoding.md) +
+[`phrase_def_ref_triage.md`](landed/phrase_def_ref_triage.md) +
+[`lane_demux_hypothesis.md`](landed/lane_demux_hypothesis.md) (the DEF→REF / reorder nulls),
+[`encoding_density_frontier.md`](landed/encoding_density_frontier.md) (the BPE-is-not-the-context-lever
+record). Earlier eras: [`generator_mdl_representation.md`](landed/generator_mdl_representation.md),
+[`universal_multiresolution_pitch.md`](landed/universal_multiresolution_pitch.md) (note-table pitch →
+`NOTE_TABLE`/`TUNING`/`NI_*`), [`unified_oscillation_primitive_design.md`](landed/unified_oscillation_primitive_design.md)
++ [`trajectory_anchoring.md`](landed/trajectory_anchoring.md) (FREQ_TRAJ),
 [`prodlike_tier_design.md`](landed/prodlike_tier_design.md) +
-[`engine_fingerprint_evalb_design.md`](landed/engine_fingerprint_evalb_design.md) (the data tiers),
-[`orinnx_audition_design.md`](landed/orinnx_audition_design.md) (the render smoke harness the
-quality gate builds on).
+[`engine_fingerprint_evalb_design.md`](landed/engine_fingerprint_evalb_design.md) (data tiers),
+[`orinnx_audition_design.md`](landed/orinnx_audition_design.md) (render smoke harness).
 
 **Elsewhere (not in this repo):**
 - `preframr-aug:design/melody_transfer_augmentation_design.md` — offline corpus expansion. Its
