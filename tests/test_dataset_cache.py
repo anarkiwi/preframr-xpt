@@ -1,4 +1,4 @@
-"""Unit tests for the parse + tokenize artefact cache in ``preframr_experiments.base``. The cache is what lets a retried prodlike run skip the ~25 min stftokenize step when nothing has changed."""
+"""Unit tests for the BACC parse-artefact cache in ``preframr_experiments.base``. The cache stores each tune's recovered ``.blocks.npy`` so a retried run skips the py65 recovery when the corpus + codec version are unchanged."""
 
 from __future__ import annotations
 
@@ -34,18 +34,13 @@ def _toy_spec(seq_len=128):
 
 
 def _populate_work_dir(work_dir: Path, data_layout):
-    """Write the artefacts the cache is supposed to capture so we can round-trip them through populate -> hit."""
+    """Write the per-tune ``.blocks.npy`` the cache is supposed to capture so we can round-trip them through populate -> hit."""
     work_dir.mkdir(parents=True, exist_ok=True)
-    (work_dir / "dataset.csv.zst").write_bytes(b"zst-bytes")
-    (work_dir / "tokens.csv").write_text("op,reg\n")
-    (work_dir / "tkmodel.json").write_text("{}")
-    (work_dir / "df-map.csv").write_text("a,b\n")
-    (work_dir / "df-map_reg_widths.json").write_text("{}")
     for subdir in data_layout.keys():
         sub = work_dir / subdir
         sub.mkdir()
         (sub / "Composer").mkdir()
-        (sub / "Composer" / "Song.0.blocks.npy").write_bytes(b"npy-bytes")
+        (sub / "Composer" / "Song.1.blocks.npy").write_bytes(b"npy-bytes")
 
 
 class _CacheKeyTestCase(unittest.TestCase):
@@ -65,20 +60,6 @@ class TestDatasetCacheKey(_CacheKeyTestCase):
         a = _dataset_cache_key(spec, {"train": ["x", "y"], "eval": ["e"]})
         b = _dataset_cache_key(spec, {"eval": ["e"], "train": ["y", "x"]})
         self.assertEqual(a, b)
-
-    def test_changes_with_macro_flags(self):
-        spec = _toy_spec()
-        layout = {"train": ["x"]}
-        a = _dataset_cache_key(spec, layout, "", ("voice_lane",))
-        b = _dataset_cache_key(spec, layout, "", ("loop_pass",))
-        self.assertNotEqual(a, b)
-
-    def test_changes_with_macro_config(self):
-        spec = _toy_spec()
-        layout = {"train": ["x"]}
-        a = _dataset_cache_key(spec, layout, "", (), "")
-        b = _dataset_cache_key(spec, layout, "", (), "full_macros")
-        self.assertNotEqual(a, b)
 
     def test_changes_with_seq_len(self):
         a = _dataset_cache_key(_toy_spec(seq_len=128), {"train": ["x"]})
@@ -185,12 +166,11 @@ class TestDatasetCachePopulateAndHit(_CacheKeyTestCase):
                 cache_dir, dst_work, data_layout, logging.getLogger()
             )
             self.assertTrue(hit)
-            self.assertEqual((dst_work / "dataset.csv.zst").read_bytes(), b"zst-bytes")
             self.assertTrue(
-                (dst_work / "train" / "Composer" / "Song.0.blocks.npy").exists()
+                (dst_work / "train" / "Composer" / "Song.1.blocks.npy").exists()
             )
             self.assertTrue(
-                (dst_work / "eval_a" / "Composer" / "Song.0.blocks.npy").exists()
+                (dst_work / "eval_a" / "Composer" / "Song.1.blocks.npy").exists()
             )
 
     def test_incomplete_cache_treated_as_miss(self):
@@ -234,6 +214,7 @@ class TestStageDumps(unittest.TestCase):
         src = tmp / "src"
         (src / "Composer").mkdir(parents=True)
         (src / "Composer" / "Song.1.dump.parquet").write_bytes(b"dump")
+        (src / "Composer" / "Song.sid").write_bytes(b"PSID")
         return src
 
     def test_symlinks_to_link_root_without_copying(self):
@@ -253,6 +234,36 @@ class TestStageDumps(unittest.TestCase):
             staged = dst / "Composer" / "Song.1.dump.parquet"
             self.assertTrue(staged.is_symlink())
             self.assertEqual(os.readlink(staged), "/dumps/Composer/Song.1.dump.parquet")
+
+    def test_stages_sibling_sid(self):
+        """The BACC codec recovers from the .sid, so it must be staged next to
+        each dump (here as a container-valid symlink)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            src = self._make_src(tmp)
+            dst = tmp / "work" / "train"
+            stage_dumps(
+                ["Composer/Song.1.dump.parquet"],
+                src,
+                dst,
+                logging.getLogger(),
+                link_root="/dumps",
+            )
+            sid = dst / "Composer" / "Song.sid"
+            self.assertTrue(sid.is_symlink())
+            self.assertEqual(os.readlink(sid), "/dumps/Composer/Song.sid")
+
+    def test_copies_sibling_sid_when_no_link_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            src = self._make_src(tmp)
+            dst = tmp / "work" / "train"
+            stage_dumps(
+                ["Composer/Song.1.dump.parquet"], src, dst, logging.getLogger()
+            )
+            sid = dst / "Composer" / "Song.sid"
+            self.assertFalse(sid.is_symlink())
+            self.assertEqual(sid.read_bytes(), b"PSID")
 
     def test_copies_when_no_link_root(self):
         """Default (pre_run_hook) mode copies real content so a hook can mutate."""
@@ -293,10 +304,9 @@ class TestCacheExcludesDumps(_CacheKeyTestCase):
             work = tmp / "work"
             sub = work / "train" / "Composer"
             sub.mkdir(parents=True)
-            (work / "dataset.csv.zst").write_bytes(b"z")
-            (sub / "Song.dump.parquet").write_bytes(b"raw-input")
-            (sub / "Song.0.parquet").write_bytes(b"parsed-output")
-            (sub / "Song.0.blocks.npy").write_bytes(b"blocks")
+            (sub / "Song.1.dump.parquet").write_bytes(b"raw-input")
+            (sub / "Song.sid").write_bytes(b"raw-sid")
+            (sub / "Song.1.blocks.npy").write_bytes(b"blocks")
             spec = _toy_spec()
             key = _dataset_cache_key(spec, {"train": ["x"]})
             cache_dir = _dataset_cache_dir(tmp, key)
@@ -304,9 +314,9 @@ class TestCacheExcludesDumps(_CacheKeyTestCase):
                 cache_dir, work, {"train": ["x"]}, logging.getLogger()
             )
             cached = cache_dir / "train" / "Composer"
-            self.assertTrue((cached / "Song.0.parquet").exists())
-            self.assertTrue((cached / "Song.0.blocks.npy").exists())
-            self.assertFalse((cached / "Song.dump.parquet").exists())
+            self.assertTrue((cached / "Song.1.blocks.npy").exists())
+            self.assertFalse((cached / "Song.1.dump.parquet").exists())
+            self.assertFalse((cached / "Song.sid").exists())
 
 
 if __name__ == "__main__":

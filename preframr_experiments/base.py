@@ -8,6 +8,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -39,13 +40,11 @@ def _src_bind_enabled() -> bool:
 
 _DATASET_CACHE_SUBDIR = "dataset_cache"
 _DATASET_CACHE_MARKER = ".complete"
-_DATASET_CACHE_FILES = (
-    "dataset.csv.zst",
-    "tokens.csv",
-    "tkmodel.json",
-    "df-map.csv",
-    "df-map_reg_widths.json",
-)
+# BACC parse output is the per-tune ``.blocks.npy`` living in the staged data
+# subdirs; no top-level tokenizer artefacts exist anymore, so the cache stores
+# the subdir trees (sans the input .sid/.dump) only.
+_DATASET_CACHE_FILES: tuple[str, ...] = ()
+_DATASET_CACHE_INPUTS = ("*.dump.parquet", "*.sid")
 _DATASET_CACHE_DISABLE_ENV = "PREFRAMR_DATASET_CACHE_DISABLE"
 
 
@@ -75,7 +74,7 @@ def mini_train_args(body: str = "large") -> str:
 
 
 def micro_mini_train_args(body: str = "small") -> str:
-    """Stage-C rapid-triage config: ~5 min/arm. small body, 30 epochs, gate ON."""
+    """Stage-C rapid-triage config: ~5 min/arm. small body, 30 epochs."""
     if body not in _MINI_BODY_FLAGS:
         raise ValueError(
             f"micro_mini_train_args: body={body!r} not in {sorted(_MINI_BODY_FLAGS)}"
@@ -86,8 +85,7 @@ def micro_mini_train_args(body: str = "small") -> str:
         "--learning-rate 3e-4 --weight-decay 0.01 "
         f"{_MINI_BODY_FLAGS[body]} "
         "--attn-dropout 0.1 --max-epochs 30 "
-        "--val-check-every 1 "
-        "--generalization-gate"
+        "--val-check-every 1"
     )
 
 
@@ -97,8 +95,6 @@ class Arm:
 
     label: str
     extra_cargs: str = ""
-    macro_flags: tuple[str, ...] = ()
-    macro_config: str = ""
     training_overrides: Optional[dict] = None
     baseline: bool = False
 
@@ -120,9 +116,6 @@ class ExperimentSpec:
     pre_run_hook: Optional[Callable] = None
     seq_len: int = 8192
     block_stride: Optional[int] = None
-    tkvocab: int = 131072
-    min_song_tokens: int = 128
-    max_perm: int = 1
     image: str = "anarkiwi/preframr"
     hvsc_root: str = "/scratch/preframr/hvsc"
 
@@ -298,6 +291,15 @@ def _stage_bucket(rel: str) -> str:
     return parent or "_root_"
 
 
+def _sid_rel(rel: str) -> str:
+    """HVSC-rel ``.dump.parquet`` path -> its sibling ``.sid`` (drop the
+    ``.<subtune>.dump.parquet`` suffix, append ``.sid``)."""
+    base = rel[: -len(".dump.parquet")] if rel.endswith(".dump.parquet") else rel
+    match = re.match(r"^(.*)\.(\d+)$", base)
+    name = match.group(1) if match else base
+    return name + ".sid"
+
+
 def stage_dumps(
     rels: list[str],
     src_root: Path,
@@ -334,6 +336,18 @@ def stage_dumps(
                 os.symlink(f"{link_root}/{rel}", dest)
         else:
             shutil.copy(src, dest)
+        # The BACC codec recovers a program from the tune's playroutine, so the
+        # sibling .sid must travel with each dump (skipped when absent: the
+        # recover pass then skips that tune rather than failing the run).
+        sid_rel = _sid_rel(rel)
+        sid_src = src_root / sid_rel
+        if sid_src.exists():
+            sid_dest = bucket / sid_src.name
+            if link_root is not None:
+                if not sid_dest.is_symlink() and not sid_dest.exists():
+                    os.symlink(f"{link_root}/{sid_rel}", sid_dest)
+            elif not sid_dest.exists():
+                shutil.copy(sid_src, sid_dest)
         staged += 1
     if missing:
         logger.warning(
@@ -385,18 +399,6 @@ def _dataset_affecting_cargs(extra_cargs: str) -> list[str]:
     return out
 
 
-def _macro_cli(arm: "Arm") -> str:
-    """Render an arm's ``macro_flags`` / ``macro_config`` into the ``--macro-flags`` /
-    ``--macro-config`` CLI passed to parse + tokenize + train. Empty for an arm with no
-    macro passes (the atomic baseline)."""
-    parts = []
-    if arm.macro_flags:
-        parts.append(f"--macro-flags {','.join(arm.macro_flags)}")
-    if arm.macro_config:
-        parts.append(f"--macro-config {arm.macro_config}")
-    return " ".join(parts)
-
-
 @functools.lru_cache(maxsize=None)
 def _image_tokens_version(image: str) -> str:
     """preframr-tokens version baked into ``image`` (queried once per image). Folded into the dataset cache key so a tokenizer upgrade invalidates stale parse/tokenize artefacts instead of silently reusing them. The key is otherwise version-blind: pre-this-fix, a 0.17->0.18 bump kept the same key and served stale tokenization."""
@@ -422,18 +424,11 @@ def _dataset_cache_key(
     spec: "ExperimentSpec",
     data_layout: dict[str, list[str]],
     extra_cargs: str = "",
-    macro_flags: tuple[str, ...] = (),
-    macro_config: str = "",
 ) -> str:
-    """Hash the inputs that determine parse + tokenize output. Stable across runs as long as the arm's macro_flags/macro_config + tier-pinned data + corpus-shape args + the parse/tokenize-affecting slice of the arm's extra_cargs + the image's preframr-tokens version don't change."""
+    """Hash the inputs that determine the BACC parse output (the per-tune ``.blocks.npy``). Stable across runs as long as the corpus-shape args (seq_len/block_stride), the tier-pinned data layout, the parse-affecting slice of the arm's extra_cargs, and the image's preframr-tokens version don't change."""
     payload = {
-        "macro_flags": sorted(macro_flags),
-        "macro_config": macro_config,
         "seq_len": spec.seq_len,
-        "tkvocab": spec.tkvocab,
-        "min_song_tokens": spec.min_song_tokens,
         "block_stride": spec.block_stride,
-        "max_perm": spec.max_perm,
         "tier": spec.tier,
         "data_layout": {k: sorted(v) for k, v in data_layout.items()},
         "dataset_cargs": _dataset_affecting_cargs(extra_cargs),
@@ -501,7 +496,7 @@ def _populate_dataset_cache(
                 shutil.copytree(
                     src,
                     tmp / subdir,
-                    ignore=shutil.ignore_patterns("*.dump.parquet"),
+                    ignore=shutil.ignore_patterns(*_DATASET_CACHE_INPUTS),
                 )
         (tmp / _DATASET_CACHE_MARKER).write_text("")
         try:
@@ -903,17 +898,13 @@ def run_arm(
     log_dir.mkdir()
 
     cache_disabled = _dataset_cache_disabled()
-    cache_key = _dataset_cache_key(
-        spec, data_layout, arm.extra_cargs, arm.macro_flags, arm.macro_config
-    )
+    cache_key = _dataset_cache_key(spec, data_layout, arm.extra_cargs)
     cache_dir = _dataset_cache_dir(src_root, cache_key)
     parse_log = log_dir / "parse.log"
     tokenize_log = log_dir / "tokenize.log"
     cache_hit = False
     if not cache_disabled:
         cache_hit = _try_dataset_cache_hit(cache_dir, work_dir, data_layout, logger)
-
-    macro_cli = _macro_cli(arm)
 
     link_root = "/dumps" if spec.pre_run_hook is None else None
     dump_volumes = (
@@ -932,15 +923,10 @@ def run_arm(
         spec.pre_run_hook(arm, work_dir)
 
     cargs = (
-        f"--no-require-pq --seq-len {spec.seq_len} "
+        f"--seq-len {spec.seq_len} "
         f"--max-seq-len {spec.seq_len} "
-        f"--tkvocab {spec.tkvocab} "
-        f"--df-map-csv /scratch/preframr/df-map.csv "
         f"--no-max-autotune "
-        f"--min-song-tokens {spec.min_song_tokens} "
         f"--block-stride {spec.block_stride} "
-        f"--max-perm {spec.max_perm} "
-        f"{macro_cli} "
         f"{arm.extra_cargs}".strip()
     )
 
@@ -949,29 +935,27 @@ def run_arm(
     has_eval = bool(eval_subdirs)
     eval_glob = build_eval_reglogs_arg(Path("/scratch/preframr"), data_layout)
 
-    tokenize_args = [
-        "/preframr/stftokenize.py",
+    # BACC parse: recover each (.sid, .dump) pair into a per-tune .blocks.npy.
+    # No separate tokenize stage exists anymore -- the alphabet is fixed.
+    parse_args = [
+        "/preframr/parse.py",
         *shlex.split(cargs),
-        "--dataset-csv",
-        "/scratch/preframr/dataset.csv.zst",
-        "--token-csv",
-        "/scratch/preframr/tokens.csv",
         "--reglogs",
         train_glob,
     ]
     if has_eval:
-        tokenize_args += ["--eval-reglogs", eval_glob]
+        parse_args += ["--eval-reglogs", eval_glob]
     if not cache_hit:
         rc = _docker_run(
             spec.image,
-            tokenize_args,
+            parse_args,
             bind_root=work_dir,
-            log_path=tokenize_log,
+            log_path=parse_log,
             memory="16g",
             extra_volumes=dump_volumes,
         )
         if rc != 0:
-            raise RuntimeError(f"tokenize failed (rc={rc}); see {tokenize_log}")
+            raise RuntimeError(f"parse failed (rc={rc}); see {parse_log}")
         if not cache_disabled:
             _populate_dataset_cache(cache_dir, work_dir, data_layout, logger)
 
@@ -988,10 +972,6 @@ def run_arm(
         *shlex.split(train_overrides_str),
         "--reglogs",
         train_glob,
-        "--dataset-csv",
-        "/scratch/preframr/dataset.csv.zst",
-        "--token-csv",
-        "/scratch/preframr/tokens.csv",
     ]
     if has_eval:
         train_args += ["--eval-reglogs", eval_glob]

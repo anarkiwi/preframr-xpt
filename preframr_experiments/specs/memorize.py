@@ -32,7 +32,6 @@ spec = ExperimentSpec(
     seeds=1,
     seq_len=1024,
     block_stride=256,
-    tkvocab=0,
     train_args=_TRAIN_ARGS,
     predict_gate=event_decode_gate,
 )

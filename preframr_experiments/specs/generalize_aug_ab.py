@@ -73,7 +73,6 @@ spec = ExperimentSpec(
     ],
     seeds=1,
     seq_len=8192,
-    tkvocab=0,
     train_args=_TRAIN_ARGS,
     predict_gate=_generalize_gate,
     pre_run_hook=_stage_aug,

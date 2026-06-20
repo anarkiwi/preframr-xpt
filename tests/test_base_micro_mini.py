@@ -14,9 +14,8 @@ from preframr_experiments.base import (
 
 
 class TestMicroMiniTrainArgs(unittest.TestCase):
-    def test_gate_flag_baked_in(self):
+    def test_rapid_triage_epochs(self):
         args = micro_mini_train_args()
-        self.assertIn("--generalization-gate", args)
         self.assertIn("--max-epochs 30", args)
 
     def test_small_body_by_default(self):

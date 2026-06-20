@@ -70,16 +70,6 @@ def main():
         help="Override spec.seeds. Useful for fast smoke runs.",
     )
     ap.add_argument(
-        "--tkvocab",
-        type=int,
-        default=None,
-        help=(
-            "Override spec.tkvocab (e.g. vocab-trim re-runs). Folds into the "
-            "dataset-cache key, so a trimmed cap re-tokenizes rather than "
-            "serving a stale tokenization."
-        ),
-    )
-    ap.add_argument(
         "--batch-size",
         type=int,
         default=None,
@@ -165,8 +155,6 @@ def main():
     spec = load_spec(args.experiment)
     if args.seeds is not None:
         spec.seeds = args.seeds
-    if args.tkvocab is not None:
-        spec.tkvocab = args.tkvocab
     if args.seq_len is not None:
         spec.seq_len = args.seq_len
     spec.train_args = _override_train_arg(
@@ -179,15 +167,13 @@ def main():
         spec.train_args, "--max-epochs", args.max_epochs
     )
     if (
-        args.tkvocab is not None
-        or args.batch_size is not None
+        args.batch_size is not None
         or (args.accumulate_grad_batches is not None)
         or (args.max_epochs is not None)
         or (args.seq_len is not None)
     ):
         logger.info(
-            "overrides: tkvocab=%s batch_size=%s accumulate_grad_batches=%s max_epochs=%s seq_len=%s",
-            args.tkvocab,
+            "overrides: batch_size=%s accumulate_grad_batches=%s max_epochs=%s seq_len=%s",
             args.batch_size,
             args.accumulate_grad_batches,
             args.max_epochs,
