@@ -78,6 +78,26 @@ generation/continuation cheap. Track the corpus distribution of whole-song token
 under 4096 by the same levers (pitch-invariant instruments, backward orderlist/REPEAT, generator recovery),
 never by truncation or a lossy shortcut (residual-zero stays the gate).
 
+### ENCODER COVERAGE GAPS (open, from the 763-tune hard survey 2026-06-20)
+
+The lane miner is robust (0 crashes / 0 lossless violations on 763 dumps); the gaps are in the
+representation, ranked by tunes-unblocked. Each is a precise "needs X", never "irreducible":
+1. **Multispeed-aware framing — IN PROGRESS (PR).** `per_frame_state` samples one CPF=19656 frame; on a
+   2×-multispeed tune (Galway Times_of_Lore) it **drops 53% of register changes** → the substrate is
+   silently LOSSY (the miner's "lossless" holds only over its own sampling, not the true bus), so BACC on
+   any multispeed tune (all Galway/Tel) is non-residual-zero. Fix = detect the play-cadence (burst interval;
+   bursts/frame ≥ 1.8 = multispeed) and frame at the true speed (CPF/2, CPF/4). The BIGGEST unlock.
+2. **Generic IRQ-driven play harness (open).** The generic classifier/fitter call play via JSR and silently
+   can't reach `play_addr==0` RSIDs (most lft, Hülsbeck, Follin). Only the lft backend has the MPU65ILL+IRQ
+   machine, and only for A Mind Is Born's signature (it rejects Platform_Hopping, another lft RSID).
+   Decouple the IRQ+illegal-opcode play machine from the lft fingerprint → a general RSID probe.
+3. **No-score/generative path + digi sub-frame archetype + ET-ratio guard (open).** lft generative tunes
+   (Perpetual_Fragility, Foerklaedd_Gud) have SCORE=0/STATE=0 (no note-ons at all). Digi (Platform_Hopping
+   697 wr/frame, Galway Game_Over 41.7/frame) collapses to 1 value/frame — needs a sub-frame primitive.
+   And `discover_note_table` false-positives on code (matched freq-writes vs opcode bytes) → add an
+   ET-ratio (~1.0595) sanity check. Mainstream Commando (Hubbard)/Cybernoid (Tel) classify cleanly but have
+   no backend `matches()` fingerprint (a fingerprinting gap, not a model gap).
+
 ## LIVE ARC — the step codec lands; clean-slate port; then generalize → corpus → train
 
 The codec is DONE on the proving tune. The work in flight, in order:
