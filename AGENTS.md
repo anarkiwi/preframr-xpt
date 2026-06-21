@@ -90,10 +90,15 @@ representation, ranked by tunes-unblocked. Each is a precise "needs X", never "i
    existing call site passes explicit cpf, so single-speed byte-exact is unchanged. New gate
    `test_multispeed_framing`. (Sanxion's ~83% "loss" at every period = a DIGI player streaming volume-PCM,
    correctly NOT multispeed — reinforces gap #3's digi sub-frame need.)
-2. **Generic IRQ-driven play harness (open).** The generic classifier/fitter call play via JSR and silently
-   can't reach `play_addr==0` RSIDs (most lft, Hülsbeck, Follin). Only the lft backend has the MPU65ILL+IRQ
-   machine, and only for A Mind Is Born's signature (it rejects Platform_Hopping, another lft RSID).
-   Decouple the IRQ+illegal-opcode play machine from the lft fingerprint → a general RSID probe.
+2. **Generic IRQ-driven play harness — BUILT (research, no PR); the survey OVERSTATED this gap.** A
+   generic `play_addr==0` harness (`/scratch/tmp/sidemu/irq_harness.py`, auto-detects waitloop/vector/exit/
+   cadence, reuses MPU65ILL) reproduces A Mind Is Born byte-exact with ZERO A_Mind hardcoding. But the
+   genuine play=0 set is TINY: only A Mind (shipped) + Platform_Hopping (a DIGI tune the per-frame backend
+   can't represent → gap #3). The survey's "IRQ-blocked" Perpetual_Fragility / Foerklaedd_Gud / Ghouls are
+   actually **PSID play!=0** and the existing JSR-play harness ALREADY runs them (their real gap is no-score
+   recovery, #3). Great_Giana crashes for lack of a Kernal ROM (infra, orthogonal). **No PR** — generalizing
+   `matches()` would only add mis-claim risk with no byte-exact gain (HARD RULE #0). The clean structural
+   matcher for a future lft-generative sibling is documented (`irq_harness_report.md`).
 3. **No-score/generative path + digi sub-frame archetype + ET-ratio guard (open).** lft generative tunes
    (Perpetual_Fragility, Foerklaedd_Gud) have SCORE=0/STATE=0 (no note-ons at all). Digi (Platform_Hopping
    697 wr/frame, Galway Game_Over 41.7/frame) collapses to 1 value/frame — needs a sub-frame primitive.
