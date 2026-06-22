@@ -526,6 +526,11 @@ class Generalizer:
                 )
         return None
 
+    def _master_step_cache(self):
+        if getattr(self, "_mstep", None) is None:
+            _, _, self._mstep = self.find_master()
+        return self._mstep
+
     # -- a state cell that toggles / is periodic over a counter bit (design 2.5):
     #    recover from its own periodic recurrence. --
     def _recover_periodic_axis(self, reg, site):
@@ -536,7 +541,26 @@ class Generalizer:
         if rec is None or rec.kind != "periodic":
             return None
         seq = self.seq[cells[0]]
-        p, table, phase0 = rec.period, rec.table, seq.first_seen_frame
+        p, table = rec.period, rec.table
+        phase0 = seq.first_seen_frame
+        # Phase-align the periodic table to the actual OUTPUT column. A state cell
+        # sampled at the play-call boundary holds the value carried INTO the call
+        # (the previous frame's residue), so its periodic table is offset from the
+        # axis output by a constant; recover that O(1) offset against the output
+        # (one integer, length-independent). Admit only if some phase reproduces the
+        # output EXACTLY over the window (else let the cursor-walk path, which fits
+        # the output directly, or surfacing handle it -- never a near-miss).
+        _, out, _ = self._build_co(self._master_step_cache())
+        if out is not None:
+            ocol = out[:, reg].astype(np.int64)
+            bestmis = None
+            for ph in range(p):
+                pred = np.array([table[(f - ph) % p] for f in range(len(ocol))])
+                mis = int(np.sum(ocol != pred))
+                if bestmis is None or mis < bestmis:
+                    bestmis, phase0 = mis, ph
+            if bestmis != 0:
+                return None
         return Axis(
             reg=reg, status="recovered",
             form=f"O=table[(f-{phase0}) % {p}] (period-{p} toggle from state cell "
@@ -562,6 +586,101 @@ class Generalizer:
             form=f"O=(s0+{step}*(f-{ph}))&0xFF (accumulator state ${cells[0]:02x})",
             render=lambda f, c, s0=s0, st=step, ph=ph: (s0 + st * (f - ph)) & 0xFF,
             state_cells=(cells[0],), size_bytes=3,
+        )
+
+    # -- Stage 5: the SEQUENCER CURSOR as a nested table-walk (design 2.6 nested
+    #    sources + 5.4). The dominant surfaced class on tracker tunes is the
+    #    orderlist->pattern->note cursor: an axis whose output is a piecewise-constant
+    #    walk O = V[cursor(f)] over a value table V (the notes/instrument-rows the
+    #    cursor visits, lifted by IDENTITY -- here V is the per-cursor-position output
+    #    value, which is the program's own data the walk dereferenced). The cursor is
+    #    a COMPOSED recurrence of levels, each `idx' = (idx + stride) mod P` with a
+    #    carry/wrap advancing the next level, keyed on a recovered dwell clock. We
+    #    recover it as TYPED recurrences (no branch re-exec): the closable case is a
+    #    cursor that closes as a fixed-size recurrence on the play-call index f --
+    #    a uniform dwell D advancing a length-P loop, `cursor(f) = (f // D) mod P` --
+    #    AND whose value table is traversed >= 2 full cycles in the window (design 2.8
+    #    admission: a single non-repeating pass is just stored output -> surfaced).
+    #    The admission is enforced length-independently: the recurrence is derived
+    #    from the SHORT window and re-executed over the FULL stream (verify_and_finalize
+    #    demotes it on any residual). A cursor that is song-position-driven (the
+    #    orderlist advance is gated by per-row effect state and does not close as a
+    #    fixed clock) is SURFACED honestly, never faked. --
+    def _recover_cursor_walk_axis(self, reg, step):
+        """Recover an axis as a uniform-dwell cyclic table-walk O = V[(f//D) mod P]
+        (design 2.6 nested cursor, the closable typed level). Returns an Axis or
+        None. Admitted only if the value table loops >= 2 full cycles in the window
+        (anti-length-proportionality, design 2.8); full-length residual-zero is the
+        final gate (verify_and_finalize)."""
+        C, out, _ = self._build_co(step)
+        if C is None:
+            return None
+        col = out[:, reg].astype(np.int64)
+        n = len(col)
+        if n < 8:
+            return None
+        vals = set(col.tolist())
+        # a pure constant / accumulator / 2-value toggle is handled by other paths;
+        # the cursor walk targets multi-value piecewise-constant tracks.
+        if len(vals) < 2:
+            return None
+        # change-point structure: where the held value steps to a new one.
+        chg = [i for i in range(1, n) if col[i] != col[i - 1]]
+        if len(chg) < 5:
+            return None
+        # uniform dwell D between cursor advances. The FIRST segment is usually a
+        # partial leading dwell (the cursor was mid-position when capture/steady
+        # play began), so we anchor on the SECOND change point and require uniform
+        # spacing from there; the leading partial is absorbed by a phase offset.
+        # (The trailing segment may also be partial -- the capture is cut mid-dwell;
+        # we ignore the very last spacing.)
+        anchor = chg[1]
+        inner = [c for c in chg[1:]]
+        dwells = np.diff(np.array(inner))
+        if len(dwells) < 3:
+            return None
+        # ignore a possibly-partial final spacing; require the rest uniform.
+        body = dwells[:-1] if len(dwells) > 3 else dwells
+        dset = set(int(d) for d in body)
+        if len(dset) != 1:
+            return None                     # non-uniform dwell -> song-position-driven
+        D = int(dwells[0])
+        if D <= 0:
+            return None
+        # cursor(f): advances +1 every D frames, phase-aligned so an advance lands on
+        # `anchor`. cursor(anchor) = some integer; we just need a consistent index.
+        def cursor(f):
+            return (f - anchor) // D
+        positions = sorted(set(cursor(f) for f in range(n)))
+        # value at each position (the held value across that position's dwell)
+        posval = {}
+        ok = True
+        for f in range(n):
+            p = cursor(f)
+            if p in posval and posval[p] != int(col[f]):
+                ok = False
+                break
+            posval[p] = int(col[f])
+        if not ok:
+            return None
+        seq = [posval[p] for p in positions]
+        per = _fit_periodic(seq, max_period=128)
+        if per is None:
+            return None                     # not a loop in-window -> surfaced
+        P, table = per
+        # >= 2 full cursor cycles observed within the window (design 2.8)
+        if len(positions) < 2 * P:
+            return None
+        p0 = positions[0]
+        return Axis(
+            reg=reg, status="recovered",
+            form=(f"O=V[((f-{anchor})//{D}-{p0}) % {P}] nested table-walk: cursor "
+                  f"advances +1 every D={D} frames (uniform dwell clock), V={P}-entry "
+                  f"value table lifted by identity, traversed {len(positions)//P}x "
+                  f"(design 2.6 nested cursor)"),
+            render=lambda f, c, D=D, anchor=anchor, P=P, table=table, p0=p0:
+                table[(((f - anchor) // D - p0) % P)],
+            state_cells=(), size_bytes=4 + len(table),  # (D, anchor, P, p0) + V
         )
 
     def _recover_window_constant_axis(self, reg, step):
@@ -600,6 +719,8 @@ class Generalizer:
             if ax is None:
                 ax = (self._recover_periodic_axis(reg, site)
                       or self._recover_accum_copy_axis(reg, site))
+            if ax is None:
+                ax = self._recover_cursor_walk_axis(reg, step)
             if ax is None:
                 cells = site.state_cells()
                 why = self._surface_reason(reg, site, cells)
