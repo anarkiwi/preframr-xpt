@@ -1,5 +1,13 @@
 # VICE CPU bus-trace / observation-graph (revice `libs/bustrace`)
 
+> **Substrate note (RESOLVED).** The canonical substrate is **`preframr-sidtrace`** (libsidplayfp-based
+> `.bus.bin`): it is what the shipped preframr-tokens generic recovery reads, and its earlier
+> run-to-run non-determinism (the motivation for this VICE track) **has since been fixed** — sidtrace
+> is now deterministic and byte-exact. This revice/VICE bus-trace (**RBT1** format) remains a landed,
+> independently-validated **parallel** ground-truth (useful as a second-source cross-check), but it is
+> **not** the shipped path and no longer supersedes sidtrace. Read the "Why" / "dropped sidtrace"
+> framing below as the historical motivation at the time, not current fact.
+
 Status: **SHIPPED**. Core + adapter landed in revice (PR
 [anarkiwi/revice#7](https://github.com/anarkiwi/revice/pull/7)); asid-vice
 adapter wired and **on-emulator validated** (PR
@@ -7,14 +15,17 @@ adapter wired and **on-emulator validated** (PR
 2026-06-21, merge commit `037ca4c`). Determinism / dump-unchanged / completeness
 all PASS on Monty + Grid_Runner — measured numbers in the runbook below.
 
-## Why
+## Why (historical — sidtrace has since been fixed)
 
-We dropped `preframr-sidtrace` / the libsidplayfp `sidtrace` tool: its
-`.sidwr.bin` varied run-to-run on the *same* tune (observed 1.78 MB / 464 B /
-524 B — sometimes capturing almost nothing), so it was non-deterministic and
-broke our byte-exact gates. VICE is the trusted, deterministic, byte-exact
+This track began when `preframr-sidtrace` / the libsidplayfp `sidtrace` tool was
+non-deterministic: its `.sidwr.bin` varied run-to-run on the *same* tune
+(observed 1.78 MB / 464 B / 524 B — sometimes capturing almost nothing), which
+broke our byte-exact gates. VICE is also a trusted, deterministic, byte-exact
 ground-truth emulator (it already produces our `.dump.parquet` via the
-`sounddump`/`dump2` path), so the bus observation belongs **there**.
+`sounddump`/`dump2` path), so putting the bus observation **there** gave a
+deterministic substrate immediately. **That sidtrace non-determinism has since
+been fixed**, so sidtrace is once again the shipped substrate; this VICE bus
+trace stands as a validated independent cross-check, not a replacement.
 
 The bus trace is the **provenance substrate for generic BACC recovery**:
 - accumulators → rate/dwell (watch a zero-page cell incremented every frame),
@@ -23,8 +34,9 @@ The bus trace is the **provenance substrate for generic BACC recovery**:
   `$d4xx` frequency write),
 - per-voice generators (group writes by the PC that issued them).
 
-It **replaces the dropped sidtrace `.bus.bin`** with a deterministic,
-self-validating equivalent.
+It is a deterministic, self-validating **independent second source** for the
+same provenance the (now-fixed) sidtrace `.bus.bin` provides — a cross-check,
+not a replacement.
 
 ## Architecture (revice core + thin asid-vice adapter)
 
@@ -110,10 +122,10 @@ cycles by summing `cycle_delta`, and validates completeness with
 The core does **no** allocation, **no** time/RNG/environment reads, and **no**
 floating point; all serialization is explicit little-endian. Given an identical
 access sequence it emits a byte-identical stream — independent of host
-endianness/word size. This is exactly the property sidtrace lacked. The unit
-test asserts it directly (two independent runs of a 256-access sequence produce
-identical bytes) and pins the CRC polynomial with the standard
-`"123456789" → 0xCBF43926` vector.
+endianness/word size. This was exactly the property sidtrace lacked at the time
+(sidtrace has since been fixed to be deterministic too). The unit test asserts it
+directly (two independent runs of a 256-access sequence produce identical bytes)
+and pins the CRC polynomial with the standard `"123456789" → 0xCBF43926` vector.
 
 Because asid-vice's emulation is itself deterministic (it already produces our
 byte-exact dumps), the same tune fed through the same build yields the same
@@ -199,7 +211,7 @@ For both tunes the trace's SID-write `(addr, val)` sequence is **identical** to
 the `-sounddev dump`'s, the CRC-32 verifies, and the only difference is a single
 **constant +64-cycle** origin offset (the dump driver and the bus trace timestamp
 from different fixed baselines — not missing or divergent data). Determinism (the
-property libsidplayfp sidtrace lacked) holds byte-exactly. **PR
+property libsidplayfp sidtrace lacked at the time, since fixed) holds byte-exactly. **PR
 [anarkiwi/asid-vice#39](https://github.com/anarkiwi/asid-vice/pull/39) merged**
 on the strength of this runtime proof (merge commit `037ca4c`).
 

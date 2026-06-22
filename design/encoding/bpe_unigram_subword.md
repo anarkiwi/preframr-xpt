@@ -27,6 +27,12 @@ north-star in `learnability_token_ordering_theory.md`), not by compression alone
 
 ## 0. Corpus and the field-id instrument
 
+> **Stale baseline (atom counts only).** The absolute per-tune atom / tok-frame numbers in the table
+> below predate the latest BACC sparsification (e.g. it lists Monty 5622 atoms / 0.320 tok/frame; current
+> is **1,313 / 0.075**). Treat the absolute counts as a stale baseline — only the **relative** welding /
+> learnability conclusions carry over (those are ratios, not affected by the later sparsification). Do
+> not recompute the exact numbers from this table.
+
 Recovered BACC id streams (white-box `.sid` + dump → `recover_program` → `program_to_ids`), each
 paired with a **per-token FIELD-ID annotation** emitted by a re-serializer that mirrors
 `serialize.py` / `gt_serialize.py` emit-for-emit and **asserts** id-equality with the upstream
@@ -194,7 +200,7 @@ per-frame `h_k` for cross-encoding comparability (`bpe_learnability.py`):
 
 | stream | tok/frame | alphabet | induction-copy | first-occ | MI(lag1) | MI tail (lag6–12) |
 |---|---|---|---|---|---|---|
-| **RAW-LEB** | 0.463 | 33 | **0.886** | 0.010 | 0.482 | ~0.11–0.22 (decays) |
+| **RAW-LEB** | 0.463 | 34 | **0.886** | 0.010 | 0.482 | ~0.11–0.22 (decays) |
 | VANILLA-1024 | 0.145 | 817 | **0.114** | 0.293 | 5.512 | **~5.35 (flat, fat tail)** |
 | HARDSEG-1024 | 0.327 | 535 | **0.741** | 0.089 | 1.693 | ~1.3 (tame) |
 

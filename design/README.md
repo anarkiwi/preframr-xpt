@@ -5,21 +5,23 @@ part lives in which repo (tokens / audio / framework / xpt / aug) and **why**, t
 dependency layering, and how to **derive the release process**. Read it before any
 cross-repo change or release.
 
-**THE encoding is the STEP / TRACKER codec** (landed 2026-06-20): decompile a dump → per-voice tracker
-ROWS `(pitch_interval, duration_in_steps, freq_instrument_ref, timbre_instrument_ref)` on a 4-frame step
-grid; instruments are **pitch-invariant parameters** (vibrato/arp/PWM rendered byte-exact through the note
-table); repeated phrases dedup via an inline backward orderlist; DECODE = render steps→frames through the
-recovered generators. It reached the headline goal — **Monty residual-zero at 0.901 token/frame** (7.9×
-under the old frame codec). It is `trace = VM(program)` realized: encode the PROGRAM, not the per-frame
-TRACE. The design + the enduring lessons are
+**THE encoding is the BACC step/tracker codec** (landed): decompile a `.sid` (`recover_from_sid`, white-box)
+→ per-voice tracker rows + **pitch-invariant instrument generators** — vibrato/slide/arp/PWM/ADSR/sweeps all
+collapse into one **bounded-accumulator (BACC)** primitive (`value += rate every dwell frames`; boundary
+wrap/reflect/none; width 8/12-bit; output map absolute/base+offset/note-table-scaled, or table-walk).
+Repeated phrases dedup via an inline backward orderlist; a transposed repeat is one backward TRANSPOSE op;
+DECODE = render the program → frames. It is `trace = VM(program)` realized: encode the PROGRAM, not the
+per-frame TRACE. Whole tunes fit one window, residual-zero: **Monty 1,313 tokens (0.075 tok/frame),
+5_Title_Tunes 1,394, Grid_Runner 2,817, A_Mind_Is_Born 496** — ~10× under the retired frame/event codec,
+VOCAB=34. The design + the enduring lessons are
 [`encoding/sid_player_decompiler.md`](encoding/sid_player_decompiler.md) ("HOW IT LANDED"); the op-set
-grounding is [`encoding/sid_opset_inventory.md`](encoding/sid_opset_inventory.md). The codec is being
-**ported into preframr-tokens** (clean slate — `events/` + `macros/` + the old frame codec DELETED); chip
-facts + pinning tests are in the [preframr-audio README](https://github.com/anarkiwi/preframr-audio). xpt-
-internal seams: [`tokens_architecture.md`](references/tokens_architecture.md),
+grounding is [`encoding/sid_opset_inventory.md`](encoding/sid_opset_inventory.md). The codec **shipped in
+preframr-tokens** (clean slate — `events/` + `macros/` + the old frame codec DELETED); the public path is
+sid-only (`recover_from_sid`, driver=`generic`, via `preframr-sidtrace`). chip facts + pinning tests are in
+the [preframr-audio README](https://github.com/anarkiwi/preframr-audio). xpt-internal seams:
+[`tokens_architecture.md`](references/tokens_architecture.md),
 [`audio_architecture.md`](references/audio_architecture.md),
-[`framework_architecture.md`](references/framework_architecture.md) (these still describe the pre-port
-event model; they are repointed by the port).
+[`framework_architecture.md`](references/framework_architecture.md).
 
 ## North star: LEARNABILITY (read this first)
 
@@ -33,9 +35,9 @@ representation work — is
 **Everything else is subordinate:** correctness/fidelity is the *gate*; compression and
 parse/runner/deploy work are *infra* that buy cheaper learnability experiments. The decisive
 empirical lesson: **model-side content interventions all refuted at a ~0.13 content ceiling because the
-frame/event codec signal-fit a dense trace** — the representation-level fix landed as the step/tracker
-codec (sparse, generator-level, < 1 token/frame). The model-side architecture was exonerated long ago
-(`framework_arch_test`); the next training read is the atoms-only continuation on the step stream.
+frame/event codec signal-fit a dense trace** — the representation-level fix landed as the BACC step/tracker
+codec (sparse, generator-level, whole-song under 4096 tokens). The model-side architecture was exonerated
+long ago (`framework_arch_test`); the next training read is the atoms-only continuation on the BACC stream.
 
 The priority order (learnability → correctness → efficiency → infra) is the lens for what to work on
 next; it is orthogonal to the physical layout below, which groups docs by *subject*. Every doc
@@ -74,19 +76,19 @@ evidence stub) / **Deferred** / **Reference**.
 | Doc | Summary | Status |
 |---|---|---|
 | [`architecture_overview.md`](references/architecture_overview.md) | The repo/dependency/release map. Read before any cross-repo change. | Reference |
-| [`learnability_token_ordering_theory.md`](references/learnability_token_ordering_theory.md) | **The north-star lens**: cheap next-token representability + the training-free triage (run at seq_len 8192, window mode, before any training A/B). Track record: predicted the codebook block-scale failure and the generator NO-GO. | Reference + tool |
-| [`encoding_principles.md`](references/encoding_principles.md) | The rubric: fidelity (gate) × context-efficiency (bound) × learnability (objective), sub-principles P1–P8, per-change checklist. Evidence re-anchored to v3 (2026-06-12). | Reference |
-| [`tokens_architecture.md`](references/tokens_architecture.md) | Pointer → tokens README. Describes the pre-port event codec; repointed to the step/tracker codec by the port. | Pointer (pre-port) |
+| [`learnability_token_ordering_theory.md`](references/learnability_token_ordering_theory.md) | **The north-star lens**: cheap next-token representability + the training-free triage (run at the whole-song context scale 4096, before any training A/B). Track record: predicted the codebook block-scale failure and the generator NO-GO. | Reference + tool |
+| [`encoding_principles.md`](references/encoding_principles.md) | The rubric: fidelity (gate) × context-efficiency (bound) × learnability (objective), sub-principles P1–P8, per-change checklist. Re-anchored to the BACC codec. | Reference |
+| [`tokens_architecture.md`](references/tokens_architecture.md) | Pointer → tokens README (the BACC codec). | Pointer |
 | [`audio_architecture.md`](references/audio_architecture.md) | Pointer → audio README + the xpt cross-repo render seam. | Pointer |
 | [`framework_architecture.md`](references/framework_architecture.md) | The torch layer: train/predict/model, data path, generation gotchas (incl. the event-vs-parse-domain constrained-decode caveat). | Reference |
 | [`sid_render_fidelity_contract.md`](references/sid_render_fidelity_contract.md) | Pointer: chip facts → audio README; v3 canonical form + encode self-verify → tokens README. | Pointer |
 | [`verification_and_audits.md`](references/verification_and_audits.md) | **How to verify**: canonical fidelity (tokens) vs canonicalization soundness (audio), + xpt operating rules. | Reference |
-| [`voice_encoding_reference.md`](references/voice_encoding_reference.md) | How voices are carried in the v3 stream + the de-mux modeling implication. | Pointer (v3, 2026-06-12) |
+| [`voice_encoding_reference.md`](references/voice_encoding_reference.md) | How voices are carried (de-muxed by construction in the BACC codec) + the de-mux modeling implication. | Pointer |
 | [`sid_driver_ornament_reference.md`](references/sid_driver_ornament_reference.md) | **Domain background:** how C64 drivers generate per-frame ornament (arp/vibrato/PW/filter mechanics, per-driver). | Reference |
 | [`digi_detection_reference.md`](references/digi_detection_reference.md) | Digi techniques + detection (refines `is_digi`). | Reference |
 | [`release_build_cache.md`](references/release_build_cache.md) | **The one place** for release/build/test/cache process. | Reference (authoritative) |
-| [`related_work.md`](references/related_work.md) | Adversarially-verified survey: the raw-register-stream LM + learnability-ordering combination is unaddressed in the literature. | Reference (positioning) |
-| [`tokenization_vs_music_llms.md`](references/tokenization_vs_music_llms.md) | v3 register-event scheme vs symbolic/MIDI/codec paradigms: wins fidelity + inductive bias + verified augmentation; pays sequence length, engine specificity, data scale. | Reference (positioning, v3 2026-06-12) |
+| [`related_work.md`](references/related_work.md) | Survey (refreshed): the project's angle is byte-exact recovery of a generative program from a deterministic playroutine trace — nearest cousins are trace-driven / re-executable neural decompilation; the trace→generative-program + byte-exact + music + learnability combination is unaddressed. | Reference (positioning) |
+| [`tokenization_vs_music_llms.md`](references/tokenization_vs_music_llms.md) | BACC recovered-program scheme vs symbolic/MIDI/codec paradigms: wins fidelity + sparse program + inductive bias; pays recovery coverage, engine specificity, data scale. | Reference (positioning) |
 
 ## encoding/ — the landed codec + its grounding
 
@@ -214,8 +216,8 @@ raw-vs-canonical A/B (see [`verification_and_audits.md`](references/verification
   (all-tier val_acc is confounded across tokenizations) **plus** the
   [generation quality gate](generation/generation_quality_gate.md) once landed; capacity-attenuation
   refuses if prodlike Δ < ¼ × mini Δ; per-eval-B breakouts confirm cross-composer transfer.
-- **Triage before training:** any representation A/B runs `learnability_triage` first (seq_len
-  8192, window mode).
+- **Triage before training:** any representation A/B runs `learnability_triage` first (at the
+  whole-song context scale, 4096).
 - **Refuted:** move to [`refuted/`](refuted/), truncate to status + pointer, write the evidence stub
   with a "do not revisit without …" condition.
 - **Landed:** move to [`landed/`](landed/) + add an index row. Docs whose subject was *superseded*

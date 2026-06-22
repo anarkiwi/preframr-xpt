@@ -1,9 +1,9 @@
 # Release / floor cascade for the decompiler-codec port
 
-Runbook to make the post-port release mechanical. Once the white-box decompiler codec
-(LIVE ARC) replaces `events/` in preframr-tokens, three packages must bump in order.
-Authority for the general build/cache rules stays `design/references/release_build_cache.md`;
-this doc is the port-specific cascade only.
+Runbook to make the post-port release mechanical. The white-box decompiler / BACC codec has **LANDED**
+(it replaced `events/` in preframr-tokens); this cascade is **largely executed**. Kept as the
+port-specific release reference — three packages bump in order. Authority for the general build/cache
+rules stays `design/references/release_build_cache.md`.
 
 ## Cascade order (each link gates the next)
 
@@ -27,7 +27,8 @@ this doc is the port-specific cascade only.
    - The dataset cache key folds the image's tokens version (`base.py _image_tokens_version`), so a
      tokens bump **auto-invalidates** stale parse/tokenize artefacts — no manual cache purge.
    - Then run the continuation spec: `specs/generalize_continuation.py` (atoms-only;
-     `CONTINUATION_TKVOCAB` = the codec's final atom count, currently 55 in the prototype).
+     `CONTINUATION_TKVOCAB` = the codec's final vocab — **VOCAB=34** (the "55 in the prototype" figure
+     is stale)).
 
 ## Drift to reconcile at port time
 - `preframr/requirements.txt` floors `preframr-tokens>=0.53.0`, but the last tokens tag is behind
@@ -44,4 +45,4 @@ this doc is the port-specific cascade only.
 | preframr | `requirements.txt` | `preframr-tokens>=0.53.0` | raise only if tokens tags >0.53.0 |
 | preframr | version + git tag | `0.2.30` | next (e.g. `0.2.31`) |
 | xpt | `Dockerfile:6` `ARG BASE` | `anarkiwi/preframr:0.2.30` | new preframr tag |
-| xpt | run | — | `generalize_continuation` (set `CONTINUATION_TKVOCAB`) |
+| xpt | run | — | `generalize_continuation` (set `CONTINUATION_TKVOCAB`=34) |

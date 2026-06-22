@@ -1,6 +1,10 @@
 # Melody/timbre factorization — a compact, contiguous melodic representation (track-major)
 
-**Status: TRIAGE RAN (2026-06-17) — decisive GO.** Tool:
+**Status: TRIAGE GO, A/B REFUTED — SUPERSEDED by BACC.** The triage (below) predicted GO, but the
+training A/B nulled like the other model-side content interventions (~0.13 ceiling) — melody/timbre
+factorization is on the refuted registry. Root cause: the frame/event codec it reordered was signal-fitting
+a dense trace; the BACC codec de-muxes voices into per-voice row streams by construction, which is the
+representation-level fix the reorder shim only approximated. Kept for the triage-vs-A/B lesson. Tool:
 `preframr_experiments/audit/melody_factor_triage.py` (torch-free; reuses `learnability_triage`
 metrics). It re-emits each tune melody-factored (a reordering shim over `encode`'s internal event
 lists — no byte-exact decode needed, the model sees only tokens) and compares to the shipped

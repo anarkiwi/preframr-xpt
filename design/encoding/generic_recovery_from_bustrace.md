@@ -3,8 +3,11 @@
 **Status: PROTOTYPE / PROOF (2026-06-21).**  Extends
 [`generic_bacc_recovery.md`](generic_bacc_recovery.md) (the rationale and the
 generator-lane probes) from a generator-lanes-only fitter to a **FULL 25-register,
-whole-tune, residual-zero** recovery driven entirely by the TRUSTED VICE CPU bus
-trace (`<base>.bus.bin`, RBT1 — headlessvice PR #24 MERGED).  This is the payoff
+whole-tune, residual-zero** recovery driven entirely by the trusted CPU bus
+trace (`<base>.bus.bin`).  The shipped substrate is **preframr-sidtrace** (its
+earlier run-to-run non-determinism has since been fixed; it is deterministic and
+byte-exact); the revice/VICE RBT1 trace (headlessvice PR #24) is a validated
+**parallel** second source, not the shipped path.  This is the payoff
 of the bus-trace pivot: the path to retiring the per-driver hand backends
 (`bacc/backends/{goattracker,hubbard}.py`).  Prototype in
 `/scratch/tmp/sidemu/gfit_complete/`; findings

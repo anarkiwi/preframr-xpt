@@ -1,63 +1,78 @@
 # preframr tokenization vs other music LLMs — a critical comparison
 
-**Status:** Reference/positioning (re-anchored 2026-06-12 to the v3 event model; the original
-comparison of the retired macro substrate is in git history). Compares the *scheme itself*;
-literature positioning lives in [`related_work.md`](related_work.md).
+**Status:** Reference/positioning (re-anchored 2026-06-22 to the BACC codec; the v3-event-model and macro-era
+comparisons are in git history). Compares the *scheme itself*; literature positioning lives in
+[`related_work.md`](related_work.md).
 
-## What preframr tokenizes (v3)
+## What preframr tokenizes (BACC)
 
-The token stream is the **SID's register-write program** — not a score, not audio. A fixed
-**127-atom event alphabet** (varint value digits, register/voice tags, note-index/freq-residual/PW
-step-and-ramp kinds, NOTE_ON with folded envelope lifecycle, ramp shapes, typed value nibbles,
-KEYFRAME segment brackets — see the
-[preframr-tokens README](https://github.com/anarkiwi/preframr-tokens)), with **BPE over the atoms as
-the only dictionary** (the vocab dial; ~98% live at tkvocab 2048). No DEF/REF ids, no literals, no
-escape path. Fidelity is the v3 canonical contract: `decode(encode(ow)) == canonical_writes(ow)`,
-self-verified on every encode; decode → registers → cycle-exact reSID audio, no vocoder. Measured
-collapse vs the 16-bit raw floor: 7.8× (order-0) / 23× (order-1). Scope: single-speed non-digi
-(~92% of corpus).
+The token stream is **the recovered generative PROGRAM of the SID playroutine** — not a score, not audio, and
+no longer the raw per-frame register trace. The codec decompiles a `.sid` (`recover_from_sid`, white-box) into
+per-voice tracker rows + **pitch-invariant instrument generators** (vibrato/slide/arp/PWM/ADSR/sweeps all
+expressed as one **bounded-accumulator (BACC)** primitive: `value += rate every dwell frames`, with a boundary
+∈ {wrap-N, reflect, none}, width ∈ {8,12}-bit, output map ∈ {absolute, base+offset, note-table-scaled}, or a
+table-walk). Notes ride a **canonical 12-TET A440 grid** (the same concert pitch is the same token across
+drivers); repeated phrases dedup via an **inline backward orderlist**, and a transposed repeat is a single
+backward **TRANSPOSE** op. The alphabet is a **tiny VOCAB=34** (LEB digits + REPEAT/TRANSPOSE markers); a
+single learnable vocabulary spans Hubbard / GoatTracker / lft (DMC in progress). See the
+[preframr-tokens README](https://github.com/anarkiwi/preframr-tokens).
+
+Fidelity is **residual = 0, byte-exact**: the recovered program renders back to the ground-truth dump
+byte-for-byte over all 25 registers, every frame (`verify_residual`). A lossy codec trivially hits any token
+budget, so the budgets only mean anything under this gate.
+
+The decisive scale result: the recovered program is **sparse**. Whole tunes fit one small context window —
+Monty 1,313 tokens (0.075 tok/frame), 5_Title_Tunes 1,394 (0.680), Grid_Runner 2,817 (0.180), A_Mind_Is_Born
+496 (0.061) — all residual-zero, ~10× smaller than the retired frame/event codec. Training context default is
+4096 (whole-song-in-context); the stretch goal is ≥ 90% of the corpus under 4096 tokens.
 
 ## The paradigm landscape
 
 | Paradigm | Representative | Token = | Reconstruction |
 |---|---|---|---|
-| **Register/engine-event** (preframr) | this repo | chip control-write event | canonical-exact replay |
-| Symbolic event | Music Transformer, REMI(+), CP-Words, MMM, Anticipatory MT | note-on/off, time-shift, bar/pos | synth-dependent; timbre not encoded |
-| Neural audio codec | MusicGen, MusicLM (EnCodec/SoundStream RVQ) | quantized acoustic frame, K codebooks | lossy neural decode |
-| Continuous/hier. VQ | Jukebox, audio-diffusion likes | VQ code or latent | lossy neural decode |
+| **Recovered playroutine program** (preframr) | this repo | a BACC op / score row / orderlist ref | byte-exact chip re-render (residual = 0) |
+| Symbolic event | Music Transformer, REMI(+), CP-Words, MMM, MuPT/NotaGen | note-on/off, time-shift, bar/pos | synth-dependent; timbre not encoded |
+| Learned symbolic codebook | MuseTok (RQ-VAE over bars) | quantized bar code | lossy decode to MIDI |
+| Neural audio codec | MusicGen, MusicLM (EnCodec/SoundStream RVQ) | quantized acoustic frame | lossy neural decode |
+| Continuous/hier. VQ | Jukebox, audio-diffusion | VQ code or latent | lossy neural decode |
 
 ## Where it's better
 
-1. **Fidelity for free.** The stream *is* the executable; replay is chip-exact under a deterministic
-   emulator. MIDI discards the sound; codecs never recover the original. For a chiptune corpus this
-   is the correct ground truth — and it makes **audio-verified augmentation** possible (perturbations
-   provably inaudible), a move MIDI/codec models can't make cleanly.
-2. **Domain structure without learned codebooks.** Events are grounded in the engine (notes as
-   intervals over a recovered per-voice table, ramps as shapes, envelope lifecycle on NOTE_ON) —
-   the inductive bias CP-Words approximates with score heuristics, here hardware-faithful.
-3. **A tiny, fully-used alphabet + a legible dictionary dial.** 127 atoms with BPE on top makes the
-   capacity/coverage trade explicit and sweepable, vs a codec's fixed lossy bottleneck.
+1. **Fidelity for free, and a sparse program to model.** The stream *is* the executable program; the render is
+   chip-exact under a deterministic emulator (residual = 0). MIDI discards the sound; codecs never recover the
+   original. Recovering the *generator* (not the dense trace) is also what makes the stream short enough to fit
+   a whole tune in one window — the per-frame modulation that made a score-level scheme look unattainably long
+   becomes a few instrument parameters. It also makes **audio-verified augmentation** possible (perturbations
+   provably inaudible).
+2. **Domain structure without learned codebooks.** Ops are grounded in the actual playroutine (notes as an
+   absolute A440 grid index, modulation as bounded-accumulator parameters rendered through the note table) —
+   the inductive bias CP-Words/MuseTok approximate with score heuristics or a learned VQ, here
+   hardware-faithful and lossless.
+3. **A tiny, fully-used alphabet.** VOCAB=34 spans every driver; no long-tail/dead-vocab pathology, no lossy
+   codec bottleneck. (Subword merging is *not* the context lever — vanilla BPE/Unigram welds across field
+   boundaries on this stream and is refuted; `../encoding/bpe_unigram_subword.md`.)
 
 ## Where it's worse (and what bites)
 
-1. **Sequence length.** Frame-locked events are far finer than note events: tunes average ~30k
-   tokens and **82% exceed the seq_len-8192 window** — the model trains on KEYFRAME-led windows,
-   never whole tunes. This is the binding constraint behind
-   [`../generation/long_range_structure.md`](../generation/long_range_structure.md).
-2. **Engine specificity.** The vocabulary means nothing off-SID: no cross-instrument transfer, no
-   borrowing internet-scale MIDI/audio corpora. (It also means a *phrase* prompt must be compiled
-   into SID events — [`../generation/prompt_interface_design.md`](../generation/prompt_interface_design.md).)
-3. **Data scale.** HVSC is the ceiling (~tens of K songs). The old long-tail/dead-vocab pathologies
-   are resolved by the fixed alphabet (~98% live vocab), but corpus size still bounds cross-composer
-   generalization; augmentation (preframr-aug) is the lever.
+1. **Recovery is the hard part.** The win depends on a white-box decompiler reaching residual = 0 for the
+   tune's driver. Per-driver coverage is partial (Hubbard / GoatTracker / lft land; the generic bus-trace path
+   covers more; DMC + others open) — a tune whose generator isn't yet recovered is out of scope, by design
+   (HARD RULE #0: never fall back to storing the dense trace). This replaces the old "sequence length" pain
+   with a *coverage* frontier.
+2. **Engine specificity.** The vocabulary means nothing off-SID: no cross-instrument transfer, no borrowing
+   internet-scale MIDI/audio corpora. A *phrase* prompt must be compiled into the SID program domain
+   ([`../generation/prompt_interface_design.md`](../generation/prompt_interface_design.md)).
+3. **Data scale.** HVSC is the ceiling (~tens of K songs, stratified by the SIDId tracker catalog). Corpus size
+   bounds cross-composer generalization; augmentation (preframr-aug) is the lever.
 
-Resolved since the original comparison: the **self-inflicted content ambiguity** (many
-near-equivalent atoms for one sound) — the v3 canonical contract collapses chip-equivalent writes at
-encode time, and the content ceiling moved 0.13 → 0.479 (atoms-only eval_a) with it. The model-side
-refutations predicted this: the ceiling was a property of the tokenization, not the model.
+The earlier **content-ambiguity** pathology (many near-equivalent tokens for one sound) is gone by
+construction: the recovered program is canonical, and the model-side content interventions that stalled at a
+~0.13 ceiling were diagnosed as the frame/event codec signal-fitting a dense trace — the BACC codec is the
+representation-level fix. Re-baseline the content metric on the BACC stream.
 
 ## References
 
-Huang+ '18 (Music Transformer); Huang+Yang '20 / Hsiao+ '21 (REMI, CP-Words); Ens+Pasquier '20
-(MMM); Thickstun+ '24 (Anticipatory MT); Défossez+ '22 (EnCodec); Copet+ '23 (MusicGen);
-Agostinelli+ '23 (MusicLM); Dhariwal+ '20 (Jukebox).
+Huang+ '18 (Music Transformer); Huang+Yang '20 / Hsiao+ '21 (REMI, CP-Words); Ens+Pasquier '20 (MMM);
+Qu+ '24 (MuPT); Wang+ '25 (NotaGen); the MuseTok RQ-VAE tokenizer '25; Défossez+ '22 (EnCodec); Copet+ '23
+(MusicGen); Agostinelli+ '23 (MusicLM); Dhariwal+ '20 (Jukebox). Decompilation/trace-synthesis cousins in
+[`related_work.md`](related_work.md).

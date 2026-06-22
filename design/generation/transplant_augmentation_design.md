@@ -1,6 +1,9 @@
 # Transplant augmentation — donor/host melody & instrument recombination + the instrument bank
 
-**Status:** Design (2026-06-12). The data-side member of the generation program. Implementation home:
+**Current status (BACC):** the codec is BACC (bounded-accumulator, VOCAB=34); melody and instrument
+objects below are the BACC equivalents (absolute-grid notes + Transpose; instrument = BACC params).
+
+**Status:** Design. The data-side member of the generation program. Implementation home:
 **preframr-aug** (owns augmentation; consumes preframr-tokens as a library — `events.oracle`,
 `events.gestures`, `events.stream`; torch-free). Supersedes the *cross-song-transfer* axis of
 `preframr-aug:design/melody_transfer_augmentation_design.md` (pre-event-model); the
@@ -19,18 +22,18 @@ model to factor content from timbre. This is the **data-side counterpart of P1 s
 encoding makes melody and instrument *representationally* separable; transplants make them
 *distributionally* separable.
 
-The v3 event model is what makes it tractable and safe:
-- **Melody is already an object:** `NI_*` interval lane over a per-voice `NOTE_TABLE` + explicit
-  durations — transposition-invariant by construction, so re-keying a donor melody to a host is an
-  anchor choice, not a rewrite.
-- **Instrument is already an object:** the note-onset program — `FLD_NOTE_ON` envelope fold
-  (AD/SR, recorded gate-edge side, HR prep), the ctrl/waveform walk, PW behavior — recurs
-  near-exactly per tune (the measured ~98% exact program recurrence).
-- **Per-voice headers** (`TUNING`/`NOTE_TABLE`/`TICK`) mean a transplanted voice can carry its own
-  pitch table and duration grid natively — no global re-quantization.
-- **Validity is free:** augmentation operates in the register-write domain and re-encodes with
-  `encode(verify=True)` — an augmented tune is just another dump, so the training pipeline needs
-  **zero changes** (the runner sees a bigger dump dir + list file).
+The BACC codec is what makes it tractable and safe:
+- **Melody is already an object:** the absolute 12-TET A440 grid-index note stream + the backward
+  Transpose op — re-keying a donor melody to a host is a Transpose/anchor choice, not a rewrite.
+- **Instrument is already an object:** the note-onset generator is BACC params (one BACC primitive
+  subsumes ADSR/PWM/sweeps + VIB/SLIDE/ARP), and recurs near-exactly per tune (the measured ~98%
+  exact program recurrence).
+- **Cross-driver notes:** the absolute-grid index is driver-independent, so a transplanted voice
+  carries its pitch natively — no global re-quantization.
+- **Validity is free:** augmentation operates in the register-write domain and re-encodes through the
+  BACC encode path (`verify=True`) — the artifact is the BACC sid/sid-trace (recoverable via
+  `recover_from_sid`; no `.dump.parquet` in the shipped path), so the training pipeline needs **zero
+  changes** (the runner sees a bigger corpus + list file).
 
 **Honest scope:** unlike inaudible perturbation, a transplant has no correctness oracle — it is new
 music. The gates below make it *valid* and *plausible*; only the dosage A/B makes it *useful*.
@@ -39,10 +42,10 @@ music. The gates below make it *valid* and *plausible*; only the dosage A/B make
 
 A corpus-wide miner extracting every note-onset instrument program:
 
-1. Per (tune, voice): segment notes (gate edges ∪ `NI` onsets — `events.gestures`); per note collect
-   the onset-anchored program: ctrl/waveform walk (W frames from onset), AD/SR, HR-prep presence,
-   PW class/trajectory, ornament class (vibrato depth/rate from the `FD_*` lane; arp cycle from
-   `NI_*`).
+1. Per (tune, voice): segment notes (gate edges ∪ note onsets); per note collect
+   the onset-anchored program as BACC params: ctrl/waveform walk (W frames from onset), AD/SR,
+   HR-prep presence, PW class/trajectory, ornament class (vibrato depth/rate, arp cycle) — all
+   carried by the BACC primitive.
 2. Collapse exact-recurring programs within a tune (expect 3–10 instruments/tune at ~98%
    recurrence), then dedupe across the corpus: exact-key first on the program template
    (tokens `engine_fingerprint` is serviceable **only** here, as a write-domain near-exact hash —
@@ -123,11 +126,12 @@ its own `TICK` grid, interval sequence) drives the host voice's instrument progr
   and let the dosage A/B decide whether naive anchoring suffices before building consonance logic.
 - **Length:** transplant whole phrases (cut at gate-off boundaries), loop/truncate to the host
   slot; role-match donor→host (lead→lead, bass→bass) via the bank's role hints.
-- Same exclusions as P1; donor rhythm keeps the donor `TICK` header (per-voice — native in v3).
+- Same exclusions as P1; donor rhythm keeps the donor's onset timing (native in the BACC stream).
 
 ## Quality + leakage gates (all phases)
 
-- **Structural:** `encode(verify=True)` passes (automatic by construction); single-speed scope.
+- **Structural:** BACC `encode(verify=True)` passes (automatic by construction); multispeed-aware
+  framing has landed, so multispeed tunes are in scope.
 - **Plausibility filter:** render + fingerprint must land within the corpus band — reuse the
   [generation quality gate](generation_quality_gate.md)'s machinery (fingerprint distance,
   write-domain structure metrics) as the *augmentation* filter; reject outliers, report the
@@ -152,4 +156,5 @@ a new dialect — per-frame h_k and copy-fraction within the natural band).
 
 Synthetic *de novo* instruments or melodies (this is recombination of real material, not
 generation); cross-engine program translation (a 6581-idiomatic program on an 8580 tune is in
-scope only as the chips' natural overlap); digi/multispeed material (encoder scope).
+scope only as the chips' natural overlap). Multispeed material is no longer out of scope —
+multispeed-aware framing has landed; digi remains lower priority.

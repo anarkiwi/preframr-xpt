@@ -18,10 +18,10 @@ composers/engines), but the metrics that measure it are not tracked
 consistently:
 
 1. **The decisive metric is run by hand.** All-tier `val_acc` is CONFOUNDED
-   across tokenizations; only the content-tier `per_class` audit settles a
-   representation A/B. It lives in `preframr_experiments/audit/` and is invoked
-   manually — so AGENTS.md has to *remind* every reader to run it ("Always run it
-   before calling a win"). The confound trap recurs.
+   across tokenizations; only the **BACC content tier** (`content_tier_report`)
+   settles a representation A/B. It is invoked manually — so AGENTS.md has to
+   *remind* every reader to run it ("Always run it before calling a win"). The
+   confound trap recurs.
 2. **The generalization KPIs are scattered.** Per-eval_b-family acc, loop_collapse,
    prompt_conditioning live across `metrics.json` + separate audit JSONs; the
    report leads with 20 `val_loss` rows, not the cross-composer signal.
@@ -34,12 +34,13 @@ consistently:
 ### 1. Decisive-audit runner stage (highest value)
 
 After each `(arm, seed)` finishes training, the runner optionally runs the
-content-tier `audit_checkpoint_per_class` (and `prompt_conditioning_audit`,
-`loop_detection_audit`) on the best checkpoint, inside the spec's image (the
-audit container already needs preframr+torch). Results merge into `metrics.json`
-as `content_acc_eval_a`, `content_acc_eval_b_<family>`, `loop_collapse`,
-`prompt_conditioning`. Gated by a spec field (`decisive_audit: bool`, default ON
-for representation-axis specs) so non-representation runs don't pay the GPU cost.
+BACC content-tier audit (`content_tier_report`, plus `copy_novel_audit` and
+`free_running_gap_audit` — the kept decisive audits) on the best checkpoint,
+inside the spec's image (the audit container already needs preframr+torch).
+Results merge into `metrics.json` as `content_acc_eval_a`,
+`content_acc_eval_b_<family>`, `loop_collapse`, `prompt_conditioning`. Gated by a
+spec field (`decisive_audit: bool`, default ON for representation-axis specs) so
+non-representation runs don't pay the GPU cost.
 `report.py` promotes the content-tier rows to the headline and **labels all-tier
 `val_acc` as "CONFOUNDED for representation A/Bs."** This makes the
 un-confounded metric always-computed instead of always-remembered.
@@ -50,13 +51,14 @@ A dedicated block at the top of the cross-arm report:
 
 - content-tier `eval_a` acc (Δ vs baseline);
 - **per-eval_b-family content acc + spread** (min/max/stdev across the 8 families
-  — the cross-composer transfer signal; the `evalb_stratify` probe becomes this);
+  — the cross-composer transfer signal; folded into `content_tier_report`'s
+  per-family breakdown, the per-family stratification);
 - `loop_collapse` / `prompt_conditioning` flags;
 - tokenizer health (`longtail_frac`, `worst_family_longtail_frac`,
   `alphabet_size`, `encoded_tokens_per_song` — the registry metrics);
-- **`frames_per_window`** (musical context per seq_len window, + the fraction of tunes fitting one
-  window) — the read for the BPE-dial-as-context-lever sweep (AGENTS.md NEXT): more music in
-  context is the point of the dial, so track it per tokenizer-hash, not just vocab size.
+- **`frames_per_window`** (musical context per seq_len window, + the **fraction of tunes under
+  4096**) — track against the **≥90%-under-4096 stretch goal** (the stretch tail that needs chaining
+  is the complement); track it per tokenizer-hash, not just vocab size.
 
 The family spread is the load-bearing read: a wide spread (e.g. STAGE 2's
 0.245–0.556) says failure is engine-family-specific → targeted augmentation, not
@@ -75,9 +77,12 @@ queryable records.
 
 ## Reuse / non-goals
 
-- Reuses `audit_checkpoint_per_class`, `prompt_conditioning_audit`,
-  `loop_detection_audit` (exist) + the `metrics.py` registry (extended in this
-  branch with the tokenizer-health extractors) + `report.py`. No new audits.
+- The `preframr_experiments/audit/` tree was mostly DELETED; the kept decisive
+  audits are `content_tier_report`, `copy_novel_audit`, `free_running_gap_audit`
+  (the old `audit_checkpoint_per_class` / `prompt_conditioning_audit` /
+  `loop_detection_audit` / `evalb_stratify` modules were removed — their reads are
+  subsumed by the kept audits). Reuses those + the `metrics.py` registry (extended
+  in this branch with the tokenizer-health extractors) + `report.py`. No new audits.
 - Tokenizer *atom* profiling stays in preframr-tokens (`tokenizer_profile`); the
   xpt extractors read run artifacts only — don't duplicate it.
 

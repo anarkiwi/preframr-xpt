@@ -1,5 +1,20 @@
 # orin_inference_optimization — design note
 
+> **BACC banner (read first):** every vocab / tokenizer / tokens-per-song number below
+> **predates the BACC codec** (now VOCAB=34, ~10× fewer tokens/song). Consequences:
+> - The **vocab-shrink ladder (item 1) is MOOT** at VOCAB=34 — the logit head is negligible
+>   (no 512 MB slab; no 8192/32768 cap question; no UNK-rate audit).
+> - The roofline / real-time figures below (**4.25 tok/frame, ~6.5 min/song, ~9× real-time gap,
+>   107M params, vocab 8192/32768**) were measured on event-model checkpoints and **must be
+>   re-measured on a BACC checkpoint** (far fewer tokens/song shifts the wall-clock and the
+>   real-time arithmetic).
+> - All **motif-pass** references are **REFUTED** (motif dictionary is not a context/vocab lever).
+> - **PRESERVED — the hard-won, codec-independent conclusions hold:** cudagraph was the real lever
+>   (1.9–3.1×, landed); lever-3 (GPU-resident decode) is a NO-GO (~1% gain); quantization needs
+>   batching (M≥16; int8 weight-only 2× slower at M=1); prompt-lookup speculative decode is a NO-GO
+>   under temperature sampling; single-stream real-time is unreachable → **offline audition is the
+>   deploy mode**. The dead-end map below is kept deliberately so these aren't re-explored.
+
 **Status (2026-05-19):** open design; no implementation yet. Captures
 the bottlenecks profiled during the `accuracy_push_prodlike_4x`
 audition on Orin NX, so future work has a concrete baseline.
@@ -70,11 +85,10 @@ the FREQ_TRAJ rework roughly halved the alphabet and the used set:
 - atom alphabet **5,492**; tkmodel still 32,768 slots.
 - only **2,929 distinct IDs used (8.9%)**, usage-weighted **1.23
   atoms/token** (top tokens are single atoms — compression is the
-  atom-level macros, not Unigram merges). This light-merge regime is
-  load-bearing for the motif pass: because Unigram barely merges at
-  deployment scale, a motif dictionary is NOT redundant with it
-  (measured ~11.4% fewer tokens at vocab 8192). The mini dry-run's 0.6% was an over-merged
-  small-corpus regime, not this one.
+  atom-level macros, not Unigram merges). [REFUTED — motif pass: this
+  light-merge regime was cited as load-bearing for a motif dictionary as a
+  context/vocab lever; the motif pass is refuted, and at VOCAB=34 the whole
+  Unigram-merge analysis is moot.]
 - **Correction to the pre-rework "all used IDs < 8,192" claim:** the
   used IDs now span the *whole* range (max used id **32,766**); only
   660 are < 4,096 (66.7% of token mass), 1,105 < 8,192 (69.8%). So a

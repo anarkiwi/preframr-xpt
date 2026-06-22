@@ -4,9 +4,13 @@
 hand-written backend that hardcodes that driver's RAM map and re-implements its generator arithmetic
 (`preframr-tokens/preframr_tokens/bacc/backends/{hubbard,goattracker}.py`). That hand-disassembly is the
 scaling bottleneck. This doc asks whether recovery can be made GENERIC, grounds the answer in probes on
-four drivers, and proposes the pipeline. The **generator-fitter experiment** §6 recommends is in flight
-(prototype `/scratch/tmp/sidemu/generic_fitter.py`); this doc is the durable rationale. Companion docs:
-the thesis [`sid_player_decompiler.md`](sid_player_decompiler.md), the op-set
+four drivers, and proposes the pipeline. The **generator-fitter experiment** §6 recommends has **LANDED**
+(reported in §7 below), and is **extended to full-tune generic recovery in the bus-trace recovery**
+([`generic_recovery_from_bustrace.md`](generic_recovery_from_bustrace.md)) — that is now the live
+substrate. Note: the py65 RAM-read-tapping mechanism the probes lean on (3b/3c) is now supplied more
+directly by the trusted **bus trace** (`preframr-sidtrace`), which emits the per-frame dump + bus trace
+in one run. This doc is the durable rationale. Companion docs: the thesis
+[`sid_player_decompiler.md`](sid_player_decompiler.md), the op-set
 [`sid_opset_inventory.md`](sid_opset_inventory.md).
 
 **Question.** Is there a GENERIC, driver-agnostic way to recover a BACC program from a SID tune, without

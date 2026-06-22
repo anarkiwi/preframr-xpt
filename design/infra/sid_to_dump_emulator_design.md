@@ -2,6 +2,13 @@
 
 **Status: DESIGN (investigation only — no implementation, no PR).**
 
+> **Approach superseded; contract durable.** The py65/`MPU65ILL` in-process emulator *approach* below
+> is superseded — the shipped dump/recovery tool is the deterministic **`preframr-sidtrace`** binary
+> (libsidplayfp-based, emits `.sidwr.bin` + `.bus.bin` in one run; see
+> [`libsidplay_callgraph_recovery_design.md`](libsidplay_callgraph_recovery_design.md)). But the **dump
+> CONTRACT** specified here (§1: the `dump2` write-stream, `reduce_res` masking, `squeeze_changes`,
+> the per-frame (nframes,25) array) is **durable** and cited downstream — read it as the live contract.
+
 **Goal.** Replace the `anarkiwi/headlessvice` VICE container with an in-process,
 py65/`MPU65ILL`-based emulator that turns a `.sid` file into the **byte-exact**
 register-write trace the codec consumes today. End state: the BACC codec parses

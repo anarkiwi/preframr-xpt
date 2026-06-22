@@ -1,12 +1,20 @@
 # Cross-driver note unification + tuning factoring — design note
 
-**Status: PROPOSAL (2026-06-20).** Makes every driver emit notes in ONE representation on ONE pitch axis,
-so a model sees *the same note as the same token* regardless of driver, with tuning resolved as a separate
-parameter. Motivated by the asymmetry the GoatTracker backend exposed (PR #93): Hubbard notes are
-structured relative-interval tracker rows; GoatTracker notes are raw `.SNG` bytes. Builds on the landed
-step/tracker codec ([`sid_player_decompiler.md`](sid_player_decompiler.md)) and the absolute-anchored
-12-TET pitch encoder (memory `libsidplayfp-groundtruth`). Subordinate to the LEARNABILITY north star
-(`design/README.md`): the win is a driver-invariant note alphabet, not a token-count change.
+**Status: LANDED.** Every driver emits notes in ONE representation on ONE pitch axis (the **ABSOLUTE
+canonical A440 12-TET grid index**), so a model sees *the same note as the same token* regardless of
+driver, with tuning resolved as a separate parameter. Builds on the landed BACC step/tracker codec
+([`sid_player_decompiler.md`](sid_player_decompiler.md)) and the absolute-anchored 12-TET pitch encoder
+(memory `libsidplayfp-groundtruth`). Subordinate to the LEARNABILITY north star (`design/README.md`):
+the win is a driver-invariant note alphabet, not a token-count change.
+
+> **SUPERSEDED / LANDED banner.** As shipped: the note token is the **ABSOLUTE A440 grid index**, NOT
+> the relative interval `n − n_prev`. Relative-interval compression is recovered by a **backward
+> TRANSPOSE op (REPEAT+delta)**, not by emitting `n − n_prev`. Part B's "the NOTE token stays the
+> relative interval" claim is **INVERTED vs reality** and corrected inline below. Part A is **LANDED,
+> not pending**: the raw-`.SNG`-bytes GoatTracker path is RETIRED — GoatTracker is recovered into
+> canonical per-voice rows / instrument generators *generically via the bus trace*
+> (`generic_recovery_from_bustrace.md`). Part C (tuning Δ(n)/micro decomposition) is the durable
+> content and stands.
 
 ## The two problems
 
@@ -45,9 +53,11 @@ the Hubbard rows use — decompose it into the same stream:
 - The four GoatTracker tables (wave/pulse/filter/speed) become instrument-definition payload (the
   pitch-invariant generator params), referenced by `instr_ref`, not per-note.
 
-Result: GoatTracker emits the *same* `(dt, interval, instr_ref, lnth, porta)` + `REPEAT` tokens as Hubbard.
-The `.SNG`-bytes path is retired (it was the residual-zero shortcut; this is the learnable form). Gate
-unchanged: render the rows back through pygoattracker → byte-exact vs the dump.
+Result: GoatTracker emits the *same* `(dt, note, instr_ref, lnth, porta)` + `REPEAT` tokens as Hubbard.
+**LANDED:** the raw-`.SNG`-bytes path is RETIRED — GoatTracker is recovered into canonical per-voice
+rows / instrument generators, **generically via the bus trace** (`generic_recovery_from_bustrace.md`),
+not by hand-decomposing a `pygoattracker.Song`. Gate unchanged: render the rows back → byte-exact vs the
+dump.
 
 ## Part B — canonical pitch axis: the note token is driver-invariant
 
@@ -65,8 +75,11 @@ onset frequency Fn  ──snap──▶  nearest 12-TET grid index n   (the NOTE
   it through GoatTracker's freq table → Fn → snap to the SAME A440 grid. So GoatTracker C-4 and Hubbard C-4
   land on the identical grid index n.
 
-The **NOTE token stays the relative interval** `n - n_prev` (per voice), exactly as Hubbard emits today —
-now driver-invariant. The same musical pitch is the same token across drivers, by construction.
+**As shipped, the NOTE token is the ABSOLUTE canonical A440 grid index `n`** (not `n − n_prev`), cross-
+driver. The same musical pitch is the same token across drivers, by construction. Relative-interval
+compression is recovered separately by a **backward TRANSPOSE op (REPEAT+delta)** — a repeated phrase is
+referenced with a pitch delta — NOT by emitting the per-note relative interval. (The earlier proposal
+here to keep the token as the relative interval `n − n_prev` is INVERTED vs the landed encoder.)
 
 ## Part C — tuning as a separate, layered parameter (the resolution)
 

@@ -1,8 +1,14 @@
 # DMC + JCH driver-backend scoping for the preframr-tokens BACC codec
 
 **Status:** scoping (read-only investigation + a measured DMC feasibility probe). No
-backend implemented, no PR. This doc says what it takes to land DMC and the three
+backend implemented. This doc says what it takes to land DMC and the three
 JCH players as BACC backends so their HVSC tunes join the unified token alphabet.
+
+> **Preferred substrate update.** The **generic bus-trace recovery**
+> (`generic_recovery_from_bustrace.md`) is now the preferred path: DMC would join via the generic
+> bus-trace recovery rather than necessarily a bespoke hand `DmcBackend`. The `.dump.parquet` is the
+> **offline oracle**, not the shipped recovery input (the shipped path recovers from the SID via the bus
+> trace). The census / feasibility-probe content below stands as the per-player grounding.
 
 ## TL;DR
 

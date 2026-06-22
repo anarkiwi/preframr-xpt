@@ -17,6 +17,13 @@ All four are **bit-exact**: each is pinned against its native player running in 
 round-trips its own tunes register-for-register, frame-for-frame. So every operation tabulated below
 is load-bearing, not a guess.
 
+> **SUPERSEDED — kept as derivation.** The op-set + 7-primitive decomposition below are durable
+> grounding that **COLLAPSED into a single BACC primitive** (one bounded accumulator + table-walk;
+> VOCAB=34). The proposed multi-instruction VM ISA (§4, the ~20-op TEMPO / NOTE / ARP / PORTA / SLIDE /
+> VIBRATO / PW.SWEEP… set) is **SUPERSEDED by that single primitive** and is kept only as the
+> derivation of how it was reached. The "no escape hatch by construction" conclusion (§3, §6 CORRECTION)
+> carries over verbatim.
+
 The SID register file (the finite machine all four write into), per voice V (base = 7·V):
 
 | off | reg | meaning |
@@ -461,7 +468,7 @@ free-running accumulators driven by SETVIB/WOBBLE/PORT-armed params. Most ops fi
 | Tempo / note duration | timing | `COUNA`,`ENDITA` | per-step frame count | `CHAN1A`/`A_END` | P3 COUNTER |
 | Pattern walk + **FOR/NEXT loop** | control | `REPA`,`RESA` (loop-ptr+count) | `A_FOR`/`A_NEXT` bounded repeat | `A_FOR`/`A_NEXT` | P5 PTR-WALK + P3 |
 | **GOSUB / RETURN (subroutine call stack)** | control | `GOSA` (saved PC) | call subtrack, return | `A_GOSUB`/`A_RETURN` | P5 PTR-WALK (stack) — *new sub-case, see below* |
-| **`A_SEND` raw register-write stream** | **ANY $D4xx** | — | reads (reg-index, value) pairs from the track and writes `value → SID,X` until a `$FF` terminator | `A_SEND`/`ATT4`: `lda(PC),Y → tax; … sta SID,X; cmp #255; bne ATT4` | **ESCAPE HATCH — no clean primitive** |
+| **`A_SEND` raw register-write stream** | **ANY $D4xx** | — | reads (reg-index, value) pairs from the track and writes `value → SID,X` until a `$FF` terminator | `A_SEND`/`ATT4`: `lda(PC),Y → tax; … sta SID,X; cmp #255; bne ATT4` | **ESCAPE HATCH — no clean primitive** *(RETRACTED — see the §6 CORRECTION below: `A_SEND` = N×SET, no escape hatch by construction)* |
 
 **Follin breaks the bound — but narrowly and at the control layer, not the modulation layer.** The
 `A_SEND` op (`ATT4` loop) is *exactly* the "arbitrary write-this-byte-to-that-register" patch the §3
@@ -490,7 +497,7 @@ freq and pulse.
 | Hard-restart / release (test-bit phase) | CTRL b3 + AD/SR | `hrtime`,`rlsc` | test bit `$08`, hold N, clear regs | `.sound` L475-515 | P1 SET + P3 COUNTER |
 | Instrument-record copy ops | AD/SR/PW/CTRL/freq/pulse tables | `cinstr`,`cipm`,`cifq` | SETFQ(14B)/SETPM(10B)/INSTR5(5B)/ARP(10B) bulk copies | `op_c2/c6/c8/d8_v1` L362-405 | P1 SET (bulk) |
 | CALL / RET / REPEAT / NEXT / TRANS / CALLT | control | `V1SP` stack, `repstack` | subroutine + counted loop + transpose | `op_c0/ca/cc/ce/da/dc_v1` L312-452 | P5 PTR-WALK (stack) |
-| **EXEC (`$D4`/`$D8`): `jmp (PARAM1)`** | **ANY** | — | execute arbitrary 6502 at a tune-supplied address | `op_d4_v1` L414-421; Arkanoid `inst_D8_v3` `jmp ($00EF)` L2024 | **ESCAPE HATCH — arbitrary code** |
+| **EXEC (`$D4`/`$D8`): `jmp (PARAM1)`** | **ANY** | — | execute arbitrary 6502 at a tune-supplied address | `op_d4_v1` L414-421; Arkanoid `inst_D8_v3` `jmp ($00EF)` L2024 | **ESCAPE HATCH — arbitrary code** *(RETRACTED — see the §6 CORRECTION below: `EXEC` = SELECT-dispatch into fixed driver routines, no escape hatch by construction)* |
 | ($D418 sample playback — Arkanoid only) | $D418 | sample stack ptrs | 4-voice digi-drum; OUT OF SCOPE | Arkanoid `PSample3`/`inst_60_sample` L5436+ | digi (out of scope) |
 
 **Galway breaks the bound, harder than Follin.** The `EXEC` op (`op_d4`=`jmp(PARAM1)`, and Arkanoid's

@@ -1,6 +1,9 @@
 # Prompt interface — from SID continuation to musical-phrase prompting (MIDI / keyboard)
 
-**Status:** Design (2026-06-12). The input side of the generation program. Continuation from a SID
+**Current status (BACC):** the codec is BACC (bounded-accumulator, VOCAB=34); the phrase compiler
+below targets the BACC encode path.
+
+**Status:** Design. The input side of the generation program. Continuation from a SID
 register prompt exists (`inference/predict.py`, `event_gate.py`); the **ultimate goal is generation
 from diverse prompts — e.g. a short musical phrase from a MIDI file or keyboard — arranged and
 continued as a SID tune.** Nothing here changes the model or the alphabet; the bet is that prompting
@@ -16,19 +19,20 @@ worth prompting).
   arranges, and continues in corpus style.
 - **G3 — style steering (refinement):** G2 plus "in the style of X" control.
 
-## G2 mechanism: the phrase compiler (phrase → native event-token prompt)
+## G2 mechanism: the phrase compiler (phrase → native BACC-token prompt)
 
-A phrase is already expressible in the event alphabet — that is the deep advantage of the v3
-encoding (notes are `NI_*` intervals over a per-voice `NOTE_TABLE`, durations are explicit on
-`FLD_NOTE_ON`). So the interface is a small deterministic compiler, **not** a model change:
+A phrase is already expressible in the BACC alphabet — notes are an **absolute 12-TET A440 grid
+index** (cross-driver) plus a backward **Transpose** op, and the instrument generator is a set of
+**BACC params** (one BACC primitive subsumes VIB/SLIDE/ARP/PWM/ADSR/sweeps). So the interface is a
+small deterministic compiler, **not** a model change:
 
 ```
 MIDI/keyboard phrase (note, onset, duration[, velocity])
   → quantize onsets/durations to the PAL frame grid (50 Hz)
-  → synthesize a minimal one-voice register dump: freq from the note (standard 2^(n/12) grid),
-    gate on/off per note, one default instrument program (waveform/AD/SR), voices 1–2 silent
-  → events.oracle.ordered_writes → stream.encode(verify=True)
-  → KEYFRAME-led prompt block (events.pipeline machinery)
+  → synthesize a minimal one-voice register dump: note → absolute 12-TET A440 grid index,
+    gate on/off per note, one default instrument generator (BACC params), voices 1–2 silent
+  → encode through the BACC encode path (verify=True)
+  → BACC prompt block
 ```
 
 Properties: the prompt lives in **exactly the model's native token space** (no new vocab, no
@@ -85,7 +89,7 @@ parameter, not a model input.
 2. **Off-manifold probe** above, before and after each mitigation.
 3. **Phrase adherence (the G2-specific metric):** does the continuation *use* the phrase? Measure
    interval-n-gram overlap between the prompt melody and the continuation's lead lane, plus key
-   consistency (NI histogram alignment). Report alongside the
+   consistency (absolute-grid note histogram alignment). Report alongside the
    [generation quality gate](generation_quality_gate.md) scorecard on a phrase-prompted cohort
    (which also guards against the failure mode of parroting the phrase verbatim — the memorization
    audit reads both ways).

@@ -2,9 +2,17 @@
 
 **Status:** Reference (background). How C64 SID music drivers generate per-frame **ornamentation** —
 pitch (arpeggio / vibrato / portamento), **pulse-width**, and **filter** — at the register level.
-Distilled from a 2026-05-29 read of four drivers (References below). Other designs cite this rather
+Distilled from a 2026-05-29 read of four drivers (References below).
+
+> **What is durable vs retired here.** The per-driver register/mechanism reverse-engineering below is
+> durable background that feeds **generic BACC recovery**. But the encoding *mapping* in this doc — the
+> "universal primitive" set with `ORN_TYPE` (`PLAIN`/`OCTAVE`/`ARP`/`SLIDE`/`VIB`/`RESID`),
+> `skeleton_pass`, and the `RESID` lossless-escape lane — is the **RETIRED pre-BACC codec**. Those
+> gestures now collapse into the single **BACC primitive** (residual-zero by construction, no escape
+> lane). Read the driver RE facts and per-driver tables as live; read the `ORN_TYPE`/`skeleton_pass`/
+> `RESID`-lane framing as the historical mapping the BACC codec superseded. Other designs cite this rather
 than re-deriving it; see [`generator_mdl_representation.md`](../landed/generator_mdl_representation.md) (the generator
-arc this grounded; its primitives now live in the v3 event model), [`encoding_principles.md`](encoding_principles.md),
+arc this grounded; its primitives now collapse into the BACC primitive), [`encoding_principles.md`](encoding_principles.md),
 [`landed/trajectory_anchoring.md`](../landed/trajectory_anchoring.md),
 [`landed/freq_v0_interval.md`](../landed/freq_v0_interval.md),
 [`voice_encoding_reference.md`](voice_encoding_reference.md).

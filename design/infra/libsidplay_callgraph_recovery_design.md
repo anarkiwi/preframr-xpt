@@ -12,7 +12,11 @@ Companion docs: the generic-recovery rationale
 [`../encoding/generic_bacc_recovery.md`](../encoding/generic_bacc_recovery.md); the thesis
 [`../encoding/sid_player_decompiler.md`](../encoding/sid_player_decompiler.md); the dump-contract source
 [`sid_to_dump_emulator_design.md`](sid_to_dump_emulator_design.md) (**superseded for APPROACH** — py65 →
-libsidplayfp — but its **dump CONTRACT still holds**, cited throughout §3).
+libsidplayfp — but its **dump CONTRACT still holds**, cited throughout §3). **Parallel track:**
+[`vice_bustrace_observation.md`](vice_bustrace_observation.md) describes a separate revice/VICE
+bus-trace (RBT1) substrate. The canonical substrate is **sidtrace `.bus.bin`** (this doc) — the shipped
+recovery reads it, and its earlier non-determinism has since been fixed; RBT1 remains a validated
+parallel cross-check, not a replacement.
 
 ---
 

@@ -1,8 +1,9 @@
 # flag stage routing — design note
 
-**Status:** Pending impl. Touches `preframr_experiments/base.py`. (2026-06-12: macro flags are
-semantically inert under the unconditional event encoding — the live stage-specific flags are
-`--tkvocab` and train-side knobs; routing remains worthwhile, the macro-flag rows are legacy.)
+**Status:** Pending impl. Touches `preframr_experiments/base.py`. (Macro flags are semantically inert
+under the BACC codec — the encoder-flag examples below (`--loop-pass`, `--instrument-pass`,
+`--vibrato-env-pass`, etc.) are legacy macro-pass flags; the live stage-specific flags are train-side
+knobs. The FLAG_STAGES routing mechanism remains worthwhile.)
 
 Framework follow-up from AGENTS.md §Framework follow-ups:
 `run_arm` (`preframr_experiments/base.py:786`) forwards

@@ -1,6 +1,6 @@
-**Status:** Reference + tool (`audit/learnability_triage.py`, training-free). The v3 event model is
-the lens's current product; the triage remains the pre-run ranking instrument for any proposed
-representation change (run it at seq_len 8192, window mode, before spending a training run).
+**Status:** Reference + tool (`audit/learnability_triage.py`, training-free). The BACC step/tracker
+codec is the lens's current product; the triage remains the pre-run ranking instrument for any proposed
+representation change (run it whole-song-in-context at 4096 before spending a training run).
 
 # A theoretical basis for token + ordering design (predict before you A/B)
 
@@ -15,8 +15,8 @@ and ordering; one canonical run decides the threshold.
 So a SID failure is **not capacity** — it is a mismatch between the *encoding* and what a bounded
 transformer can cheaply represent. That mismatch is computable from the encoder + driver model
 **without training**. (Confirmed empirically twice over: model-side interventions all refuted at the
-~0.13 content ceiling; tokenizer-side representation lifted it — most recently the v3 event model's
-atoms-only baseline at eval_a content 0.479.)
+~0.13 content ceiling; tokenizer-side representation lifted it — historically the v3 event model's
+atoms-only baseline at eval_a content 0.479, superseded by the BACC codec.)
 
 ## Principle 1 — a transformer is a bounded automaton, not a recurrence
 A constant-depth, log-precision softmax transformer sits at ~**TC⁰** (Merrill & Sabharwal 2023). It
@@ -42,8 +42,9 @@ an implicit per-frame arp/ramp counter is not (Principle 1). The right notion of
 Every encoding change that replaces "state implied by a counter run since some event" with an
 explicit local parameter is a learnability win, independent of token budget: explicit durations kill
 a latent counter; periodic/polynomial ramp *shapes* with explicit params move the per-frame counter
-into the deterministic decoder, out of the prediction target. (v3: mixed-radix durations on
-`FLD_NOTE_ON`, `SHAPE_POLY`/`SHAPE_PERIOD` ramps, settled end-of-frame values.)
+into the deterministic decoder, out of the prediction target. (BACC: explicit per-note durations + the
+BACC primitive's rate/dwell/boundary params move the per-frame counter into the deterministic decoder.
+Historical: v3's mixed-radix durations on `FLD_NOTE_ON`, `SHAPE_POLY`/`SHAPE_PERIOD` ramps.)
 
 ## Principle 4 — ordering = topological order of the causal DAG
 Ordering matters only under finite capacity + optimization + exposure bias; two training-free rules:
@@ -52,8 +53,9 @@ Ordering matters only under finite capacity + optimization + exposure bias; two 
    before melody — [`lane_demux_hypothesis.md`](../landed/lane_demux_hypothesis.md).)
 2. **Front-load determinants, but only low-entropy ones.** An early token must itself be highly
    determined. This is why absolute onset pitch ≈ 0 next-token while structure learns: high-entropy,
-   no local determinant. Anchoring to a nearby reference (interval-from-previous — v3's `NI_*` lane)
-   is the theory-prescribed fix; the absolute anchor stays ≈0 and must be scored distributionally.
+   no local determinant. Anchoring to a nearby reference (the BACC backward Transpose op; historically
+   v3's interval-from-previous `NI_*` lane) is the theory-prescribed fix; the absolute anchor (the
+   A440/12-TET grid index) stays ≈0 and must be scored distributionally.
 
 ## The training-free triage — `audit/learnability_triage.py`
 Computed on the tokenized corpus, no transformer: **entropy-rate** h_k = H_{k+1} − H_k per token AND
@@ -61,8 +63,8 @@ per frame (cross-encoding comparison must be per-frame — token counts differ);
 I(x_t; x_{t−d}) vs d (fat tail = a long-range counter the model will shortcut); **induction-copy
 rate** (share of tokens completing a previously-seen bigram); alphabet/coverage context. Read: low
 per-frame h_k + early plateau + fast MI decay + high copy ⇒ predicted learnable. **Measure at the
-real block scale** (seq_len 8192, window mode) — whole-song mode over-credits cross-window reuse,
-and smaller windows over-penalize codebooks (both measured failure modes).
+real block scale** (whole-song-in-context 4096, the training context default) — smaller windows
+over-penalize codebooks (a measured failure mode).
 
 **Track record (why the tool is trusted):** (1) at block scale it flipped the song-mode ordering and
 predicted absolute-keyed codebooks don't pay in-window (copy 0.718 < baseline 0.852) — consistent

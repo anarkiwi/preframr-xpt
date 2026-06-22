@@ -3,6 +3,12 @@
 **Status:** Deferred — cloud-rental prereq. Design-only; not built. (Unblocked: the
 old `loop_lookahead_prodlike` base.py-edit freeze is over; gate is now just rental.)
 
+> **Staging note (BACC reality):** the dump-staging path below (`stage_dumps` copying
+> `.dump.parquet`) is superseded by the symlink-farm + RO-mount in
+> [`runner_iteration_efficiency_design.md`](runner_iteration_efficiency_design.md), and the shipped
+> recovery path is **sid-only** (`recover_from_sid` via `preframr-sidtrace` — no `.dump.parquet` copy).
+> The resume/early-abort/max-parallel-arms design stands; treat the `stage_dumps` rows as illustrative.
+
 These three features are one program for running A/B specs on a rented multi-GPU box
 (e.g. 8×A100/H100). All three edit `preframr_experiments/base.py` + `run.py`:
 

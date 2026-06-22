@@ -1,11 +1,11 @@
 # SID Player Decompiler — the universal generator grammar (op-set from real drivers, zero residual)
 
-**Status: LANDED (2026-06-20) — the live arc reached its goal.** The thesis below (`trace =
+**Status: LANDED — the live arc reached its goal.** The thesis below (`trace =
 VM(program)`, op-set = grammar, per-tune program = music, residual→0 the gate, no escape hatch) is the
-spine of the codec that **shipped as the STEP / TRACKER representation**: Monty_on_the_Run encodes
-**byte-exact (residual-zero) at < 1 token/frame** (0.901; 15,816 tokens / 17,544 frames). The decisive
+spine of the codec that **shipped as the BACC step / tracker representation**: Monty_on_the_Run encodes
+**byte-exact (residual-zero) at 0.075 token/frame (1,313 tokens), ~10× reduction, VOCAB=34**. The decisive
 reframe on top of the thesis: the frames are *playback*; the composer wrote *steps*. So we encode the
-PROGRAM (tracker rows + pitch-invariant instruments on a 4-frame step grid), not the trace. DECODE =
+PROGRAM (tracker rows + pitch-invariant instruments on a step grid), not the trace. DECODE =
 render steps→frames through the recovered generators (the "audio layer"). The living description of the
 landed codec is `landed/README.md` + `AGENTS.md` LIVE ARC; this doc is kept as the durable record of the
 thesis and the enduring lessons (HARD RULE #0, recover-the-program-not-the-trace, pitch-invariant
@@ -92,12 +92,18 @@ compact (it stores playback, not the program). The fix was the **STEP / TRACKER 
   This collapsed Monty's 818 distinct "freq bodies" → 45.
 - **Repetition:** repeated phrases dedup via an **inline backward orderlist** (backward-reference only —
   no forward declaration, consistent with the model-facing inline-streaming rule).
-- **Cross-lane factoring + micro derivation** took the body from 22.7k → 15.8k tokens (sweeps shared
-  across lanes; `micro` derived from the note table + generator onset, not stored).
+- **Cross-lane factoring + micro derivation** shared sweeps across lanes;
+  `micro` derived from the note table + generator onset, not stored.
+- **BACC primitive collapse — the final landing.** After the STEP reframe, the 7 op-set primitives
+  collapsed into **one bounded-accumulator (BACC) primitive + table-walk**: a single BACC subsumes
+  VIB / SLIDE / ARP / PWM / ADSR / sweeps. VOCAB=34. This is what drove Monty to **1,313 tokens
+  (0.075 token/frame), ~10× reduction, residual-zero**.
 
 The journey, for the record: frame event codec → generator recovery (VIB/SLIDE/ARP/HOLD) → frame-level
 repetition (REPEAT/LREPLAY, tapped out ~37k) → the STEP reframe → pitch-invariant instruments → cross-lane
-sweep factoring + micro derivation → **0.901 token/frame, residual-zero.**
+sweep factoring + micro derivation → the **BACC primitive collapse (one bounded accumulator + table-walk,
+VOCAB=34)** → **0.075 token/frame, residual-zero.** (The earlier STEP-codec figures — 0.901 token/frame,
+15,816 tokens — are superseded by the BACC result.)
 
 **The enduring lesson — HARD RULE #0 (the transposition trap, recurred 4×):** nothing is irreducible.
 Every "distinct body" was a few instruments rendered at many pitches: `micro` = the note table; arp =
