@@ -86,6 +86,7 @@ class SiddfSite:
     slice_pcs: list
     leaves: list  # list[Leaf]
     op_seq: list  # list[int] ALU ops
+    val_seq: list = field(default_factory=list)  # SDCU mid-call value sequence
 
     def state_cells(self):
         return [l.addr for l in self.leaves if l.kind == LK_STATE_CELL]
@@ -238,6 +239,15 @@ def parse_sdst(path):
                 off += 2
                 ops = list(struct.unpack_from(f"<{nops}B", buf, off)) if nops else []
                 off += nops
+                # SDCU mid-call value sequence (design 2.5/2.7): the genuine
+                # generator state stream sampled at the cell's UPDATE site, which the
+                # host feeds to Berlekamp-Massey for the LFSR-vs-not verdict. SDDF
+                # writes nValSeq=0 (the field is present for a uniform entry shape).
+                (nval,) = struct.unpack_from("<H", buf, off)
+                off += 2
+                vseq = (list(struct.unpack_from(f"<{nval}B", buf, off))
+                        if nval else [])
+                off += nval
                 # For SDCU the `pc` field carries the state-cell ADDRESS (key).
                 dest.append(
                     SiddfSite(
@@ -245,7 +255,7 @@ def parse_sdst(path):
                         val_first=vfirst, has_stride=bool(flags & 1),
                         any_out_of_window=bool(flags & 2), stride_base=sbase,
                         stride_step=sstep, stride_idx_min=simin, stride_idx_max=simax,
-                        slice_pcs=pcs, leaves=leaves, op_seq=ops,
+                        slice_pcs=pcs, leaves=leaves, op_seq=ops, val_seq=vseq,
                     )
                 )
         elif tag == b"STSQ":

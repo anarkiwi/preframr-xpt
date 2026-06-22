@@ -30,6 +30,7 @@ import pytest
 
 from preframr_experiments.sid_decompiler import sdst as S
 from preframr_experiments.sid_decompiler.generalize import (
+    bm_on_byte_sequence,
     recover_program_from,
     residual,
 )
@@ -250,3 +251,101 @@ def test_grid_freq_cursor_surfaced_not_faked(grid):
     for r in (0, 7, 8):
         assert prog.axes[r].status == "unrecovered"
         assert prog.axes[r].render is None
+
+
+# --------------------------------------------------------------------------- #
+# Stage 3b -- Berlekamp-Massey closure attempt on the $14 LFSR cell + the strict
+# no-branching-re-exec guard (design 2.5/2.7/5.3 + HARD RULINGS 1 & 2).
+#
+# The fast-SMC holdouts are driven by cell $14, described as an LFSR (`LDA #$b8;
+# SRE $14`) INTERLEAVED with a section-indexed self-modifying store, branch-
+# selected by the section counter. RULING 1 permits closing an axis ONLY as a
+# typed recurrence -- and an LFSR ONLY via Berlekamp-Massey recovering the feedback
+# taps (NOT by re-running SRE in a loop). So we run BM over the cell's GENUINE
+# mid-call value sequence (the new SDCU valSeq -- the call-boundary STATESEQ for a
+# fast SMC cell is a constant residue and useless). The verdict is the gate: low L
+# => recover taps; L ~ n/2 => NOT a typed LFSR => surface (RULING 2), never fake,
+# never branch-re-execute.
+# --------------------------------------------------------------------------- #
+def test_sdcu_valseq_present_and_genuine(amind):
+    """The Stage-3b artifact upgrade: SDCU carries the cell's MID-CALL value
+    sequence (the genuine generator state stream), NOT the all-constant call-
+    boundary STATESEQ. $14's mid-call sequence must be richly varying (the LFSR /
+    section stream), proving the upgrade captured the real generator state."""
+    by = amind["art"].sdcu_by_addr()
+    assert 0x14 in by, "$14 (LFSR cell) update DAG missing"
+    vs = by[0x14].val_seq
+    assert len(vs) >= 256, f"$14 mid-call valSeq too short: {len(vs)}"
+    # the GENUINE mid-call stream is richly varying (>= many distinct values),
+    # unlike the call-boundary STATESEQ which is a constant 0 for this fast SMC cell
+    assert len(set(vs)) >= 32, f"$14 mid-call valSeq not varying: {len(set(vs))} vals"
+    seq = amind["art"].stateseq_by_addr().get(0x14)
+    if seq is not None:
+        # the call-boundary sample sequence is (near-)constant -- the reason a naive
+        # BM over STATESEQ would have been meaningless; the valSeq is what BM needs
+        assert len(set(seq.samples)) <= 2
+
+
+def test_berlekamp_massey_14_is_not_a_typed_lfsr(amind):
+    """RULING 1's LFSR test, run honestly: Berlekamp-Massey over $14's GENUINE
+    mid-call value sequence. A genuine LFSR has LOW linear complexity (L << n); this
+    cell has L ~ n/2 in every bit-plane -- it is NOT a low-complexity linear-feedback
+    shift register, so it CANNOT be recovered as a typed BM-taps recurrence. This is
+    the rigorous, data-grounded reason the $14-driven axes cannot close under the
+    no-branching-re-exec rule (design 5.3)."""
+    vs = amind["art"].sdcu_by_addr()[0x14].val_seq
+    lmax, per, is_lfsr = bm_on_byte_sequence(vs)
+    n = len(vs)
+    assert not is_lfsr, f"BM unexpectedly low-complexity: L={lmax} per={per}"
+    # L ~ n/2 (the high-linear-complexity / not-an-LFSR signature)
+    assert lmax >= n // 3, f"L={lmax} not ~n/2 over n={n}"
+    # every bit-plane is high-complexity (not just one)
+    assert min(per) >= n // 4, f"some plane low-complexity: {per}"
+
+
+def test_smc_holdouts_reason_cites_bm_verdict(amind):
+    """Each surfaced $14-coupled holdout (reg1 v0 freq-lo, reg8 v1 freq-hi, reg10 v1
+    PW-hi) carries the Berlekamp-Massey verdict in its reason -- the DAG-level,
+    data-grounded cause, not a hand-wave. reg10 ($14 itself) and reg1 (reads the
+    coupled $14 index) cite the high-L / NOT-a-typed-LFSR finding explicitly."""
+    prog = amind["full"][0]
+    for reg in (1, 10):
+        r = prog.axes[reg].reason
+        assert "Berlekamp-Massey" in r, f"reg{reg} reason omits BM: {r[:120]}"
+        assert "NOT a typed LFSR" in r, f"reg{reg} reason omits the verdict: {r[:120]}"
+    # the no-branching-re-exec rule is named as the reason closure is refused
+    assert "no-branching-re-exec" in prog.axes[10].reason
+
+
+def test_closures_are_closed_form_not_branch_reexec():
+    """The strict no-branching-re-exec guard (RULING 1 / the retired seed-image
+    crutch): every RECOVERED axis's generator (`render`) is a pure closed-form /
+    numpy expression over the recovered counter -- it must NOT step a 6502 core,
+    re-run SRE in a loop, or execute a branching micro-program. We assert (a) the
+    module never references the seed-image interpreter (covered by the AST guard
+    below too) and (b) the BM closure helper is a typed linear-algebra routine, not
+    an instruction stepper: it contains no opcode dispatch / player re-execution."""
+    import ast
+    import inspect
+
+    from preframr_experiments.sid_decompiler import generalize
+
+    src = inspect.getsource(generalize)
+    tree = ast.parse(src)
+    # no opcode-stepping / branching-microprogram re-execution primitives
+    forbidden_tokens = ("step_cpu", "run_player", "execute_opcode", "sre_loop",
+                        "AmindRecurrence", "cpu6502", "LftBackend")
+    names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name):
+            names.add(node.id)
+        elif isinstance(node, ast.Attribute):
+            names.add(node.attr)
+    for t in forbidden_tokens:
+        assert t not in names, f"closure must not re-execute branches: {t}"
+    # the BM helper is a fixed linear recurrence over GF(2) bit-planes (typed
+    # recurrence recovery), with NO loop that conditionally stores back into a
+    # co-evolving mutable cell selected by a runtime branch (that would be the
+    # forbidden micro-program). Sanity: it only reads its input `values`.
+    bm = inspect.getsource(generalize.bm_on_byte_sequence)
+    assert "ramFn" not in bm and "STA" not in bm and "opcode" not in bm

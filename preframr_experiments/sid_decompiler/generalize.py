@@ -194,6 +194,35 @@ def _berlekamp_massey_gf2(bits):
     return tuple(c[1 : L + 1]), L
 
 
+def bm_on_byte_sequence(values):
+    """Berlekamp-Massey LFSR verdict over a BYTE-valued state sequence (design
+    2.5/2.7 + 5.3). A genuine LFSR is linear over GF(2), so we run BM on EACH of the
+    8 bit-planes independently (an n-bit binary LFSR has the same low complexity in
+    every tapped plane). Return ``(Lmax, per_plane_L, is_lfsr)`` where ``is_lfsr`` is
+    True only if EVERY plane has low linear complexity relative to the sequence
+    length (Massey 1969: a length-n sequence with linear complexity L is reproduced
+    by an order-L recurrence from 2L samples; L ~ n/2 means NOT linear -> design 5.3
+    fall back). This is the strict typed-recurrence test of HARD RULING 1: a low L
+    recovers the taps as a typed recurrence; a high L means the cell is NOT a typed
+    LFSR and the axis must be surfaced, not branch-re-executed.
+
+    THRESHOLD: ``is_lfsr`` requires max plane L <= n/4 (a comfortable margin below
+    the n/2 random-sequence expectation; a real k-bit LFSR has L<=k<<n). The verdict
+    is the gate -- we never claim an LFSR closure unless BM proves low complexity AND
+    the recovered recurrence reproduces the sequence (checked by the caller)."""
+    n = len(values)
+    if n < 8:
+        return 0, (), False
+    per = []
+    for bit in range(8):
+        bits = [(v >> bit) & 1 for v in values]
+        _taps, L = _berlekamp_massey_gf2(bits)
+        per.append(L)
+    lmax = max(per)
+    is_lfsr = lmax <= max(1, n // 4)
+    return lmax, tuple(per), is_lfsr
+
+
 def fit_recurrence(seq: S.StateSeq):
     """Fit the best fixed-size recurrence to a STATESEQ cell (design 2.5)."""
     samples = list(seq.samples)
@@ -660,6 +689,32 @@ class Generalizer:
                 why = self._sdcu_update_reason(a, upd)
                 if why:
                     return why
+        # reg1 (v0 freq-lo) class: the SID-write slice is an indexed table read
+        # (`O = K_table[idx]`, ops include EOR/etc.) whose INDEX has no recovered
+        # cursor state cell -- the index is produced by the SAME coupled LFSR /
+        # section-walk generator ($14) that does not close. Cite its BM verdict so
+        # the surfacing is DAG-level and grounded (the mandate). The K-table is
+        # liftable by identity; the holdout is the coupled, non-linear index.
+        if site.has_stride and not cells:
+            lfsr = self.sdcu.get(0x14)
+            bm = ""
+            if lfsr is not None and lfsr.val_seq:
+                lmax, per, is_lfsr = bm_on_byte_sequence(lfsr.val_seq)
+                bm = (f" The coupled index generator ($14) has Berlekamp-Massey max "
+                      f"linear complexity L={lmax} over n={len(lfsr.val_seq)} "
+                      f"(per-plane {list(per)}) -- "
+                      f"{'a typed LFSR' if is_lfsr else '~n/2: NOT a typed LFSR'}; "
+                      f"it cannot be recovered as fixed BM taps and its branch "
+                      f"selector co-evolves with mutable state (design 5.1/5.3).")
+            ram = sorted(set(site.ram_reads()))
+            return (
+                f"reg{reg}: SID-write slice is an indexed table read "
+                f"O=K_table[idx] (ops={site.op_names()}, table src "
+                f"{[hex(x) for x in ram]} liftable from SNAP by identity), but the "
+                f"INDEX is produced by the coupled $14 LFSR / section-indexed "
+                f"self-mod generator -- not a fixed-size recurrence and not a closed "
+                f"predicate on a recovered exogenous counter.{bm} Surfaced honestly, "
+                f"not branch-re-executed (design 5.4).")
         for a in cells:
             rec = self.recur.get(a)
             if rec is not None and rec.kind is None:
@@ -683,24 +738,53 @@ class Generalizer:
         # self-referential feedback: the cell reads its own prior value (LFSR/accum)
         self_fb = addr in states or addr in ram
         npaths = len(ram) + (1 if upd.has_stride else 0)
+        # Berlekamp-Massey verdict over the cell's GENUINE mid-call value sequence
+        # (the SDCU valSeq -- NOT the all-constant call-boundary STATESEQ; design
+        # 2.5/2.7/5.3). This is the strict test of HARD RULING 1: low L => taps
+        # recover a typed LFSR recurrence; L ~ n/2 => NOT linear => surface.
+        bm_note = ""
+        if upd.val_seq:
+            lmax, per, is_lfsr = bm_on_byte_sequence(upd.val_seq)
+            n = len(upd.val_seq)
+            verdict = ("low: a typed LFSR (taps recoverable)" if is_lfsr
+                       else "~n/2: NOT a typed LFSR")
+            bm_note = (
+                f" Berlekamp-Massey over the cell's GENUINE mid-call value sequence "
+                f"(n={n}, per-bit-plane L={list(per)}): max linear complexity L={lmax} "
+                f"({verdict} -- design 5.3). "
+                + ("" if is_lfsr else
+                   f"L is ~n/2, so the cell is NOT a low-complexity linear-feedback "
+                   f"shift register: its value stream cannot be recovered as a fixed "
+                   f"set of Berlekamp-Massey feedback taps. The stream is the LFSR "
+                   f"path INTERLEAVED with a section-indexed self-mod store, "
+                   f"branch-selected by co-evolving mutable state.")
+            )
         if self_fb and npaths >= 1:
             return (
                 f"state cell ${addr:02x}: SDCU update DAG is a MULTI-PATH conditional "
                 f"SMC chain -- self-feedback (LFSR/accumulator on ${addr:02x}) plus "
                 f"{len(ram)} table/source read(s) {[hex(x) for x in ram]}"
                 f"{' + section-indexed self-mod store' if upd.has_stride else ''}, "
-                f"branch-selected mid-call (ops={ops}). This is not a single fixed "
-                f"template: the path taken depends on the section counter / a carry "
-                f"predicate the bounded slice records as taken-edges only (design 5.1 "
-                f"data-dependent control flow / 5.4 deep coupling). Re-executing it "
-                f"faithfully needs the full branching update micro-program; that would "
-                f"be re-running the player (the retired seed-image crutch), so the "
-                f"axis is surfaced honestly, not faked.")
-        if npaths >= 2:
+                f"branch-selected mid-call (ops={ops}).{bm_note} This is not a single "
+                f"fixed template: the path taken depends on the section counter / a "
+                f"carry predicate the bounded slice records as taken-edges only "
+                f"(design 5.1 data-dependent control flow / 5.4 deep coupling). "
+                f"Re-executing it faithfully needs the full branching update "
+                f"micro-program; that would be re-running the player (the retired "
+                f"seed-image crutch) -- FORBIDDEN by the no-branching-re-exec rule -- "
+                f"so the axis is surfaced honestly, not faked.")
+        if npaths >= 2 or (upd.has_stride and len(ram) >= 1):
             return (
-                f"state cell ${addr:02x}: SDCU update DAG reads {npaths} distinct "
-                f"source paths {[hex(x) for x in ram]} (ops={ops}), branch-selected "
-                f"mid-call -- not a single fixed-size recurrence template (design 5).")
+                f"state cell ${addr:02x}: SDCU update DAG is a section-indexed "
+                f"self-modifying store (base ${upd.stride_base:04x}) interleaved with "
+                f"an LFSR path, reading {len(ram)} source(s) {[hex(x) for x in ram]} "
+                f"(ops={ops}), branch-selected mid-call by the section counter / a "
+                f"carry predicate.{bm_note} Not a single fixed-size recurrence template "
+                f"and not a closed predicate on a recovered exogenous counter: the "
+                f"branch selector co-evolves with the LFSR state, so closing it would "
+                f"require re-executing the branching micro-program (FORBIDDEN by the "
+                f"no-branching-re-exec rule). Surfaced honestly, not faked (design "
+                f"5.1/5.3/5.4).")
         if len(ram) == 1 and not self_fb:
             # O = K_table[idx] with the index produced by ANOTHER (unrecovered) SMC
             # cell -- the table K is lifted by identity, but the index recurrence is
