@@ -153,6 +153,79 @@ class Sdst:
         return {e.addr: e for e in self.stateseq}
 
 
+# Valid section tags a well-formed stream may begin a section with (used to
+# disambiguate the optional SDDF/SDCU val_seq field structurally -- see below).
+_SECTION_TAGS = (
+    b"ACMP", b"SNAP", b"SIDW", b"IDXR", b"SDDF", b"SDCU", b"STSQ", b"END\x00",
+)
+
+
+def _at_section_boundary(buf, off):
+    """True iff `off` is EOF or points at a recognized 4-byte section tag."""
+    if off == len(buf):
+        return True
+    return buf[off : off + 4] in _SECTION_TAGS
+
+
+def _parse_siddf_section(buf, off, nent, with_val_seq):
+    """Parse `nent` SDDF/SDCU entries starting at `off`.
+
+    Returns (entries, new_off), or (None, off) if the layout does not fit the
+    buffer (so the caller can retry with the other `with_val_seq` choice). The
+    only layout difference is the trailing per-entry val_seq (nValSeq:u16 + bytes).
+    """
+    entries = []
+    try:
+        for _ in range(nent):
+            (
+                pc, reg, flags, count, vlo, vhi, vfirst,
+                sbase, sstep, simin, simax,
+            ) = _SIDDF_HEAD.unpack_from(buf, off)
+            off += _SIDDF_HEAD.size
+            (npcs,) = struct.unpack_from("<H", buf, off)
+            off += 2
+            pcs = list(struct.unpack_from(f"<{npcs}H", buf, off))
+            off += 2 * npcs
+            (nleaves,) = struct.unpack_from("<H", buf, off)
+            off += 2
+            leaves = []
+            for _ in range(nleaves):
+                kind, addr, value = _SIDDF_LEAF.unpack_from(buf, off)
+                off += _SIDDF_LEAF.size
+                leaves.append(Leaf(kind, addr, value))
+            (nops,) = struct.unpack_from("<H", buf, off)
+            off += 2
+            ops = list(struct.unpack_from(f"<{nops}B", buf, off)) if nops else []
+            off += nops
+            if with_val_seq:
+                # SDCU mid-call value sequence (design 2.5/2.7): the genuine
+                # generator state stream sampled at the cell's UPDATE site, which
+                # the host feeds to Berlekamp-Massey for the LFSR-vs-not verdict.
+                # SDDF writes nValSeq=0 (the field is present for a uniform shape).
+                (nval,) = struct.unpack_from("<H", buf, off)
+                off += 2
+                vseq = (list(struct.unpack_from(f"<{nval}B", buf, off))
+                        if nval else [])
+                off += nval
+            else:
+                vseq = []
+            # For SDCU the `pc` field carries the state-cell ADDRESS (key).
+            entries.append(
+                SiddfSite(
+                    pc=pc, reg=reg, count=count, val_lo=vlo, val_hi=vhi,
+                    val_first=vfirst, has_stride=bool(flags & 1),
+                    any_out_of_window=bool(flags & 2), stride_base=sbase,
+                    stride_step=sstep, stride_idx_min=simin, stride_idx_max=simax,
+                    slice_pcs=pcs, leaves=leaves, op_seq=ops, val_seq=vseq,
+                )
+            )
+    except struct.error:
+        return None, off
+    if off > len(buf):
+        return None, off
+    return entries, off
+
+
 def parse_sdst(path):
     with open(path, "rb") as handle:
         buf = handle.read()
@@ -218,46 +291,29 @@ def parse_sdst(path):
             (nent,) = struct.unpack_from("<I", buf, off)
             off += 4
             dest = siddf if tag == b"SDDF" else sdcu
-            for _ in range(nent):
-                (
-                    pc, reg, flags, count, vlo, vhi, vfirst,
-                    sbase, sstep, simin, simax,
-                ) = _SIDDF_HEAD.unpack_from(buf, off)
-                off += _SIDDF_HEAD.size
-                (npcs,) = struct.unpack_from("<H", buf, off)
-                off += 2
-                pcs = list(struct.unpack_from(f"<{npcs}H", buf, off))
-                off += 2 * npcs
-                (nleaves,) = struct.unpack_from("<H", buf, off)
-                off += 2
-                leaves = []
-                for _ in range(nleaves):
-                    kind, addr, value = _SIDDF_LEAF.unpack_from(buf, off)
-                    off += _SIDDF_LEAF.size
-                    leaves.append(Leaf(kind, addr, value))
-                (nops,) = struct.unpack_from("<H", buf, off)
-                off += 2
-                ops = list(struct.unpack_from(f"<{nops}B", buf, off)) if nops else []
-                off += nops
-                # SDCU mid-call value sequence (design 2.5/2.7): the genuine
-                # generator state stream sampled at the cell's UPDATE site, which the
-                # host feeds to Berlekamp-Massey for the LFSR-vs-not verdict. SDDF
-                # writes nValSeq=0 (the field is present for a uniform entry shape).
-                (nval,) = struct.unpack_from("<H", buf, off)
-                off += 2
-                vseq = (list(struct.unpack_from(f"<{nval}B", buf, off))
-                        if nval else [])
-                off += nval
-                # For SDCU the `pc` field carries the state-cell ADDRESS (key).
-                dest.append(
-                    SiddfSite(
-                        pc=pc, reg=reg, count=count, val_lo=vlo, val_hi=vhi,
-                        val_first=vfirst, has_stride=bool(flags & 1),
-                        any_out_of_window=bool(flags & 2), stride_base=sbase,
-                        stride_step=sstep, stride_idx_min=simin, stride_idx_max=simax,
-                        slice_pcs=pcs, leaves=leaves, op_seq=ops, val_seq=vseq,
-                    )
+            # Two on-disk layouts coexist in the consolidated corpus: the current
+            # tracer (sidtrace feature/siddf-bm) appends a per-entry SDCU mid-call
+            # value sequence (nValSeq:u16 + bytes, design 2.5/2.7 -- the generator
+            # state stream the host feeds to Berlekamp-Massey); older depacker-less
+            # Goto80 fixtures were distilled before that field existed. The header is
+            # v1 in both, so we DISAMBIGUATE structurally: parse the whole section
+            # assuming the val_seq field is present, and only if that fails to land
+            # exactly on a valid next section tag (or EOF) do we re-parse without it.
+            # This is deterministic and keeps the reader byte-compatible with both
+            # emitters without weakening any consumer (val_seq is simply [] for the
+            # legacy layout, exactly as SDDF writes nValSeq=0 in the new one).
+            body_off = off
+            entries, end_off = _parse_siddf_section(
+                buf, body_off, nent, with_val_seq=True
+            )
+            if entries is None or not _at_section_boundary(buf, end_off):
+                entries, end_off = _parse_siddf_section(
+                    buf, body_off, nent, with_val_seq=False
                 )
+            if entries is None:
+                raise ValueError(f"could not parse {tag!r} section")
+            off = end_off
+            dest.extend(entries)
         elif tag == b"STSQ":
             (nent,) = struct.unpack_from("<I", buf, off)
             off += 4
