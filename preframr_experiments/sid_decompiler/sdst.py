@@ -129,6 +129,15 @@ class Sdst:
     idx_reads: list
     siddf: list = field(default_factory=list)
     stateseq: list = field(default_factory=list)
+    sdcu: list = field(default_factory=list)  # per-state-cell update DAG (design 2.2)
+
+    def sdcu_by_addr(self):
+        """Map state-cell addr -> SiddfSite (its update DAG). Highest-count wins."""
+        out = {}
+        for s in self.sdcu:
+            if s.pc not in out or s.count > out[s.pc].count:
+                out[s.pc] = s
+        return out
 
     def siddf_by_reg(self):
         """Map reg -> SiddfSite. If multiple PCs write a reg, the highest-count
@@ -162,7 +171,7 @@ def parse_sdst(path):
 
     acc = np.zeros(65536, dtype=np.uint8)
     ram = np.zeros(65536, dtype=np.uint8)
-    sid_writes, idx_reads, siddf, stateseq = [], [], [], []
+    sid_writes, idx_reads, siddf, stateseq, sdcu = [], [], [], [], []
     while off < len(buf):
         tag = buf[off : off + 4]
         off += 4
@@ -204,9 +213,10 @@ def parse_sdst(path):
                 )
                 off += _IDXR_ENTRY.size
                 idx_reads.append((pc, base, stride, imin, imax, count))
-        elif tag == b"SDDF":
+        elif tag in (b"SDDF", b"SDCU"):
             (nent,) = struct.unpack_from("<I", buf, off)
             off += 4
+            dest = siddf if tag == b"SDDF" else sdcu
             for _ in range(nent):
                 (
                     pc, reg, flags, count, vlo, vhi, vfirst,
@@ -228,7 +238,8 @@ def parse_sdst(path):
                 off += 2
                 ops = list(struct.unpack_from(f"<{nops}B", buf, off)) if nops else []
                 off += nops
-                siddf.append(
+                # For SDCU the `pc` field carries the state-cell ADDRESS (key).
+                dest.append(
                     SiddfSite(
                         pc=pc, reg=reg, count=count, val_lo=vlo, val_hi=vhi,
                         val_first=vfirst, has_stride=bool(flags & 1),
@@ -261,5 +272,5 @@ def parse_sdst(path):
         version=version, init=init, play=play, load=load, subtune=subtune,
         nframes=nframes, cycles_per_frame=cpf, t0_cycle=t0, load_len=load_len,
         acc=acc, ram=ram, sid_writes=sid_writes, idx_reads=idx_reads,
-        siddf=siddf, stateseq=stateseq,
+        siddf=siddf, stateseq=stateseq, sdcu=sdcu,
     )

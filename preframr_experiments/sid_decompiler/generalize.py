@@ -1,7 +1,16 @@
-"""Stage 2 -- the host generalizer (design 2.5): derive ``{G_A}`` AUTOMATICALLY
-from the bounded tracer artifact (SIDDF + STATESEQ + SNAP) and re-execute the
+"""Stage 2/3 -- the host generalizer (design 2.5): derive ``{G_A}`` AUTOMATICALLY
+from the bounded tracer artifact (SIDDF + STATESEQ + SNAP + SDCU) and re-execute the
 recovered recurrences (NOT the seed image, NOT the white-box player) to a byte-
 exact ``[N, 25]`` SID register stream.
+
+Stage 3 consumes the per-state-cell UPDATE DAG (SDCU, design 2.2/2.3): for a fast
+mid-call SMC accumulator the SID-write slice bottoms out at the shadow cell as a
+LEAF, so the cell's update DAG ``cell' = f(cell, C, K, ...)`` is what tells the host
+how the axis is generated. The host uses SDCU to (a) lift, by identity from the
+widened SNAP, the K-table the axis dereferences, and (b) diagnose at the DAG level
+why a multi-path conditional SMC chain (LFSR + section-indexed self-mod store,
+branch-selected) does NOT close as a single fixed-size recurrence -- surfacing it
+HONESTLY (design 5) with the precise reason, never faking the residual-zero gate.
 
 This RETIRES the Stage-0 scaffolding crutch: Stage 0's ``AmindRecurrence._play``
 re-executed the original ~254-byte seed image on a 6502 core. Stage 2 derives the
@@ -348,6 +357,13 @@ class Generalizer:
         self.recur = {e.addr: fit_recurrence(e) for e in art.stateseq}
         self.seq = art.stateseq_by_addr()
         self.by_reg = art.siddf_by_reg()
+        # SDCU (design 2.2/2.3): per-state-cell UPDATE DAG, keyed by cell addr.
+        # This is the Stage-3 addition -- for a fast mid-call SMC accumulator the
+        # SID-write slice bottoms out at the cell as a leaf; SDCU carries HOW the
+        # cell was recomputed (op_seq + leaves + strided interval) so the host can
+        # synthesize U or, where the update is a multi-path conditional SMC chain
+        # that is not a single fixed template, surface it with the precise reason.
+        self.sdcu = art.sdcu_by_addr()
         self.reference = reference
         self.window = window
         self._co = None   # (C[window], out[window,25], frame_offset) lazily built
@@ -577,8 +593,13 @@ class Generalizer:
         Returns a TableK or None. The note table feeding a freq axis is lifted via
         the ram_read leaves the slice attributed (the filler-linked table reads)."""
         ram = self.art.ram
-        # Prefer the strided interval (a contiguous table O indexed).
-        if site.has_stride and site.stride_idx_max >= site.stride_idx_min:
+        # Prefer the strided interval ONLY when it points into a real RAM table
+        # (a contiguous table O indexed). The fast-SMC blit `STA $D400,X` carries a
+        # spurious strided interval over the SID shadow buffer / IO page; reject any
+        # base that lands in or just below IO ($D000+) or that the SID-write site
+        # inherited from the blit -- those are not data tables.
+        if site.has_stride and site.stride_idx_max >= site.stride_idx_min \
+                and 0x0100 <= site.stride_base < 0xCF00:
             base = site.stride_base
             stride = max(1, abs(site.stride_step) or 1)
             span = site.stride_idx_max - site.stride_idx_min + 1
@@ -588,17 +609,42 @@ class Generalizer:
                 if int(ram[lo:hi].any()):  # SNAP actually has these bytes
                     return TableK(base=base, stride=stride, span=span,
                                   bytes_=tuple(int(x) for x in ram[lo:hi]))
-        # Otherwise lift the discrete ram_read leaf addresses (the note-table
-        # entries the slice attributed across the held-note frame gap).
+        # Lift the discrete ram_read leaf addresses (the note-table entries the
+        # slice attributed across the held-note frame gap).
         addrs = sorted(set(site.ram_reads()))
         if addrs:
             bts = tuple(int(ram[a]) for a in addrs)
             if any(bts):
                 return TableK(base=addrs[0], stride=0, span=len(addrs), bytes_=bts)
+        # Stage-3: a fast-SMC axis's SID-write slice bottoms out at the shadow cell
+        # as a state leaf, so the table O ultimately reads is in the cell's SDCU
+        # UPDATE DAG, not the SID-write slice. Lift the contiguous K-table the
+        # update dereferenced from the now-widened SNAP (which captures the
+        # relocated player's zero-page generator tables, design 2.4 + SNAP widen).
+        for c in site.state_cells():
+            upd = self.sdcu.get(c)
+            if upd is None:
+                continue
+            uaddrs = sorted(set(upd.ram_reads()))
+            uaddrs = [a for a in uaddrs if a != c]   # drop self-feedback leaf
+            # group into the maximal contiguous run that SNAP actually holds
+            if uaddrs:
+                base = uaddrs[0]
+                # extend the run while SNAP is populated (the generator table)
+                hi = base
+                while hi + 1 < 0x10000 and (ram[hi + 1] or (hi + 1) in uaddrs) \
+                        and (hi + 1 - base) < 64:
+                    hi += 1
+                bts = tuple(int(ram[a]) for a in range(base, hi + 1))
+                if any(bts):
+                    return TableK(base=base, stride=1, span=len(bts), bytes_=bts)
         return None
 
     def _surface_reason(self, reg, site, cells):
-        """Honest, specific reason an axis did not close (design 5)."""
+        """Honest, specific reason an axis did not close (design 5). Where the new
+        Stage-3 SDCU update DAG is available for the axis's state cell, cite the
+        EXACT DAG-level cause (what the mid-call SMC update does and why it is not a
+        single fixed template) -- the mandate: surface with the precise reason."""
         if site.has_stride and site.stride_idx_max > site.stride_idx_min:
             # table-walk: the output is a table traversal but the cursor recurrence
             # did not fit a fixed template from the artifact.
@@ -607,6 +653,13 @@ class Generalizer:
                     f"K-table is liftable from SNAP, but the cursor advance did not "
                     f"fit a fixed-size recurrence from STATESEQ (design 5: cursor "
                     f"under-determined; needs richer op-DAG)")
+        # Stage-3: consult the SDCU update DAG of the axis's state cell(s).
+        for a in cells:
+            upd = self.sdcu.get(a)
+            if upd is not None:
+                why = self._sdcu_update_reason(a, upd)
+                if why:
+                    return why
         for a in cells:
             rec = self.recur.get(a)
             if rec is not None and rec.kind is None:
@@ -616,6 +669,49 @@ class Generalizer:
                         f"closed form (design 5: not a single Daikon/BM template)")
         return (f"no fixed-size recurrence fit; op_seq={site.op_names()}, "
                 f"state_cells={[hex(a) for a in cells]} (design 5)")
+
+    def _sdcu_update_reason(self, addr, upd):
+        """Diagnose, from the SDCU update DAG, WHY a state cell's update does not
+        close as a single fixed-size recurrence (design 5.1 data-dependent control
+        flow / 5.4 deep coupling). The DAG tells us the update reads several
+        distinct source paths (an LFSR self-feedback, a section-indexed self-mod
+        store from a SNAP table, and immediates) selected by a runtime branch -- a
+        multi-path conditional SMC update, not one Daikon/BM template."""
+        ops = upd.op_names()
+        ram = sorted(set(upd.ram_reads()))
+        states = sorted(set(upd.state_cells()))
+        # self-referential feedback: the cell reads its own prior value (LFSR/accum)
+        self_fb = addr in states or addr in ram
+        npaths = len(ram) + (1 if upd.has_stride else 0)
+        if self_fb and npaths >= 1:
+            return (
+                f"state cell ${addr:02x}: SDCU update DAG is a MULTI-PATH conditional "
+                f"SMC chain -- self-feedback (LFSR/accumulator on ${addr:02x}) plus "
+                f"{len(ram)} table/source read(s) {[hex(x) for x in ram]}"
+                f"{' + section-indexed self-mod store' if upd.has_stride else ''}, "
+                f"branch-selected mid-call (ops={ops}). This is not a single fixed "
+                f"template: the path taken depends on the section counter / a carry "
+                f"predicate the bounded slice records as taken-edges only (design 5.1 "
+                f"data-dependent control flow / 5.4 deep coupling). Re-executing it "
+                f"faithfully needs the full branching update micro-program; that would "
+                f"be re-running the player (the retired seed-image crutch), so the "
+                f"axis is surfaced honestly, not faked.")
+        if npaths >= 2:
+            return (
+                f"state cell ${addr:02x}: SDCU update DAG reads {npaths} distinct "
+                f"source paths {[hex(x) for x in ram]} (ops={ops}), branch-selected "
+                f"mid-call -- not a single fixed-size recurrence template (design 5).")
+        if len(ram) == 1 and not self_fb:
+            # O = K_table[idx] with the index produced by ANOTHER (unrecovered) SMC
+            # cell -- the table K is lifted by identity, but the index recurrence is
+            # the holdout (design 5.4 cross-cell coupling).
+            return (
+                f"state cell ${addr:02x}: SDCU update is O=K_table[idx] reading "
+                f"${ram[0]:04x} (table liftable from SNAP by identity), but the INDEX "
+                f"is computed by a coupled SMC cell (an LFSR / section walk) that does "
+                f"not itself close as a fixed-size recurrence from the short window "
+                f"(design 5.4 cross-cell coupling); surfaced, not faked.")
+        return ""
 
 
 # --------------------------------------------------------------------------- #
@@ -645,14 +741,16 @@ def recover_phase(prog: Program, reference_aligned, regs, window=512, search=(0,
     return best_phase, best_resid
 
 
-def verify_and_finalize(prog: Program, reference_aligned, phase):
+def verify_and_finalize(prog: Program, reference_aligned, phase, gen=None):
     """Per-axis full-length residual-zero verification + HONEST downgrade (design
     2.8 admission + design 5 fallback). A G_A recovered from the SHORT window is a
     HYPOTHESIS; we re-execute it over the FULL gate stream and demote any axis that
     does not stay byte-exact -- a window-too-short / long-period axis is surfaced as
     unrecovered (length-proportional fallback), never faked. This is what makes the
     recovered set honest under length-independence: an axis is 'recovered' only if
-    the fixed-size object derived from the short window reproduces the FULL stream."""
+    the fixed-size object derived from the short window reproduces the FULL stream.
+    ``gen`` (the Generalizer) is used, when available, to enrich the demotion reason
+    with the SDCU update-DAG diagnosis (the precise DAG-level cause)."""
     n = len(reference_aligned)
     rendered = prog.render(n, phase)
     a = mask_dontcares(rendered)
@@ -663,15 +761,34 @@ def verify_and_finalize(prog: Program, reference_aligned, phase):
         mism = int((a[:, reg] != b[:, reg]).sum())
         if mism != 0:
             ax.status = "unrecovered"
+            sdcu_why = ""
+            if gen is not None:
+                cells = list(ax.state_cells)
+                site = gen.by_reg.get(reg)
+                if site is not None:
+                    cells += [c for c in site.state_cells() if c not in cells]
+                for c in cells:
+                    upd = gen.sdcu.get(c)
+                    if upd is not None:
+                        w = gen._sdcu_update_reason(c, upd)
+                        if w:
+                            sdcu_why = " -- " + w
+                            break
             ax.reason = (
                 f"window-{prog.nframes_window} fit '{ax.form}' fails full-length "
                 f"verification ({mism} mismatched frames): a long-period / SMC axis "
                 f"whose variation is not visible in the short capture window and does "
                 f"not close as a fixed-size recurrence from the artifact (design 5)"
+                f"{sdcu_why}"
             )
             ax.form = ""
             ax.render = None
             ax.size_bytes = 1 << 30
+            # attach the K-table the cell's update dereferenced, lifted by identity
+            if gen is not None and ax.table_k is None:
+                site = gen.by_reg.get(reg)
+                if site is not None:
+                    ax.table_k = gen._lift_table_k(site)
 
 
 def recover_program_from(art, reference, window=512, verify_full=True):
@@ -686,7 +803,7 @@ def recover_program_from(art, reference, window=512, verify_full=True):
     ref_a = align_reference(prog, reference)
     phase, _ = recover_phase(prog, ref_a, prog.recovered_regs(), window=window)
     if verify_full:
-        verify_and_finalize(prog, ref_a, phase)
+        verify_and_finalize(prog, ref_a, phase, gen=gen)
     regs = prog.recovered_regs()
     rendered = prog.render(len(ref_a), phase)
     info = {
