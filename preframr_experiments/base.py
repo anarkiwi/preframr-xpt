@@ -8,7 +8,6 @@ import hashlib
 import json
 import logging
 import os
-import re
 import shlex
 import shutil
 import subprocess
@@ -44,7 +43,7 @@ _DATASET_CACHE_MARKER = ".complete"
 # subdirs; no top-level tokenizer artefacts exist anymore, so the cache stores
 # the subdir trees (sans the input .sid/.dump) only.
 _DATASET_CACHE_FILES: tuple[str, ...] = ()
-_DATASET_CACHE_INPUTS = ("*.dump.parquet", "*.sid")
+_DATASET_CACHE_INPUTS = ("*.sid",)
 _DATASET_CACHE_DISABLE_ENV = "PREFRAMR_DATASET_CACHE_DISABLE"
 
 
@@ -114,18 +113,16 @@ class ExperimentSpec:
     predict_gate: Optional[Callable] = None
     derived_metrics: Optional[dict] = None
     pre_run_hook: Optional[Callable] = None
-    seq_len: int = 8192
+    seq_len: int = 4096
     block_stride: Optional[int] = None
     image: str = "anarkiwi/preframr"
     hvsc_root: str = "/scratch/preframr/hvsc"
 
     _VALID_TIERS = (
         "smoke",
-        "micro_mini",
         "mini",
         "canonical",
-        "prodlike",
-        "prodlike_4x",
+        "frontier",
     )
 
     def __post_init__(self):
@@ -137,7 +134,7 @@ class ExperimentSpec:
         if len(set(labels)) != len(labels):
             raise ValueError(f"experiment {self.name}: duplicate arm labels")
         if self.seeds is None:
-            self.seeds = 1 if self.tier in ("smoke", "micro_mini", "mini") else 3
+            self.seeds = 1 if self.tier in ("smoke", "mini") else 3
         if self.block_stride is None:
             self.block_stride = self.seq_len // 4
         baselines = [a for a in self.arms if a.baseline]
@@ -182,86 +179,56 @@ class ArmArtefacts:
 
 
 def read_list(path: Path) -> list[str]:
-    """Parse a pinned .list file. One HVSC-relative path per line;
-    ``# ...`` comments stripped; blank lines ignored."""
-    paths = []
+    """Parse a pinned .list file. One ``relpath<TAB>subtune`` entry per line
+    (``.sid`` HVSC-relative + 1-based subtune; a bare relpath defaults to
+    subtune 1); ``# ...`` comments stripped, blank lines ignored."""
+    entries = []
     with open(path) as f:
         for raw in f:
             line = raw.split("#", 1)[0].strip()
             if line:
-                paths.append(line)
-    return paths
+                entries.append(line)
+    return entries
+
+
+def parse_entry(entry: str) -> tuple[str, int]:
+    """``relpath<TAB>subtune`` (or bare relpath) -> (.sid relpath, 1-based subtune)."""
+    parts = entry.split("\t") if "\t" in entry else entry.split()
+    return parts[0], int(parts[1]) if len(parts) > 1 else 1
+
+
+def _tier_paths(tier: str) -> dict[str, list[str]]:
+    """Read a tier's pinned ``train`` / ``eval-A`` / ``eval-B-*`` .list files."""
+    base = DATA_DIR / tier
+    out: dict[str, list[str]] = {"train": read_list(base / "train.list")}
+    eval_a = base / "eval-A.list"
+    if eval_a.exists():
+        out["eval-A"] = read_list(eval_a)
+    for p in sorted(base.glob("eval-B-*.list")):
+        out[p.stem] = read_list(p)
+    return out
 
 
 def smoke_paths() -> list[str]:
     return read_list(DATA_DIR / "smoke.list")
 
 
-def canonical_paths() -> dict[str, list[str]]:
-    base = DATA_DIR / "canonical"
-    return {
-        "train": read_list(base / "train.list"),
-        "eval-A": read_list(base / "eval-A.list"),
-        "eval-B-daglish": read_list(base / "eval-B-daglish.list"),
-        "eval-B-follin": read_list(base / "eval-B-follin.list"),
-    }
-
-
 def mini_paths() -> dict[str, list[str]]:
-    """Stratified subset of canonical -- 30 train + 6 eval-A per
-    composer, 8 entries per Eval-B composer. Same HVSC version pin.
-    Use when canonical wallclock is the bottleneck on a first-pass
-    arm-level decision and the ~150-SID train scale is enough signal
-    to gate proceeding to canonical."""
-    base = DATA_DIR / "mini"
-    return {
-        "train": read_list(base / "train.list"),
-        "eval-A": read_list(base / "eval-A.list"),
-        "eval-B-daglish": read_list(base / "eval-B-daglish.list"),
-        "eval-B-follin": read_list(base / "eval-B-follin.list"),
-    }
+    """Small tracker-balanced tier (residual-zero, <= 4096 tokens) for fast
+    arm-level decisions before canonical."""
+    return _tier_paths("mini")
 
 
-def micro_mini_paths() -> dict[str, list[str]]:
-    """Stage-C tier: deterministic 16-SID train slice + small eval cut from mini."""
-    paths = mini_paths()
-    return {
-        "train": paths["train"][:16],
-        "eval-A": paths["eval-A"][:8],
-        "eval-B-daglish": paths["eval-B-daglish"][:4],
-        "eval-B-follin": paths["eval-B-follin"][:4],
-    }
+def canonical_paths() -> dict[str, list[str]]:
+    """Primary A/B tier: medium multi-tracker train + in-distribution (eval-A)
+    and held-out-composer (eval-B-*) splits; all residual-zero, <= 4096 tokens."""
+    return _tier_paths("canonical")
 
 
-def prodlike_paths() -> dict[str, list[str]]:
-    """Near-production tier: ~4.4K train across 25 composers + 385
-    Eval-A + every committed ``eval-B-<family>.list`` in the prodlike
-    data dir. HVSC v84.
-    """
-    base = DATA_DIR / "prodlike"
-    out: dict[str, list[str]] = {
-        "train": read_list(base / "train.list"),
-        "eval-A": read_list(base / "eval-A.list"),
-    }
-    for p in sorted(base.glob("eval-B-*.list")):
-        out[p.stem] = read_list(p)
-    return out
-
-
-def prodlike_4x_paths() -> dict[str, list[str]]:
-    """Scaled prodlike tier: ~17.7K train across 50 composers (top-N
-    admitted from the corpus structural index, eval-B holdouts
-    excluded). Eval-A and Eval-B lists are symlinked from the prodlike
-    data dir so they're held out identically.
-    """
-    base = DATA_DIR / "prodlike_4x"
-    out: dict[str, list[str]] = {
-        "train": read_list(base / "train.list"),
-        "eval-A": read_list(base / "eval-A.list"),
-    }
-    for p in sorted(base.glob("eval-B-*.list")):
-        out[p.stem] = read_list(p)
-    return out
+def frontier_paths() -> dict[str, list[str]]:
+    """Full whole-song-in-context corpus: every residual-zero tune <= 4096
+    tokens, tracker-stratified, with the canonical eval holdouts."""
+    return _tier_paths("frontier")
 
 
 _PRODLIKE_BODY_FLAGS = (
@@ -291,74 +258,62 @@ def _stage_bucket(rel: str) -> str:
     return parent or "_root_"
 
 
-def _sid_rel(rel: str) -> str:
-    """HVSC-rel ``.dump.parquet`` path -> its sibling ``.sid`` (drop the
-    ``.<subtune>.dump.parquet`` suffix, append ``.sid``)."""
-    base = rel[: -len(".dump.parquet")] if rel.endswith(".dump.parquet") else rel
-    match = re.match(r"^(.*)\.(\d+)$", base)
-    name = match.group(1) if match else base
-    return name + ".sid"
-
-
-def stage_dumps(
-    rels: list[str],
+def stage_sids(
+    entries: list[str],
     src_root: Path,
-    dst_dir: Path,
+    subdir: str,
+    work_dir: Path,
     logger: logging.Logger,
     link_root: Optional[str] = None,
-) -> int:
-    """Stage each .dump.parquet from ``src_root/rel`` into a per-composer
-    subdir under ``dst_dir`` (``dst_dir/<composer>/<basename>``).
+) -> list[tuple[str, int]]:
+    """Stage each manifest entry's ``.sid`` from ``src_root/relpath`` into a
+    per-composer bucket under ``work_dir/subdir`` and return the manifest rows
+    ``(manifest_relpath, subtune)`` (relpath rooted at ``work_dir``, i.e.
+    ``subdir/<composer>/<name>.sid``).
 
-    When ``link_root`` is set, the staged entry is a **symlink** to
-    ``f"{link_root}/{rel}"`` -- a path valid inside the container where
-    ``src_root`` is bind-mounted read-only at ``link_root`` (broken on the host,
-    which is fine: only ever followed in-container). The parser derives its
-    output paths by string from the input name, so the parsed sidecars land in
-    the writable ``dst_dir`` next to the symlink. When ``link_root`` is None the
-    content is copied (needed when a ``pre_run_hook`` mutates the staged dumps).
-    Skips files missing at ``src_root`` (logs a warning); returns the count
-    actually staged.
+    The codec recovers sid-only and writes ``<sid_base>.<subtune>.blocks.npy``
+    next to the staged ``.sid`` (the writable ``work_dir``). A ``.sid`` shared by
+    several subtunes is staged once but yields one manifest row per subtune.
+    When ``link_root`` is set the staged ``.sid`` is a **symlink** to
+    ``f"{link_root}/{relpath}"`` (valid in-container where ``src_root`` is
+    bind-mounted read-only at ``link_root``); else it is copied (needed when a
+    ``pre_run_hook`` mutates the staged corpus). Missing ``.sid`` are skipped.
     """
+    dst_dir = work_dir / subdir
     dst_dir.mkdir(parents=True, exist_ok=True)
-    staged = 0
+    rows: list[tuple[str, int]] = []
     missing = 0
-    for rel in rels:
-        src = src_root / rel
+    for entry in entries:
+        relpath, subtune = parse_entry(entry)
+        src = src_root / relpath
         if not src.exists():
             missing += 1
             continue
-        bucket = dst_dir / _stage_bucket(rel)
+        bucket = dst_dir / _stage_bucket(relpath)
         bucket.mkdir(parents=True, exist_ok=True)
         dest = bucket / src.name
         if link_root is not None:
             if not dest.is_symlink() and not dest.exists():
-                os.symlink(f"{link_root}/{rel}", dest)
-        else:
+                os.symlink(f"{link_root}/{relpath}", dest)
+        elif not dest.exists():
             shutil.copy(src, dest)
-        # The BACC codec recovers a program from the tune's playroutine, so the
-        # sibling .sid must travel with each dump (skipped when absent: the
-        # recover pass then skips that tune rather than failing the run).
-        sid_rel = _sid_rel(rel)
-        sid_src = src_root / sid_rel
-        if sid_src.exists():
-            sid_dest = bucket / sid_src.name
-            if link_root is not None:
-                if not sid_dest.is_symlink() and not sid_dest.exists():
-                    os.symlink(f"{link_root}/{sid_rel}", sid_dest)
-            elif not sid_dest.exists():
-                shutil.copy(sid_src, sid_dest)
-        staged += 1
+        rows.append((f"{subdir}/{_stage_bucket(relpath)}/{src.name}", subtune))
     if missing:
         logger.warning(
-            "dump cache missing %u/%u dumps under %s; experiment runs on the "
-            "%u that were found",
+            "%u/%u .sid missing under %s; running on the %u found",
             missing,
-            len(rels),
+            len(entries),
             src_root,
-            staged,
+            len(rows),
         )
-    return staged
+    return rows
+
+
+def write_manifest(path: Path, rows: list[tuple[str, int]]) -> None:
+    """Write ``relpath<TAB>subtune`` manifest rows for the framework parser."""
+    with open(path, "w", encoding="utf-8") as handle:
+        for relpath, subtune in rows:
+            handle.write(f"{relpath}\t{subtune}\n")
 
 
 _TRAIN_ONLY_CARG_FLAGS = {
@@ -648,12 +603,8 @@ def event_decode_gate(artefacts) -> tuple[bool, str]:
         "/preframr/inference/event_gate.py",
         "--tb-logs",
         "/scratch/preframr/tb_logs",
-        "--token-csv",
-        "/scratch/preframr/tokens.csv",
-        "--df-map-csv",
-        "/scratch/preframr/df-map.csv",
-        "--reglogs",
-        "/scratch/preframr/train/**/*dump.parquet",
+        "--blocks-glob",
+        "/scratch/preframr/train/**/*.blocks.npy",
         "--predict-set",
         "train",
         "--no-compile",
@@ -910,14 +861,19 @@ def run_arm(
     dump_volumes = (
         [(src_root.resolve(), "/dumps:ro")] if link_root is not None else None
     )
-    for subdir, rels in data_layout.items():
-        dst = work_dir / subdir
-        n = stage_dumps(rels, src_root, dst, logger, link_root=link_root)
-        if n == 0:
+    for subdir, entries in data_layout.items():
+        rows = stage_sids(entries, src_root, subdir, work_dir, logger, link_root)
+        if not rows and not cache_hit:
             raise RuntimeError(
-                f"arm {arm.label}/seed{seed}: zero dumps staged into {dst}; "
-                f"is the dump cache at {src_root} populated?"
+                f"arm {arm.label}/seed{seed}: zero .sid staged for {subdir}; "
+                f"is the HVSC corpus at {src_root} present?"
             )
+        write_manifest(work_dir / f"{subdir}.manifest", rows)
+    # Songlengths travels with the run (frame budgets for sid-only recovery),
+    # so both symlink and copy modes resolve it the same in-container path.
+    songlengths_src = src_root / "DOCUMENTS" / "Songlengths.md5"
+    if songlengths_src.exists():
+        shutil.copy(songlengths_src, work_dir / "Songlengths.md5")
 
     if spec.pre_run_hook is not None:
         spec.pre_run_hook(arm, work_dir)
@@ -930,21 +886,23 @@ def run_arm(
         f"{arm.extra_cargs}".strip()
     )
 
-    train_glob = "/scratch/preframr/train/*/*.dump.parquet"
+    corpus_args = [
+        "--manifest",
+        "/scratch/preframr/train.manifest",
+        "--sid-root",
+        "/scratch/preframr",
+        "--songlengths",
+        "/scratch/preframr/Songlengths.md5",
+    ]
     eval_subdirs = [k for k in data_layout.keys() if k != "train"]
     has_eval = bool(eval_subdirs)
-    eval_glob = build_eval_reglogs_arg(Path("/scratch/preframr"), data_layout)
+    eval_arg = build_eval_manifest_arg(data_layout)
 
-    # BACC parse: recover each (.sid, .dump) pair into a per-tune .blocks.npy.
-    # No separate tokenize stage exists anymore -- the alphabet is fixed.
-    parse_args = [
-        "/preframr/parse.py",
-        *shlex.split(cargs),
-        "--reglogs",
-        train_glob,
-    ]
+    # BACC parse: recover each .sid (sid-only) into a per-tune .blocks.npy.
+    # No separate tokenize stage exists -- the alphabet is fixed.
+    parse_args = ["/preframr/parse.py", *shlex.split(cargs), *corpus_args]
     if has_eval:
-        parse_args += ["--eval-reglogs", eval_glob]
+        parse_args += ["--eval-manifest", eval_arg]
     if not cache_hit:
         rc = _docker_run(
             spec.image,
@@ -970,11 +928,10 @@ def run_arm(
         *shlex.split(cargs),
         *shlex.split(spec.effective_train_args()),
         *shlex.split(train_overrides_str),
-        "--reglogs",
-        train_glob,
+        *corpus_args,
     ]
     if has_eval:
-        train_args += ["--eval-reglogs", eval_glob]
+        train_args += ["--eval-manifest", eval_arg]
     train_t0 = time.monotonic()
     rc = _docker_run(
         spec.image,
@@ -1008,35 +965,21 @@ def run_arm(
 
 
 def resolve_data_layout(spec: ExperimentSpec) -> dict[str, list[str]]:
-    """Map tier -> {subdir: [HVSC-rel-paths]}. The runner stages each
-    subdir under its own work-dir directory so the existing parse /
-    tokenize / train flag conventions (``--reglogs``,
-    ``--eval-reglogs``) keep working unchanged.
+    """Map tier -> {subdir: [``relpath<TAB>subtune`` entries]}. The runner stages
+    each subdir's ``.sid`` under ``work_dir/<subdir>`` and emits a per-subdir
+    manifest the framework parser consumes (``--manifest`` / ``--eval-manifest``).
     """
     if spec.tier == "smoke":
         return {"train": smoke_paths()}
-    if spec.tier == "micro_mini":
-        paths = micro_mini_paths()
-        return {
-            "train": paths["train"],
-            "eval": paths["eval-A"] + paths["eval-B-daglish"] + paths["eval-B-follin"],
-        }
     if spec.tier == "mini":
         paths = mini_paths()
-        return {
-            "train": paths["train"],
-            "eval": paths["eval-A"] + paths["eval-B-daglish"] + paths["eval-B-follin"],
-        }
-    if spec.tier == "prodlike":
-        paths = prodlike_paths()
-    elif spec.tier == "prodlike_4x":
-        paths = prodlike_4x_paths()
+    elif spec.tier == "frontier":
+        paths = frontier_paths()
     else:
         paths = canonical_paths()
-    layout: dict[str, list[str]] = {
-        "train": paths["train"],
-        "eval_a": paths["eval-A"],
-    }
+    layout: dict[str, list[str]] = {"train": paths["train"]}
+    if "eval-A" in paths:
+        layout["eval_a"] = paths["eval-A"]
     for key in paths:
         if key.startswith("eval-B-"):
             family = key[len("eval-B-") :]
@@ -1045,21 +988,15 @@ def resolve_data_layout(spec: ExperimentSpec) -> dict[str, list[str]]:
 
 
 _TRAIN_SUBDIR = "train"
-_LEGACY_EVAL_SUBDIR = "eval"
 
 
-def build_eval_reglogs_arg(work_dir: Path, data_layout: dict) -> str:
-    """Render the ``--eval-reglogs`` flag value from the staged data
-    layout. Single eval subdir (legacy mini path) returns a bare
-    glob. Multiple eval subdirs return the ``name=glob;name=glob``
-    multi-subset form. No eval subdirs return ``""``.
-    """
-    eval_subdirs = [k for k in data_layout.keys() if k != _TRAIN_SUBDIR]
-    if not eval_subdirs:
-        return ""
-    if eval_subdirs == [_LEGACY_EVAL_SUBDIR]:
-        return f"{work_dir / _LEGACY_EVAL_SUBDIR}/*/*.dump.parquet"
-    parts = []
-    for subdir in eval_subdirs:
-        parts.append(f"{subdir}={work_dir / subdir}/*/*.dump.parquet")
+def build_eval_manifest_arg(data_layout: dict) -> str:
+    """Render the ``--eval-manifest`` value (``name=path;name=path``) from the
+    staged layout: one in-container manifest path per eval subdir; ``""`` if
+    there are no eval subdirs."""
+    parts = [
+        f"{subdir}=/scratch/preframr/{subdir}.manifest"
+        for subdir in data_layout
+        if subdir != _TRAIN_SUBDIR
+    ]
     return ";".join(parts)

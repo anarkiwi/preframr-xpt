@@ -1,5 +1,8 @@
 # Free-running pathology — remediation ladder for "good first token, poor afterward"
 
+**SUPERSEDED (2026-06-20):** the free-running ↔ teacher-forced gap was an event-codec / dense-stream
+pathology; the representation-level fix is the step/tracker codec. Re-evaluate on the landed stream.
+
 **Status: LIVE — Tier-0 CONFIRMED `exposure_bias` on the v2 baseline (2026-06-14).** The go/no-go
 fired: `free_running_gap_audit` on `/scratch/tmp/v2_atoms_baseline.ckpt` (8 held-out blocks, result
 `data/audit/v2_baseline_freerun_gap.json`) reads **`exposure_bias`** — teacher-forced accuracy is
@@ -146,7 +149,7 @@ gate's sampling grid (sampling is "the gate's subject").
 
 ## Tier 2 — Representation (the winning lever; attacks M2)
 
-- **Lane de-mux** ([`../encoding/lane_demux_hypothesis.md`](../encoding/lane_demux_hypothesis.md)) is
+- **Lane de-mux** ([`../encoding/lane_demux_hypothesis.md`](lane_demux_hypothesis.md)) is
   the prime fix for the prime suspect. The frame-major interleave is the most fragile thing under
   self-conditioning — one bad voice-tag/DT desyncs the whole multiplex. Voice-contiguous reordering
   makes per-voice prediction short-range and position-stable; **role-form (accompaniment-before-melody,

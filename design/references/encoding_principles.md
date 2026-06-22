@@ -37,7 +37,7 @@ signal (0.66 → 0.009) by welding it into thousands of compounds.
 - **P2 — Locality.** Predictive context should be near the decision — but locality only helps where
   cross-song-predictable structure is being separated; it cannot manufacture predictability for a
   multi-modal target (→ P6). Cross-voice de-multiplexing is the open locality lever
-  ([`lane_demux_hypothesis.md`](../encoding/lane_demux_hypothesis.md)).
+  ([`lane_demux_hypothesis.md`](../landed/lane_demux_hypothesis.md)).
 - **P3 — Don't multiplex the target.** Interleaving independent streams (voices) into the
   next-token position dilutes each stream's signal; the per-voice line is the real prediction
   target. (Still structurally true in v3's frame groups — same hypothesis doc.)

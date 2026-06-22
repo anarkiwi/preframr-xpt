@@ -1,5 +1,8 @@
 # Shipped generation path — the free-running off-ramp (constrained decode + Tier-1 caps)
 
+**SUPERSEDED (2026-06-20):** built on the event codec / framework that the clean-slate port retires. The
+generation path is rebuilt on the step/tracker codec after the framework rebuild.
+
 **Status: SHIPPED (2026-06-16).** This is the usable-but-imperfect generation path the free-running
 arc landed on after the [remediation ladder](free_running_pathology_remediation_design.md) and
 [DAgger triage](dagger_recanonicalization_design.md) concluded that open-ended free-running is **not

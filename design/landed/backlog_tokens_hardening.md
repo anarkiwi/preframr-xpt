@@ -1,5 +1,8 @@
 # preframr-tokens test hardening — real-pipeline tests + fixture policy
 
+**SUPERSEDED (2026-06-20):** targeted the event codec's `tests/`. The step-codec port carries its own
+byte-exact + < 1 token/frame gates into preframr-tokens CI; the no-skip fixture policy survives.
+
 **Status:** Partially landed (2026-06-12, with the v3-hardening PR). The real-pipeline round-trip
 harness shipped in preframr-tokens as `tests/test_events_corpus.py` — raw dump df → `Corpus.preload`
 → per-dump `.blocks.npy` → `ids_to_writes` == `canonical_writes`, on both the raw-block and

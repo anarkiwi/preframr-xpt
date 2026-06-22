@@ -13,6 +13,7 @@ README's parse-domain section; they are not the trained encoding.
 - Melodic onsets remain **multiplexed across voices** — within a frame group, consecutive events
   belong to different voices, so the next same-voice note is a long-range, position-unstable
   dependency. This is the structural cost the
-  [`lane_demux_hypothesis.md`](../encoding/lane_demux_hypothesis.md) targets (open; evidence-gated).
+  [`lane_demux_hypothesis.md`](../landed/lane_demux_hypothesis.md) targets (superseded — voices are
+  de-muxed by construction in the landed step/tracker codec).
 - Voice identity is structural (P4) and explicit in v3; the de-mux question is about *ordering*,
   not attribution.

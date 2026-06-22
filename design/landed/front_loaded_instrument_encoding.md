@@ -1,5 +1,8 @@
 # Front-loaded instrument encoding — tracker-style DEF→REF for the onset program
 
+**SUPERSEDED (2026-06-20):** event-codec-era DEF→REF; RAN as a de-confounded null. Pitch-invariant
+instrument banks landed inside the step/tracker codec instead (`../encoding/sid_player_decompiler.md`).
+
 **Status: BUILT (preframr-tokens #86, v3, byte-exact) + A/B RAN (2026-06-17) — does NOT meaningfully fix
 free-running.** Implementation home: **preframr-tokens** (`events/`); README is the authoritative grammar.
 

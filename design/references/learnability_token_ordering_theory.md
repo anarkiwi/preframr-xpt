@@ -49,7 +49,7 @@ into the deterministic decoder, out of the prediction target. (v3: mixed-radix d
 Ordering matters only under finite capacity + optimization + exposure bias; two training-free rules:
 1. **If A causes B, emit A before B** — predicting an effect before its cause forces a high-entropy
    marginal. Derive ordering from the driver data-flow graph. (Open application: accompaniment
-   before melody — [`lane_demux_hypothesis.md`](../encoding/lane_demux_hypothesis.md).)
+   before melody — [`lane_demux_hypothesis.md`](../landed/lane_demux_hypothesis.md).)
 2. **Front-load determinants, but only low-entropy ones.** An early token must itself be highly
    determined. This is why absolute onset pitch ≈ 0 next-token while structure learns: high-entropy,
    no local determinant. Anchoring to a nearby reference (interval-from-previous — v3's `NI_*` lane)

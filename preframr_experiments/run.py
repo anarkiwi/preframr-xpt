@@ -57,10 +57,10 @@ def main():
     ap.add_argument(
         "--src-root",
         type=Path,
-        default=Path("/scratch/preframr/training-dumps"),
+        default=Path("/scratch/preframr/hvsc/C64Music"),
         help=(
-            "Where the .dump.parquet cache lives. Each list entry "
-            "resolves against this root."
+            "HVSC C64Music root. Each .list entry's .sid relpath (and "
+            "DOCUMENTS/Songlengths.md5) resolves against this root."
         ),
     )
     ap.add_argument(

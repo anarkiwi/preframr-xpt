@@ -18,7 +18,7 @@ from preframr_experiments.base import (
     _dataset_cache_key,
     _populate_dataset_cache,
     _try_dataset_cache_hit,
-    stage_dumps,
+    stage_sids,
 )
 
 
@@ -209,11 +209,10 @@ class TestDatasetCachePopulateAndHit(_CacheKeyTestCase):
             self.assertEqual(mtime_first, mtime_second)
 
 
-class TestStageDumps(unittest.TestCase):
+class TestStageSids(unittest.TestCase):
     def _make_src(self, tmp: Path) -> Path:
         src = tmp / "src"
         (src / "Composer").mkdir(parents=True)
-        (src / "Composer" / "Song.1.dump.parquet").write_bytes(b"dump")
         (src / "Composer" / "Song.sid").write_bytes(b"PSID")
         return src
 
@@ -222,89 +221,60 @@ class TestStageDumps(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             src = self._make_src(tmp)
-            dst = tmp / "work" / "train"
-            n = stage_dumps(
-                ["Composer/Song.1.dump.parquet"],
+            work = tmp / "work"
+            rows = stage_sids(
+                ["Composer/Song.sid\t1"],
                 src,
-                dst,
+                "train",
+                work,
                 logging.getLogger(),
                 link_root="/dumps",
             )
-            self.assertEqual(n, 1)
-            staged = dst / "Composer" / "Song.1.dump.parquet"
+            self.assertEqual(rows, [("train/Composer/Song.sid", 1)])
+            staged = work / "train" / "Composer" / "Song.sid"
             self.assertTrue(staged.is_symlink())
-            self.assertEqual(os.readlink(staged), "/dumps/Composer/Song.1.dump.parquet")
-
-    def test_stages_sibling_sid(self):
-        """The BACC codec recovers from the .sid, so it must be staged next to
-        each dump (here as a container-valid symlink)."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp = Path(tmp)
-            src = self._make_src(tmp)
-            dst = tmp / "work" / "train"
-            stage_dumps(
-                ["Composer/Song.1.dump.parquet"],
-                src,
-                dst,
-                logging.getLogger(),
-                link_root="/dumps",
-            )
-            sid = dst / "Composer" / "Song.sid"
-            self.assertTrue(sid.is_symlink())
-            self.assertEqual(os.readlink(sid), "/dumps/Composer/Song.sid")
-
-    def test_copies_sibling_sid_when_no_link_root(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp = Path(tmp)
-            src = self._make_src(tmp)
-            dst = tmp / "work" / "train"
-            stage_dumps(
-                ["Composer/Song.1.dump.parquet"], src, dst, logging.getLogger()
-            )
-            sid = dst / "Composer" / "Song.sid"
-            self.assertFalse(sid.is_symlink())
-            self.assertEqual(sid.read_bytes(), b"PSID")
+            self.assertEqual(os.readlink(staged), "/dumps/Composer/Song.sid")
 
     def test_copies_when_no_link_root(self):
         """Default (pre_run_hook) mode copies real content so a hook can mutate."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             src = self._make_src(tmp)
-            dst = tmp / "work" / "train"
-            n = stage_dumps(
-                ["Composer/Song.1.dump.parquet"], src, dst, logging.getLogger()
+            work = tmp / "work"
+            rows = stage_sids(
+                ["Composer/Song.sid\t1"], src, "train", work, logging.getLogger()
             )
-            self.assertEqual(n, 1)
-            staged = dst / "Composer" / "Song.1.dump.parquet"
+            self.assertEqual(rows, [("train/Composer/Song.sid", 1)])
+            staged = work / "train" / "Composer" / "Song.sid"
             self.assertFalse(staged.is_symlink())
-            self.assertEqual(staged.read_bytes(), b"dump")
+            self.assertEqual(staged.read_bytes(), b"PSID")
 
     def test_missing_src_skipped(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             src = self._make_src(tmp)
-            dst = tmp / "work" / "train"
-            n = stage_dumps(
-                ["Composer/Song.1.dump.parquet", "Composer/Gone.9.dump.parquet"],
+            work = tmp / "work"
+            rows = stage_sids(
+                ["Composer/Song.sid\t1", "Composer/Gone.sid\t1"],
                 src,
-                dst,
+                "train",
+                work,
                 logging.getLogger(),
                 link_root="/dumps",
             )
-            self.assertEqual(n, 1)
-            self.assertFalse((dst / "Composer" / "Gone.9.dump.parquet").exists())
+            self.assertEqual(rows, [("train/Composer/Song.sid", 1)])
+            self.assertFalse((work / "train" / "Composer" / "Gone.sid").exists())
 
 
-class TestCacheExcludesDumps(_CacheKeyTestCase):
-    def test_populate_skips_dump_files(self):
-        """The cache stores parse/tokenize OUTPUTS only -- never the raw dumps
-        (real or symlinked), which already live at src_root."""
+class TestCacheExcludesInputs(_CacheKeyTestCase):
+    def test_populate_skips_sid_files(self):
+        """The cache stores the parse OUTPUT (.blocks.npy) only -- never the raw
+        .sid (real or symlinked), which already lives at src_root."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             work = tmp / "work"
             sub = work / "train" / "Composer"
             sub.mkdir(parents=True)
-            (sub / "Song.1.dump.parquet").write_bytes(b"raw-input")
             (sub / "Song.sid").write_bytes(b"raw-sid")
             (sub / "Song.1.blocks.npy").write_bytes(b"blocks")
             spec = _toy_spec()
@@ -315,7 +285,6 @@ class TestCacheExcludesDumps(_CacheKeyTestCase):
             )
             cached = cache_dir / "train" / "Composer"
             self.assertTrue((cached / "Song.1.blocks.npy").exists())
-            self.assertFalse((cached / "Song.1.dump.parquet").exists())
             self.assertFalse((cached / "Song.sid").exists())
 
 

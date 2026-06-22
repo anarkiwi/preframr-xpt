@@ -1,5 +1,8 @@
 # Representation-abstraction probe — local vs structural (the free-running root, refined)
 
+**SUPERSEDED (2026-06-20):** the structural-locality diagnosis is addressed at the representation level
+by the step/tracker codec (sparse, generator-level). Kept as the probe-method + finding record.
+
 **Status: RAN (2026-06-17).** Training-free probe of the trained model's *representation* (not its
 behaviour), prompted by the question "does the model fail to generate because it can't *see what is
 genuinely similar across tracks* — an abstraction failure?" Answer: **yes, but specifically a long-range

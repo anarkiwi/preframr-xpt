@@ -1,5 +1,8 @@
 # Lane de-mux hypothesis — voice- or role-contiguous ordering of the event stream
 
+**SUPERSEDED (2026-06-20):** the step/tracker codec is per-voice tracker rows by construction (voices
+already de-muxed); the cross-voice content question is mooted by the generator-recovery representation.
+
 **Status:** Open hypothesis (merged 2026-06-12 from `superframe_voice_lane_design.md` +
 `role_lane_factorization.md`, restated against the v3 event model). **Trigger:** open this only if
 the canonical event-model runs localize a content failure to cross-voice interference (e.g. `NI_*`

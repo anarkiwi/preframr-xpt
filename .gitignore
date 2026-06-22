@@ -219,3 +219,4 @@ __marimo__/
 
 # local Claude Code agent state (scheduled-task locks, etc.)
 .claude/
+.claude/settings.local.json

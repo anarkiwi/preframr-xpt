@@ -1,5 +1,8 @@
 # Context-length arc — does longer `seq_len` improve held-out continuation? (v2)
 
+**SUPERSEDED (2026-06-20):** ran on the v2 event codec. The step/tracker codec changes the token budget
+wholesale (< 1 token/frame); re-cut context experiments on the landed stream if needed.
+
 **Status: RAN, INCONCLUSIVE — step-confounded (2026-06-13); decisive re-do = matched STEPS (see
 Results).** The first experiment after the v2 re-baseline; AGENTS NEXT #1. Overnight `seq_len` sweep
 on the atoms-only v2 model, decided in bits/canonical-atom + content-tier (full-eval). The

@@ -1,28 +1,13 @@
-# Smoke-tier SID corpus. 7 SIDs hand-picked to exercise every macro
-# class the encoder produces, end-to-end wallclock target < 10 min per
-# experiment arm with a warm dump cache.
+# Smoke tier: one residual-zero gate fixture per codec backend family, to
+# exercise the sid-only BACC parse -> train -> report path end to end.
 #
-# Coverage rubric (one line per class):
-#   BACK_REF / PATTERN_REPLAY     LoopPass + transposed/fuzzy variants
-#   GATE_REPLAY palette           GateMacroPass; bundle replay
-#   PLAY_INSTRUMENT body          InstrumentProgramPass; envelope replay
-#   INTERVAL mirror               IntervalPass; cross-voice freq link
-#   PWM / FilterSweep burst       PwmPass / FilterSweepPass
-#   Long DELAY frames             Variable-IRQ idle handling
-#   PAL + NTSC                    irq mapping divergence
-#
-# Path format: ``<HVSC_VERSION>``-relative, ``MUSICIANS/<L>/<Composer>/<song>.<tune>.dump.parquet``.
-# The list is read by ``preframr_experiments/base.py`` which
-# resolves each entry against ``--hvsc-root`` (default
-# ``/scratch/preframr/training-dumps``).
-#
-# Edit policy: this list is pinned. Re-curation is a deliberate event
-# (record the rationale in the commit message); single-arm experiments
-# that care about specific data should reference this file unmodified.
-MUSICIANS/G/Goto80/Truth.1.dump.parquet                # short, dense, voice-rotated
-MUSICIANS/G/Goto80/Acid_10000.1.dump.parquet           # GATE_REPLAY-rich
-MUSICIANS/G/Goto80/Skybox.1.dump.parquet               # InstrumentProgramPass
-MUSICIANS/G/Goto80/CBM_85.1.dump.parquet               # PATTERN_REPLAY-rich
-MUSICIANS/H/Hubbard_Rob/Commando.1.dump.parquet        # long ADSR (long-form PI)
-MUSICIANS/G/Galway_Martin/Yie_Ar_Kung_Fu.1.dump.parquet  # arpeggio (xframe TRANSPOSE)
-MUSICIANS/T/Tel_Jeroen/Afterburner.1.dump.parquet      # NTSC bias
+# Entry format: ``<C64Music-relative .sid path><TAB><1-based subtune>``.
+# Resolved against the HVSC root (run.py --src-root, default
+# /scratch/preframr/hvsc/C64Music) and recovered sid-only via the codec.
+# These are the codec's own gate tunes (kept in sync with select.SMOKE_FIXTURES);
+# re-curation is a deliberate, commit-logged event.
+MUSICIANS/H/Hubbard_Rob/Monty_on_the_Run.sid	1	# hubbard
+MUSICIANS/H/Hubbard_Rob/5_Title_Tunes.sid	2	# hubbard (5TT)
+MUSICIANS/J/Jammer/Grid_Runner.sid	1	# goattracker
+MUSICIANS/L/Lft/A_Mind_Is_Born.sid	1	# lft
+MUSICIANS/A/Ass_It/Ode_to_Music.sid	1	# dmc

@@ -1,5 +1,8 @@
 # Tier-4 — DAgger / scheduled-sampling on re-canonicalised rollouts (attacks exposure bias, M1)
 
+**SUPERSEDED (2026-06-20):** an event-codec exposure-bias remedy mooted by the representation-level fix
+(step/tracker codec). In the model-side anti-queue (`../refuted/multi_modal_objective_design.md`).
+
 **Status:** Design (2026-06-16). Opened because **Tier-3 augmentation RAN and did not fix free-running**
 (`aug_ab_evalb_results.md`): corpus changes lifted teacher-forced metrics (instrument transplant
 novel-content +26%) but free-running content acc stayed flat ~0.05–0.07 at every dose. That is the

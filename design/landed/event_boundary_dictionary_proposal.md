@@ -1,5 +1,8 @@
 # Event-boundary-respecting dictionary — the promoted §6 lever, triage-resolved PARTIAL (NOT adopted)
 
+**SUPERSEDED (2026-06-20):** event/frame-codec density era. The step/tracker codec reaches < 1
+token/frame by recovering the generator, not by dictionary-compressing a dense stream.
+
 **Status: RESOLVED — PARTIAL, not adopted (2026-06-13).** The tokens-side mechanism shipped
 (preframr-tokens 0.51.0, `unit_starts` segmenter wired into `Corpus.preload`); the xpt-side static
 triage RAN on the v2 codec and the **kill-gate survived but the ADOPT gate is structurally

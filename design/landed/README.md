@@ -35,6 +35,29 @@ historical context; consult git log for the actual commits.
 | [`encodability_metric_design.md`](encodability_metric_design.md) | Per-cluster Eval-B encodability metric extractor. **Retired** — served the refuted `global_instr_ids` Phase A; impl removed in the repo-focus cleanup. |
 | [`orinnx_audition_design.md`](orinnx_audition_design.md) | Orin NX predict-host audition harness. |
 
+## Decompiler arc → the STEP / TRACKER codec (the < 1 token/frame win)
+
+All superseded-with-banner by the landed step/tracker codec
+([`../encoding/sid_player_decompiler.md`](../encoding/sid_player_decompiler.md) "HOW IT LANDED"); kept
+as the record of the arc. The enduring lesson is HARD RULE #0 (the transposition trap recurred 4×).
+
+| Doc | What it recorded |
+|---|---|
+| [`ornament_generator_recovery.md`](ornament_generator_recovery.md) | **The central diagnosis:** the event stream isn't sparse because ornaments are per-frame generators; recover the per-instrument program → note-rate sparse + byte-exact. Pointed the arc at generator recovery. |
+| [`universal_sid_codec.md`](universal_sid_codec.md) | Own-VM / universal op-set codec with a residual *escape lane* — right instinct, wrong mechanism (the landed codec removed the escape hatch). |
+| [`virtual_tracker_codec.md`](virtual_tracker_codec.md) | GoatTracker-as-target — refuted (one driver's grid/tempo/table caps = the wrong cage; freq ~85% off-grid). |
+| [`automated_generator_recovery.md`](automated_generator_recovery.md) | MDL inference over the op-set grammar (Berlekamp–Massey + periodicity + DP segmentation) to retire hand-coded recognizers; the generators landed in the codec. |
+| [`front_loaded_instrument_encoding.md`](front_loaded_instrument_encoding.md) | Tracker-style instrument DEF→REF on the event codec — RAN as a de-confounded null; pitch-invariant instrument banks landed in the step codec instead. |
+| [`phrase_def_ref_triage.md`](phrase_def_ref_triage.md) | Phrase/pattern recurrence census — landed as the inline backward orderlist. |
+| [`melody_timbre_factorization.md`](melody_timbre_factorization.md) | Track-major melody/timbre split — strongest proxy of the era, but a de-confounded generation null; the step codec is per-voice rows by construction. |
+| [`lane_demux_hypothesis.md`](lane_demux_hypothesis.md) | Voice/role-contiguous event-stream ordering — mooted (step codec de-muxes voices structurally). |
+| [`event_boundary_dictionary_proposal.md`](event_boundary_dictionary_proposal.md) + [`encoding_density_frontier.md`](encoding_density_frontier.md) + [`context_length_experiment.md`](context_length_experiment.md) | Frame/event-codec density era: BPE / boundary-dictionary refuted as the context lever; < 1 token/frame came from recovering the generator, not compressing a dense stream. |
+| [`log_to_swm_recompiler_design.md`](log_to_swm_recompiler_design.md) | Register-log → editable SID-Wizard module — the landed step codec is itself the register-log → program decompiler; export rebuildable on it. |
+| [`backlog_tokens_hardening.md`](backlog_tokens_hardening.md) | tokens testing discipline for the event codec; the step-codec port carries its own gates + the no-skip fixture policy. |
+| [`macros_removal_refactor_plan.md`](macros_removal_refactor_plan.md) + [`tokens_port_deadwood_manifest.md`](tokens_port_deadwood_manifest.md) | The dead-wood audit + removal sequence the clean-slate port followed (`events/` + `macros/` + frame codec deleted). |
+| [`representation_abstraction_probe.md`](representation_abstraction_probe.md) | Local-vs-structural abstraction probe — the structural-locality failure the step codec addresses at the representation level. |
+| [`generation_offramp_shipped.md`](generation_offramp_shipped.md) + [`free_running_pathology_remediation_design.md`](free_running_pathology_remediation_design.md) + [`dagger_recanonicalization_design.md`](dagger_recanonicalization_design.md) | The free-running off-ramp + remediation ladder + DAgger — event-codec-era; the free-running ↔ teacher-forced gap was a dense-stream pathology. Re-evaluate on the step stream. |
+
 ## Tokenizer / encoding
 
 | Doc | What landed |

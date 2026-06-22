@@ -54,4 +54,4 @@ atoms, intervals, no codebook keys to fragment) → the v3 event model. See
 
 The melody layer-2/3 stack this doc gated (interval skeleton, lane de-mux) resolved as: layer 2
 **absorbed** by v3's `NI_*` interval lane; layer 3 remains the open
-[`lane_demux_hypothesis.md`](../encoding/lane_demux_hypothesis.md).
+[`lane_demux_hypothesis.md`](lane_demux_hypothesis.md).

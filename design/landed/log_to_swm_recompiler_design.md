@@ -1,5 +1,8 @@
 # Register-log → SWM recompiler — re-render-equivalent SID-Wizard module from a register log
 
+**SUPERSEDED (2026-06-20):** the landed step/tracker codec IS the register-log → editable-program
+decompiler. A tracker-module export endpoint can be rebuilt on it if the editable-output goal returns.
+
 **Status:** Design (2026-06-06; IR source retargeted 2026-06-12 — the generator-MDL tokens pass is
 retired, so the decomposition is derived standalone, below). Does not exist yet: `pysidwizard` has
 `build_swm`/`write_swm` (typed model → SWM bytes) + a reader + a bit-exact player, but nothing

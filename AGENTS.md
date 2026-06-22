@@ -56,17 +56,36 @@ hits any budget). **This test MUST pass, MUST run in CI, and may NEVER be remove
 bypassed; its fixture is auto-acquired (no skip path).** The same dual gate applies to the GoatTracker
 (Grid_Runner) and 5TT tests.
 
-**The original "below context 8192" goal is now ACHIEVED** — the two-file BACC codec makes the whole tune
-fit a single 8192-token context window with room to spare: **Monty 3,863 tokens (0.220 tok/frame),
-5_Title_Tunes 1,394 (0.680), Grid_Runner 4,132 (0.264), A Mind Is Born 496 (0.061)** — all residual-zero.
-(The 0.901 / 15,816-token figures above describe the older STEP codec; the BACC codec is far sparser.) BPE
-does NOT count; these are pre-BPE token-id streams.
+**The original "below context 8192" goal is now ACHIEVED, and all four gate tunes are now under 4,096** —
+the two-file BACC codec makes the whole tune fit a single 8192-token context window with room to spare:
+**Monty 1,313 tokens (0.075 tok/frame), 5_Title_Tunes 1,394 (0.680), Grid_Runner 2,817 (0.180),
+A Mind Is Born 496 (0.061)** — all residual-zero. (Grid_Runner 4,132 → 2,817 came from the global
+cross-pattern row-LZ, PR #101: one backward window over all patterns concatenated, re-sliced by per-pattern
+row-count headers — lossless, no new vocab.) (The 0.901 / 15,816-token figures above describe the older STEP
+codec; the BACC codec is far sparser.) BPE does NOT count; these are pre-BPE token-id streams.
+
+**GoatTracker corpus byte-exact: ~37.8% → ~41% (freq-overrun class CLOSED, PR #102 + pygoattracker
+v0.1.3).** The packed player indexes `mt_freqtbllo-FIRSTNOTE,y`; a wavetable relative-note step past
+`lastnote` overruns into the adjacent relocated image bytes. Falsification-traced (HARD RULE #0, NOT
+irreducible): the overrun lo = `freqtblhi[n−96]` (the CONSTANT standard hi-freq table), hi = the low
+bytes of the relocated orderlist/pattern absolute addresses — a deterministic function of the packer's
+load-address layout, not musical content (verified: `songtbl[0..2]==orderlist_addrs & 0xFF`). pygoattracker
+ports the editor player (zero-padded table → freq 0), so those notes diverged. Fix: `gt_unpack` reconstructs
+the exact 128-entry table from the packed image and passes it to the new `Player(..., freq_table=...)`
+override — TRUE image bytes, no per-frame correction. (The abstract token Song doesn't encode the packer's
+relocation layout, so the token round-trip can't byte-reproduce those address low-bytes — hence the relaxed
+structural assertion on `test_measure_guards_nonpitched_note_byte`; in-range round-trip stays covered by
+Grid_Runner.) Lossless, zero regression; Twilight/
+Crazy_Brain/Dear_Enemy now full-song byte-exact (Twilight added to GATE_FIXTURES). The hypothesized ~50%
+was WRONG — the overrun class is ~5% of mismatches, not the dominant one; the bulk of GoatTracker
+non-byte-exactness is still elsewhere (a target for a future survey, not this fix).
 
 **Cross-driver note unification + the absolute-grid tradeoff (recorded):** the note token is the ABSOLUTE
 canonical 12-TET A440 grid index, identical across drivers (the same concert pitch = the same token,
-Hubbard and GoatTracker). This costs intra-phrase delta compression a *relative*-interval scheme would have
-(Monty was 1,247 tokens pre-migration under relative; absolute is 3,863 even after a backward Transpose op
-recovers transposed-phrase reuse) — the deliberate trade for one learnable cross-driver alphabet. The
+Hubbard and GoatTracker). This costs intra-phrase delta compression a *relative*-interval scheme would have,
+but the backward Transpose op (`REPEAT`+Δ) recovers nearly all of it: Monty was 1,247 tokens pre-migration
+under relative and is 1,313 under absolute+Transpose — only +66 tokens (+5%) for one learnable cross-driver
+alphabet, not the cost a naive absolute scheme would pay. The
 remaining intra-phrase cost is the lever for SUBWORD (BPE/Unigram) to recover at the motif level WITHOUT
 welding fields together (study in flight); see `design/encoding/cross_driver_note_unification.md`.
 
@@ -108,15 +127,16 @@ representation, ranked by tunes-unblocked. Each is a precise "needs X", never "i
 
 ## LIVE ARC — the step codec lands; clean-slate port; then generalize → corpus → train
 
-The codec is DONE on the proving tune. The work in flight, in order:
+The codec is DONE and the framework/harness are ported to it. The work in flight, in order:
 
-1. **The clean-slate port (concurrent — do NOT touch).** The step codec is being locked into
-   `preframr-tokens`; `events/` + `macros/` + the frame codec are being **DELETED**; preframr/preframr-xpt
-   are intentionally broken pending rebuild. Port-specific runbook:
-   `design/infra/tokens_port_release_cascade.md`. Do not edit `preframr-tokens` or the port's working tree.
+1. **The clean-slate port — LANDED.** The step/BACC codec is locked into `preframr-tokens` (sid-only
+   `recover_from_sid`, generic driver serialized); `events/` + `macros/` are deleted. preframr (framework)
+   + preframr-xpt (harness) are ported to the sid-only manifest path; xpt has a census-driven,
+   tracker-stratified corpus selector (`preframr_experiments/corpus/`). Remaining: run the full-HVSC
+   census + pin the tiers (blocked only on the generic-driver fix in flight).
 2. **Generalize beyond Monty.** Roll the decompiler corpus-wide (other drivers stress other generators);
    drive residual → 0 + < 1 token/frame everywhere. HARD RULE #0 applies to every "irreducible"-looking
-   run you hit.
+   run you hit. The census (`corpus/census.py`) measures per-tracker residual-zero coverage corpus-wide.
 3. **Re-encode the corpus + train** the atoms-only continuation on the step stream
    (`specs/generalize_continuation.py`) and re-read the deciders on a note-rate-sparse stream where a
    window holds real musical structure.
@@ -194,15 +214,20 @@ program. Hub: `design/references/learnability_token_ordering_theory.md`.
 ## Packages
 
 - **`preframr`** — framework (train/inference/model/args/parse), Docker `anarkiwi/preframr` (no PyPI).
-  Release = merge to `main` (`release.yml` + `v*` tag → `:VERSION`+`:latest`). **Rebuild pending** the
-  step-codec port (intentionally broken until the new tokens wheel lands; floor cascade
-  `design/infra/tokens_port_release_cascade.md`).
+  Release = merge to `main` (`release.yml` + `v*` tag → `:VERSION`+`:latest`). **Ported to the BACC
+  sid-only codec** (`recover_from_sid`, no `.dump.parquet`): parse consumes a `(.sid, subtune)`
+  manifest (`--manifest`/`--sid-root`/`--songlengths`); the image bundles the `preframr-sidtrace`
+  binary (`SIDTRACE_BIN`).
 - **`preframr-tokens`** (PyPI; `/scratch/anarkiwi/preframr/preframr-tokens`) — torch-free
-  parser/tokenizer. **Being rebuilt as the step/tracker codec**; `events/` + `macros/` (the old frame
-  codec) are DELETED by the port. Do not touch the port's working tree.
+  step/tracker BACC codec. Public sid-only path: `recover_from_sid` (driver=`generic`) →
+  `program_to_ids`/`measure`/`ids_to_program` (all dispatch the generic serializer). VOCAB 34, PAD 34.
 - **`preframr-audio`** (PyPI) — SID render + chip-semantics reference tests (ADSR / write-liveness /
   release-position); answer envelope questions from these, not ad-hoc probes.
-- **`preframr-experiments`** (this repo; PYTHONPATH, no PyPI) — runner + specs + `audit/`.
+- **`preframr-experiments`** (this repo; PYTHONPATH, no PyPI) — runner + specs + `corpus/` (census +
+  tracker-stratified selection) + the 3 decisive `audit/` tools (content-tier, copy-novel,
+  free-running-gap).
+- **HVSC tracker catalog** (`/scratch/anarkiwi/cbm/hvsc-tracker-catalog/data/results.csv`) — SIDId
+  player id for every `.sid` (the ground-truth stratification axis).
 
 **Run all non-GPU work (build, parse, audit, pytest, lint, decompiler) on `fogbank`** (72 cores; keep
 defroster for training). Release/build/cache authority: `design/references/release_build_cache.md`.
@@ -211,10 +236,14 @@ defroster for training). Release/build/cache authority: `design/references/relea
 
 - Framework: `./run_tests.sh` (black, pytest, pylint, pyright, coverage ≥77).
 - xpt host CLI (no torch): `PYTHONPATH=. python3 -m preframr_experiments.run <spec> --root <work>`.
-  One spec per A/B in `specs/`; runner stages → tokenize → train per (arm,seed) in `docker run`.
-  Spec-dependent tokenization needs `PREFRAMR_DATASET_CACHE_DISABLE=1`.
-- Decisive gate = content-tier audit: `audit_checkpoint_per_class --ckpt … --work-dir <seed0>`
-  (`--device cpu` to avoid GPU contention) → `content_tier_report`. Readers in `audit/README.md`.
+  One spec per A/B in `specs/`; runner stages `.sid` + writes a manifest → parse (sid-only recovery →
+  `.blocks.npy`) → train per (arm,seed) in `docker run`. Default context = 4096 tokens (whole-song-in-
+  context). Spec-dependent parse needs `PREFRAMR_DATASET_CACHE_DISABLE=1`.
+- **Corpus = census-driven, tracker-stratified, residual-zero-gated** (`preframr_experiments/corpus/`):
+  `census.py` over full HVSC → `select.py` pins tiers (smoke/mini/canonical/frontier) of `.sid`
+  entries ≤ 4096 tokens. See `data/README.md`. (The old composer/k-means dump tiers are gone.)
+- Decisive gate = `content_tier_report` (+ `copy_novel_audit`, `free_running_gap_audit`) over the
+  trained checkpoint's blocks.
 
 ## Conventions
 

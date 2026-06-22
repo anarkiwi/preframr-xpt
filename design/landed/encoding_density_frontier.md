@@ -1,5 +1,8 @@
 # Encoding-density frontier — atoms-only is the default, BPE refuted as the context lever (true magnitude ~1.4× bits/atom), radix + head-amortization the open density levers
 
+**SUPERSEDED (2026-06-20):** frame/event-codec density bookkeeping. The < 1 token/frame goal landed via
+the step/tracker codec (`../encoding/sid_player_decompiler.md`); BPE-is-not-the-context-lever survives.
+
 **Status: DECISION (2026-06-12; the §7 de-confounding audit RAN — verdict revised, magnitude
 resolved).** *Codec note (2026-06-13): the live reference baseline was re-anchored to the **v2 codec**
 (tokens 0.51.0, `EVENT_FORMAT_VERSION=2`) — current numbers content-tier 0.505/0.552/0.485,
