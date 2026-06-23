@@ -17,6 +17,65 @@ cycle recurs elsewhere — yes = backward-reference (phrase-LZ); (3) trace it to
 after all three is it per-tune note DATA — and that still repeats. There is no "irreducible" category.
 This protocol goes into every analysis/codec subagent prompt. (Memory: `no-irreducible-runs`.)
 
+### The proof nothing is irreducible — A Mind Is Born (256 bytes → 0.42 token/frame)
+
+The adversarial case for "irreducible": lft's *A Mind Is Born* is **256 bytes of arbitrary machine code** —
+no note table, no patterns, no instruments, no gates in any tracker sense; pitch and rhythm are *computed*
+by bit-arithmetic on a counter. If anything in HVSC is a wall, it is this. It is not. The **ENTIRE 2:16
+song** (8,193 frames at the CIA-IRQ rate) encodes **byte-exact to 3,477 tokens — 0.42 token/frame** — by
+recovering the generators it computes (a period-32 accumulator melody, a +1-every-128 filter ramp, a
+repeating drum lane), NEVER by compressing output. Raw, that trace is 8,193 × 25 ≈ 205,000 register values,
+and LZMA of it floors far above 0.42 (it cannot represent an accumulator ramp). If 256 bytes of hand-written
+assembly driving evolving synthesis collapses to 0.42 token/frame, **NOTHING a human composed in a tool can
+be a wall** — the only question is whether you have recovered the generator yet. Pin this number against any
+future "this tune is irreducible" claim.
+
+### The other face of the wall — JCH NewPlayer, where "irreducible" hides in the TRACER (2026-06-22)
+
+A_Mind proves a tune with NO source structure still compresses. JCH NewPlayer proves the dual: a tune that
+LOOKS like high-entropy continuous pitch is a compact INTEGRATOR the tracer fails to capture. Goto80's
+`10.sid` encodes at 3.97 token/frame; the output-only recovery sees **718 distinct pitches — voice 0 = 3000
+distinct freq values over 3000 frames, 100% unique.** RE of the player (`deplayroutine` + `da65`) shows freq
+is `note_table[arp(note,transpose)] + vibrato_acc + porta_acc`: one `$60` "slide to note N at speed s"
+command makes the player add `interval(N)>>s` to the freq shadow EVERY frame. The 3000 "pitches" are the
+integral of ONE slide command. The source is tiny (orderlists, a 96-entry note table, ~24 instruments of ~8
+bytes, a few slide/vibrato bytes); the output is dense only because the player is an accumulator.
+
+The lesson: **"irreducible" can hide in a TRACER capture gap, not just a codec gap.** The compact source is
+all in the post-init RAM SNAP and the FILTER sweep is already fully traced — but `preframr-sidtrace`'s STSQ
+samples only SIDDF *leaves*, so the freq ACCUMULATORS (`$1778` porta, `$17a7` vibrato, `$1795` wave-ptr) —
+pass-through stores the slicer jumps over — are never sampled, leaving recovery blind to the slide command.
+The fix is upstream (sample every transitive state cell of a `$D4xx` write + capture the orderlist pointer
+walk), not a codec wall, and it generalises to every slide/portamento/table-walk player. Scoped in
+`design/encoding/sidtrace_accumulator_capture.md`.
+
+### Why it STILL recurs, and the MECHANICAL fix (2026-06-22)
+
+Prose does not propagate. The protocol above has been written down since the 4× transposition trap, yet a
+codec subagent STILL called 7/12 generic tunes an "entropy wall" this session. Two structural reasons: it
+lives HERE (`preframr-xpt`) while codec subagents run in `preframr-tokens` (this doc is never auto-loaded
+into their context), and a rule you must "remember to paste into every prompt" is a rule that leaks. Three
+NEW disguises the wall wore, all trivially false once you look:
+- **General-compressor-as-oracle.** "LZMA floors this at 1.1 token/frame" is meaningless — LZMA cannot
+  represent an accumulator ramp or a long table-walk, the exact generators we recover (a +1-every-128
+  filter sweep is 3 ints to us, near-incompressible to LZMA). The floor is the PLAYER (hundreds of bytes),
+  proven by the tune's existence in a tool. NEVER let a general compressor adjudicate irreducibility.
+- **Framing / denominator bugs as walls.** Master_Composer read at 4.24 token/frame was framed at 234
+  frames (a sparse-writer binned per write-burst) where the raster denominator is 2280 → **0.525**,
+  byte-exact. Check the frame count before crying entropy.
+- **Inconsistent segmentation defeats REPEAT.** MusicAssembler / Electrosound melodies are **92–93%
+  repeated phrases** yet encoded at 1.3–1.6 because a global token-min cover segments the SAME subsequence
+  differently per occurrence, so segment-LZ can't match it. "Can't compress further" ≠ "no structure" — it
+  means the cover isn't canonical. The structure was 92% there the whole time.
+
+ENFORCEMENT (mechanical, lives in `preframr-tokens`, not prose here):
+- `.claude/agents/sid-codec.md` — the HARD RULE #0 guardrails baked into the subagent SYSTEM PROMPT.
+  Dispatch ALL codec/analysis work as `subagent_type: sid-codec`, never `general-purpose`.
+- `.claude/hooks/codec_guard.sh` (SubagentStop hook) — rejects a finish that left scratch files OR asserted
+  an "irreducible / entropy wall / near-digi" conclusion without the falsification keywords.
+- `tools/codec_gate.py` — "done" is the GATE (residual-0 AND < 1 token/frame AND ~0 literal-floor), never
+  an agent's judgment; a FAIL on token/frame means UNRECOVERED STRUCTURE, never a wall.
+
 ## HEADLINE GOAL — < 1 token per frame — ACHIEVED
 
 The encoding had to reach **< 1 token/frame**, measured **pre-BPE**, by recovering the GENERATOR (never
@@ -151,6 +210,80 @@ Proven (ground truth, byte-exact, corpus-wide): `sidtrace` cycle-exact dumps; 63
 ≥99% byte-exact; **full bus sweep = 1,437,769 exceptions, 0 unexplained** — every write is a table-read /
 RMW state-var (vibrato/porta/sweep) / immediate, NO arbitrary writes; digis split out (61,834 music).
 Pitch lane: absolute-anchored 12-TET encoder, byte-exact 100%, base-snap sub-cent.
+
+### GENERIC DRIVER ACROSS ALL DRIVERS — the structure-recovery breakthrough (2026-06-23)
+
+The hand backends hit < 1 token/frame; the push since: make the SINGLE GENERIC driver do it for EVERY
+driver. The Hubbard/DMC/lft custom packers are RETIRED — only `generic` + GoatTracker (kept for reference)
+remain, so a model trained on the output sees ONE structure. The arc and the breakthrough:
+
+- **The catastrophic packer, fixed.** The first generic encoder decomposed each tune into ~16 independent
+  per-REGISTER lanes (freq/pw/ctrl/ad/sr per voice + globals), each a JSON-seed event stream — 3.9–20.6
+  token/frame, the note structure shattered. Replaced by a NOTE-structured **common tracker IR** (shared
+  pitch-invariant instrument pool + per-voice note-event rows of `(note, instr_ref, command, dur)` +
+  REPEAT/TRANSPOSE orderlist — the same shape GoatTracker/Hubbard/DMC already converge on), recovered
+  byte-exact from a token-minimizing generator COVER of each lane (`generic/cover.py`,
+  `bacc/tracker_ir.py`). A_Mind_Is_Born — 256 bytes of arbitrary 6502 machine code, the adversarial
+  "irreducible" case — lands the ENTIRE 8193-frame song at **0.42 token/frame, byte-exact** (residual 0),
+  pinned as a permanent gate (`tests/test_amib_generic_budget.py`).
+
+- **The wall trap, re-caught TWICE, then broken.** The dense/structured tunes floored > 1 and were twice
+  mislabeled "genuine content / entropy floor" — both times the HARD RULE #0 falsification protocol broke
+  it (framing bug: Master_Composer 4.24→0.525 once its play period was detected; fragmented sweeps;
+  inconsistent segmentation). JCH NewPlayer was the decisive case: its freq is an INTEGRATOR
+  (`note_table[arp] + porta_acc + vibrato_acc`), so output-fitting the per-frame trace saw **572 phantom
+  "pitches" and 21 per-note programs** for a tune the player drives with **16 instruments / 30 pitches /
+  33 patterns / an orderlist** (~1199 source bytes). The miss, named exactly: we *output-fit the trace
+  instead of recovering the tracker STRUCTURE that is already captured byte-exact in the distill
+  SNAP/IDXR/SDDF* (`generic/recover.py` literally hardcoded `instruments=[]`).
+
+- **The fix — `generic/structure_recover.py`: recover the structure, don't fit the output.** GENERICALLY,
+  no hardcoded addresses: SDDF leaf-GCD → the instrument-table base/stride; the SNAP split-pointer
+  signature → the pattern-pointer table; 0xFF-terminated index streams → the orderlists. It reads the 16
+  instruments, the patterns of `(note, instr_ref, command)` rows, the 3 orderlists and the 30-pitch note
+  table, folds in the proven per-cell accumulator subtraction (porta = QUADRATIC i.e. integral-of-arithmetic-
+  series, vibrato = AFFINE) for clean pitches, and emits the common IR. **JCH: 6825 → 1225 tokens,
+  4.94 → 0.886 token/frame, BYTE-EXACT.** Validated no hardcoded structure (`tests/test_structure_recover.py`
+  asserts the no-wall property: freq lanes cover byte-exact in fewer segments than frames).
+
+- **The complementary two-path architecture, ONE common IR.** STRUCTURE recovery (tracker tunes — the bulk
+  of HVSC) when a valid structure renders byte-exact; the output-only GENERATOR cover (algorithmic tunes —
+  A_Mind_Is_Born) as the additive fallback when `recover_structure` returns ok=False. The state-machine
+  accumulator capture (sidtrace worktree `feature/accumulator-capture`, design item #1) enables the
+  clean-pitch derivation; the heavier tracer items #3/#4 were NOT needed — the structure recovered from the
+  CURRENT distill artifact.
+
+- **The mechanical acceptance gate.** `tests/test_corpus_budget.py`: 20 distinct-driver, average-complexity
+  HVSC tunes, parametrized (xdist), each asserting byte-exact + < 1 token/frame, with committed uint8 state
+  fixtures + a MANIFEST. SHIPPED (commit `2e9943b`, 2026-06-23): **14 pass / 6 xfail** (was 3 / 17) — the
+  structure path recovered 11 of the 17 dense tunes to byte-exact + < 1 token/frame through the REAL driver
+  (SoedeSoft 0.48, EMS/Odie 0.56, DefMon 0.57, Cyberlogic 0.60, GoatTracker 0.63, Geir_Tjelta 0.64,
+  Electrosound 0.81, AMP/Music_Assembler 0.83, HardTrack 0.87, JCH 0.89). `run_tests.sh` green (490 passed,
+  pyright 0, coverage 90.98%). The 6 remaining xfails each carry a FALSIFIABLE reason, never a wall: DMC
+  recovers byte-exact but 21 raw instrument structs floor it at ~1.16 (pending generator-fitting of the
+  instrument tables); MoN/FutureComposer + Digitalizer + RoMuzak are table-less (no pattern-pointer table)
+  and correctly fall back to the cover; TFX + 20CC fail the pattern-decode round-trip (a structure-detection
+  heuristic gap, not entropy). Enforcement layer hardening this against regression: `tools/codec_gate.py` (objective
+  done = residual-0 ∧ tok/frame < threshold ∧ ~0 literal-floor) + the SubagentStop `codec_guard.sh`
+  (rejects scratch-in-tree and any unfalsified wall-claim) + CLAUDE.md. The guard is text-checkable hence
+  gameable; the FIXTURE GATES are the real enforcement.
+
+- **The honest residual (HARD RULE #0 — recorded, not hidden).** The shipped codec STORES the porta/vibrato
+  accumulator value-sequences rather than fitting them to their generators (the original `token_budget` proof
+  OMITTED these). They amortize < 1 on the ~2300-frame corpus tunes, but the SAME codec is **1.58** on a short
+  1382-frame trace (JCH `10.sid`) — the ~512-sample accumulators don't amortize. This is the thesis in
+  miniature: a stored accumulator sequence is OUTPUT-FITTING; the accumulator IS a generator (porta =
+  QUADRATIC / integral-of-arithmetic-series, vibrato = TRIANGLE). The next increment fits them to those
+  generators — simultaneously dropping every tune far below 1, passing short traces, AND unblocking DMC's
+  raw-instrument floor — plus the non-freq structure→register REPLAY (orderlist→patterns→rows→instrument SID
+  loads), whose missing piece is the per-driver `dur`→frame TEMPO mapping (durations don't yet sum to the
+  frame count). FREQ already renders fully from the IR byte-exact. Tracked: codec increment #2.
+
+Design: `design/encoding/generic_generator_state_machine.md` (why the archetype zoo is output-fitting; the
+state-machine generic solution) and `sidtrace_accumulator_capture.md` (the tracer capture spec). Code in
+`preframr-tokens/preframr_tokens/bacc/generic/` (`structure_recover.py`, `structure_ir.py`, `cover.py`,
+`recover.py`, `tracker.py`) + `bacc/tracker_ir.py` / `tracker_serialize.py`; gates `tests/test_corpus_budget.py`,
+`test_amib_generic_budget.py`, `test_structure_recover.py`, `tools/codec_gate.py`.
 
 ### THE GENERIC GENERATOR — one BACC primitive subsumes the op-set (validated on a 2nd driver)
 
