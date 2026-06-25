@@ -1,7 +1,8 @@
 # Generation quality gate — scoring what the model *makes*, not just what it predicts
 
-**Current status (BACC):** the codec is BACC (bounded-accumulator, VOCAB=34); generation decodes
-through the BACC decode/recover path, and the scorecard below is in the BACC domain.
+**Current status (FLAT v2):** the model-facing codec is the FLAT v2 typed-atom vocab (VOCAB=576,
+`flat_serialize.py`; BACC remains the instrument primitive); generation decodes through the
+decode/recover path, and the scorecard below applies in that domain.
 
 **Status:** Design. Every decisive gate today is token-prediction accuracy
 (content-tier per-class, val_acc); the only generation-side checks are pathology flags (loop
@@ -75,8 +76,8 @@ The scorecard is computed **per sampling configuration** — its first scientifi
 default regime (the grid above) instead of folklore ("constrained + low temp"). Open item folded in
 here: **port the sampling-time validity mask to the BACC token domain** (`constrained_decode.StreamState`
 speaks the parse-domain space; the BACC decode path currently relies on strict decode + resample).
-The BACC alphabet is small (VOCAB=34) and self-delimiting, so the mask is a small numpy state machine
-over the BACC token categories. Until it lands, `invalid_rate` measures how much it is missed.
+The FLAT v2 alphabet (VOCAB=576) is typed and self-delimiting, so the mask is a small numpy state machine
+over the typed token ranges. Until it lands, `invalid_rate` measures how much it is missed.
 Loop-escape policies (on detected tail cycle: raise T / re-anchor at a fresh BACC block boundary) are
 v2, measured by the same scorecard.
 

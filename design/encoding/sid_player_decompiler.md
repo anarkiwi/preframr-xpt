@@ -1,6 +1,9 @@
 # SID Player Decompiler — the universal generator grammar (op-set from real drivers, zero residual)
 
-**Status: LANDED — the live arc reached its goal.** The thesis below (`trace =
+**Status: LANDED — the live arc reached its goal.** (v1 historical; the model-facing alphabet is now the
+FLAT v2 typed-atom vocab, VOCAB=576 — `flat_serialize.py`, see AGENTS.md. The thesis and lessons below are
+durable; the cited v1 BACC numbers / `token/frame` figures are kept as point-in-time results, and
+`token/frame` is now a REPORTED metric, not a gate.) The thesis below (`trace =
 VM(program)`, op-set = grammar, per-tune program = music, residual→0 the gate, no escape hatch) is the
 spine of the codec that **shipped as the BACC step / tracker representation**: Monty_on_the_Run encodes
 **byte-exact (residual-zero) at 0.075 token/frame (1,313 tokens), ~10× reduction, VOCAB=34**. The decisive

@@ -18,12 +18,15 @@ the win is a driver-invariant note alphabet, not a token-count change.
 
 ## The two problems
 
-1. **Representation split.** `serialize.py` (Hubbard) factors the score into per-voice rows
+1. **Representation split** (the v1 problem this note resolved; both serializers below are now retired —
+   GoatTracker is recovered into canonical rows and the model-facing form is the FLAT v2 typed-atom vocab,
+   `flat_serialize.py`, see the banner). `serialize.py` (Hubbard) factored the score into per-voice rows
    `(dt, note_interval, instr_ref, lnth, porta)` + inline backward `REPEAT`, pitch as a **relative
-   12-TET semitone interval**, pitch-invariant instruments defined once. `gt_serialize.py` (GoatTracker)
-   stores the reconstructed `.SNG` module as **raw bytes** (2 LEB digits/byte); a note is an *absolute*
-   GoatTracker pattern note byte buried in pattern data. Same LEB alphabet, totally different structure —
-   a model trained across both sees two distributions for the same musical content.
+   12-TET semitone interval**, pitch-invariant instruments defined once. `gt_serialize.py` (GoatTracker;
+   since DELETED — GoatTracker now routes the flat codec) stored the reconstructed `.SNG` module as **raw
+   bytes** (2 base-16 LEB digits/byte); a note was an *absolute* GoatTracker pattern note byte buried in
+   pattern data. Same v1 LEB alphabet, totally different structure — a model trained across both saw two
+   distributions for the same musical content.
 
 2. **Tuning split.** Even once both are "notes," the *pitch axis* differs. Hubbard's note index is an
    offset into Hubbard's ET-but-±4c note table; GoatTracker's note byte indexes GoatTracker's freq table;

@@ -552,7 +552,7 @@ library fit to the JCH player's *output*). It obeys the project's HARD RULES by 
   the program's own RAM (the note table at `$166d`, the wavetable at `$17db`). The refuted shape was
   *"any invented op-set + residual escape lane"*; this is the opposite — the op-set is the chip's
   programmer's, and there is no escape lane (high-complexity cells are *surfaced*, not patched).
-- **Residual = 0 stays the gate; < 1 token/frame is met by length-independence.** The recurrence is
+- **Residual = 0 stays the gate; `token/frame` is a REPORTED metric (not a gate), met by length-independence.** The recurrence is
   fixed-size, so the recovered program does not grow with playback; the dense output is the
   unrolling, recovered for free at render time.
 

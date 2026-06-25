@@ -9,11 +9,15 @@ cross-repo change or release.
 → per-voice tracker rows + **pitch-invariant instrument generators** — vibrato/slide/arp/PWM/ADSR/sweeps all
 collapse into one **bounded-accumulator (BACC)** primitive (`value += rate every dwell frames`; boundary
 wrap/reflect/none; width 8/12-bit; output map absolute/base+offset/note-table-scaled, or table-walk).
-Repeated phrases dedup via an inline backward orderlist; a transposed repeat is one backward TRANSPOSE op;
-DECODE = render the program → frames. It is `trace = VM(program)` realized: encode the PROGRAM, not the
-per-frame TRACE. Whole tunes fit one window, residual-zero: **Monty 1,313 tokens (0.075 tok/frame),
-5_Title_Tunes 1,394, Grid_Runner 2,817, A_Mind_Is_Born 496** — ~10× under the retired frame/event codec,
-VOCAB=34. The design + the enduring lessons are
+Repeated phrases replay via inline content-addressed `REF` (define-at-first-use); a transposed reuse is a
+small signed Δ; DECODE = render the program → frames. It is `trace = VM(program)` realized: encode the
+PROGRAM, not the per-frame TRACE. **Model-facing alphabet = the FLAT, learnability-first typed-atom vocab
+(v2), VOCAB=576** (`flat_serialize.py`; typed ranges + `GEN_*` generators, no place value, no numeric LZ);
+GoatTracker dispatches it (shipped), the generic path's flat port is in flight (its legacy v1 serializer
+still runs until then). The historical v1 BACC figures (Monty 1,313 tokens at 0.075 tok/frame,
+5_Title_Tunes 1,394, Grid_Runner 2,817, A_Mind_Is_Born 496 under the base-16 LEB + inline-LZ alphabet,
+VOCAB=34) are kept as point-in-time results; `token/frame` is now a REPORTED metric, not a gate (see
+AGENTS.md). The design + the enduring lessons are
 [`encoding/sid_player_decompiler.md`](encoding/sid_player_decompiler.md) ("HOW IT LANDED"); the op-set
 grounding is [`encoding/sid_opset_inventory.md`](encoding/sid_opset_inventory.md). The codec **shipped in
 preframr-tokens** (clean slate — `events/` + `macros/` + the old frame codec DELETED); the public path is
@@ -88,11 +92,12 @@ evidence stub) / **Deferred** / **Reference**.
 | [`digi_detection_reference.md`](references/digi_detection_reference.md) | Digi techniques + detection (refines `is_digi`). | Reference |
 | [`release_build_cache.md`](references/release_build_cache.md) | **The one place** for release/build/test/cache process. | Reference (authoritative) |
 | [`related_work.md`](references/related_work.md) | Survey (refreshed): the project's angle is byte-exact recovery of a generative program from a deterministic playroutine trace — nearest cousins are trace-driven / re-executable neural decompilation; the trace→generative-program + byte-exact + music + learnability combination is unaddressed. | Reference (positioning) |
-| [`tokenization_vs_music_llms.md`](references/tokenization_vs_music_llms.md) | BACC recovered-program scheme vs symbolic/MIDI/codec paradigms: wins fidelity + sparse program + inductive bias; pays recovery coverage, engine specificity, data scale. | Reference (positioning) |
+| [`tokenization_vs_music_llms.md`](references/tokenization_vs_music_llms.md) | FLAT v2 recovered-program scheme vs symbolic/MIDI/codec paradigms: wins fidelity + sparse program + inductive bias; pays recovery coverage, engine specificity, data scale. | Reference (positioning) |
 
 ## encoding/ — the landed codec + its grounding
 
-The codec **landed** (step/tracker; see banner) — Monty residual-zero at < 1 token/frame. The
+The codec **landed** (step/tracker; see banner) — Monty residual-zero (the v1 BACC alphabet; the
+model-facing form is now the FLAT v2 typed-atom vocab, VOCAB=576, see AGENTS.md). The
 frame/event-codec era and its whole design stack (event/v3 model, generator-MDL pipeline, GoatTracker-
 target codec, invented-op-set codec, DEF→REF instrument/phrase banks, melody/timbre factorization, lane-
 demux, boundary dictionary, density frontier, context-length sweep, the port deadwood/macros-removal

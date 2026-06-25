@@ -1,9 +1,10 @@
 # orin_inference_optimization — design note
 
-> **BACC banner (read first):** every vocab / tokenizer / tokens-per-song number below
-> **predates the BACC codec** (now VOCAB=34, ~10× fewer tokens/song). Consequences:
-> - The **vocab-shrink ladder (item 1) is MOOT** at VOCAB=34 — the logit head is negligible
->   (no 512 MB slab; no 8192/32768 cap question; no UNK-rate audit).
+> **Codec banner (read first):** every vocab / tokenizer / tokens-per-song number below
+> **predates the current codec** (the model-facing FLAT v2 alphabet is **VOCAB=576**, `flat_serialize.py`).
+> Consequences:
+> - The **vocab-shrink ladder (item 1) is MOOT** at VOCAB=576 — the logit head is negligible vs the old
+>   8192/32768 slots (no 512 MB slab; no 8192/32768 cap question; no UNK-rate audit).
 > - The roofline / real-time figures below (**4.25 tok/frame, ~6.5 min/song, ~9× real-time gap,
 >   107M params, vocab 8192/32768**) were measured on event-model checkpoints and **must be
 >   re-measured on a BACC checkpoint** (far fewer tokens/song shifts the wall-clock and the
@@ -87,8 +88,8 @@ the FREQ_TRAJ rework roughly halved the alphabet and the used set:
   atoms/token** (top tokens are single atoms — compression is the
   atom-level macros, not Unigram merges). [REFUTED — motif pass: this
   light-merge regime was cited as load-bearing for a motif dictionary as a
-  context/vocab lever; the motif pass is refuted, and at VOCAB=34 the whole
-  Unigram-merge analysis is moot.]
+  context/vocab lever; the motif pass is refuted, and at the FLAT v2 VOCAB=576
+  typed-atom alphabet the whole Unigram-merge analysis is moot.]
 - **Correction to the pre-rework "all used IDs < 8,192" claim:** the
   used IDs now span the *whole* range (max used id **32,766**); only
   660 are < 4,096 (66.7% of token mass), 1,105 < 8,192 (69.8%). So a

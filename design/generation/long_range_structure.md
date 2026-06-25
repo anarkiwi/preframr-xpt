@@ -1,13 +1,16 @@
 # Long-range structure — generating whole tunes beyond one window
 
-**Status:** Design — re-scoped to the BACC codec. Under BACC (VOCAB=34, absolute 12-TET grid notes +
-backward Transpose, residual-zero), **whole tunes fit one 4096-token window** (Monty 1,313;
-5_Title_Tunes 1,394; Grid_Runner 2,817; A_Mind_Is_Born 496), and the training default context is
-4096 (whole-song-in-context). The old problem statement — tunes ~30k tokens, 82% exceeding a window,
-seq_len 8192 + KEYFRAME windows, "no mechanism to produce a whole tune" — is **OVERTURNED**: the norm
-is now a whole tune in one window. The only live long-range problem is the **>4096 STRETCH TAIL**:
-the corpus stretch goal is ≥90% of tunes under 4096, so chaining is needed only for the ≤10% that
-exceed one window. This doc covers that stretch-tail mechanism and the long-horizon coherence
+**Status:** Design — re-scoped to the SID decompiler codec. Under the FLAT v2 typed-atom vocab (VOCAB=576,
+`flat_serialize.py`; absolute A440/12-TET NOTE atoms + content-addressed `REF`/signed Δ for transposed
+reuse, residual-zero), most tunes fit one context window (the v1 BACC measurements, kept as history:
+Monty 1,313; 5_Title_Tunes 1,394; Grid_Runner 2,817; A_Mind_Is_Born 496; note flat v2 trades compactness
+for learnability, so per-tune counts rise — Grid_Runner flat ≈ 9,480). The training default context is
+now **8192** (whole-song-in-context). The old problem statement — tunes ~30k tokens, 82% exceeding a
+window, seq_len 8192 + KEYFRAME windows, "no mechanism to produce a whole tune" — is **OVERTURNED**: the
+norm is now a whole tune in (or, via the inline layout's prefix-validity, any window of) one context.
+The only live long-range problem is the **STRETCH TAIL**: the corpus stretch goal is ≥90% of tunes under
+the window, so chaining is needed only for the tunes that exceed it. This doc covers that stretch-tail
+mechanism and the long-horizon coherence
 measurement. It deliberately does NOT propose whole-tune-scale context blowup or a hierarchical model
 (out of the single-4090 / Orin envelope — refuse in design, per AGENTS.md).
 
