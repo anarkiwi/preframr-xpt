@@ -1,6 +1,8 @@
-**Status:** Reference + tool (`audit/learnability_triage.py`, training-free). The BACC step/tracker
-codec is the lens's current product; the triage remains the pre-run ranking instrument for any proposed
-representation change (run it whole-song-in-context at 4096 before spending a training run).
+**Status:** Reference + tool (`audit/learnability_triage.py`, training-free). The **flat v2** typed-atom
+tracker codec is the lens's current product (it is the learnability-first redesign of the earlier BACC
+codec — see [`tokenization_vs_music_llms.md`](tokenization_vs_music_llms.md)); the triage remains the
+pre-run ranking instrument for any proposed representation change (run it whole-song-in-context at the
+training context — now 8192 — before spending a training run).
 
 # A theoretical basis for token + ordering design (predict before you A/B)
 
@@ -53,8 +55,9 @@ Ordering matters only under finite capacity + optimization + exposure bias; two 
    before melody — [`lane_demux_hypothesis.md`](../landed/lane_demux_hypothesis.md).)
 2. **Front-load determinants, but only low-entropy ones.** An early token must itself be highly
    determined. This is why absolute onset pitch ≈ 0 next-token while structure learns: high-entropy,
-   no local determinant. Anchoring to a nearby reference (the BACC backward Transpose op; historically
-   v3's interval-from-previous `NI_*` lane) is the theory-prescribed fix; the absolute anchor (the
+   no local determinant. Anchoring to a nearby reference (the flat-v2 content-addressed phrase `REF` + signed
+   Δ; historically the BACC backward Transpose op and v3's interval-from-previous `NI_*` lane) is the
+   theory-prescribed fix; the absolute anchor (the
    A440/12-TET grid index) stays ≈0 and must be scored distributionally.
 
 ## The training-free triage — `audit/learnability_triage.py`
@@ -63,7 +66,7 @@ per frame (cross-encoding comparison must be per-frame — token counts differ);
 I(x_t; x_{t−d}) vs d (fat tail = a long-range counter the model will shortcut); **induction-copy
 rate** (share of tokens completing a previously-seen bigram); alphabet/coverage context. Read: low
 per-frame h_k + early plateau + fast MI decay + high copy ⇒ predicted learnable. **Measure at the
-real block scale** (whole-song-in-context 4096, the training context default) — smaller windows
+real block scale** (whole-song-in-context at the training context default — now 8192 under flat v2) — smaller windows
 over-penalize codebooks (a measured failure mode).
 
 **Track record (why the tool is trusted):** (1) at block scale it flipped the song-mode ordering and

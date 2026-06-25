@@ -81,7 +81,7 @@ same gate preframr already enforces.
   <https://arxiv.org/abs/2301.11975>, <https://arxiv.org/pdf/2304.08953>
 - *Contrast + the verified caveat:* these tokenize a *score*; preframr tokenizes a recovered *program* on a
   cross-driver absolute A440 grid. preframr's own subword study **refuted vanilla BPE/Unigram on the sparse
-  BACC stream** (it welds across field boundaries and collapses induction-copy) — consistent with the music
+  recovered-program stream** (it welds across field boundaries and collapses induction-copy) — consistent with the music
   literature, where the strong "BPE bigger-vocab improves results AND speed" claim is unverified; only the
   length/vocab tradeoff is established. (`../encoding/bpe_unigram_subword.md`.)
 
@@ -94,9 +94,11 @@ same gate preframr already enforces.
 - **GTTM** (Lerdahl & Jackendoff) + grammatical-induction segmentation (LZ78/RePair/Sequitur) — the
   grammar-of-music tradition; reusable non-terminals ≈ a backward orderlist.
   <https://arxiv.org/pdf/2405.18742>
-- *Note:* the project's earlier framing as an "MDL DEF→REF generator-primitive codebook" is **refuted** as a
-  forward-declaration codebook; the shipped form is an inline backward orderlist + one BACC primitive. The MDL
-  *spirit* (shortest generating program) survives; the DEF→REF *mechanism* does not.
+- *Note:* the project's earlier framing as an "MDL DEF→REF generator-primitive codebook" (a forward-declaration
+  preamble) is **refuted**, as is the interim "inline backward orderlist + one BACC primitive" form. The
+  shipped/flat-v2 form is an **inline content-addressed `REF`** (define-at-first-use, replay-by-stable-id — no
+  numeric back-offset, prefix-valid) over a fixed `GEN_*` generator set. The MDL *spirit* (shortest generating
+  program) survives; both the DEF→REF preamble and the numeric-LZ *mechanisms* do not.
 
 ### 5. Transformer learnability / expressivity — the ordering theory the design invokes
 - **Liu et al., "Transformers Learn Shortcuts to Automata"** — a bounded-depth transformer can simulate a
@@ -106,14 +108,16 @@ same gate preframr already enforces.
 
 ### 6. Voice de-mux / track ordering as a lever
 - **MMM** — concatenates per-track event sequences rather than time-interleaving, framing track layout as a
-  deliberate choice. <https://arxiv.org/pdf/2008.06048> Supports the de-mux premise (the BACC codec de-muxes
-  voices by construction — per-voice row streams, not interleaved frames).
+  deliberate choice. <https://arxiv.org/pdf/2008.06048> Supports the de-mux premise (the recovered-program codec
+  de-muxes voices by construction — per-voice row streams, not interleaved frames).
 
 ### 7. Transposition-invariant pitch
 - Interval/relative-pitch encodings are inherently transposition-invariant. <https://arxiv.org/pdf/1806.08236>
-  preframr instead uses an **absolute** cross-driver A440 grid + a backward **Transpose** op (REPEAT + Δ): the
-  same concert pitch is one token across drivers, and transposition is recovered as a phrase-level op rather
-  than baked into every note token (`../encoding/cross_driver_note_unification.md`).
+  preframr instead uses an **absolute** cross-driver A440 grid (one global NOTE token per semitone) + a
+  small signed **Δ on a content-addressed phrase `REF`**: the same concert pitch is one token across drivers,
+  and transposition is recovered as a phrase-level op rather than baked into every note token. Tuning/detune
+  stay orthogonal to NOTE (per-tune TUNING + bounded DETUNE), so the note alphabet does not fragment per song
+  (`../encoding/cross_driver_note_unification.md`).
 
 ## What appears genuinely novel (cross-facet)
 No single surveyed work unites preframr's defining choices:

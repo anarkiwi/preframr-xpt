@@ -1,6 +1,11 @@
 # Generic tracker-structure decompilation — recover the PROGRAM, not the per-register trace
 
-**Status: SHIPPED (2026-06-22).**  Byte-exact lift implemented
+**Status: SHIPPED (2026-06-22; v1 generic path — flat-v2 port pending).**  This is the legacy v1 generic
+serialization (base-16 LEB + inline-LZ); the model-facing alphabet is now the FLAT v2 typed-atom vocab
+(VOCAB=576, no place value / no numeric LZ — `flat_serialize.py`, AGENTS.md), to which the generic path is
+being ported. GoatTracker already dispatches the flat codec; `bacc/tracker_serialize.py` (and the shared
+`serialize._lz_emit_t`) remain the v1 generic serializer until the port lands. `token/frame` figures below
+are REPORTED metrics, not a gate. Byte-exact lift implemented
 (`bacc/generic/tracker.py` + `bacc/tracker_serialize.py`), wired into
 `generic_serialize` behind a 1-token format tag (the encoder picks the smaller of
 the genfits / tracker forms AFTER verifying the tracker form renders identically).
@@ -219,9 +224,10 @@ BaccProgram(
 - `score` is the per-voice note-event list, frame-ordered — the SAME `NoteOn`
   dataclass the Hubbard/GoatTracker paths emit.
 - Serialization: a generic `lit_emit`/`lit_read`/`delta_of`/`shift` over the
-  note-event rows, fed to the SHARED `_lz_emit_t` (REPEAT/TRANSPOSE) with the
+  note-event rows, fed to the SHARED v1 `_lz_emit_t` (REPEAT/TRANSPOSE) with the
   inline-define-instrument-on-first-use `seen` dedup — byte-for-byte the same
-  machinery `gt_serialize._row_lit` + `_emit_rows` already use.  No new token ids.
+  machinery the retired `gt_serialize` row literals used (that module is since
+  DELETED; the shared `serialize._lz_emit_t` remains).  No new token ids.
 
 Decode is the inverse: rebuild instruments + score, then `render_generic` over the
 tracker representation → `(nframes,25)`.

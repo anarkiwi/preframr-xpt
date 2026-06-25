@@ -1,6 +1,10 @@
 # Subword tokenization (BPE / Unigram) on the BACC token-id stream — grounded design analysis
 
-**Status: ANALYSIS — vanilla BPE/Unigram REFUTED on the BACC stream (2026-06-20).** Vanilla subwording
+**Status: ANALYSIS — vanilla BPE/Unigram REFUTED on the BACC stream (2026-06-20).** (Measured on the v1
+BACC stream — base-16 LEB + inline-LZ `REPEAT`, VOCAB=34. The model-facing alphabet is now the FLAT v2
+typed-atom vocab, VOCAB=576, no place value / no numeric LZ — `flat_serialize.py`, AGENTS.md. The
+absolute counts below are v1 history; the welding / induction-copy RATIOS are what carry forward, and the
+flat v2 vocab is even more strongly typed-atom, so the vanilla-BPE welding hazard stands.) Vanilla subwording
 welds 63–65% of token occurrences across field boundaries (note↔instr / instr↔dur / whole rows) and
 collapses induction-copy 0.886 → 0.114 (a learnability NO-GO, same outcome as the refuted old-codec BPE
 but via welding, not density-fitting). Melodic-sequence capture does NOT materialize (the inline row-LZ
@@ -34,9 +38,9 @@ north-star in `learnability_token_ordering_theory.md`), not by compression alone
 > not recompute the exact numbers from this table.
 
 Recovered BACC id streams (white-box `.sid` + dump → `recover_program` → `program_to_ids`), each
-paired with a **per-token FIELD-ID annotation** emitted by a re-serializer that mirrors
-`serialize.py` / `gt_serialize.py` emit-for-emit and **asserts** id-equality with the upstream
-serializer (`bpe_field_serialize.py`), so the role of every atom is exact.
+paired with a **per-token FIELD-ID annotation** emitted by a re-serializer that mirrored the v1
+`serialize.py` / `gt_serialize.py` (the latter since DELETED) emit-for-emit and **asserts** id-equality
+with the upstream serializer (`bpe_field_serialize.py`), so the role of every atom is exact.
 
 | tune | driver | atoms | frames | tok/frame |
 |---|---|---|---|---|

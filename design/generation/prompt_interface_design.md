@@ -1,7 +1,8 @@
 # Prompt interface — from SID continuation to musical-phrase prompting (MIDI / keyboard)
 
-**Current status (BACC):** the codec is BACC (bounded-accumulator, VOCAB=34); the phrase compiler
-below targets the BACC encode path.
+**Current status (FLAT v2):** the model-facing codec is the FLAT v2 typed-atom vocab (VOCAB=576,
+`flat_serialize.py`; BACC remains the instrument primitive); the phrase compiler below targets the same
+encode path.
 
 **Status:** Design. The input side of the generation program. Continuation from a SID
 register prompt exists (`inference/predict.py`, `event_gate.py`); the **ultimate goal is generation

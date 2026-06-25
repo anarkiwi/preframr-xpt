@@ -18,8 +18,9 @@ round-trips its own tunes register-for-register, frame-for-frame. So every opera
 is load-bearing, not a guess.
 
 > **SUPERSEDED — kept as derivation.** The op-set + 7-primitive decomposition below are durable
-> grounding that **COLLAPSED into a single BACC primitive** (one bounded accumulator + table-walk;
-> VOCAB=34). The proposed multi-instruction VM ISA (§4, the ~20-op TEMPO / NOTE / ARP / PORTA / SLIDE /
+> grounding that **COLLAPSED into a single BACC primitive** (one bounded accumulator + table-walk; the v1
+> BACC alphabet was VOCAB=34 — the model-facing form is now the FLAT v2 typed-atom vocab, VOCAB=576,
+> `flat_serialize.py`, see AGENTS.md). The proposed multi-instruction VM ISA (§4, the ~20-op TEMPO / NOTE / ARP / PORTA / SLIDE /
 > VIBRATO / PW.SWEEP… set) is **SUPERSEDED by that single primitive** and is kept only as the
 > derivation of how it was reached. The "no escape hatch by construction" conclusion (§3, §6 CORRECTION)
 > carries over verbatim.

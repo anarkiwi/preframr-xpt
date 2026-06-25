@@ -27,8 +27,8 @@ rules stays `design/references/release_build_cache.md`.
    - The dataset cache key folds the image's tokens version (`base.py _image_tokens_version`), so a
      tokens bump **auto-invalidates** stale parse/tokenize artefacts — no manual cache purge.
    - Then run the continuation spec: `specs/generalize_continuation.py` (atoms-only;
-     `CONTINUATION_TKVOCAB` = the codec's final vocab — **VOCAB=34** (the "55 in the prototype" figure
-     is stale)).
+     `CONTINUATION_TKVOCAB` = the codec's final vocab — the FLAT v2 alphabet is **VOCAB=576, PAD_ID=576**
+     (`flat_serialize.py`; the earlier "VOCAB=34" / "55 in the prototype" figures are stale v1)).
 
 ## Drift to reconcile at port time
 - `preframr/requirements.txt` floors `preframr-tokens>=0.53.0`, but the last tokens tag is behind

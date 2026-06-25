@@ -1,7 +1,9 @@
 # Transplant augmentation — donor/host melody & instrument recombination + the instrument bank
 
-**Current status (BACC):** the codec is BACC (bounded-accumulator, VOCAB=34); melody and instrument
-objects below are the BACC equivalents (absolute-grid notes + Transpose; instrument = BACC params).
+**Current status (FLAT v2):** the model-facing codec is the FLAT v2 typed-atom vocab (VOCAB=576,
+`flat_serialize.py`; BACC remains the instrument primitive). Melody and instrument objects below map to the
+flat equivalents (absolute-grid NOTE atoms + content-addressed `REF`/signed Δ for transposed reuse;
+instrument = `GEN_*` / BACC params).
 
 **Status:** Design. The data-side member of the generation program. Implementation home:
 **preframr-aug** (owns augmentation; consumes preframr-tokens as a library — `events.oracle`,

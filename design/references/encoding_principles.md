@@ -34,8 +34,9 @@ destroyed the pitch-onset signal (0.66 → 0.009) by welding it into thousands o
 
 - **P1 — Separability.** Each content decision is its own low-cardinality token, never fused with
   unrelated content. *Earned by:* de-merging lifted pitch-onset 0.009→0.658. *BACC embodiment:* the
-  recovered program emits each decision (note, instrument, BACC param) as its own token in the VOCAB=34
-  alphabet; no fused compounds (BPE refuted as the lever).
+  recovered program emits each decision (note, instrument, BACC param) as its own typed atom in the
+  FLAT v2 alphabet (VOCAB=576; a token's RANGE encodes its kind); no fused compounds (BPE refuted as the
+  lever).
 - **P2 — Locality.** Predictive context should be near the decision — but locality only helps where
   cross-song-predictable structure is being separated; it cannot manufacture predictability for a
   multi-modal target (→ P6). Cross-voice de-multiplexing is the open locality lever
